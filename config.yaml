@@ -31,13 +31,15 @@ loot:
   filter_name: "LK Bot"
   pick: [rune, unique]
 
-# Named click points, client coords at 1280x720. CALIBRATE in M2 from real frames.
+# Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
   play: [640, 640]
-  difficulty_normal: [640, 300]
-  difficulty_nightmare: [640, 360]
-  difficulty_hell: [640, 420]
-  save_and_exit: [640, 300]
+  difficulty_normal: [636, 300]
+  difficulty_nightmare: [636, 346]
+  difficulty_hell: [636, 390]
+  save_and_exit: [640, 314]
+  esc_loot_filter: [640, 420]
+  exit_game: [165, 430]        # main menu "Exit Diablo II"
 
 capture:
   fps: 2                         # tools/capture.py interval mode
@@ -58,7 +60,19 @@ vision:
     unique: {lo: [15, 60, 120], hi: [28, 165, 255]}
     rune:   {lo: [12, 200, 180], hi: [24, 255, 255]}
     set:    {lo: [50, 150, 150], hi: [70, 255, 255]}
-  label_ignore: []                # HUD regions to skip, e.g. [[0, 560, 1280, 160]]
+  label_ignore:                   # HUD (bottom bar + orbs) and the clock (top right)
+    - [0, 595, 1280, 125]
+    - [1140, 10, 140, 40]
   # Screen states: list of cues {template, region, threshold}; templates live in
-  # bot/assets/templates/. Checked in order; first full match wins. Empty until M1.
-  states: {}
+  # bot/assets/templates/. Checked in order; first full match wins.
+  states:
+    title:
+      - {template: title.png, region: [450, 540, 380, 80], threshold: 0.8}
+    difficulty:
+      - {template: difficulty.png, region: [530, 220, 220, 80], threshold: 0.8}
+    esc_menu:
+      - {template: esc_menu.png, region: [550, 175, 180, 85], threshold: 0.8}
+    main_menu:
+      - {template: main_menu.png, region: [25, 400, 210, 85], threshold: 0.8}
+    in_game:
+      - {template: in_game.png, region: [160, 600, 100, 120], threshold: 0.8}

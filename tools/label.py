@@ -38,7 +38,7 @@ def main() -> int:
             if args.mp is not None:
                 meta["mp"] = args.mp
             if args.labels is not None:
-                meta["labels"] = sorted(k for k in args.labels.split(",") if k)
+                meta["labels"] = sorted(k for k in args.labels.split(",") if k and k != "none")
             if args.note:
                 meta["note"] = args.note
             out.with_suffix(".json").write_text(json.dumps(meta, indent=1))

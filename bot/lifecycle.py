@@ -1,7 +1,7 @@
 """Game lifecycle (M2): main menu -> create game -> in town -> save & exit.
 
-Screen states used (see config vision.states): main_menu, difficulty, loading, in_game,
-esc_menu. Click points come from config `ui`.
+Screen states used (see config vision.states): title, main_menu, difficulty, loading,
+in_game, esc_menu. Click points come from config `ui`.
 """
 from __future__ import annotations
 
@@ -15,10 +15,20 @@ T_MENU = 20.0
 T_LOAD = 45.0
 
 
+def to_main_menu(bot: Controller) -> None:
+    """From the title screen (or a menu) to the main menu."""
+    state = bot.wait_for({"title", "main_menu", "in_game"}, T_LOAD)
+    if state == "title":
+        bot.press("space")
+        bot.wait_for("main_menu", T_MENU)
+
+
 def create_game(bot: Controller, difficulty: str = "hell") -> None:
-    state = bot.wait_for({"main_menu", "in_game"}, T_MENU)
+    state = bot.wait_for({"title", "main_menu", "in_game"}, T_MENU)
     if state == "in_game":
         raise BotError("already in a game; expected main menu")
+    if state == "title":
+        to_main_menu(bot)
     bot.click_ui("play")
     bot.wait_for("difficulty", 10)
     bot.click_ui(f"difficulty_{difficulty}")

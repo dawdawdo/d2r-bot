@@ -42,8 +42,14 @@ def match_score(frame: np.ndarray, template: np.ndarray, region=None) -> tuple[f
 
 
 def is_loading(frame: np.ndarray, max_mean: float = 12.0, max_bright_frac: float = 0.01) -> bool:
+    """Black frame, or D2R's loading card: a framed picture centered on black margins.
+    Only used as a fallback after template states (so in-game darkness with a HUD is excluded)."""
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return gray.mean() < max_mean and (gray > 60).mean() < max_bright_frac
+    if gray.mean() < max_mean and (gray > 60).mean() < max_bright_frac:
+        return True
+    w = gray.shape[1]
+    sides = np.hstack([gray[:, : w // 4], gray[:, -w // 4 :]])
+    return sides.mean() < 4 and (sides > 40).mean() < 0.002
 
 
 class ScreenClassifier:
