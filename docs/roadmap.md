@@ -1,5 +1,18 @@
 # Roadmap beyond phase 1
 
+## End goal (Stephen, 2026-10-25)
+A **portable Python application** that runs on Windows or Linux. Requirements this implies:
+- All OS-specific code stays in `bot/io/` (Windows backend exists; a Linux evdev/uinput + X11/PipeWire
+  backend is still to do). Nothing else may import platform libraries (enforced by a test).
+- Package as an installable app (`pyproject.toml`, console entry point `d2r-bot`), with config
+  paths resolved per OS (save folder, game exe).
+
+## Inventory policy
+- Keys: keep exactly 12 (one stack). Today: bought from Lysander (A2). Goal: collect from chests.
+- Rejuvs: belt restocked from the stash Materials tab. Goal: collect from chests.
+- Runes: deposit into the shared stash **Materials** tab at the stash stop each run (to build).
+- Traveling to Act 2 changes the act new games start in: always return to A3 before exiting.
+
 ## Map change detection and relearning (requested by Stephen)
 The LK route is only valid for the current map seed (`Blizzaga.map`), which will eventually
 be replaced, probably by accident.
