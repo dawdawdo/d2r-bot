@@ -28,5 +28,33 @@ loot:
   # Item label colors to pick up (M5). Default until Stephen decides.
   pick: [unique, set, rune]
 
+# Named click points, client coords at 1280x720. CALIBRATE in M2 from real frames.
+ui:
+  play: [640, 640]
+  difficulty_normal: [640, 300]
+  difficulty_nightmare: [640, 360]
+  difficulty_hell: [640, 420]
+  save_and_exit: [640, 300]
+
 capture:
-  fps: 2                          # tools/capture.py interval mode
+  fps: 2                         # tools/capture.py interval mode
+
+# Perception. All regions are client-relative [x, y, w, h] at 1280x720.
+# CALIBRATE in M1 from real frames — current numbers are educated guesses.
+vision:
+  orbs:
+    hp:
+      region: [40, 600, 90, 105]
+      color: {lo: [170, 120, 60], hi: [8, 255, 255]}     # red, hue wraps
+    mp:
+      region: [1150, 600, 90, 105]
+      color: {lo: [105, 120, 60], hi: [130, 255, 255]}   # blue
+  labels:
+    # D2R text colors: unique = muted gold, rune = saturated orange, set = bright green.
+    unique: {lo: [15, 60, 120], hi: [28, 165, 255]}
+    rune:   {lo: [12, 200, 180], hi: [24, 255, 255]}
+    set:    {lo: [50, 150, 150], hi: [70, 255, 255]}
+  label_ignore: []                # HUD regions to skip, e.g. [[0, 560, 1280, 160]]
+  # Screen states: list of cues {template, region, threshold}; templates live in
+  # bot/assets/templates/. Checked in order; first full match wins. Empty until M1.
+  states: {}
