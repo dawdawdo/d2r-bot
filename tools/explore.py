@@ -100,6 +100,7 @@ def main() -> int:
                     help="actions after the hops, e.g. 'click:600,500 wait:1.5 snap:a rclick:700,400 key:alt'")
     ap.add_argument("--hover-scan", action="store_true",
                     help="after the last hop, hover-scan the view for interactables (chests)")
+    ap.add_argument("--walk", action="store_true", help="left-click walk instead of teleport (town)")
     ap.add_argument("--stay", action="store_true",
                     help="don't save & exit at the end (DANGEROUS: idle characters die in Hell)")
     args = ap.parse_args()
@@ -132,7 +133,7 @@ def main() -> int:
 
     try:
         bot.release_all()
-        bot.guard(True)
+        bot.guard(not args.walk)
         frame = b.capture.grab()
         paste(frame)
         prev = gray_small(frame, 0.5)
@@ -160,8 +161,12 @@ def main() -> int:
                 continue
             ux, uy = DIRS[d]
             tx, ty = int(CENTER[0] + ux * args.hop), int(CENTER[1] + uy * args.hop * 0.75)
-            bot.click(tx, ty, "right")
-            s.kill.sleep(args.settle)
+            if args.walk:
+                bot.click(tx, ty, "left")
+                bot.wait_still(timeout=5)
+            else:
+                bot.click(tx, ty, "right")
+                s.kill.sleep(args.settle)
             frame = b.capture.grab()
             cur = gray_small(frame, 0.5)
             dx, dy, resp = measure_shift(prev, cur, 0.5)
@@ -207,7 +212,7 @@ def main() -> int:
     finally:
         bot.release_all()
         bot.guard(False)
-        if not args.stay and not s.kill.tripped:
+        if not args.stay and not args.walk and not s.kill.tripped:
             try:
                 if bot.observe() == "in_game":
                     save_and_exit(bot)

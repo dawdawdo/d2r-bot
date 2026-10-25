@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from bot.config import load_config  # noqa: E402
 from bot.io import GuardedInput, open_backend  # noqa: E402
 from bot.killswitch import KillSwitch  # noqa: E402
+from bot.vision.tooltip import find_tooltip  # noqa: E402
 
 
 def main() -> int:
@@ -42,11 +43,11 @@ def main() -> int:
             inp.move(x, y)
             time.sleep(0.07)
             f = b.capture.grab()
-            g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.int16)
-            y0, x0 = max(0, y - 140), max(0, x - 120)
-            if (np.abs(g[y0:y, x0 : x + 120] - base[y0:y, x0 : x + 120]) > 60).mean() > 0.02:
+            box = find_tooltip(f, x, y)
+            if box is not None:
                 hit = (x, y)
-                cv2.imwrite("scratch/npc_hit.png", f[y0 : y + 20, x0 : x + 120])
+                bx, by, bw, bh = box
+                cv2.imwrite("scratch/npc_hit.png", f[by : by + bh, bx : bx + bw])
                 break
         if hit:
             break
