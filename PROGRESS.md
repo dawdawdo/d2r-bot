@@ -17,6 +17,10 @@ he's done with the machine** before any live game.
   `docs/loot.md` (native loot filter draft `filters/LK Bot.fltr`), `docs/roadmap.md`
   (map-change detection → relearn → map hunting; Linux; remote control).
 
+**Loot filter:** `LK Bot.fltr` copied into the save folder 2026-10-25 (approved; backup
+`backups/20261025-145937` taken first). Stephen approved adding any filters needed. Still to do:
+select it in-game and verify it hides/shows as intended.
+
 **Next step (live):** launch D2R → set windowed 1280×720 + low graphics in-game (approved)
 → capture frames → calibrate → fixture tests green → commit M1 → live M2 ×20.
 
@@ -25,7 +29,5 @@ M4 plan A OK, but map relearning is required eventually; loot = Dol+ runes + uni
 (+ optional cube gems).
 
 **Open questions for Stephen:**
-- OK to copy `filters/LK Bot.fltr` into the save folder? It's a new file; no save files touched.
-  Otherwise I build the filter through the in-game UI.
 - Remote start channel: recommended = Claude Remote Control (see last chat message).
 - I can't run `/usage` myself; tell me if weekly usage nears 85%.
