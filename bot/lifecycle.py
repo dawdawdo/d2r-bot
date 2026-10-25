@@ -36,6 +36,21 @@ def create_game(bot: Controller, difficulty: str = "hell") -> None:
     log.info("in game (%s)", difficulty)
 
 
+def ensure_main_menu(bot: Controller) -> None:
+    """Recover to the main menu from whatever state we're in (start of each run)."""
+    state = bot.wait_for({"title", "main_menu", "in_game", "esc_menu", "difficulty"}, T_LOAD)
+    if state == "title":
+        to_main_menu(bot)
+    elif state == "difficulty":
+        bot.press("esc")
+        bot.wait_for("main_menu", T_MENU)
+    elif state == "esc_menu":
+        bot.click_ui("save_and_exit")
+        bot.wait_for("main_menu", T_LOAD)
+    elif state == "in_game":
+        save_and_exit(bot)
+
+
 def save_and_exit(bot: Controller) -> None:
     for attempt in range(3):
         bot.press("esc")

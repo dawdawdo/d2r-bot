@@ -7,7 +7,7 @@ from bot.controller import BotError, Controller
 from bot.io import Input
 from bot.io.fake import FakeCapture, FakeWindow
 from bot.killswitch import KillSwitch, KillSwitchTripped
-from bot.lifecycle import create_game, save_and_exit
+from bot.lifecycle import create_game, ensure_main_menu, save_and_exit
 
 
 class SimGame(Input):
@@ -80,6 +80,21 @@ def test_full_cycle_twenty_times(cfg):
         save_and_exit(bot)
         assert game.state == "main_menu"
     assert game.log[:2] == ["play", "difficulty_hell"]
+
+
+@pytest.mark.parametrize("start", ["in_game", "esc_menu", "main_menu", "difficulty"])
+def test_ensure_main_menu_recovers(cfg, start):
+    game = SimGame(cfg["ui"], state=start)
+    bot = make_bot(cfg, game)
+
+    def key_down(key, _orig=game.key_down):
+        _orig(key)
+        if key == "esc" and game.state == "difficulty":
+            game.state = "main_menu"
+
+    game.key_down = key_down
+    ensure_main_menu(bot)
+    assert game.state == "main_menu"
 
 
 def test_create_game_refuses_when_in_game(cfg):

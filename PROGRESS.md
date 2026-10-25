@@ -1,7 +1,15 @@
 # Progress
 
-**Current milestone:** M1 (perception). Offline work done; **waiting for Stephen to say
-he's done with the machine** before any live game.
+**Current milestone:** M3 (town → WP → LK). **M1 done, M2 done: 20/20 live cycles clean
+(about 7.4 s each), 2026-10-25.** Stephen gave the go-ahead to run live (approved remotely).
+
+**Live facts (2026-10-25):** `D2R.exe` launches directly (no Battle.net). It opens with the
+intro → title "Press any key" → main menu (Offline tab, Blizzaga selected). Window client
+1280×720 (it moves around; coordinates are client-relative). Show Items = **Toggle** (Alt toggles).
+Automap = Mini Map Right, starts closed. Life orb text on. The A3 town is Kurast Docks.
+Loot filter `LK Bot` is active, all 5 rules load (see docs/loot.md for gotchas).
+Tools: `tools/peek.py`, `tools/act.py` (scripted inputs + capture), `tools/state_check.py`,
+`tools/orb_probe.py`. `python -m bot.run --runs N` recovers to the main menu from any state.
 
 **Works (offline, 26 tests pass, fixture tests skip until frames exist):**
 - M0: `bot/io/` boundary (Windows backend + fakes), F12 kill switch, `GuardedInput`

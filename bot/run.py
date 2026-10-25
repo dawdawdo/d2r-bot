@@ -15,7 +15,7 @@ from .config import ROOT
 from .controller import BotError, Controller
 from .io import open_backend
 from .killswitch import KillSwitchTripped
-from .lifecycle import create_game, save_and_exit
+from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from .vision.screen import ScreenClassifier
 
@@ -25,6 +25,7 @@ FIELDS = ["start", "duration_s", "result", "error"]
 
 
 def one_run(bot: Controller, cfg: dict) -> None:
+    ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     bot.kill.sleep(1.0)
     save_and_exit(bot)
