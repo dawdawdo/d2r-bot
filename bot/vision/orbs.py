@@ -12,8 +12,13 @@ from .color import crop, hsv_mask
 
 
 def orb_fill(frame: np.ndarray, region, color_range: dict, row_frac: float = 0.25) -> float:
-    """Return fill in [0, 1]. `region` = (x, y, w, h) tightly around the liquid area."""
-    mask = hsv_mask(crop(frame, region), color_range) > 0
+    """Return fill in [0, 1]. `region` = (x, y, w, h) tightly around the liquid area.
+    `color_range` may be a list of ranges (e.g. red, plus green when poisoned)."""
+    sub = crop(frame, region)
+    ranges = color_range if isinstance(color_range, list) else [color_range]
+    mask = np.zeros(sub.shape[:2], bool)
+    for r in ranges:
+        mask |= hsv_mask(sub, r) > 0
     rows = mask.mean(axis=1) >= row_frac
     if not rows.any():
         return 0.0

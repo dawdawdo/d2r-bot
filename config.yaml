@@ -28,6 +28,7 @@ hotkeys:
 safety:
   chicken_hp_pct: 50
   potion_hp_pct: 70
+  potion_mp_pct: 25    # Energy Shield turns damage into mana loss, so low mana is dangerous too
   run_timeout_s: 180
 
 loot:
@@ -78,7 +79,9 @@ vision:
     # The effective bottom is y 711 (hidden by the orb frame): 350/635 HP (55%) has its top at y 656.
     hp:
       region: [308, 611, 40, 100]
-      color: {lo: [170, 120, 60], hi: [8, 255, 255]}     # red, hue wraps
+      color:
+        - {lo: [170, 120, 60], hi: [8, 255, 255]}        # red, hue wraps
+        - {lo: [40, 120, 60], hi: [75, 255, 255]}        # green = poisoned
     mp:
       region: [968, 611, 40, 100]
       color: {lo: [105, 120, 60], hi: [130, 255, 255]}   # blue

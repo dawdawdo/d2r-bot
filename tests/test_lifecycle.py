@@ -103,6 +103,8 @@ def hp_frame(cfg, pct):
     fill = round(h * pct / 100)
     if fill:
         f[y + h - fill : y + h, x : x + w] = (20, 20, 200)
+    mx, my, mw, mh = cfg["vision"]["orbs"]["mp"]["region"]
+    f[my : my + mh, mx : mx + mw] = (200, 60, 20)  # full mana
     by0, by1 = cfg["vision"]["belt"]["y"]
     for bx in cfg["vision"]["belt"]["x"][1:]:  # slot 1 empty, 2-4 hold (purple) potions
         f[by0:by1, bx - 12 : bx + 12] = (200, 40, 160)

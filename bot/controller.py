@@ -48,6 +48,7 @@ class Controller:
         # HP guardian: active only while out of town (enable with guard(True)).
         self.guarding = False
         self.hp: float | None = None
+        self.mp: float | None = None
         self._last_potion = -99.0
 
     # --- perception -------------------------------------------------------
@@ -65,7 +66,8 @@ class Controller:
     def _check_vitals(self) -> None:
         from .vision.orbs import orb_pcts
 
-        self.hp = orb_pcts(self.frame, self.cfg["vision"]["orbs"])["hp"]
+        orbs = orb_pcts(self.frame, self.cfg["vision"]["orbs"])
+        self.hp, self.mp = orbs["hp"], orbs["mp"]
         if not self.guarding:
             return
         s = self.cfg["safety"]
@@ -75,13 +77,14 @@ class Controller:
         if self.hp < s["chicken_hp_pct"]:
             self.save_failure(f"chicken_hp{int(self.hp)}")
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
-        if self.hp < s["potion_hp_pct"] and self.clock() - self._last_potion > 1.5:
+        low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
+        if low and self.clock() - self._last_potion > 1.5:
             self._last_potion = self.clock()
             key = self.potion_key()
             if key is None:
                 log.warning("HP %.0f%%: belt is empty", self.hp)
                 return
-            log.info("HP %.0f%% -> potion %s", self.hp, key)
+            log.info("HP %.0f%% MP %.0f%% -> potion %s", self.hp, self.mp, key)
             self._ensure_foreground()
             self.input.press(key)
 
