@@ -105,10 +105,64 @@ def needs_heal(bot: Controller) -> bool:
     return bot.hp is not None and bot.hp < bot.cfg["town"]["heal_below_pct"]
 
 
+def cast_buffs(bot: Controller) -> None:
+    """Cast each buff (select it on right-click, right-click on ourselves), then put Teleport back."""
+    hk = bot.cfg["hotkeys"]
+    for name in hk.get("buffs", []):
+        bot.press(hk["skills"][name])
+        bot.kill.sleep(0.15)
+        bot.click(*bot.cfg["town"]["corpse_click"], "right")
+        bot.kill.sleep(0.7)
+    bot.press(hk["skills"]["teleport"])
+    bot.kill.sleep(0.15)
+
+
+def restock_belt(bot: Controller) -> int:
+    """If any visible belt slot is empty, open the stash (next to the town WP) and shift-click
+    Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
+    from .vision.orbs import belt_slots
+
+    scfg = bot.cfg["stash"]
+    belt = bot.cfg["vision"]["belt"]
+    bot.observe()
+    if all(belt_slots(bot.frame, belt)):
+        return 0
+    bot.click(*scfg["click"])
+    for _ in range(20):
+        bot.kill.sleep(0.3)
+        if bot.find("stash_open.png", region=(165, 16, 110, 42), threshold=0.8) is not None:
+            break
+    else:
+        bot.save_failure("stash_not_opened")
+        log.warning("stash didn't open; skipping restock")
+        return 0
+    bot.click(*scfg["materials_tab"])
+    bot.kill.sleep(0.5)
+    moved = 0
+    for _ in range(scfg.get("max_potions", 16)):
+        bot.input.move(1270, 590)
+        bot.kill.sleep(0.15)
+        if all(belt_slots(bot.capture.grab(), belt)):
+            break
+        bot.input.key_down("shift")
+        bot.kill.sleep(0.05)
+        bot.click(*scfg["full_rejuv"])
+        bot.kill.sleep(0.05)
+        bot.input.key_up("shift")
+        bot.kill.sleep(0.3)
+        moved += 1
+    bot.press("esc")
+    bot.kill.sleep(0.5)
+    log.info("restocked belt with %d potions", moved)
+    return moved
+
+
 def town_to_lower_kurast(bot: Controller) -> None:
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
+    cast_buffs(bot)
     walk_route(bot, tcfg["route"])
+    restock_belt(bot)
     open_town_wp(bot, tcfg)
     bot.click_ui("wp_lower_kurast")
     try:  # the town frame lingers for a moment; wait for the load to actually start

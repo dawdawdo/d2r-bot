@@ -39,7 +39,18 @@ def create_game(bot: Controller, difficulty: str = "hell") -> None:
 def ensure_main_menu(bot: Controller) -> None:
     """Recover to the main menu from whatever state we're in (start of each run)."""
     bot.guard(False)
-    state = bot.wait_for({"title", "main_menu", "in_game", "esc_menu", "difficulty"}, T_LOAD)
+    known = {"title", "main_menu", "in_game", "esc_menu", "difficulty"}
+    deadline = bot.clock() + 90
+    while True:  # right after launch: intro videos/splash screens -> press space to skip
+        state = bot.observe()
+        if state in known:
+            break
+        if bot.clock() > deadline:
+            bot.save_failure("ensure_main_menu_stuck")
+            raise BotError(f"stuck in state {state!r} trying to reach the main menu")
+        if state == "unknown":
+            bot.press("space")
+        bot.kill.sleep(2.0)
     if state == "title":
         to_main_menu(bot)
     elif state == "difficulty":

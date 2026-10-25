@@ -18,6 +18,10 @@ paths:
 hotkeys:
   kill_switch: f12
   teleport: right_click          # Teleport bound to right-click skill
+  # Skill hotkeys (each selects the right-click skill). Read from in-game tooltips 2026-10-25.
+  skills: {frozen_armor: q, energy_shield: w, static_field: e, frozen_orb: a,
+           teleport: s, blizzard: d, ice_blast: f}
+  buffs: [frozen_armor, energy_shield]   # cast at the town spawn every run
   potions: ["1", "2", "3", "4"]
   show_items: alt
 
@@ -56,8 +60,15 @@ town:
 
 debug_loot_frames: false         # save the first loot-scan frame of each chest to fixtures/raw/
 
+# Stash: right next to the town WP; visible at the end of the town route.
+stash:
+  click: [420, 190]             # stash chest, screen coords at the end of the town route
+  materials_tab: [280, 66]
+  full_rejuv: [96, 250]         # Materials tab: Full Rejuvenation Potion stack (shift-click = to belt)
+  max_potions: 16
+
 capture:
-  fps: 2                       # tools/capture.py interval mode
+  fps: 2                      # tools/capture.py interval mode
 
 # Perception. All regions are client-relative [x, y, w, h] at 1280x720.
 # CALIBRATE in M1 from real frames — current numbers are educated guesses.

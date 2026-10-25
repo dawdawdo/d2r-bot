@@ -13,9 +13,9 @@
             "enabled": true,
             "ruleType": "hide",
             "filterEtherealSocketed": false,
-            "itemCategory": ["ammo", "scrlt", "keysr"],
+            "itemCategory": ["ammo", "scrlt"],
             "itemCode": ["hp1", "hp2", "hp3", "hp4", "hp5", "mp1", "mp2", "mp3", "mp4", "mp5",
-                         "rvs", "rvl", "yps", "vps", "wms", "gld",
+                         "yps", "vps", "wms", "gld",
                          "r01", "r02", "r03", "r04", "r05", "r06", "r07", "r08", "r09", "r10",
                          "r11", "r12", "r13"]
         },
@@ -44,6 +44,13 @@
             "filterEtherealSocketed": false,
             "itemCode": ["r14", "r15", "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23",
                          "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31", "r32", "r33"]
+        },
+        {
+            "name": "Show rejuvenation potions and keys",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "itemCode": ["rvs", "rvl", "key"]
         },
         {
             "name": "Show cube gems for rune upgrades",
