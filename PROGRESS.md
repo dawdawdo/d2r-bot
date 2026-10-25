@@ -36,6 +36,15 @@
   now, eventually collect keys and rejuvs from chests (the filter already shows them).
 - Can't read the weekly /usage figure; see the chat.
 
+**Update 2026-10-25 later:**
+- Keys: **24 bought from Lysander (A2)**. Route: town WP → Act II tab → Lut Gholein; Lysander's stall is
+  south-east of the WP; Trade, shift+right-click the key = buy a stack. Must return to A3 via the WP before exiting
+  (new games start in the act you exited from). Hratli's forge was not reachable on foot (automap marker
+  in the east ruin, but he wasn't there).
+- `bot/vision/tooltip.py`: shape-based tooltip detection (dark box + text). Robust to moving NPCs.
+- West bonfire is at about world (-2250, -380) from the LK WP; hut to its NW; Doom Ape champion pack there.
+- Goal recorded: portable Python app (Windows + Linux). Keys target = 12; runes → stash Materials tab.
+
 **Next step:** find more super-chest huts (waiting on Stephen's answer; else keep scouting with
 `explore.py`), add them to route.yaml; then M6 (stuck detection, timeout, 50-run soak).
 
