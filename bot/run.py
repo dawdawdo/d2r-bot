@@ -38,7 +38,7 @@ def main() -> int:
 
     session = start_session()
     cfg = session.cfg
-    backend = open_backend(cfg["game"]["window_title"])
+    backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
     backend.window.focus()

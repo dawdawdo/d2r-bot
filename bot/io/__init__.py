@@ -15,12 +15,13 @@ class Backend:
     hotkeys: HotkeyListener
 
 
-def open_backend(window_title: str) -> Backend:
-    """Open the platform backend attached to the game window."""
+def open_backend(window_title: str, launch_exe: str | None = None) -> Backend:
+    """Open the platform backend attached to the game window, launching the game first
+    if `launch_exe` is given and the window isn't up."""
     if sys.platform == "win32":
-        from .windows import DirectInput, MssCapture, PynputHotkeys, Win32Window
+        from .windows import DirectInput, MssCapture, PynputHotkeys, Win32Window, launch_game
 
-        win = Win32Window(window_title)
+        win = launch_game(launch_exe, window_title) if launch_exe else Win32Window(window_title)
         return Backend(win, MssCapture(win), DirectInput(win), PynputHotkeys())
     raise NotImplementedError(f"no I/O backend for {sys.platform} yet")
 

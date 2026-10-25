@@ -46,6 +46,27 @@ class Win32Window(Window):
         _user32.SetForegroundWindow(self.hwnd)
 
 
+def find_window(title: str) -> bool:
+    return bool(_user32.FindWindowW(None, title))
+
+
+def launch_game(exe: str, title: str, timeout: float = 90.0, args: list[str] | None = None) -> Win32Window:
+    """Start the game (if its window isn't already up) and wait for the window."""
+    import subprocess
+    import time
+    from pathlib import Path
+
+    if not find_window(title):
+        log.info("launching %s", exe)
+        subprocess.Popen([exe, *(args or [])], cwd=str(Path(exe).parent))
+        deadline = time.monotonic() + timeout
+        while not find_window(title):
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"game window {title!r} did not appear within {timeout}s")
+            time.sleep(1)
+    return Win32Window(title)
+
+
 class MssCapture(Capture):
     def __init__(self, window: Window) -> None:
         self.window = window
@@ -95,6 +116,12 @@ class DirectInput(Input):
             self.key_up(k)
         for b in _BUTTONS.values():
             pydirectinput.mouseUp(button=b)
+
+    def cursor_pos(self):
+        pt = wt.POINT()
+        _user32.GetCursorPos(ctypes.byref(pt))
+        wx, wy, _, _ = self.window.client_rect()
+        return pt.x - wx, pt.y - wy
 
 
 class PynputHotkeys(HotkeyListener):

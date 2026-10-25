@@ -2,6 +2,7 @@
 
 game:
   window_title: "Diablo II: Resurrected"   # verify in M1
+  exe: "C:\\Program Files (x86)\\Diablo II Resurrected\\D2R.exe"  # direct launch, no Battle.net (verify)
   resolution: [1280, 720]                   # client area, windowed; verify in M1
   difficulty: hell
   character: Blizzaga                       # most recently played .d2s; confirm with Stephen
@@ -25,8 +26,10 @@ safety:
   run_timeout_s: 180
 
 loot:
-  # Item label colors to pick up (M5). Default until Stephen decides.
-  pick: [unique, set, rune]
+  # The in-game filter (filters/LK Bot.fltr) hides everything except Dol+ runes and unique
+  # rings; the bot then picks up visible labels of these colors. See docs/loot.md.
+  filter_name: "LK Bot"
+  pick: [rune, unique]
 
 # Named click points, client coords at 1280x720. CALIBRATE in M2 from real frames.
 ui:

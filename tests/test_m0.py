@@ -50,6 +50,20 @@ def test_guarded_input_blocks_after_trip_but_releases():
     assert ("click", 1, 1, "left") not in inner.events
 
 
+def test_user_mouse_move_trips_killswitch():
+    k = KillSwitch()
+    inner = FakeInput()
+    inp = GuardedInput(inner, k)
+    inp.click(100, 100)
+    inner.pos = (110, 105)  # small jitter is fine
+    inp.click(200, 200)
+    inner.pos = (700, 50)  # human grabbed the mouse
+    with pytest.raises(KillSwitchTripped, match="mouse moved by user"):
+        inp.click(300, 300)
+    assert k.tripped
+    assert ("click", 300, 300, "left") not in inner.events
+
+
 def test_session_hotkey_trips_killswitch(tmp_path):
     cfg = load_config()
     cfg["paths"]["logs"] = tmp_path / "logs"

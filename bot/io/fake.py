@@ -46,12 +46,18 @@ class FakeInput(Input):
     def __init__(self) -> None:
         self.events: list[tuple] = []
         self.held: set[str] = set()
+        self.pos = (0, 0)
 
     def move(self, x, y):
+        self.pos = (x, y)
         self.events.append(("move", x, y))
 
     def click(self, x, y, button="left"):
+        self.pos = (x, y)
         self.events.append(("click", x, y, button))
+
+    def cursor_pos(self):
+        return self.pos
 
     def key_down(self, key):
         self.held.add(key)
