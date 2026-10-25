@@ -103,6 +103,9 @@ def hp_frame(cfg, pct):
     fill = round(h * pct / 100)
     if fill:
         f[y + h - fill : y + h, x : x + w] = (20, 20, 200)
+    by0, by1 = cfg["vision"]["belt"]["y"]
+    for bx in cfg["vision"]["belt"]["x"][1:]:  # slot 1 empty, 2-4 hold (purple) potions
+        f[by0:by1, bx - 12 : bx + 12] = (200, 40, 160)
     return f
 
 
@@ -119,6 +122,7 @@ def test_guardian(cfg, pct, exc, potions):
     else:
         bot.observe()
     assert sum(1 for e in game.log if e in ("key:1", "key:2", "key:3", "key:4")) == potions
+    assert "key:1" not in game.log  # empty slot is skipped
     bot.guard(False)
     bot.observe()  # never raises when not guarding
 

@@ -20,6 +20,16 @@
                          "r11", "r12", "r13"]
         },
         {
+            "name": "Hide gems",
+            "enabled": true,
+            "ruleType": "hide",
+            "filterEtherealSocketed": false,
+            "itemCode": ["gcv", "gfv", "gsv", "gzv", "gpv", "gcy", "gfy", "gsy", "gly", "gpy",
+                         "gcb", "gfb", "gsb", "glb", "gpb", "gcg", "gfg", "gsg", "glg", "gpg",
+                         "gcr", "gfr", "gsr", "glr", "gpr", "gcw", "gfw", "gsw", "glw", "gpw",
+                         "skc", "skf", "sku", "skl", "skz"]
+        },
+        {
             "name": "Show unique rings",
             "enabled": true,
             "ruleType": "show",

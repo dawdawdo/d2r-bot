@@ -41,5 +41,6 @@ def test_fixture(png, classifier):
             if k in meta:
                 assert abs(pcts[k] - meta[k]) <= ORB_TOL, (k, pcts[k], meta[k])
     if "labels" in meta:
-        found = sorted({l.kind for l in find_labels(frame, CFG["labels"], ignore=CFG["label_ignore"])})
+        kinds = {k: v for k, v in CFG["labels"].items() if k != "white"}  # white = testing-only kind
+        found = sorted({l.kind for l in find_labels(frame, kinds, ignore=CFG["label_ignore"])})
         assert found == meta["labels"]

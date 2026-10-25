@@ -39,37 +39,82 @@ def check_area(bot: Controller, template: str) -> bool:
     """True if the area name (shown top-right only while the automap is open) matches.
 
     Tab toggles the automap and we don't know its current state, so: check, toggle and
-    check, toggle and check. Leaves the automap open on success.
+    check, toggle and check. On success the automap is open, so close it again.
     """
     for i in range(3):
         if i:
             bot.press("tab")
             bot.kill.sleep(0.4)
         if bot.find(template, region=(1100, 20, 180, 70), threshold=0.75) is not None:
+            bot.press("tab")
+            bot.kill.sleep(0.3)
             return True
     return False
 
 
-def recover_corpse_and_heal(bot: Controller) -> None:
+def recover_corpse(bot: Controller) -> None:
     """After a death the corpse lies at the new-game spawn; clicking our own feet picks it up
-    (harmless when there's no corpse). Then top up life with a potion if needed."""
+    (harmless when there's no corpse)."""
     x, y = bot.cfg["town"]["corpse_click"]
     bot.click(x, y)
     bot.kill.sleep(0.8)
     bot.observe()
-    if bot.hp is not None and bot.hp < 90:
-        log.info("HP %.0f%% in town -> potion", bot.hp)
-        bot.press(bot.cfg["hotkeys"]["potions"][0])
-        bot.kill.sleep(1.2)
+
+
+def _tooltip_points(bot: Controller, region, step: int = 30):
+    """Yield hover points in `region` where a name tooltip pops up above the cursor."""
+    import cv2
+    import numpy as np
+
+    rx, ry, rw, rh = region
+    bot.input.move(1270, 590)
+    bot.kill.sleep(0.15)
+    base = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
+    for y in range(ry, ry + rh, step):
+        for x in range(rx, rx + rw, step):
+            bot.input.move(x, y)
+            bot.kill.sleep(0.07)
+            g = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
+            y0, x0 = max(0, y - 140), max(0, x - 120)
+            if (np.abs(g[y0:y, x0 : x + 120] - base[y0:y, x0 : x + 120]) > 60).mean() > 0.02:
+                yield x, y
+
+
+def heal_at_ormus(bot: Controller) -> bool:
+    """Walk toward the plaza, find Ormus by hover, talk to him (heals), close the dialog.
+    The character ends up somewhere near Ormus, so the caller should start a new game."""
+    tcfg = bot.cfg["town"]
+    walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]])
+    for attempt, (x, y) in enumerate(_tooltip_points(bot, tcfg["ormus_region"])):
+        if attempt >= 4:
+            break
+        bot.click(x, y)
+        bot.kill.sleep(2.0)
+        if bot.find("npc_ormus.png", region=(0, 0, 1280, 500), threshold=0.8) is not None:
+            bot.press("esc")
+            log.info("healed by Ormus")
+            return True
+        bot.press("esc")  # someone else's dialog (or nothing); keep looking
+        bot.kill.sleep(0.3)
+    bot.save_failure("ormus_not_found")
+    return False
+
+
+def needs_heal(bot: Controller) -> bool:
+    bot.observe()
+    return bot.hp is not None and bot.hp < bot.cfg["town"]["heal_below_pct"]
 
 
 def town_to_lower_kurast(bot: Controller) -> None:
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
-    recover_corpse_and_heal(bot)
     walk_route(bot, tcfg["route"])
     open_town_wp(bot, tcfg)
     bot.click_ui("wp_lower_kurast")
+    try:  # the town frame lingers for a moment; wait for the load to actually start
+        bot.wait_for("loading", 5, poll=0.05)
+    except BotError:
+        log.info("didn't catch the loading screen (fast load?)")
     bot.wait_for("in_game", 30)
     bot.guard(True)  # out of town from here on
     bot.wait_still(timeout=5)

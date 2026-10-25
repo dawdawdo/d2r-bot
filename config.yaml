@@ -5,7 +5,8 @@ game:
   exe: "C:\\Program Files (x86)\\Diablo II Resurrected\\D2R.exe"  # direct launch, no Battle.net (verify)
   resolution: [1280, 720]                   # client area, windowed; verify in M1
   difficulty: hell
-  character: Blizzaga                       # most recently played .d2s; confirm with Stephen
+  character: Blizzaga
+  route: blizzaga_hell                      # maps/<route>/route.yaml
 
 paths:
   save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
@@ -49,9 +50,14 @@ town:
   wp_click_offset: [35, 40]      # template top-left -> platform center
   wp_threshold: 0.7
   corpse_click: [638, 334]       # character's feet at spawn (where the corpse lies after a death)
+  heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
+  ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs
+  ormus_region: [300, 40, 860, 480]
+
+debug_loot_frames: false         # save the first loot-scan frame of each chest to fixtures/raw/
 
 capture:
-  fps: 2                        # tools/capture.py interval mode
+  fps: 2                       # tools/capture.py interval mode
 
 # Perception. All regions are client-relative [x, y, w, h] at 1280x720.
 # CALIBRATE in M1 from real frames — current numbers are educated guesses.
@@ -65,14 +71,20 @@ vision:
     mp:
       region: [968, 611, 40, 100]
       color: {lo: [105, 120, 60], hi: [130, 255, 255]}   # blue
+  belt:   # visible belt row, slot centers for keys 1-4 (measured 2026-10-25)
+    x: [744, 786, 828, 869]
+    y: [695, 720]
   labels:
     # D2R text colors: unique = muted gold, rune = saturated orange, set = bright green.
     unique: {lo: [15, 60, 120], hi: [28, 165, 255]}
     rune:   {lo: [12, 200, 180], hi: [24, 255, 255]}
     set:    {lo: [50, 150, 150], hi: [70, 255, 255]}
-  label_ignore:                   # HUD (bottom bar + orbs) and the clock (top right)
+    white:  {lo: [0, 0, 200], hi: [179, 30, 255]}        # gold, gems, normal items (testing only)
+  label_ignore:                   # HUD (bottom bar + orbs), the clock (top right), life/mana text
     - [0, 595, 1280, 125]
     - [1140, 10, 140, 40]
+    - [180, 565, 230, 30]
+    - [880, 565, 230, 30]
   # Screen states: list of cues {template, region, threshold}; templates live in
   # bot/assets/templates/. Checked in order; first full match wins.
   states:

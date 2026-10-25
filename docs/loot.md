@@ -20,6 +20,11 @@ Gotchas learned:
   only while D2R is closed.
 - Select a filter: Esc → Loot Filter (640,420) → profile dropdown (558,108).
 
+- Real drop seen 2026-10-25: gold ("967 Gold") still shows (`gld` doesn't hide it) and gems
+  showed because no rule hid them; a "Hide gems" rule was added (installed at the next game restart).
+- Super-chest hut #1 has a **Locked Chest**: opening it uses a key from inventory. Keys run out;
+  restocking (buy from a vendor) needs handling eventually.
+
 Still to verify with real drops: that show rules override earlier hide rules.
 
 Original status: draft. Category and item codes still need checking in-game: whether the

@@ -1,0 +1,14 @@
+# Lower Kurast super-chest route for Blizzaga's current Hell map seed (recorded 2026-10-25).
+# Coordinates: teleport hops are right-click offsets from the character (screen 640,330);
+# chest points are screen coords after the hut's last hop. See docs/M4-navigation.md.
+
+fingerprint:
+  # On arrival at the LK waypoint the platform must match, or the map changed (stop, notify).
+  template: lk_wp.png
+  region: [520, 290, 240, 140]
+  threshold: 0.6
+
+targets:
+  - name: hut1_bonfire_sw          # big thatched hut SW of the WP, bonfire to its NE
+    hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
+    chests: [[690, 344]]           # one Locked Chest (uses a key)

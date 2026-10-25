@@ -13,39 +13,60 @@ import logging
 import time
 
 from .config import ROOT
-from .controller import BotError, Controller
+from .controller import BotError, Chicken, Controller, Died
+from .lk import MapChanged, load_route, run_route
 from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
-from .town import town_to_lower_kurast
+from .town import heal_at_ormus, needs_heal, recover_corpse, town_to_lower_kurast
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
 RUNS_CSV = ROOT / "runs.csv"
-FIELDS = ["start", "duration_s", "result", "error"]
+FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 
-def one_run(bot: Controller, cfg: dict, mode: str) -> None:
+def one_run(bot: Controller, cfg: dict, mode: str) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
-    if mode == "lk":
-        town_to_lower_kurast(bot)
-    else:
-        bot.kill.sleep(1.0)
-    save_and_exit(bot)
+    if mode != "lifecycle":
+        bot.wait_for("in_game", 10)
+        recover_corpse(bot)
+        if needs_heal(bot):
+            log.info("HP %.0f%% at spawn -> heal at Ormus, then a fresh game", bot.hp)
+            heal_at_ormus(bot)
+            save_and_exit(bot)
+            create_game(bot, cfg["game"]["difficulty"])
+    bot._labels_known = False
+    stats: dict = {}
+    try:
+        if mode in ("lk", "chests"):
+            town_to_lower_kurast(bot)
+        if mode == "chests":
+            stats = run_route(bot, load_route(cfg["game"]["route"]))
+        if mode == "lifecycle":
+            bot.kill.sleep(1.0)
+    finally:
+        if bot.state != "main_menu":
+            save_and_exit(bot)
+    return stats
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1)
     ap.add_argument("--max-fail-streak", type=int, default=3)
-    ap.add_argument("--mode", choices=["lifecycle", "lk"], default="lifecycle",
-                    help="lifecycle = M2 create/exit; lk = M3 also walk to WP and go to Lower Kurast")
+    ap.add_argument("--mode", choices=["lifecycle", "lk", "chests"], default="lifecycle",
+                    help="lifecycle = M2 create/exit; lk = M3 town -> Lower Kurast; "
+                         "chests = M4/M5 full run (route, chests, loot)")
+    ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
     args = ap.parse_args()
 
     session = start_session()
     cfg = session.cfg
+    if args.pick:
+        cfg["loot"]["pick"] = args.pick.split(",")
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -61,9 +82,18 @@ def main() -> int:
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
-                    one_run(bot, cfg, args.mode)
+                    stats = one_run(bot, cfg, args.mode)
+                    row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
                     ok += 1
                     streak = 0
+                except MapChanged as e:
+                    row.update(result="map_changed", error=str(e))
+                    w.writerow({**row, "duration_s": round(time.time() - t0, 1)})
+                    log.error("map changed: %s -- stopping; the route needs relearning", e)
+                    break
+                except (Chicken, Died) as e:
+                    row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
+                    log.warning("run %d: %s", i + 1, e)
                 except BotError as e:
                     row.update(result="fail", error=str(e))
                     streak += 1

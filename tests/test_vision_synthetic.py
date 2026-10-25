@@ -9,6 +9,7 @@ from bot.vision.orbs import orb_fill, orb_pcts
 from bot.vision.screen import Cue, ScreenClassifier, is_loading, match_score
 
 CFG = load_config()["vision"]
+CFG["labels"] = {k: v for k, v in CFG["labels"].items() if k != "white"}  # white = testing-only kind
 
 
 def blank(h=720, w=1280, val=20):

@@ -49,7 +49,6 @@ class Controller:
         self.guarding = False
         self.hp: float | None = None
         self._last_potion = -99.0
-        self._potion_i = 0
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
@@ -77,16 +76,48 @@ class Controller:
             self.save_failure(f"chicken_hp{int(self.hp)}")
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
         if self.hp < s["potion_hp_pct"] and self.clock() - self._last_potion > 1.5:
-            key = self.cfg["hotkeys"]["potions"][self._potion_i % len(self.cfg["hotkeys"]["potions"])]
-            log.info("HP %.0f%% -> potion %s", self.hp, key)
-            self._potion_i += 1
             self._last_potion = self.clock()
+            key = self.potion_key()
+            if key is None:
+                log.warning("HP %.0f%%: belt is empty", self.hp)
+                return
+            log.info("HP %.0f%% -> potion %s", self.hp, key)
             self._ensure_foreground()
             self.input.press(key)
+
+    def potion_key(self) -> str | None:
+        """Hotkey of the first belt slot that still holds a potion (None if all empty)."""
+        from .vision.orbs import belt_slots
+
+        frame = self.frame if self.frame is not None else self.capture.grab()
+        for key, full in zip(self.cfg["hotkeys"]["potions"], belt_slots(frame, self.cfg["vision"]["belt"])):
+            if full:
+                return key
+        return None
 
     def check(self) -> None:
         """Cheap guardian tick for tight loops: observe (which runs the HP checks)."""
         self.observe()
+
+    def sleep(self, seconds: float, tick: float = 0.1) -> None:
+        """Kill-switch-aware sleep that keeps checking HP while guarding."""
+        end = self.clock() + seconds
+        while True:
+            left = end - self.clock()
+            if left <= 0:
+                return
+            self.kill.sleep(min(tick, left))
+            if self.guarding:
+                self._guard_frame(self.capture.grab())
+
+    def _guard_frame(self, frame: np.ndarray) -> None:
+        """Run the HP checks on a frame, but only if it really is gameplay (not loading/menus)."""
+        if not self.guarding:
+            return
+        self.frame = frame
+        self.state = self.classifier.classify(frame)
+        if self.state == "in_game":
+            self._check_vitals()
 
     def wait_for(self, states: str | Iterable[str], timeout: float, poll: float | None = None) -> str:
         want = {states} if isinstance(states, str) else set(states)
@@ -104,12 +135,14 @@ class Controller:
     def wait_still(self, timeout: float = 6.0, thresh: float = 2.5, settle: int = 2,
                    poll: float = 0.15, min_wait: float = 0.3) -> bool:
         """Wait until the view stops moving (character finished walking). Returns False on timeout."""
-        self.kill.sleep(min_wait)
+        self.sleep(min_wait)
         deadline = self.clock() + timeout
         prev = None
         calm = 0
         while self.clock() < deadline:
-            f = cv2.resize(self.capture.grab((0, 0, 1280, 590)), (160, 74), interpolation=cv2.INTER_AREA)
+            full = self.capture.grab()
+            self._guard_frame(full)
+            f = cv2.resize(full[:590], (160, 74), interpolation=cv2.INTER_AREA)
             if prev is not None:
                 calm = calm + 1 if np.abs(f.astype(np.int16) - prev).mean() < thresh else 0
                 if calm >= settle:

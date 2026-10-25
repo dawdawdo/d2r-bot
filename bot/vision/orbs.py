@@ -21,6 +21,15 @@ def orb_fill(frame: np.ndarray, region, color_range: dict, row_frac: float = 0.2
     return (len(rows) - top) / len(rows)
 
 
+def belt_slots(frame: np.ndarray, belt_cfg: dict) -> list[bool]:
+    """Which visible belt slots (keys 1-4) hold a potion: potions are saturated, empty slots gray."""
+    import cv2
+
+    y0, y1 = belt_cfg["y"]
+    hsv = cv2.cvtColor(frame[y0:y1], cv2.COLOR_BGR2HSV)
+    return [bool((hsv[:, x - 10 : x + 10, 1] > 120).mean() > 0.15) for x in belt_cfg["x"]]
+
+
 def orb_pcts(frame: np.ndarray, orb_cfg: dict) -> dict[str, float]:
     """{'hp': 0-100, 'mp': 0-100} from config `vision.orbs`."""
     return {
