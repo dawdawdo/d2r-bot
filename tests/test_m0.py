@@ -57,6 +57,8 @@ def test_user_mouse_move_trips_killswitch():
     inp.click(100, 100)
     inner.pos = (110, 105)  # small jitter is fine
     inp.click(200, 200)
+    inner.pos = (440, 200)  # game panel opened: camera + cursor shift 240px right
+    inp.click(250, 250)
     inner.pos = (700, 50)  # human grabbed the mouse
     with pytest.raises(KillSwitchTripped, match="mouse moved by user"):
         inp.click(300, 300)

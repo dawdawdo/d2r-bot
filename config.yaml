@@ -39,10 +39,18 @@ ui:
   difficulty_hell: [636, 390]
   save_and_exit: [640, 314]
   esc_loot_filter: [640, 420]
+  wp_lower_kurast: [190, 314]  # waypoint panel, Act III tab (default when in A3)
   exit_game: [165, 430]        # main menu "Exit Diablo II"
 
+# M3: walking route from the new-game spawn (by Meshif) to the waypoint, recorded 2026-10-25.
+town:
+  route: [[1180, 330], [773, 170], [900, 160], [1050, 170], [810, 250], [1180, 420], [1150, 200]]
+  wp_template: town_wp.png       # platform + right brazier
+  wp_click_offset: [35, 40]      # template top-left -> platform center
+  wp_threshold: 0.7
+
 capture:
-  fps: 2                         # tools/capture.py interval mode
+  fps: 2                        # tools/capture.py interval mode
 
 # Perception. All regions are client-relative [x, y, w, h] at 1280x720.
 # CALIBRATE in M1 from real frames — current numbers are educated guesses.
@@ -72,6 +80,8 @@ vision:
       - {template: difficulty.png, region: [530, 220, 220, 80], threshold: 0.8}
     esc_menu:
       - {template: esc_menu.png, region: [550, 175, 180, 85], threshold: 0.8}
+    wp_menu:
+      - {template: wp_menu.png, region: [45, 5, 360, 60], threshold: 0.8}
     main_menu:
       - {template: main_menu.png, region: [25, 400, 210, 85], threshold: 0.8}
     in_game:

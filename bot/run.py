@@ -1,6 +1,7 @@
 """Bot entry point.
 
   python -m bot.run --runs 20          # M2: create game -> save & exit, N times
+  python -m bot.run --runs 5 --mode lk # M3: ... -> town WP -> Lower Kurast -> save & exit
 
 Backs up saves first, arms F12, logs to logs/, appends one row per run to runs.csv.
 """
@@ -17,6 +18,7 @@ from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
+from .town import town_to_lower_kurast
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
@@ -24,10 +26,13 @@ RUNS_CSV = ROOT / "runs.csv"
 FIELDS = ["start", "duration_s", "result", "error"]
 
 
-def one_run(bot: Controller, cfg: dict) -> None:
+def one_run(bot: Controller, cfg: dict, mode: str) -> None:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
-    bot.kill.sleep(1.0)
+    if mode == "lk":
+        town_to_lower_kurast(bot)
+    else:
+        bot.kill.sleep(1.0)
     save_and_exit(bot)
 
 
@@ -35,6 +40,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1)
     ap.add_argument("--max-fail-streak", type=int, default=3)
+    ap.add_argument("--mode", choices=["lifecycle", "lk"], default="lifecycle",
+                    help="lifecycle = M2 create/exit; lk = M3 also walk to WP and go to Lower Kurast")
     args = ap.parse_args()
 
     session = start_session()
@@ -54,7 +61,7 @@ def main() -> int:
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
-                    one_run(bot, cfg)
+                    one_run(bot, cfg, args.mode)
                     ok += 1
                     streak = 0
                 except BotError as e:

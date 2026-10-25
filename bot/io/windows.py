@@ -126,9 +126,17 @@ class DirectInput(Input):
     def move(self, x, y):
         pydirectinput.moveTo(*self._abs(x, y))
 
-    def click(self, x, y, button="left"):
+    def click(self, x, y, button="left", hover: float = 0.08):
+        # D2R only interacts with an object (waypoint, chest) if the cursor hovered it for a
+        # frame or two before the press; an instant move+click is treated as "walk here".
+        import time
+
         ax, ay = self._abs(x, y)
-        pydirectinput.click(ax, ay, button=_BUTTONS[button])
+        pydirectinput.moveTo(ax, ay)
+        time.sleep(hover)
+        pydirectinput.mouseDown(button=_BUTTONS[button])
+        time.sleep(0.03)
+        pydirectinput.mouseUp(button=_BUTTONS[button])
 
     def key_down(self, key):
         self.held.add(key)

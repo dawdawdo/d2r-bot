@@ -36,6 +36,7 @@ class Controller:
         self.frame: np.ndarray | None = None
         self.state = "unknown"
         self.poll = 0.25  # seconds between observations in wait_for
+        self._templates: dict[str, np.ndarray] = {}
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
@@ -56,6 +57,38 @@ class Controller:
                 self.save_failure(f"wait_for_{'_'.join(sorted(want))}_got_{s}")
                 raise BotError(f"timeout waiting for {sorted(want)}; last state {s!r}")
             self.kill.sleep(poll)
+
+    def wait_still(self, timeout: float = 6.0, thresh: float = 2.5, settle: int = 2,
+                   poll: float = 0.15, min_wait: float = 0.3) -> bool:
+        """Wait until the view stops moving (character finished walking). Returns False on timeout."""
+        self.kill.sleep(min_wait)
+        deadline = self.clock() + timeout
+        prev = None
+        calm = 0
+        while self.clock() < deadline:
+            f = cv2.resize(self.capture.grab((0, 0, 1280, 590)), (160, 74), interpolation=cv2.INTER_AREA)
+            if prev is not None:
+                calm = calm + 1 if np.abs(f.astype(np.int16) - prev).mean() < thresh else 0
+                if calm >= settle:
+                    return True
+            prev = f.astype(np.int16)
+            self.kill.sleep(poll)
+        return False
+
+    def find(self, template: str, region=None, threshold: float = 0.8) -> tuple[int, int] | None:
+        """Top-left of the best match of bot/assets/templates/<template> in the current frame."""
+        from .vision.screen import ASSETS, match_score
+
+        img = self._templates.get(template)
+        if img is None:
+            img = cv2.imread(str(ASSETS / template))
+            if img is None:
+                raise FileNotFoundError(template)
+            self._templates[template] = img
+        self.observe()
+        score, loc = match_score(self.frame, img, region)
+        log.debug("find %s score %.2f at %s", template, score, loc)
+        return loc if score >= threshold else None
 
     # --- action -----------------------------------------------------------
     def _ensure_foreground(self, timeout: float = 5.0) -> None:

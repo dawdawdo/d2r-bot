@@ -1,7 +1,15 @@
 # Progress
 
-**Current milestone:** M3 (town → WP → LK). **M1 done, M2 done: 20/20 live cycles clean
-(about 7.4 s each), 2026-10-25.** Stephen gave the go-ahead to run live (approved remotely).
+**Current milestone:** M4 (find the chest huts). **M1, M2 and M3 done 2026-10-25.** M2: 20/20 live
+cycles (7.4 s). M3: 13/13 town → WP → Lower Kurast (about 22 s per full cycle). Stephen gave
+the go-ahead to run live (approved remotely); PowerShell commands are pre-approved.
+
+**M3 facts:** the town waypoint is east of the temple: a round platform with two blue braziers.
+The vertical blue ring near Ormus and the white ground circle are decoration. The route is
+in config `town.route`. D2R needs a hover before a click to interact (DirectInput.click
+does this). Opening a side panel shifts the camera and cursor by 240 px (the user-mouse
+guard allows exactly that). The automap is set to Full Screen with no transparency; the area name shows
+top-right only while it's open. `python -m bot.run --mode lk`.
 
 **Live facts (2026-10-25):** `D2R.exe` launches directly (no Battle.net). It opens with the
 intro → title "Press any key" → main menu (Offline tab, Blizzaga selected). Window client

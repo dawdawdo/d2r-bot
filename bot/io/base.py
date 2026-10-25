@@ -78,6 +78,10 @@ class GuardedInput(Input):
     i.e. a human has grabbed the mouse.
     """
 
+    # D2R shifts the camera (and warps the cursor with it) by exactly this many pixels
+    # horizontally when a side panel (waypoint, inventory, ...) opens or closes.
+    GAME_WARPS_DX = (240, -240)
+
     def __init__(self, inner: Input, kill, user_move_tol: int = 25) -> None:
         self.inner = inner
         self.kill = kill
@@ -89,9 +93,12 @@ class GuardedInput(Input):
         pos = self.inner.cursor_pos()
         if self.expected is not None and pos is not None:
             dx, dy = pos[0] - self.expected[0], pos[1] - self.expected[1]
-            if dx * dx + dy * dy > self.tol * self.tol:
-                self.kill.trip(f"mouse moved by user (expected {self.expected}, at {pos})")
-                self.kill.check()
+            if dx * dx + dy * dy <= self.tol * self.tol:
+                return
+            if abs(dy) <= 2 and any(abs(dx - w) <= 2 for w in self.GAME_WARPS_DX):
+                return  # panel camera shift, not a human
+            self.kill.trip(f"mouse moved by user (expected {self.expected}, at {pos})")
+            self.kill.check()
 
     def move(self, x, y):
         self._check()
