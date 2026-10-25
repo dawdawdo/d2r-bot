@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(gh *)",
+      "PowerShell(conda run *)",
+      "PowerShell(git init *)"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+# Bot configuration. Values marked "verify in M1" are assumptions until confirmed live.
+
+game:
+  window_title: "Diablo II: Resurrected"   # verify in M1
+  resolution: [1280, 720]                   # client area, windowed; verify in M1
+  difficulty: hell
+  character: Blizzaga                       # most recently played .d2s; confirm with Stephen
+
+paths:
+  save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
+  backups: backups
+  logs: logs
+  raw_frames: fixtures/raw
+  failures: fixtures/failures
+
+hotkeys:
+  kill_switch: f12
+  teleport: right_click          # Teleport bound to right-click skill
+  potions: ["1", "2", "3", "4"]
+  show_items: alt
+
+safety:
+  chicken_hp_pct: 50
+  potion_hp_pct: 70
+  run_timeout_s: 180
+
+loot:
+  # Item label colors to pick up (M5). Default until Stephen decides.
+  pick: [unique, set, rune]
+
+capture:
+  fps: 2                          # tools/capture.py interval mode

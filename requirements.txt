@@ -1,0 +1,8 @@
+# Installed into the existing conda env `d2r` (Python 3.12) with pip.
+mss==10.2.0
+opencv-python==5.0.0.93
+numpy==2.5.4
+pydirectinput==1.0.4
+pynput==1.8.2
+pytest==9.1.1
+pyyaml==6.0.3

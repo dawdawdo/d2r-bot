@@ -1,0 +1,9 @@
+backups/
+fixtures/raw/
+fixtures/failures/
+logs/
+*.d2s
+__pycache__/
+*.pyc
+.pytest_cache/
+runs.csv
