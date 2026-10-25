@@ -67,6 +67,33 @@ def launch_game(exe: str, title: str, timeout: float = 90.0, args: list[str] | N
     return Win32Window(title)
 
 
+class DesktopCapture(Capture):
+    """Whole primary monitor (for diagnostics when the game window isn't found)."""
+
+    def __init__(self) -> None:
+        self.sct = mss.mss()
+
+    def grab(self, region: Region | None = None) -> np.ndarray:
+        mon = self.sct.monitors[1]
+        if region is not None:
+            x, y, w, h = region
+            mon = {"left": mon["left"] + x, "top": mon["top"] + y, "width": w, "height": h}
+        return np.ascontiguousarray(np.asarray(self.sct.grab(mon))[:, :, :3])
+
+    def close(self) -> None:
+        self.sct.close()
+
+
+def window_info(title: str) -> dict | None:
+    if not find_window(title):
+        return None
+    w = Win32Window(title)
+    rc = wt.RECT()
+    _user32.GetWindowRect(w.hwnd, ctypes.byref(rc))
+    return {"client": w.client_rect(), "window": (rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top),
+            "foreground": w.is_foreground()}
+
+
 class MssCapture(Capture):
     def __init__(self, window: Window) -> None:
         self.window = window
@@ -112,10 +139,9 @@ class DirectInput(Input):
         pydirectinput.keyUp(key)
 
     def release_all(self):
+        # Only release what we hold: a stray mouseUp over the desktop opens context menus.
         for k in list(self.held):
             self.key_up(k)
-        for b in _BUTTONS.values():
-            pydirectinput.mouseUp(button=b)
 
     def cursor_pos(self):
         pt = wt.POINT()

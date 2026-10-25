@@ -46,11 +46,12 @@ capture:
 # CALIBRATE in M1 from real frames — current numbers are educated guesses.
 vision:
   orbs:
+    # Measured 2026-10-25 (tools/orb_probe.py): liquid spans y 611..692, centers x 328 / 988.
     hp:
-      region: [40, 600, 90, 105]
+      region: [308, 611, 40, 82]
       color: {lo: [170, 120, 60], hi: [8, 255, 255]}     # red, hue wraps
     mp:
-      region: [1150, 600, 90, 105]
+      region: [968, 611, 40, 82]
       color: {lo: [105, 120, 60], hi: [130, 255, 255]}   # blue
   labels:
     # D2R text colors: unique = muted gold, rune = saturated orange, set = bright green.

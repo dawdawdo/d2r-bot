@@ -12,7 +12,17 @@ the bot picks up every visible label. No OCR or reading of label text needed. As
 check, pickup only clicks labels whose color is rune-orange or unique-gold (or white, for
 gems if enabled).
 
-Status: **draft**. Category and item codes still need checking in-game: whether the
+**Verified 2026-10-25:** installed and selected in-game; all 5 rules load (gem rule off).
+Gotchas learned:
+- Rule **names must not contain `+`**: the game silently drops the whole rule.
+- The game loads `.fltr` files **only at startup** and keeps them in memory; switching
+  profiles or editing in the UI **writes its cached copy over the file**. Install filter files
+  only while D2R is closed.
+- Select a filter: Esc → Loot Filter (640,420) → profile dropdown (558,108).
+
+Still to verify with real drops: that show rules override earlier hide rules.
+
+Original status: draft. Category and item codes still need checking in-game: whether the
 "hide all gear" rule is accepted, and that low runes, potions and gold are hidden. The file
 must sit in the save folder to be selectable, which needs Stephen's OK to add (it's a new
 file there; no save files are touched).

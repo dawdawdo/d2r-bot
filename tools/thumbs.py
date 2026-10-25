@@ -55,6 +55,7 @@ def main() -> int:
     while len(tiles) % args.cols:
         tiles.append(np.zeros_like(tiles[0]))
     rows = [np.hstack(tiles[r : r + args.cols]) for r in range(0, len(tiles), args.cols)]
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(args.out, np.vstack(rows))
     for i, p in enumerate(paths):
         print(i, p)

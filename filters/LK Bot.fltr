@@ -28,7 +28,7 @@
             "equipmentCategory": ["rings"]
         },
         {
-            "name": "Show Dol+ runes",
+            "name": "Show Dol and higher runes",
             "enabled": true,
             "ruleType": "show",
             "filterEtherealSocketed": false,
@@ -36,7 +36,7 @@
                          "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31", "r32", "r33"]
         },
         {
-            "name": "Show cube gems for Dol+ upgrades",
+            "name": "Show cube gems for rune upgrades",
             "enabled": false,
             "ruleType": "show",
             "filterEtherealSocketed": false,

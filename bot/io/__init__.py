@@ -26,6 +26,23 @@ def open_backend(window_title: str, launch_exe: str | None = None) -> Backend:
     raise NotImplementedError(f"no I/O backend for {sys.platform} yet")
 
 
+def open_desktop_capture() -> Capture:
+    if sys.platform == "win32":
+        from .windows import DesktopCapture
+
+        return DesktopCapture()
+    raise NotImplementedError(sys.platform)
+
+
+def window_info(title: str) -> dict | None:
+    """{'client': rect, 'window': rect, 'foreground': bool} or None if not found."""
+    if sys.platform == "win32":
+        from .windows import window_info as wi
+
+        return wi(title)
+    raise NotImplementedError(sys.platform)
+
+
 def open_hotkeys() -> HotkeyListener:
     """Hotkey listener alone (doesn't need the game window)."""
     if sys.platform == "win32":
