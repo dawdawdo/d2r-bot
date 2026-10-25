@@ -64,7 +64,7 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         pts += [(px, py) for px, py in ring if 20 < px < 1260 and 60 < py < 560]
     base = None
     for i, (px, py) in enumerate(pts):
-        if i % 8 == 0:
+        if i % 6 == 0:
             bot.check()
             bot.input.move(1270, 590)
             bot.sleep(0.12)

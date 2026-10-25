@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from bot.controller import BotError, Controller  # noqa: E402
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
-from bot.nav import Odometer, scan_tooltips, teleport_to  # noqa: E402
+from bot.nav import Odometer, fight, scan_tooltips, teleport_to  # noqa: E402
 from bot.session import start_session  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
@@ -41,6 +41,8 @@ def main() -> int:
         for i, t in enumerate(args.targets.split()):
             tx, ty = map(float, t.split(","))
             ok = teleport_to(bot, odo, (tx, ty))
+            fight(bot)
+            odo.update(b.capture.grab())
             view = b.capture.grab()
             hits = scan_tooltips(bot)
             print(f"target {i} ({tx:.0f},{ty:.0f}) reached={ok} at {odo.pos.round().tolist()} "

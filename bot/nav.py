@@ -74,6 +74,46 @@ def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hop
     return False
 
 
+def movers(bot: Controller, gap: float = 0.18, min_area: int = 250) -> list[tuple[int, int, int]]:
+    """Moving blobs (monsters) between two frames `gap` s apart, excluding the character.
+    Returns [(x, y, area)] sorted by area, largest first."""
+    a = cv2.cvtColor(bot.capture.grab()[:VIEW_H], cv2.COLOR_BGR2GRAY)
+    bot.sleep(gap)
+    f = bot.capture.grab()
+    b = cv2.cvtColor(f[:VIEW_H], cv2.COLOR_BGR2GRAY)
+    d = (cv2.absdiff(a, b) > 25).astype(np.uint8)
+    d[CENTER[1] - 70 : CENTER[1] + 40, CENTER[0] - 40 : CENTER[0] + 40] = 0  # our own sprite/effects
+    d[:40, 1100:] = 0  # clock
+    d = cv2.morphologyEx(d, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+    n, _, st, cen = cv2.connectedComponentsWithStats(d)
+    out = [(int(cen[i][0]), int(cen[i][1]), int(st[i][4])) for i in range(1, n) if st[i][4] >= min_area]
+    return sorted(out, key=lambda t: -t[2])
+
+
+def fight(bot: Controller, max_casts: int = 8) -> int:
+    """Cast Frozen Orb at moving monsters until nothing moves (or max_casts). Restores Teleport."""
+    sk = bot.cfg["hotkeys"]["skills"]
+    casts = 0
+    quiet = 0
+    bot.press(sk["frozen_orb"])
+    try:
+        while casts < max_casts and quiet < 2:
+            m = movers(bot)
+            if not m:
+                quiet += 1
+                continue
+            quiet = 0
+            x, y, _ = m[0]
+            bot.click(x, y, "right")
+            casts += 1
+            bot.sleep(0.5)
+    finally:
+        bot.press(sk["teleport"])
+    if casts:
+        log.info("fight: %d frozen orbs", casts)
+    return casts
+
+
 def world_to_screen(odo: Odometer, wx: float, wy: float) -> tuple[int, int]:
     return int(CENTER[0] + wx - odo.pos[0]), int(CENTER[1] + wy - odo.pos[1])
 
@@ -87,7 +127,9 @@ def scan_tooltips(bot: Controller, region=(160, 60, 960, 500), step: int = 40) -
         bot.input.move(1270, 590)
         bot.sleep(0.12)
         base = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
-        for x in range(rx, rx + rw, step):
+        for i, x in enumerate(range(rx, rx + rw, step)):
+            if i and i % 6 == 0:
+                bot.check()  # HP guardian every ~0.5 s
             bot.input.move(x, y)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
