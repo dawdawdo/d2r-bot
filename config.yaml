@@ -56,12 +56,13 @@ capture:
 # CALIBRATE in M1 from real frames — current numbers are educated guesses.
 vision:
   orbs:
-    # Measured 2026-10-25 (tools/orb_probe.py): liquid spans y 611..692, centers x 328 / 988.
+    # Measured 2026-10-25 (tools/orb_probe.py): full liquid top y 611, centers x 328 / 988.
+    # The effective bottom is y 711 (hidden by the orb frame): 350/635 HP (55%) has its top at y 656.
     hp:
-      region: [308, 611, 40, 82]
+      region: [308, 611, 40, 100]
       color: {lo: [170, 120, 60], hi: [8, 255, 255]}     # red, hue wraps
     mp:
-      region: [968, 611, 40, 82]
+      region: [968, 611, 40, 100]
       color: {lo: [105, 120, 60], hi: [130, 255, 255]}   # blue
   labels:
     # D2R text colors: unique = muted gold, rune = saturated orange, set = bright green.
