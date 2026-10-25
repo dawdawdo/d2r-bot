@@ -38,6 +38,7 @@ def create_game(bot: Controller, difficulty: str = "hell") -> None:
 
 def ensure_main_menu(bot: Controller) -> None:
     """Recover to the main menu from whatever state we're in (start of each run)."""
+    bot.guard(False)
     state = bot.wait_for({"title", "main_menu", "in_game", "esc_menu", "difficulty"}, T_LOAD)
     if state == "title":
         to_main_menu(bot)
@@ -52,6 +53,7 @@ def ensure_main_menu(bot: Controller) -> None:
 
 
 def save_and_exit(bot: Controller) -> None:
+    bot.guard(False)  # we're leaving; don't raise Chicken while trying to exit
     for attempt in range(3):
         bot.press("esc")
         try:

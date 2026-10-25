@@ -50,13 +50,28 @@ def check_area(bot: Controller, template: str) -> bool:
     return False
 
 
+def recover_corpse_and_heal(bot: Controller) -> None:
+    """After a death the corpse lies at the new-game spawn; clicking our own feet picks it up
+    (harmless when there's no corpse). Then top up life with a potion if needed."""
+    x, y = bot.cfg["town"]["corpse_click"]
+    bot.click(x, y)
+    bot.kill.sleep(0.8)
+    bot.observe()
+    if bot.hp is not None and bot.hp < 90:
+        log.info("HP %.0f%% in town -> potion", bot.hp)
+        bot.press(bot.cfg["hotkeys"]["potions"][0])
+        bot.kill.sleep(1.2)
+
+
 def town_to_lower_kurast(bot: Controller) -> None:
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
+    recover_corpse_and_heal(bot)
     walk_route(bot, tcfg["route"])
     open_town_wp(bot, tcfg)
     bot.click_ui("wp_lower_kurast")
     bot.wait_for("in_game", 30)
+    bot.guard(True)  # out of town from here on
     bot.wait_still(timeout=5)
     if not check_area(bot, "area_lower_kurast.png"):
         bot.save_failure("not_in_lower_kurast")

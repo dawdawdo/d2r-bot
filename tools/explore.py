@@ -22,7 +22,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.config import load_config  # noqa: E402
-from bot.controller import Controller  # noqa: E402
+from bot.controller import BotError, Controller  # noqa: E402
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
@@ -65,6 +65,29 @@ def find_fires(frame: np.ndarray, min_area: int = 120) -> list[tuple[int, int, i
     return [(int(cen[i][0]), int(cen[i][1]), int(st[i][4])) for i in range(1, n) if st[i][4] >= min_area]
 
 
+def hover_names(bot, b, step: int = 40, region=(200, 60, 880, 500)) -> list:
+    """Hover a grid; where a name tooltip (dark box with light text) pops up, record it.
+    Quick: one grab per point. Returns [(x, y, tooltip_crop)]."""
+    rx, ry, rw, rh = region
+    bot.input.move(1270, 590)
+    bot.kill.sleep(0.15)
+    base = cv2.cvtColor(b.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
+    hits = []
+    for y in range(ry, ry + rh, step):
+        bot.check()  # HP guardian (potion / chicken / death) once per row
+        for x in range(rx, rx + rw, step):
+            bot.input.move(x, y)
+            bot.kill.sleep(0.09)
+            f = b.capture.grab()
+            g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.int16)
+            y0, x0 = max(0, y - 90), max(0, x - 120)
+            d = np.abs(g[y0:y, x0 : x + 120] - base[y0:y, x0 : x + 120])
+            if (d > 60).mean() > 0.02:
+                hits.append((x, y, cv2.resize(f[y0:y, x0 : x + 120], (240, 90))))
+    bot.input.move(1270, 590)
+    return hits
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--hops", required=True)
@@ -72,6 +95,11 @@ def main() -> int:
     ap.add_argument("--scale", type=float, default=0.25, help="stitched map scale")
     ap.add_argument("--name", default="lk_scout")
     ap.add_argument("--settle", type=float, default=0.45)
+    ap.add_argument("--snap", action="store_true", help="save every hop's full frame to fixtures/raw/")
+    ap.add_argument("--then", default="",
+                    help="actions after the hops, e.g. 'click:600,500 wait:1.5 snap:a rclick:700,400 key:alt'")
+    ap.add_argument("--hover-scan", action="store_true",
+                    help="after the last hop, hover-scan the view for interactables (chests)")
     ap.add_argument("--stay", action="store_true",
                     help="don't save & exit at the end (DANGEROUS: idle characters die in Hell)")
     args = ap.parse_args()
@@ -104,6 +132,7 @@ def main() -> int:
 
     try:
         bot.release_all()
+        bot.guard(True)
         frame = b.capture.grab()
         paste(frame)
         prev = gray_small(frame, 0.5)
@@ -147,8 +176,37 @@ def main() -> int:
                   f"resp={resp:.2f} hp={hp} mp={mp}")
             paste(frame)
             prev = cur
+            if args.snap:
+                cv2.imwrite(f"fixtures/raw/{args.name}_{i:02d}.png", frame)
+        for a in args.then.split():
+            kind, _, rest = a.partition(":")
+            if kind in ("click", "rclick"):
+                x, y = map(int, rest.split(","))
+                bot.click(x, y, "right" if kind == "rclick" else "left")
+            elif kind == "key":
+                bot.press(rest)
+            elif kind == "wait":
+                s.kill.sleep(float(rest))
+            elif kind == "snap":
+                f = b.capture.grab()
+                cv2.imwrite(f"fixtures/raw/{args.name}_{rest}.png", f)
+                cv2.imwrite(f"scratch/{args.name}_{rest}.png", cv2.resize(f, None, fx=0.5, fy=0.5))
+                print(f"snap {rest}  hp={orb_pcts(f, cfg['vision']['orbs'])['hp']}")
+            if orb_pcts(b.capture.grab(), cfg["vision"]["orbs"])["hp"] < 45:
+                print("HP low during actions -> save & exit")
+                break
+        if args.hover_scan and not s.kill.tripped:
+            hits = hover_names(bot, b)
+            for x, y, crop in hits:
+                print(f"interactable at ({x},{y})")
+            if hits:
+                strip = np.vstack([c for _, _, c in hits[:8]])
+                cv2.imwrite(f"scratch/{args.name}_hover.png", strip)
+    except BotError as e:
+        print("guardian:", e)
     finally:
         bot.release_all()
+        bot.guard(False)
         if not args.stay and not s.kill.tripped:
             try:
                 if bot.observe() == "in_game":

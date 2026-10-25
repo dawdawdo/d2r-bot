@@ -48,6 +48,7 @@ town:
   wp_template: town_wp.png       # platform + right brazier
   wp_click_offset: [35, 40]      # template top-left -> platform center
   wp_threshold: 0.7
+  corpse_click: [638, 334]       # character's feet at spawn (where the corpse lies after a death)
 
 capture:
   fps: 2                        # tools/capture.py interval mode
@@ -79,8 +80,8 @@ vision:
       - {template: title.png, region: [450, 540, 380, 80], threshold: 0.8}
     difficulty:
       - {template: difficulty.png, region: [530, 220, 220, 80], threshold: 0.8}
-    esc_menu:
-      - {template: esc_menu.png, region: [550, 175, 180, 85], threshold: 0.8}
+    esc_menu:   # the opaque "Save and Exit" button text (the "Paused" title is see-through)
+      - {template: esc_menu.png, region: [573, 296, 134, 42], threshold: 0.8}
     wp_menu:
       - {template: wp_menu.png, region: [45, 5, 360, 60], threshold: 0.8}
     main_menu:

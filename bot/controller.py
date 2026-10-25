@@ -23,6 +23,14 @@ class BotError(RuntimeError):
     """A step failed (timeout, unexpected screen). The run should be aborted/recovered."""
 
 
+class Chicken(BotError):
+    """HP fell below the chicken threshold: leave the game now."""
+
+
+class Died(BotError):
+    """HP orb is empty: the character is dead."""
+
+
 class Controller:
     def __init__(self, window: Window, capture: Capture, inp: Input, classifier, kill: KillSwitch,
                  cfg: dict, clock=time.monotonic) -> None:
@@ -37,13 +45,48 @@ class Controller:
         self.state = "unknown"
         self.poll = 0.25  # seconds between observations in wait_for
         self._templates: dict[str, np.ndarray] = {}
+        # HP guardian: active only while out of town (enable with guard(True)).
+        self.guarding = False
+        self.hp: float | None = None
+        self._last_potion = -99.0
+        self._potion_i = 0
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
         self.kill.check()
         self.frame = self.capture.grab()
         self.state = self.classifier.classify(self.frame)
+        if self.state == "in_game":
+            self._check_vitals()
         return self.state
+
+    def guard(self, on: bool) -> None:
+        self.guarding = on
+
+    def _check_vitals(self) -> None:
+        from .vision.orbs import orb_pcts
+
+        self.hp = orb_pcts(self.frame, self.cfg["vision"]["orbs"])["hp"]
+        if not self.guarding:
+            return
+        s = self.cfg["safety"]
+        if self.hp <= 1:
+            self.save_failure("died")
+            raise Died("HP orb empty")
+        if self.hp < s["chicken_hp_pct"]:
+            self.save_failure(f"chicken_hp{int(self.hp)}")
+            raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
+        if self.hp < s["potion_hp_pct"] and self.clock() - self._last_potion > 1.5:
+            key = self.cfg["hotkeys"]["potions"][self._potion_i % len(self.cfg["hotkeys"]["potions"])]
+            log.info("HP %.0f%% -> potion %s", self.hp, key)
+            self._potion_i += 1
+            self._last_potion = self.clock()
+            self._ensure_foreground()
+            self.input.press(key)
+
+    def check(self) -> None:
+        """Cheap guardian tick for tight loops: observe (which runs the HP checks)."""
+        self.observe()
 
     def wait_for(self, states: str | Iterable[str], timeout: float, poll: float | None = None) -> str:
         want = {states} if isinstance(states, str) else set(states)
@@ -99,6 +142,8 @@ class Controller:
             self.kill.sleep(0.25)
 
     def click(self, x: int, y: int, button: str = "left") -> None:
+        if self.guarding:
+            self.observe()
         self._ensure_foreground()
         self.input.click(x, y, button)
 

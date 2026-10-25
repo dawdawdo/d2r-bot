@@ -97,6 +97,32 @@ def test_ensure_main_menu_recovers(cfg, start):
     assert game.state == "main_menu"
 
 
+def hp_frame(cfg, pct):
+    f = np.zeros((720, 1280, 3), np.uint8)
+    x, y, w, h = cfg["vision"]["orbs"]["hp"]["region"]
+    fill = round(h * pct / 100)
+    if fill:
+        f[y + h - fill : y + h, x : x + w] = (20, 20, 200)
+    return f
+
+
+@pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (60, None, 1), (40, "Chicken", 0), (0, "Died", 0)])
+def test_guardian(cfg, pct, exc, potions):
+    from bot import controller as C
+
+    game = SimGame(cfg["ui"], state="in_game")
+    bot = Controller(FakeWindow(), FakeCapture([hp_frame(cfg, pct)]), game, game, KillSwitch(), cfg)
+    bot.guard(True)
+    if exc:
+        with pytest.raises(getattr(C, exc)):
+            bot.observe()
+    else:
+        bot.observe()
+    assert sum(1 for e in game.log if e in ("key:1", "key:2", "key:3", "key:4")) == potions
+    bot.guard(False)
+    bot.observe()  # never raises when not guarding
+
+
 def test_create_game_refuses_when_in_game(cfg):
     bot = make_bot(cfg, SimGame(cfg["ui"], state="in_game"))
     with pytest.raises(BotError):
