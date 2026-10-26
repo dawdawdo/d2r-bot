@@ -19,7 +19,8 @@ from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
-from .town import heal_at_ormus, needs_heal, recover_corpse, repair_at_hratli, town_to_lower_kurast
+from . import state
+from .town import heal_at_ormus, needs_heal, recover_corpse, repair_at_hratli, set_players, town_to_lower_kurast
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
@@ -27,12 +28,16 @@ RUNS_CSV = ROOT / "runs.csv"
 FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 
-def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False) -> dict:
+def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
+            players: int | None = None) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
         bot.wait_for("in_game", 10)
+        if players:
+            set_players(bot, players)
         recover_corpse(bot)
+        repair = repair or buy_keys  # same vendor
         if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:
                 log.info("HP %.0f%% at spawn -> heal at Ormus", bot.hp)
@@ -41,7 +46,8 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False) -> dict
                     save_and_exit(bot)
                     create_game(bot, cfg["game"]["difficulty"])
             if repair:
-                repair_at_hratli(bot)
+                if repair_at_hratli(bot, keys=buy_keys) and buy_keys:
+                    bot.keys_left = cfg["town"]["keys_full"]
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
     bot._labels_known = False
@@ -79,6 +85,8 @@ def main() -> int:
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
     backend.window.focus()
+    bot.keys_left = state.load().get("keys_left")  # estimate; None = unknown -> buy on the first run
+    log.info("keys left (estimate): %s", bot.keys_left)
     new_file = not RUNS_CSV.exists()
     ok = streak = 0
     try:
@@ -90,8 +98,17 @@ def main() -> int:
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
-                    repair = args.mode == "chests" and i % cfg["town"]["repair_every"] == 0
-                    stats = one_run(bot, cfg, args.mode, repair=repair)
+                    chests = args.mode == "chests"
+                    repair = chests and i % cfg["town"]["repair_every"] == 0
+                    keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
+                    bot.keys_used = 0
+                    try:
+                        stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
+                                        players=cfg["game"].get("players") if i == 0 else None)
+                    finally:  # keys are spent even if the run then chickens
+                        if bot.keys_left is not None:
+                            bot.keys_left = max(0, bot.keys_left - bot.keys_used)
+                        state.save({**state.load(), "keys_left": bot.keys_left})
                     row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
                     ok += 1
                     streak = 0

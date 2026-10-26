@@ -26,9 +26,33 @@ class MapChanged(BotError):
     """Arrival view doesn't match the stored map fingerprint: route is stale."""
 
 
+# Bonfire camp layout, as offsets from the bonfire (world px, measured at the east camp 2026-10-26
+# and matching the west camp within ~25 px): where to stand, and where the chest is.
+BONFIRE_LAYOUT = {
+    "nw":      {"stand": (-421, -191), "chest": (-582, -281)},  # hut NW of the fire, near its door
+    "nw_deep": {"stand": (-784, -373), "chest": (-957, -376)},  # same hut, far end
+    "ne":      {"stand": (711, -281),  "chest": (850, -333)},   # hut NE of the fire
+}
+
+
+def bonfire_targets(camp: dict) -> list[dict]:
+    """Expand a route `bonfires` entry into world targets (one per chest spot)."""
+    bx, by = camp["world"]
+    out = []
+    for slot in camp.get("order", list(BONFIRE_LAYOUT)):
+        lay = BONFIRE_LAYOUT[slot]
+        out.append({"name": f"{camp['name']}_{slot}", "bonfire": [bx, by],
+                    "world": [bx + lay["stand"][0], by + lay["stand"][1]],
+                    "chests_world": [[bx + lay["chest"][0], by + lay["chest"][1]]]})
+    return out
+
+
 def load_route(name: str) -> dict:
     route = yaml.safe_load((ROOT / "maps" / name / "route.yaml").read_text())
     route.setdefault("name", name)
+    route["targets"] = list(route.get("targets") or [])
+    for camp in route.get("bonfires", []):
+        route["targets"] += bonfire_targets(camp)
     return route
 
 
@@ -83,6 +107,9 @@ def _is_chest(frame: np.ndarray, box) -> bool:
     return False
 
 
+LOCKED_MIN_W = 110  # tooltip box px: "Chest" is ~60-80 wide, "Locked Chest" about twice that
+
+
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> tuple[int, int] | None:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
     tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found."""
@@ -107,6 +134,9 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         if box is not None:
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
+            log.info("chest tooltip %dx%d", box[2], box[3])
+            if box[2] > LOCKED_MIN_W:  # "Locked Chest" tooltip: opening it uses a key
+                bot.keys_used = getattr(bot, "keys_used", 0) + 1
             bot.click(px, py)
             bot.wait_still(timeout=2.5, min_wait=0.6)
             return px, py

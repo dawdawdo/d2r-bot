@@ -8,32 +8,21 @@ fingerprint:
   region: [520, 290, 240, 140]
   threshold: 0.6
 
+# Super-chest bonfire camps: every camp has the same layout (bot/lk.py BONFIRE_LAYOUT), so a camp
+# is just its bonfire's world position + the order to visit its 3 chest spots (Stephen, 2026-10-26).
+bonfires:
+  - name: east
+    world: [1629, 776]
+    order: [nw, nw_deep, ne]
+  - name: west
+    world: [-2208, -389]
+    order: [ne, nw, nw_deep]
+
+# Other targets (visited before the camps).
 targets:
   - name: hut1_bonfire_sw          # big thatched hut SW of the WP (the "bonfire" NE of it is a WP brazier)
     hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
     chests: [[690, 344]]           # one Locked Chest (uses a key)
-  # Bonfire targets: `world` = where to stand, `bonfire` = landmark to re-anchor odometry on,
-  # `chests_world` = hover points that showed a "Chest" tooltip (scouted 2026-10-25 with tools/visit.py).
-  - name: hut3_bonfire_e           # hut NW of the east bonfire
-    world: [1208, 585]
-    bonfire: [1629, 776]
-    chests_world: [[1048, 495]]
-  - name: hut3_deep                # 2nd chest in the same hut, deep inside (Stephen spotted it missed)
-    world: [845, 403]
-    bonfire: [1629, 776]
-    chests_world: [[672, 400]]
-  - name: east_bonfire_ne          # hut NE of the east bonfire
-    world: [2340, 495]
-    bonfire: [1629, 776]
-    chests_world: [[2480, 445]]
-  - name: west_bonfire_ne          # hut NE of the west bonfire
-    world: [-1514, -617]
-    bonfire: [-2208, -389]
-    chests_world: [[-1374, -707]]
-  - name: hut2_bonfire_w           # hut NW of the west bonfire; Doom Ape champions nearby
-    world: [-2611, -557]
-    bonfire: [-2208, -389]
-    chests_world: [[-2711, -667]]
   # Disabled: the scout saw a "Chest" tooltip here, but the live run didn't find it (23:43), and
   # the bonfire itself is the most dangerous spot (Doom Ape champions). Re-scout before enabling.
   # - name: east_bonfire_e

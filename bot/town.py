@@ -126,6 +126,29 @@ def heal_at_ormus(bot: Controller) -> bool:
     return False
 
 
+def chat(bot: Controller, text: str) -> None:
+    """Type a chat line / command (Enter, text, Enter)."""
+    names = {" ": "space", "/": "/"}
+    bot.press("enter")
+    bot.kill.sleep(0.3)
+    for ch in text:
+        bot.press(names.get(ch, ch))
+        bot.kill.sleep(0.04)
+    bot.press("enter")
+    bot.kill.sleep(0.3)
+
+
+def set_players(bot: Controller, n: int) -> None:
+    """/players N: monster difficulty of an N-player game (chest loot unaffected, per Stephen).
+    Holds until D2R exits, so once per bot session is enough."""
+    chat(bot, f"/players {n}")
+    bot.kill.sleep(0.3)
+    import cv2
+
+    cv2.imwrite(str(bot.cfg["paths"]["raw_frames"] / "players_set.png"), bot.capture.grab())  # evidence
+    log.info("set /players %d", n)
+
+
 def buy_keys(bot: Controller, h: dict) -> None:
     """Trade window open: Misc tab, shift+right-click the key = buy a stack (tops the inventory
     stack up; Stephen: keys ran out)."""
@@ -140,7 +163,7 @@ def buy_keys(bot: Controller, h: dict) -> None:
     log.info("bought keys")
 
 
-def repair_at_hratli(bot: Controller) -> bool:
+def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
     """From spawn: walk past Ormus, SE over the bridge, NE at the landing to Hratli's forge
     (route from Stephen, recorded 2026-10-26), open Trade/Repair, Repair All. Like the Ormus detour,
     this leaves us far from the WP, so the caller should start a new game."""
@@ -169,7 +192,8 @@ def repair_at_hratli(bot: Controller) -> bool:
             return False
         bot.click(*h["repair_all"])
         bot.kill.sleep(1.0)
-        buy_keys(bot, h)
+        if keys:
+            buy_keys(bot, h)
         bot.press("esc")
         bot.kill.sleep(0.5)
         log.info("repaired at Hratli")
