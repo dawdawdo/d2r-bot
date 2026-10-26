@@ -11,9 +11,10 @@ import numpy as np
 def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: int = 140) -> tuple[int, int, int, int] | None:
     """Look for a tooltip box in the area above (x, y). Returns its (x, y, w, h) or None."""
     x0, y0 = max(0, x - half_w), max(0, y - above)
-    roi = cv2.cvtColor(frame[y0:y, x0 : x + half_w], cv2.COLOR_BGR2GRAY)
-    if roi.size == 0:
+    crop = frame[y0:y, x0 : x + half_w]
+    if crop.size == 0:  # cursor at/over the top or left edge
         return None
+    roi = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     # Tooltip boxes are pure black (~0-3); scenery shadows rarely are, so a low threshold keeps
     # the box from merging with dark surroundings.
     dark = (roi < 8).astype(np.uint8)

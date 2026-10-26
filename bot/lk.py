@@ -88,9 +88,12 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
     tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found."""
     pts = [(x, y)]
     for r in range(step, radius + 1, step):
-        ring = [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
+        pts += [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
                 if max(abs(dx), abs(dy)) == r]
-        pts += [(px, py) for px, py in ring if 20 < px < 1260 and 60 < py < 560]
+    pts = [(px, py) for px, py in pts if 20 < px < 1260 and 60 < py < 560]
+    if not pts:
+        log.warning("chest point (%d, %d) is off screen: odometry is off", x, y)
+        return None
     from .vision.tooltip import find_tooltip
 
     for i, (px, py) in enumerate(pts):

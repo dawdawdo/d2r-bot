@@ -162,6 +162,9 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
     fires = [f for f in find_fires(frame) if f[2] >= BONFIRE_AREA]
     if not fires:
         log.info("anchor: no bonfire in view (predicted at %d,%d)", px, py)
+        if 100 < px < 1180 and 80 < py < 520 and not odo.lost:  # it should be right there
+            log.warning("odometry lost: bonfire should be in view but isn't")
+            odo.lost = True
         return False
     fx, fy, _ = min(fires, key=lambda f: math.hypot(f[0] - px, f[1] - py))
     err = math.hypot(fx - px, fy - py)

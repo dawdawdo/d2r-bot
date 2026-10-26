@@ -103,7 +103,11 @@ def main() -> int:
                 except (Chicken, Died) as e:
                     row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
                     log.warning("run %d: %s", i + 1, e)
-                except BotError as e:
+                except KillSwitchTripped:
+                    raise
+                except Exception as e:  # noqa: BLE001 - one bad run must not end an unattended soak
+                    if not isinstance(e, BotError):
+                        log.exception("run %d: unexpected error", i + 1)
                     row.update(result="timeout" if isinstance(e, RunTimeout) else "fail", error=str(e))
                     streak += 1
                     log.error("run %d failed: %s", i + 1, e)
