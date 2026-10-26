@@ -15,23 +15,27 @@
 - Game window refocuses itself when a popup steals focus (AttachThreadInput trick).
 - Guardian: potion at HP < 70% or MP < 25%, chicken at HP < 50% or ES broken (MP < 8% and HP < 75%), death, run timeout.
 
+**Fixed 2026-10-26 evening (last 12 runs: 6,6,6,4,6,6,6,6 chests on the ok runs; best 53 s):**
+- Desktop right-click: blocked-teleport detours rotated hops off the window bottom -> desktop menu stole
+  focus every run. Rotated hops re-limited; `Controller.click` clamps to the client; focus thief is logged.
+- "Entering Lower Kurast" banner pinned odometry at zero on the first hops: soft mask over static overlays.
+- Lost odometry: spiral bonfire search (`nav.search_bonfire`) instead of skipping the rest; no blind 30 s
+  chest scan while lost; long legs (camp to camp) count toward re-anchoring. Lost hops save a frame pair.
+- Every "unique" pick ever was gold coins between labels. Labels now need 13 px text height. Real loot so far:
+  a Hel rune (18:15). Pick frames are saved clean with the box in the file name.
+
 **Broken / risks:**
-- **Stash is out of Full Rejuvs.** Belt restock now falls back to plain Rejuvs (`stash.rejuv_slots`); only ~1 left.
-  Stephen's choice: no buying; sustain from chest drops (not built yet; see next step). MP threshold back to 25%
-  (45% burned all 98 rejuvs in a few hours).
-- **Odometry loss cascades:** once lost with no bonfire in view, every later target is skipped (0–1 chest runs).
-  Triggers: when-struck Teleport item jumps, and focus loss mid-teleport. Needs a recovery (e.g. go back toward
-  the last good position / the camp's bonfire with a wider search) instead of skipping.
-- Chickens still ~1 in 4–6 runs (ES broken at the camps). Stephen: speed is the cure; keep cutting LK time.
-- Game window lost focus 3× in 20 min on 2026-10-26 (Zoom reminder toast, then unknown while Stephen was on the PC).
+- **Stash is out of rejuvs completely** (belt restock = 0). Chickens will rise until chest pickup of rejuvs exists.
+- Chickens ~1 in 4-6 runs (ES broken at the camps).
+- Occasional silent odometry error (no "lost" flag), fixed at the next bonfire anchor; costs that one chest.
+- 1 fail "town waypoint not visible at end of route" in the last 15.
 
 **Next step:**
-1. Odometry-loss recovery (biggest chest loss now).
-2. Chest pickup of keys + rejuvs: white labels; widths measured live: "Key" 37 px, "Rejuvenation" 133 px,
-   "Potion" 68 px, "Gold" 51 px, gold amounts 32–49 px. Merc name label "Waheed" is also 51 px (top-left: ignore).
-   Keys: count +1; rejuvs: only when the belt has room. Templates better than widths.
-3. More speed: `open_chest` ~1.5–2.8 s per chest (hover-scan rings), town walk 12.5 s (7 legs).
-4. Soak (foreground, 3 runs per command; see memory note on the reaper).
+1. Chest pickup of rejuvs (belt is empty) + keys: white labels; widths measured live: "Key" 37 px,
+   "Rejuvenation" 133 px, "Potion" 68 px, "Gold" 51 px, gold amounts 32-49 px. Merc name "Waheed" 51 px
+   (top-left: ignore). Templates better than widths.
+2. More speed: `open_chest` ~1.5-2.8 s per chest (hover-scan rings), town walk 12.5 s (7 legs).
+3. Soak (foreground, 3 runs per command; see memory note on the reaper).
 
 **Open questions for Stephen:** none right now.
 
