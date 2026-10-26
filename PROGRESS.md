@@ -45,7 +45,22 @@
 - West bonfire is at about world (-2250, -380) from the LK WP; hut to its NW; Doom Ape champion pack there.
 - Goal recorded: portable Python app (Windows + Linux). Keys target = 12; runes → stash Materials tab.
 
-**Next step:** find more super-chest huts (waiting on Stephen's answer; else keep scouting with
+**Session end 2026-10-25 ~20:33 (Stephen pressed F12; he needed the PC). Game may be left mid-run.**
+- Route now has 3 huts (hut1 SW near the WP, hut3 east bonfire, hut2 west bonfire), with world-coord targets
+  via odometry. Best runs: **3 chests per run** (20:20-20:22). Chest search reads tooltip text
+  (tt_chest*.png templates) so Armor Stands are skipped.
+- **Stephen: each bonfire has THREE super chests** (I only open one per hut). Next: scan each bonfire
+  hut fully (tools/visit.py), record all chest world coords, add them to route.yaml.
+- Late runs often missed the hut2/hut3 chests (search started 70+ px off): odometry drift after
+  fighting/potions. Fix idea: re-anchor on the bonfire (fire blob) before searching for chests.
+- One more death (champion Doom Ape pack at hut3, 20:23). Added: guardian check on every chest-scan
+  point and an energy-shield-broken chicken (MP < 8% and HP < 75%). Gold was lost on death; corpse picked up at the next spawn.
+- `hot_movers` skip rule disabled: the motion detector counts orb shards/torches. Needs a real
+  monster detector.
+- One "unique" pick was a false positive (nothing new in the inventory). Valuable picks now save an
+  evidence frame `fixtures/raw/pick_*.png`.
+
+**Next step:** add all 3 chests per bonfire hut; re-anchor odometry on the bonfire; then M6 soak. (waiting on Stephen's answer; else keep scouting with
 `explore.py`), add them to route.yaml; then M6 (stuck detection, timeout, 50-run soak).
 
 **Open questions for Stephen:**

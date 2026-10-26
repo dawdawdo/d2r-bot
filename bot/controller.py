@@ -77,6 +77,10 @@ class Controller:
         if self.hp < s["chicken_hp_pct"]:
             self.save_failure(f"chicken_hp{int(self.hp)}")
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
+        # Energy Shield gone (mana empty) while already hurt: life falls very fast from here.
+        if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):
+            self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
+            raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
         low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
         if low and self.clock() - self._last_potion > 1.5:
             self._last_potion = self.clock()

@@ -111,6 +111,19 @@ def hp_frame(cfg, pct):
     return f
 
 
+def test_guardian_es_broken(cfg):
+    from bot import controller as C
+
+    f = hp_frame(cfg, 70)
+    mx, my, mw, mh = cfg["vision"]["orbs"]["mp"]["region"]
+    f[my : my + mh, mx : mx + mw] = 0  # mana empty
+    game = SimGame(cfg["ui"], state="in_game")
+    bot = Controller(FakeWindow(), FakeCapture([f]), game, game, KillSwitch(), cfg)
+    bot.guard(True)
+    with pytest.raises(C.Chicken, match="energy shield"):
+        bot.observe()
+
+
 @pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (60, None, 1), (40, "Chicken", 0), (0, "Died", 0)])
 def test_guardian(cfg, pct, exc, potions):
     from bot import controller as C

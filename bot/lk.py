@@ -92,8 +92,7 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
     from .vision.tooltip import find_tooltip
 
     for i, (px, py) in enumerate(pts):
-        if i % 6 == 0:
-            bot.check()
+        bot.check()  # every point: bursts from champion packs kill in about a second
         bot.input.move(px, py)
         bot.kill.sleep(0.09)
         f = bot.capture.grab()
@@ -174,7 +173,7 @@ def run_route(bot: Controller, route: dict) -> dict:
     or `world` (teleport_to target, world coords from the WP arrival view) + `chests_world`.
     Odometry runs throughout, so both kinds can be mixed in one route.
     """
-    from .nav import Odometer, fight, hop, teleport_to, world_to_screen
+    from .nav import Odometer, fight, hop, movers, teleport_to, world_to_screen
 
     check_fingerprint(bot, route)
     stats = {"chests": 0, "picked": []}
@@ -187,6 +186,11 @@ def run_route(bot: Controller, route: dict) -> dict:
             if t.get("fight", True):
                 fight(bot)
                 odo.update(bot.capture.grab())
+                n = len(movers(bot))
+                if n >= bot.cfg["safety"].get("hot_movers", 99):
+                    log.warning("%s: %d monsters still active -> skipping", t["name"], n)
+                    stats.setdefault("skipped", []).append(t["name"])
+                    continue
             points = [world_to_screen(odo, *c) for c in t["chests_world"]]
         else:
             for dx, dy in t["hops"]:

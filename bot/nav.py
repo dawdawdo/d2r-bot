@@ -90,7 +90,7 @@ def movers(bot: Controller, gap: float = 0.18, min_area: int = 250) -> list[tupl
     return sorted(out, key=lambda t: -t[2])
 
 
-def fight(bot: Controller, max_casts: int = 8) -> int:
+def fight(bot: Controller, max_casts: int = 4) -> int:
     """Cast Frozen Orb at moving monsters until nothing moves (or max_casts). Restores Teleport."""
     sk = bot.cfg["hotkeys"]["skills"]
     casts = 0
