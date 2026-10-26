@@ -43,7 +43,21 @@ class Win32Window(Window):
         return _user32.GetForegroundWindow() == self.hwnd
 
     def focus(self) -> None:
-        _user32.SetForegroundWindow(self.hwnd)
+        """Windows refuses SetForegroundWindow from a background process unless its input is
+        attached to the current foreground thread (a toast or a desktop menu had focus 2026-10-26)."""
+        fg = _user32.GetForegroundWindow()
+        if fg == self.hwnd:
+            return
+        me = ctypes.windll.kernel32.GetCurrentThreadId()
+        other = _user32.GetWindowThreadProcessId(fg, None) if fg else 0
+        attached = bool(other) and other != me and _user32.AttachThreadInput(me, other, True)
+        try:
+            _user32.ShowWindow(self.hwnd, 9)  # SW_RESTORE
+            _user32.BringWindowToTop(self.hwnd)
+            _user32.SetForegroundWindow(self.hwnd)
+        finally:
+            if attached:
+                _user32.AttachThreadInput(me, other, False)
 
 
 def find_window(title: str) -> bool:

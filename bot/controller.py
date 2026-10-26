@@ -187,17 +187,20 @@ class Controller:
 
     # --- action -----------------------------------------------------------
     def _ensure_foreground(self, timeout: float = 5.0) -> None:
+        """Popups (notifications, a desktop menu) steal focus: take it back, or give up after `timeout`."""
         deadline = self.clock() + timeout
         while not self.window.is_foreground():
             if self.clock() >= deadline:
                 raise BotError("game window is not in the foreground; refusing to send input")
+            log.info("game window lost focus; refocusing")
+            self.window.focus()
             self.kill.sleep(0.25)
 
-    def click(self, x: int, y: int, button: str = "left") -> None:
+    def click(self, x: int, y: int, button: str = "left", hover: float = 0.08) -> None:
         if self.guarding:
             self.observe()
         self._ensure_foreground()
-        self.input.click(x, y, button)
+        self.input.click(x, y, button, hover)
 
     def click_ui(self, name: str) -> None:
         """Click a named point from config `ui` (client coords)."""

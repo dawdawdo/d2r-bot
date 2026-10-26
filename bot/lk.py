@@ -19,7 +19,7 @@ from .vision.labels import find_labels
 log = logging.getLogger(__name__)
 
 CENTER = (640, 330)  # character's screen position
-TP_SETTLE = 0.45     # seconds per teleport (cast + landing)
+TP_SETTLE = 0.2      # seconds per teleport (cast + landing); see nav.TP_SETTLE
 
 
 class MapChanged(BotError):
@@ -277,7 +277,7 @@ def run_route(bot: Controller, route: dict) -> dict:
     odometry only when it's lost or has drifted a while; if the bonfire isn't visible from the stand
     point, it's visited first. Where chests were actually found is learned (maps/<route>/learned.json).
     """
-    from .nav import CENTER as C, Odometer, fight, hop, reanchor, teleport_to, world_to_screen
+    from .nav import CENTER as C, Odometer, bonfire_stand, fight, hop, reanchor, teleport_to, world_to_screen
 
     check_fingerprint(bot, route)
     learned = load_learned(route)
@@ -289,7 +289,7 @@ def run_route(bot: Controller, route: dict) -> dict:
             bf = t.get("bonfire")
             need_anchor = bf is not None and (odo.lost or odo.since_anchor > REANCHOR_AFTER)
             if need_anchor and not _in_view(t["world"], bf):
-                teleport_to(bot, odo, bf, tol=150)  # bonfire first, then the stand point
+                teleport_to(bot, odo, bonfire_stand(bf), tol=120)  # bonfire first, then the stand point
                 need_anchor = not reanchor(bot, odo, bf)
             if not teleport_to(bot, odo, t["world"]):
                 gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))

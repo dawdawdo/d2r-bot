@@ -1,4 +1,4 @@
-# Bot configuration. Values marked "verify in M1" are assumptions until confirmed live.
+﻿# Bot configuration. Values marked "verify in M1" are assumptions until confirmed live.
 
 game:
   window_title: "Diablo II: Resurrected"   # verify in M1
@@ -29,8 +29,8 @@ hotkeys:
 safety:
   chicken_hp_pct: 50
   potion_hp_pct: 70
-  potion_mp_pct: 45    # Energy Shield turns damage into mana loss: keep mana high (all chickens had MP 0)
-  potion_cooldown_s: 0.7  # a rejuv refills instantly; champion packs drain 45% mana in about a second
+  potion_mp_pct: 25    # was 45 (2026-10-26 morning): burned all 98 stash rejuvs in a few hours
+  potion_cooldown_s: 1.5
   es_broken_mp_pct: 8  # chicken if mana < 8% AND life < 75% (shield gone under attack)
   es_broken_hp_pct: 75
   hot_movers: 99       # DISABLED: nav.movers() counts orb shards/torch flicker as monsters (8-28 blobs
@@ -80,21 +80,20 @@ town:
     resurrect_offset: [38, 53]     # "Resurrect <merc>" relative to the npc_asheara.png match (dialog line 2)
   merc_region: [0, 0, 78, 74]    # merc portrait (top-left) shows only while the merc is alive
 
-debug_loot_frames: false         # save the first loot-scan frame of each chest to fixtures/raw/
+debug_loot_frames: false        # save the first loot-scan frame of each chest to fixtures/raw/
 
 # Stash: right next to the town WP; visible at the end of the town route.
 stash:
   click: [420, 190]             # stash chest, screen coords at the end of the town route
   materials_tab: [280, 66]
-  full_rejuv: [57, 250]         # Materials tab: first slot of the potion row (98 Full Rejuvs, 2026-10-26).
-                                # Was [96, 250] = the empty slot beside it: restocks silently did nothing.
+  rejuv_slots: [[57, 250], [96, 250]]  # Materials tab potion row: Full Rejuvs, then Rejuvs (stash out of Full 2026-10-26)
   max_potions: 16
 
 capture:
   fps: 2                      # tools/capture.py interval mode
 
 # Perception. All regions are client-relative [x, y, w, h] at 1280x720.
-# CALIBRATE in M1 from real frames — current numbers are educated guesses.
+# CALIBRATE in M1 from real frames â€” current numbers are educated guesses.
 vision:
   orbs:
     # Measured 2026-10-25 (tools/orb_probe.py): full liquid top y 611, centers x 328 / 988.

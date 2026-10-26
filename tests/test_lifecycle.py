@@ -30,7 +30,7 @@ class SimGame(Input):
         self.pending = ["loading"] * self.load_frames
         self.state = state
 
-    def click(self, x, y, button="left"):
+    def click(self, x, y, button="left", hover=0.08):
         name = self.ui.get((x, y), f"({x},{y})")
         self.log.append(name)
         if self.state == "main_menu" and name == "play":
@@ -178,6 +178,23 @@ def test_no_input_when_window_not_foreground(cfg):
     with pytest.raises(BotError, match="foreground"):
         bot.click_ui("play")
     assert game.log == []
+
+
+def test_refocuses_when_focus_stolen(cfg):
+    class Stolen(FakeWindow):  # a popup has focus until we call focus()
+        fg = False
+
+        def is_foreground(self):
+            return self.fg
+
+        def focus(self):
+            self.fg = True
+
+    game = SimGame(cfg["ui"])
+    bot = make_bot(cfg, game, window=Stolen(), clock=TickClock(0.5))
+    bot.kill.sleep = lambda s: None
+    bot.click_ui("play")
+    assert game.log
 
 
 def test_kill_switch_stops_lifecycle(cfg):

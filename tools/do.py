@@ -9,6 +9,7 @@ town_to_lower_kurast, recover_corpse.
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -29,6 +30,7 @@ def main() -> int:
     b.window.focus()
     try:
         for step in sys.argv[1:]:
+            t0 = time.perf_counter()
             name, _, arg = step.partition(":")
             if name == "walk_route":
                 legs = cfg["town"]["route"][: int(arg)] if arg else cfg["town"]["route"]
@@ -39,7 +41,7 @@ def main() -> int:
                 getattr(town, name)(bot)
             else:
                 getattr(lifecycle, name)(bot)
-            print("done", step)
+            print(f"done {step} in {time.perf_counter() - t0:.1f}s")
     finally:
         bot.release_all()
         s.close()

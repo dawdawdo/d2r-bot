@@ -303,14 +303,23 @@ def restock_belt(bot: Controller) -> int:
     bot.click(*scfg["materials_tab"])
     bot.kill.sleep(0.5)
     moved = 0
+    slots = list(scfg["rejuv_slots"])
+    prev = None
     for _ in range(scfg.get("max_potions", 16)):
         bot.input.move(1270, 590)
         bot.kill.sleep(0.15)
-        if all(belt_slots(bot.capture.grab(), belt)):
+        now = belt_slots(bot.capture.grab(), belt)
+        if all(now):
             break
+        if now == prev:  # last click moved nothing: that stash slot is empty, try the next
+            slots.pop(0)
+            moved -= 1
+            if not slots:
+                break
+        prev = now
         bot.input.key_down("shift")
         bot.kill.sleep(0.05)
-        bot.click(*scfg["full_rejuv"])
+        bot.click(*slots[0])
         bot.kill.sleep(0.05)
         bot.input.key_up("shift")
         bot.kill.sleep(0.3)

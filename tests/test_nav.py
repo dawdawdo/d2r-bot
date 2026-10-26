@@ -55,6 +55,6 @@ def test_anchor_bonfire_none_in_view():
     frame = view(0, 0, [(700, 200, 6)])  # only a torch
     odo = Odometer(frame)
     odo.pos = np.array([10.0, 10.0])
-    bot = SimpleNamespace(capture=FakeCapture([frame]))
+    bot = SimpleNamespace(capture=FakeCapture([frame]), save_failure=lambda note: None)
     assert not anchor_bonfire(bot, odo, (500, 100))
     assert np.allclose(odo.pos, (10, 10), atol=3)

@@ -40,7 +40,8 @@ class Input(ABC):
     def move(self, x: int, y: int) -> None: ...
 
     @abstractmethod
-    def click(self, x: int, y: int, button: str = "left") -> None: ...
+    def click(self, x: int, y: int, button: str = "left", hover: float = 0.08) -> None:
+        """`hover` = seconds the cursor rests before the press (objects need it; teleport doesn't)."""
 
     @abstractmethod
     def key_down(self, key: str) -> None: ...
@@ -105,9 +106,9 @@ class GuardedInput(Input):
         self.inner.move(x, y)
         self.expected = (x, y)
 
-    def click(self, x, y, button="left"):
+    def click(self, x, y, button="left", hover=0.08):
         self._check()
-        self.inner.click(x, y, button)
+        self.inner.click(x, y, button, hover)
         self.expected = (x, y)
 
     def key_down(self, key):

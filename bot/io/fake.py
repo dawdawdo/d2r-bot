@@ -52,7 +52,7 @@ class FakeInput(Input):
         self.pos = (x, y)
         self.events.append(("move", x, y))
 
-    def click(self, x, y, button="left"):
+    def click(self, x, y, button="left", hover=0.08):
         self.pos = (x, y)
         self.events.append(("click", x, y, button))
 

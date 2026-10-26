@@ -18,8 +18,8 @@ log = logging.getLogger(__name__)
 
 CENTER = (640, 330)
 VIEW_H = 590
-MAX_HOP = 300
-TP_SETTLE = 0.45
+MAX_HOP = 420     # live 2026-10-26: 450 px hops tracked fine, 520 px lost tracking
+TP_SETTLE = 0.2  # live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/10 (tools/tp_rate.py)
 
 
 def _small(frame: np.ndarray) -> np.ndarray:
@@ -62,7 +62,7 @@ class Odometer:
 
 
 def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, float]:
-    bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right")
+    bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
     bot.sleep(TP_SETTLE)
     return odo.update(bot.capture.grab())
 
@@ -164,6 +164,7 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
         log.info("anchor: no bonfire in view (predicted at %d,%d)", px, py)
         if 100 < px < 1180 and 80 < py < 520 and not odo.lost:  # it should be right there
             log.warning("odometry lost: bonfire should be in view but isn't")
+            bot.save_failure("bonfire_missing")
             odo.lost = True
         return False
     fx, fy, _ = min(fires, key=lambda f: math.hypot(f[0] - px, f[1] - py))
@@ -178,12 +179,20 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
     return True
 
 
+ANCHOR_STAND = (0, 160)  # look at the bonfire from just south of it: standing on it, we (and the
+                         # merc) hide the flames and it reads as torch-sized (live 2026-10-26)
+
+
+def bonfire_stand(bonfire_world) -> tuple[float, float]:
+    return bonfire_world[0] + ANCHOR_STAND[0], bonfire_world[1] + ANCHOR_STAND[1]
+
+
 def reanchor(bot: Controller, odo: Odometer, bonfire_world) -> bool:
     """anchor_bonfire; if the bonfire isn't in view, teleport to where odometry thinks it is and
     look again (after a jump the estimate is off, but usually by less than a screen)."""
     if anchor_bonfire(bot, odo, bonfire_world):
         return True
-    teleport_to(bot, odo, bonfire_world, tol=150, max_hops=8)
+    teleport_to(bot, odo, bonfire_stand(bonfire_world), tol=120, max_hops=8)
     return anchor_bonfire(bot, odo, bonfire_world)
 
 
