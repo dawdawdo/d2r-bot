@@ -1,6 +1,6 @@
 # Progress
 
-**Current milestone:** M4/M5 (chests + loot) working for **1 chest**; needs more huts. M1–M3 done.
+**Current milestone:** M4/M5: route has **6 chests** (5–6 per clean run). M1–M3 done. Next: M6 soak.
 
 **Works (2026-10-25, live):**
 - `python -m bot.run --runs N --mode chests`: launch/recover → Hell game → corpse pickup at spawn →
@@ -66,8 +66,23 @@
   search; if no landmark is found, go back toward the last good position, else skip the hut. Fallback:
   Stephen removes the item.
 
-**Next step:** add all 3 chests per bonfire hut; jump detection + bonfire re-anchoring; then M6 soak. (waiting on Stephen's answer; else keep scouting with
-`explore.py`), add them to route.yaml; then M6 (stuck detection, timeout, 50-run soak).
+**Session 2026-10-25 23:10 → 10-26 (Stephen: "pick up where you left off"):**
+- Odometry: `Odometer.lost` flags untrustworthy steps (phase-corr response < 0.04 or a step near the
+  wrap limit: > 520 px across / 280 px down); `teleport_to` caps vertical hops at 220 px. `fight()`
+  feeds odometry every frame. Bonfire targets re-anchor (`nav.reanchor`) before the chest search;
+  corrections are usually < 15 px, and live jumps of 600 px were caught and recovered.
+- Chests scouted (`tools/visit.py --bonfire=x,y` prints chest world coords): east bonfire NW hut +
+  NE hut; west bonfire NW hut + NE hut; a chest W of the WP by the hollow logs. The "bonfire" by hut1
+  is really the WP braziers. The east chest just E of the bonfire was seen once, then not found live:
+  disabled in route.yaml. West bonfire 3rd chest: not found yet (SE hut has a closed roof; entrance unknown).
+- **Big bug found:** belt restock clicked the empty slot beside the rejuv stack, so it never moved a
+  potion (98 Full Rejuvs still in stash). All of today's chickens ran on an empty belt. Fixed
+  (`stash.full_rejuv: [57, 250]`). The stash is now found by template (`town_stash.png`) with
+  Esc+retry when Cain stands on it; walk_route re-clicks a leg if the view didn't move.
+- One unique pick: evidence in `fixtures/raw/pick_unique_1025-234423.png` (not verified).
+
+**Next step:** M6: stuck detection, per-run timeout, 50-run soak with runs.csv. Optional: find the
+west bonfire's 3rd chest and re-check the east-bonfire E chest.
 
 **Open questions for Stephen:**
 - Where are the super-chest huts relative to the LK waypoint?

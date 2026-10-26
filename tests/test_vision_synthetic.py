@@ -44,7 +44,7 @@ def bgr_from_rgb(r, g, b):
 def draw_label(f, text, org, rgb):
     (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
     x, y = org
-    cv2.rectangle(f, (x - 4, y - th - 4), (x + tw + 4, y + 4), (10, 10, 10), -1)
+    cv2.rectangle(f, (x - 4, y - th - 4), (x + tw + 4, y + 7), (10, 10, 10), -1)  # room for descenders
     cv2.putText(f, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr_from_rgb(*rgb), 1, cv2.LINE_AA)
 
 

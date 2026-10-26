@@ -27,7 +27,8 @@ class Label:
 
 
 def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 6,
-                max_h: int = 30, ignore: list | None = None, max_bg: float = 45.0) -> list[Label]:
+                max_h: int = 30, ignore: list | None = None, max_bg: float = 45.0,
+                min_pad_dark: float = 0.6) -> list[Label]:
     """`kinds` maps kind -> HSV range. `ignore` = list of (x, y, w, h) regions (HUD etc.).
     Labels sit on a dark backdrop box, so candidates whose non-text pixels are brighter
     than `max_bg` (gray mean) are rejected."""
@@ -49,6 +50,12 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
                 continue
             bg = gray[y : y + h, x : x + w][~text]
             if bg.size and bg.mean() > max_bg:
+                continue
+            # The backdrop box extends a few px above and below the text. Gold piles and other
+            # yellowish ground sprites pass the color test but have lit ground there.
+            pad = np.concatenate([gray[max(0, y - 3) : max(0, y - 1), x : x + w].ravel(),
+                                  gray[y + h + 1 : y + h + 3, x : x + w].ravel()])
+            if pad.size and (pad < 25).mean() < min_pad_dark:
                 continue
             out.append(Label(kind, int(x), int(y), int(w), int(h)))
     return sorted(out, key=lambda l: (l.y, l.x))

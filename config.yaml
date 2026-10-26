@@ -69,7 +69,8 @@ debug_loot_frames: false         # save the first loot-scan frame of each chest 
 stash:
   click: [420, 190]             # stash chest, screen coords at the end of the town route
   materials_tab: [280, 66]
-  full_rejuv: [96, 250]         # Materials tab: Full Rejuvenation Potion stack (shift-click = to belt)
+  full_rejuv: [57, 250]         # Materials tab: first slot of the potion row (98 Full Rejuvs, 2026-10-26).
+                                # Was [96, 250] = the empty slot beside it: restocks silently did nothing.
   max_potions: 16
 
 capture:

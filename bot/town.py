@@ -7,16 +7,30 @@ from __future__ import annotations
 
 import logging
 
+import numpy as np
+
 from .controller import BotError, Controller
 
 log = logging.getLogger(__name__)
 
 
-def walk_route(bot: Controller, route: list) -> None:
+def _view_moved(a: np.ndarray, b: np.ndarray) -> bool:
+    return float(np.abs(a[:560].astype(np.int16) - b[:560]).mean()) > 4
+
+
+def walk_route(bot: Controller, route: list, retries: int = 2) -> None:
+    """Click each leg in turn. If the view didn't move (click swallowed right after the game
+    loads, or a wandering NPC was in the way), click the leg again."""
     for i, (x, y) in enumerate(route):
-        bot.click(x, y)
-        if not bot.wait_still(timeout=6):
-            log.info("leg %d: view still moving after timeout", i)
+        for attempt in range(retries + 1):
+            before = bot.capture.grab()
+            bot.click(x, y)
+            if not bot.wait_still(timeout=6):
+                log.info("leg %d: view still moving after timeout", i)
+            if _view_moved(before, bot.capture.grab()):
+                break
+            log.info("leg %d: didn't move (attempt %d), clicking again", i, attempt + 1)
+            bot.kill.sleep(0.5)
 
 
 def open_town_wp(bot: Controller, tcfg: dict) -> None:
@@ -64,7 +78,6 @@ def recover_corpse(bot: Controller) -> None:
 def _tooltip_points(bot: Controller, region, step: int = 30):
     """Yield hover points in `region` where a name tooltip pops up above the cursor."""
     import cv2
-    import numpy as np
 
     rx, ry, rw, rh = region
     bot.input.move(1270, 590)
@@ -117,6 +130,31 @@ def cast_buffs(bot: Controller) -> None:
     bot.kill.sleep(0.15)
 
 
+def open_stash(bot: Controller, attempts: int = 3) -> bool:
+    """Click the stash chest (found by template; the route's end point varies by a few dozen px)
+    and wait for its panel. An NPC (often Cain) standing on it eats the click and opens a dialog:
+    close it with Esc and try again."""
+    scfg = bot.cfg["stash"]
+    for attempt in range(attempts):
+        loc = bot.find("town_stash.png", region=(0, 0, 1280, 560), threshold=0.75)
+        if loc is not None:
+            x, y = loc[0] + 25, loc[1] + 28  # template is 50x48; click the chest's lower middle
+        else:
+            log.info("stash template not found; clicking the configured spot")
+            x, y = scfg["click"]
+        bot.click(x, y)
+        for _ in range(12):
+            bot.kill.sleep(0.3)
+            if bot.find("stash_open.png", region=(165, 16, 110, 42), threshold=0.8) is not None:
+                return True
+        log.info("stash didn't open (attempt %d)", attempt + 1)
+        bot.press("esc")  # close an NPC dialog if we clicked one
+        bot.kill.sleep(1.0)
+    bot.save_failure("stash_not_opened")
+    log.warning("stash didn't open; skipping restock")
+    return False
+
+
 def restock_belt(bot: Controller) -> int:
     """If any visible belt slot is empty, open the stash (next to the town WP) and shift-click
     Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
@@ -127,14 +165,7 @@ def restock_belt(bot: Controller) -> int:
     bot.observe()
     if all(belt_slots(bot.frame, belt)):
         return 0
-    bot.click(*scfg["click"])
-    for _ in range(20):
-        bot.kill.sleep(0.3)
-        if bot.find("stash_open.png", region=(165, 16, 110, 42), threshold=0.8) is not None:
-            break
-    else:
-        bot.save_failure("stash_not_opened")
-        log.warning("stash didn't open; skipping restock")
+    if not open_stash(bot):
         return 0
     bot.click(*scfg["materials_tab"])
     bot.kill.sleep(0.5)
@@ -151,6 +182,10 @@ def restock_belt(bot: Controller) -> int:
         bot.input.key_up("shift")
         bot.kill.sleep(0.3)
         moved += 1
+    else:
+        bot.observe()
+        bot.save_failure("belt_not_full_after_restock")
+        log.warning("belt still not full after %d clicks: stash out of Full Rejuvs?", moved)
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("restocked belt with %d potions", moved)
