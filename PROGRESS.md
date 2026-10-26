@@ -60,7 +60,13 @@
 - One "unique" pick was a false positive (nothing new in the inventory). Valuable picks now save an
   evidence frame `fixtures/raw/pick_*.png`.
 
-**Next step:** add all 3 chests per bonfire hut; re-anchor odometry on the bonfire; then M6 soak. (waiting on Stephen's answer; else keep scouting with
+- **Stephen: Blizzaga has an item that casts Teleport when she's struck** → random jumps during fights.
+  This likely causes the odometry "drift". Plan (agreed): keep the item; detect jumps (big shift or low
+  phase-correlation response), then re-anchor on a landmark (bonfire / LK WP) before every chest
+  search; if no landmark is found, go back toward the last good position, else skip the hut. Fallback:
+  Stephen removes the item.
+
+**Next step:** add all 3 chests per bonfire hut; jump detection + bonfire re-anchoring; then M6 soak. (waiting on Stephen's answer; else keep scouting with
 `explore.py`), add them to route.yaml; then M6 (stuck detection, timeout, 50-run soak).
 
 **Open questions for Stephen:**
