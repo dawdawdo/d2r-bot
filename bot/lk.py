@@ -196,8 +196,13 @@ def run_route(bot: Controller, route: dict) -> dict:
                     log.warning("%s: odometry lost and no bonfire in view -> skipping", t["name"])
                     stats.setdefault("skipped", []).append(t["name"])
                     continue
-                if not teleport_to(bot, odo, t["world"], tol=40):  # anchoring may have moved the goal
-                    continue
+                # Anchoring shifts our position estimate, so close the gap again. Teleports can't
+                # land closer than ~50 px; the chest search tolerates ~200 px, so go on anyway.
+                if not teleport_to(bot, odo, t["world"]):
+                    gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))
+                    if gap > 200:
+                        continue
+                    log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
             points = [world_to_screen(odo, *c) for c in t["chests_world"]]
         else:
             for dx, dy in t["hops"]:

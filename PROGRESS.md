@@ -85,8 +85,12 @@
   (label detector now requires the dark backdrop above/below the text; `tests/test_labels_real.py`).
 - Per-run timeout enforced: `safety.run_timeout_s` (180 s for the LK part) -> `RunTimeout`, logged as
   `timeout` in runs.csv.
-- 00:24: a 10-run soak was killed by Claude Code (system low on memory; D2R uses ~2 GB) before
-  the first game started. Not restarted; waiting for Stephen.
+- Background soaks get killed by Claude Code when memory is low (D2R launch spike). Memory hogs are idle apps:
+  vmmem VM ~4 GB (likely the Claude desktop sandbox), D2R ~3 GB, ChatGPT ~1.9 GB, Steam ~1.4 GB. Stephen
+  will close Steam + ChatGPT. Workaround: launch D2R detached, run soaks in the FOREGROUND, 3 runs/command.
+- 2026-10-26 05:00-05:13: 6 runs: 4 ok (6, 1, 3, 6 chests), 2 chickens (ES broken). The 1/3-chest runs
+  were huts skipped after re-anchoring (post-anchor tolerance 40 px was too tight; fixed). Chickens are
+  now the main loss: ~1 in 3 runs, all "energy shield broken" at the bonfires.
 
 **Next step:** M6: 50-run soak with runs.csv (re-run `python -m bot.run --runs 10 --mode chests` first). Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
