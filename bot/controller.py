@@ -88,7 +88,7 @@ class Controller:
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
         low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
-        if low and self.clock() - self._last_potion > 1.5:
+        if low and self.clock() - self._last_potion > self.cfg["safety"].get("potion_cooldown_s", 1.5):
             self._last_potion = self.clock()
             key = self.potion_key()
             if key is None:

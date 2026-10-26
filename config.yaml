@@ -29,7 +29,8 @@ hotkeys:
 safety:
   chicken_hp_pct: 50
   potion_hp_pct: 70
-  potion_mp_pct: 25    # Energy Shield turns damage into mana loss, so low mana is dangerous too
+  potion_mp_pct: 45    # Energy Shield turns damage into mana loss: keep mana high (all chickens had MP 0)
+  potion_cooldown_s: 0.7  # a rejuv refills instantly; champion packs drain 45% mana in about a second
   es_broken_mp_pct: 8  # chicken if mana < 8% AND life < 75% (shield gone under attack)
   es_broken_hp_pct: 75
   hot_movers: 99       # DISABLED: nav.movers() counts orb shards/torch flicker as monsters (8-28 blobs

@@ -123,7 +123,20 @@
     Reading the real count would need digit OCR of the hover tooltip; maybe later.
   - Merc teleports with her (no waiting needed).
 
-**Next step:** M6: 50-run soak, run in the foreground in 3-run batches (see memory note). Optional: find the
+- **2026-10-26 ~08:00 (Stephen paused; he's using the PC).** Since `/players 7`: 17/22 runs ok, 5 chickens.
+  Route is exactly 6 chests (hut1 dropped: not a super chest).
+  - Chickens: every chicken frame had an EMPTY mana orb (Energy Shield drained it). Changed: potion at
+    MP < 45% (was 25%), cooldown 0.7 s (was 1.5 s). **Not tested live yet.**
+  - **Merc is dead** (no portrait top-left since at least 2026-10-25 17:25). Revive at Asheara:
+    Stephen: "walk directly northwest from Ormus, all the way until you get into her hut." To build:
+    `town.revive_merc` (detect missing portrait -> Asheara -> Resurrect), then re-check chickens.
+  - Loot ideas (Stephen: keys + rejuvs from chests should sustain). The filter shows gold, keys, rejuvs
+    as white labels. Gold splits into 2 pieces (amount + a 51 px "Gold" word): skip it via a "Gold"
+    word template, pick other whites (keys: count +1; rejuvs: only when the belt row has room).
+    Needs live frames with Key / Rejuvenation labels first.
+  - Speed is the priority (Stephen). Chickens -> 0 may eventually need killing champions.
+
+**Next step:** (when Stephen frees the PC) test potion tuning; merc revive at Asheara; white-label pickup for keys/rejuvs; then soak. Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
 
 **Open questions for Stephen:**
