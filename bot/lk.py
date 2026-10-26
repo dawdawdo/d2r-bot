@@ -1,4 +1,4 @@
-﻿"""M4/M5: Lower Kurast route -> open super chests -> pick up filtered loot.
+"""M4/M5: Lower Kurast route -> open super chests -> pick up filtered loot.
 
 The route is per-map data (maps/<name>/route.yaml). On arrival we check a fingerprint of the
 waypoint view; a mismatch means the map seed changed and the route is stale (MapChanged).
@@ -173,7 +173,7 @@ def run_route(bot: Controller, route: dict) -> dict:
     or `world` (teleport_to target, world coords from the WP arrival view) + `chests_world`.
     Odometry runs throughout, so both kinds can be mixed in one route.
     """
-    from .nav import Odometer, fight, hop, movers, teleport_to, world_to_screen
+    from .nav import Odometer, reanchor, fight, hop, movers, teleport_to, world_to_screen
 
     check_fingerprint(bot, route)
     stats = {"chests": 0, "picked": []}
@@ -184,12 +184,19 @@ def run_route(bot: Controller, route: dict) -> dict:
             if not teleport_to(bot, odo, t["world"]):
                 continue
             if t.get("fight", True):
-                fight(bot)
+                fight(bot, odo=odo)
                 odo.update(bot.capture.grab())
-                n = len(movers(bot))
+                n = len(movers(bot, odo=odo))
                 if n >= bot.cfg["safety"].get("hot_movers", 99):
                     log.warning("%s: %d monsters still active -> skipping", t["name"], n)
                     stats.setdefault("skipped", []).append(t["name"])
+                    continue
+            if "bonfire" in t:  # re-anchor: fights/teleport-on-hit make odometry drift or jump
+                if not reanchor(bot, odo, t["bonfire"]) and odo.lost:
+                    log.warning("%s: odometry lost and no bonfire in view -> skipping", t["name"])
+                    stats.setdefault("skipped", []).append(t["name"])
+                    continue
+                if not teleport_to(bot, odo, t["world"], tol=40):  # anchoring may have moved the goal
                     continue
             points = [world_to_screen(odo, *c) for c in t["chests_world"]]
         else:

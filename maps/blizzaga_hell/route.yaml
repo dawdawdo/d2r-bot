@@ -12,9 +12,27 @@ targets:
   - name: hut1_bonfire_sw          # big thatched hut SW of the WP, bonfire to its NE
     hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
     chests: [[690, 344]]           # one Locked Chest (uses a key)
-  - name: hut3_bonfire_e           # hut NW of the east bonfire (same hut layout as hut2)
+  # Bonfire targets: `world` = where to stand, `bonfire` = landmark to re-anchor odometry on,
+  # `chests_world` = hover points that showed a "Chest" tooltip (scouted 2026-10-25 with tools/visit.py).
+  - name: hut3_bonfire_e           # hut NW of the east bonfire
     world: [1208, 585]
+    bonfire: [1629, 776]
     chests_world: [[1048, 495]]
-  - name: hut2_bonfire_w          # hut NW of the west bonfire; Doom Ape champions nearby
-    world: [-2611, -557]           # where the scan stood (world = px from the WP arrival view)
+  - name: east_bonfire_ne          # hut NE of the east bonfire
+    world: [2340, 495]
+    bonfire: [1629, 776]
+    chests_world: [[2480, 445]]
+  - name: west_bonfire_ne          # hut NE of the west bonfire
+    world: [-1514, -617]
+    bonfire: [-2208, -389]
+    chests_world: [[-1374, -707]]
+  - name: hut2_bonfire_w           # hut NW of the west bonfire; Doom Ape champions nearby
+    world: [-2611, -557]
+    bonfire: [-2208, -389]
     chests_world: [[-2711, -667]]
+  # Disabled: the scout saw a "Chest" tooltip here, but the live run didn't find it (23:43), and
+  # the bonfire itself is the most dangerous spot (Doom Ape champions). Re-scout before enabling.
+  # - name: east_bonfire_e
+  #   world: [1629, 776]
+  #   bonfire: [1629, 776]
+  #   chests_world: [[1891, 850]]

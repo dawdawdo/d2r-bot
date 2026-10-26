@@ -11,10 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.controller import Controller  # noqa: E402
 from bot.io import open_backend  # noqa: E402
-from bot.lifecycle import create_game, ensure_main_menu  # noqa: E402
+from bot.lifecycle import create_game, ensure_main_menu, save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
-from bot.town import town_to_lower_kurast  # noqa: E402
-from bot.vision.orbs import orb_pcts  # noqa: E402
+from bot.town import heal_at_ormus, needs_heal, recover_corpse, town_to_lower_kurast  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
@@ -28,12 +27,13 @@ def main() -> int:
     try:
         ensure_main_menu(bot)
         create_game(bot, cfg["game"]["difficulty"])
-        bot.wait_still(timeout=3)
-        hp = orb_pcts(bot.capture.grab(), cfg["vision"]["orbs"])["hp"]
-        if hp < 90:  # life carries over between games; top up in town
-            print(f"HP {hp}% -> potion")
-            bot.press(cfg["hotkeys"]["potions"][0])
-            bot.kill.sleep(1.5)
+        bot.wait_for("in_game", 10)
+        recover_corpse(bot)
+        if needs_heal(bot):  # life carries over between games (same as bot.run)
+            print(f"HP {bot.hp:.0f}% -> heal at Ormus, fresh game")
+            heal_at_ormus(bot)
+            save_and_exit(bot)
+            create_game(bot, cfg["game"]["difficulty"])
         town_to_lower_kurast(bot)
     finally:
         bot.release_all()
