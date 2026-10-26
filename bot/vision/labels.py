@@ -26,7 +26,7 @@ class Label:
         return self.x + self.w // 2, self.y + self.h // 2
 
 
-def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 6,
+def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 11,
                 max_h: int = 30, ignore: list | None = None, max_bg: float = 45.0,
                 min_pad_dark: float = 0.6, min_bg_dark: float = 0.6) -> list[Label]:
     """`kinds` maps kind -> HSV range. `ignore` = list of (x, y, w, h) regions (HUD etc.).
@@ -46,8 +46,8 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
             if w < min_w or h < min_h or h > max_h:
                 continue
             text = mask[y : y + h, x : x + w] > 0
-            if text.mean() < 0.08:  # too sparse to be text
-                continue
+            if not 0.08 <= text.mean() <= 0.22:  # label text fills 12-14% of its 13 px tall box (live);
+                continue                         # coins between two labels: 27%, 8 px tall
             bg = gray[y : y + h, x : x + w][~text]
             if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):
                 continue  # label text sits on a near-black box; gold piles sit on lit ground

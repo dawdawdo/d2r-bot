@@ -212,10 +212,9 @@ def loot(bot: Controller, max_picks: int = 8) -> list[str]:
         if lab.kind != "white":  # keep evidence of every valuable pick for review
             import time
 
-            p = ROOT / "fixtures" / "raw" / f"pick_{lab.kind}_{time.strftime('%m%d-%H%M%S')}.png"
-            img = bot.frame.copy()
-            cv2.rectangle(img, (lab.x, lab.y), (lab.x + lab.w, lab.y + lab.h), (0, 255, 255), 1)
-            cv2.imwrite(str(p), img)
+            # clean frame (a drawn box spoils it as a test fixture); the label box is in the name
+            name = f"pick_{lab.kind}_{time.strftime('%m%d-%H%M%S')}_{lab.x}_{lab.y}_{lab.w}_{lab.h}.png"
+            cv2.imwrite(str(ROOT / "fixtures" / "raw" / name), bot.frame)
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
         picked.append(lab.kind)
