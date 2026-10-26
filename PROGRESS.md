@@ -81,7 +81,14 @@
   Esc+retry when Cain stands on it; walk_route re-clicks a leg if the view didn't move.
 - One unique pick: evidence in `fixtures/raw/pick_unique_1025-234423.png` (not verified).
 
-**Next step:** M6: stuck detection, per-run timeout, 50-run soak with runs.csv. Optional: find the
+- After the potion fix, 3 clean runs in a row (5 chests each). Earlier "unique" picks were gold piles
+  (label detector now requires the dark backdrop above/below the text; `tests/test_labels_real.py`).
+- Per-run timeout enforced: `safety.run_timeout_s` (180 s for the LK part) -> `RunTimeout`, logged as
+  `timeout` in runs.csv.
+- 00:24: a 10-run soak was killed by Claude Code (system low on memory; D2R uses ~2 GB) before
+  the first game started. Not restarted; waiting for Stephen.
+
+**Next step:** M6: 50-run soak with runs.csv (re-run `python -m bot.run --runs 10 --mode chests` first). Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
 
 **Open questions for Stephen:**

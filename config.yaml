@@ -33,7 +33,7 @@ safety:
   es_broken_hp_pct: 75
   hot_movers: 99       # DISABLED: nav.movers() counts orb shards/torch flicker as monsters (8-28 blobs
                        # even when calm). Needs a real monster detector before it can gate huts.
-  run_timeout_s: 180
+  run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)
 
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except Dol+ runes and unique

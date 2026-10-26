@@ -13,7 +13,7 @@ import logging
 import time
 
 from .config import ROOT
-from .controller import BotError, Chicken, Controller, Died
+from .controller import BotError, Chicken, Controller, Died, RunTimeout
 from .lk import MapChanged, load_route, run_route
 from .io import open_backend
 from .killswitch import KillSwitchTripped
@@ -44,10 +44,12 @@ def one_run(bot: Controller, cfg: dict, mode: str) -> dict:
         if mode in ("lk", "chests"):
             town_to_lower_kurast(bot)
         if mode == "chests":
+            bot.deadline = bot.clock() + cfg["safety"]["run_timeout_s"]  # Lower Kurast part only
             stats = run_route(bot, load_route(cfg["game"]["route"]))
         if mode == "lifecycle":
             bot.kill.sleep(1.0)
     finally:
+        bot.deadline = None
         if bot.state != "main_menu":
             save_and_exit(bot)
     return stats
@@ -95,7 +97,7 @@ def main() -> int:
                     row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
                     log.warning("run %d: %s", i + 1, e)
                 except BotError as e:
-                    row.update(result="fail", error=str(e))
+                    row.update(result="timeout" if isinstance(e, RunTimeout) else "fail", error=str(e))
                     streak += 1
                     log.error("run %d failed: %s", i + 1, e)
                 row["duration_s"] = round(time.time() - t0, 1)

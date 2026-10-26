@@ -31,6 +31,10 @@ class Died(BotError):
     """HP orb is empty: the character is dead."""
 
 
+class RunTimeout(BotError):
+    """The run went past its deadline while out of town (stuck somewhere)."""
+
+
 class Controller:
     def __init__(self, window: Window, capture: Capture, inp: Input, classifier, kill: KillSwitch,
                  cfg: dict, clock=time.monotonic) -> None:
@@ -42,6 +46,7 @@ class Controller:
         self.cfg = cfg
         self.clock = clock
         self.frame: np.ndarray | None = None
+        self.deadline: float | None = None  # clock() time; checked while guarding (out of town)
         self.state = "unknown"
         self.poll = 0.25  # seconds between observations in wait_for
         self._templates: dict[str, np.ndarray] = {}
@@ -58,6 +63,7 @@ class Controller:
         self.state = self.classifier.classify(self.frame)
         if self.state == "in_game":
             self._check_vitals()
+        self._check_deadline()
         return self.state
 
     def guard(self, on: bool) -> None:
@@ -125,6 +131,12 @@ class Controller:
         self.state = self.classifier.classify(frame)
         if self.state == "in_game":
             self._check_vitals()
+        self._check_deadline()
+
+    def _check_deadline(self) -> None:
+        if self.guarding and self.deadline is not None and self.clock() > self.deadline:
+            self.deadline = None  # raise once; save & exit must be able to run
+            raise RunTimeout("run timeout: still out of town past the deadline")
 
     def wait_for(self, states: str | Iterable[str], timeout: float, poll: float | None = None) -> str:
         want = {states} if isinstance(states, str) else set(states)

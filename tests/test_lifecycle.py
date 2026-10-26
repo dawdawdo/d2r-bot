@@ -187,3 +187,15 @@ def test_kill_switch_stops_lifecycle(cfg):
     with pytest.raises(KillSwitchTripped):
         create_game(make_bot(cfg, game, kill=kill))
     assert game.log == []
+
+
+def test_run_timeout_raises_once(cfg):
+    from bot import controller as C
+
+    game = SimGame(cfg["ui"], state="in_game")
+    bot = Controller(FakeWindow(), FakeCapture([hp_frame(cfg, 90)]), game, game, KillSwitch(), cfg)
+    bot.guard(True)
+    bot.deadline = bot.clock() - 1
+    with pytest.raises(C.RunTimeout):
+        bot.observe()
+    bot.observe()  # cleared: save & exit can still observe
