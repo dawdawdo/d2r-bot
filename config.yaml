@@ -62,6 +62,14 @@ town:
   heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
   ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs
   ormus_region: [300, 40, 860, 480]
+  repair_every: 10               # runs between repairs at Hratli (Stephen: armor ran low)
+  hratli:                        # legs after the Ormus legs: E across the plaza, SE bridge, landing, NE bridge
+    route: [[1000, 560], [1150, 380], [1040, 480], [900, 470], [860, 510], [900, 540], [1118, 262], [880, 220], [1000, 170]]
+    region: [600, 60, 500, 300]  # where Hratli stands at the end of the route
+    trade_offset: [37, 58]       # "Trade/Repair" relative to the npc_hratli.png match
+    repair_all: [362, 516]       # trade window: right anvil button ("Repair all equipment")
+    misc_tab: [370, 77]          # trade window tabs: Armor, Weapons, Weapons, Misc
+    key: [395, 110]              # Misc tab: Key (shift+right-click buys a stack)
 
 debug_loot_frames: false         # save the first loot-scan frame of each chest to fixtures/raw/
 

@@ -31,6 +31,9 @@ def main() -> int:
     ap.add_argument("--targets", required=True, help='space-separated "x,y" world coords')
     ap.add_argument("--name", default="visit")
     ap.add_argument("--bonfire", help='"x,y" world coords of a bonfire to anchor on')
+    ap.add_argument("--step", type=int, default=40, help="hover grid step (px)")
+    ap.add_argument("--region", default="160,60,960,500", help="hover region x,y,w,h (screen)")
+    ap.add_argument("--fight", type=int, default=0, help="frozen orb casts before scanning (0 = none)")
     args = ap.parse_args()
     s = start_session(backup=False)
     cfg = s.cfg
@@ -44,13 +47,14 @@ def main() -> int:
         for i, t in enumerate(args.targets.split()):
             tx, ty = map(float, t.split(","))
             ok = teleport_to(bot, odo, (tx, ty))
-            fight(bot, max_casts=10, odo=odo)
+            if args.fight:
+                fight(bot, max_casts=args.fight, odo=odo)
             odo.update(b.capture.grab())
             if args.bonfire:
                 reanchor(bot, odo, tuple(map(float, args.bonfire.split(","))))
                 ok = teleport_to(bot, odo, (tx, ty), tol=60)  # reanchor may have moved us to the bonfire
             view = b.capture.grab()
-            hits = scan_tooltips(bot)
+            hits = scan_tooltips(bot, region=tuple(map(int, args.region.split(","))), step=args.step)
             chests = []
             for x, y, crop in hits:
                 if _is_chest(crop, (0, 0, crop.shape[1], crop.shape[0])):

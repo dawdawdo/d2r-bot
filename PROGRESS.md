@@ -103,6 +103,16 @@
 - D2R working set grew 1.4 -> 4.3 GB over ~12 games, then held flat. Restart it between long soaks to be safe.
 - 05:53 F12 pressed mid-run (Stephen?): Blizzaga left standing at the west hut in LK.
 
+- **Repair + keys at Hratli** (route from Stephen: E across the plaza from Ormus, SE bridge, landing, NE
+  bridge to the forge). `town.repair_at_hratli` on run 1 of a session and every `town.repair_every` (10)
+  runs: Trade/Repair -> Repair All -> Misc tab -> shift+right-click Key (buys a stack). Tested live 3/3.
+- Route: wp_west removed (Stephen: not a super chest). Added `hut3_deep` (2nd chest inside the east NW
+  hut, world (672, 400)). 2 runs at 6 chests after that.
+- West NW hut (hut2): Stephen says it has a 2nd chest too. Not found: the scan spot matching hut3's layout
+  held baskets, and 3 longer scans there ended in chickens (Doom Ape champions). One near-death
+  (18/635 life) when I tried "drink a rejuv instead of chickening on broken ES": reverted.
+- Ideas from Stephen: merc (Prayer, tank) could help survival; player count 7 instead of 8.
+
 **Next step:** M6: 50-run soak with runs.csv (re-run `python -m bot.run --runs 10 --mode chests` first). Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
 

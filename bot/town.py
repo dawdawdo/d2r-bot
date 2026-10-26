@@ -93,6 +93,19 @@ def _tooltip_points(bot: Controller, region, step: int = 30):
                 yield x, y
 
 
+def _name_points(bot: Controller, region, step: int = 30):
+    """Yield hover points in `region` where an NPC/object name tooltip box appears."""
+    from .vision.tooltip import find_tooltip
+
+    rx, ry, rw, rh = region
+    for y in range(ry, ry + rh, step):
+        for x in range(rx, rx + rw, step):
+            bot.input.move(x, y)
+            bot.kill.sleep(0.08)
+            if find_tooltip(bot.capture.grab(), x, y) is not None:
+                yield x, y
+
+
 def heal_at_ormus(bot: Controller) -> bool:
     """Walk toward the plaza, find Ormus by hover, talk to him (heals), close the dialog.
     The character ends up somewhere near Ormus, so the caller should start a new game."""
@@ -110,6 +123,59 @@ def heal_at_ormus(bot: Controller) -> bool:
         bot.press("esc")  # someone else's dialog (or nothing); keep looking
         bot.kill.sleep(0.3)
     bot.save_failure("ormus_not_found")
+    return False
+
+
+def buy_keys(bot: Controller, h: dict) -> None:
+    """Trade window open: Misc tab, shift+right-click the key = buy a stack (tops the inventory
+    stack up; Stephen: keys ran out)."""
+    bot.click(*h["misc_tab"])
+    bot.kill.sleep(0.5)
+    bot.input.key_down("shift")
+    bot.kill.sleep(0.05)
+    bot.click(*h["key"], "right")
+    bot.kill.sleep(0.05)
+    bot.input.key_up("shift")
+    bot.kill.sleep(0.5)
+    log.info("bought keys")
+
+
+def repair_at_hratli(bot: Controller) -> bool:
+    """From spawn: walk past Ormus, SE over the bridge, NE at the landing to Hratli's forge
+    (route from Stephen, recorded 2026-10-26), open Trade/Repair, Repair All. Like the Ormus detour,
+    this leaves us far from the WP, so the caller should start a new game."""
+    tcfg = bot.cfg["town"]
+    h = tcfg["hratli"]
+    walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]] + h["route"])
+    # Shape-based tooltip finder: the forge fire flickers, which fooled the frame-diff one.
+    for attempt, (x, y) in enumerate(_name_points(bot, h["region"])):
+        if attempt >= 5:
+            break
+        bot.click(x, y)
+        bot.kill.sleep(2.0)
+        loc = bot.find("npc_hratli.png", region=(0, 0, 1280, 500), threshold=0.8)
+        if loc is None:
+            bot.press("esc")  # someone else's dialog (or nothing); keep looking
+            bot.kill.sleep(0.3)
+            continue
+        bot.click(loc[0] + h["trade_offset"][0], loc[1] + h["trade_offset"][1])
+        for _ in range(10):
+            bot.kill.sleep(0.3)
+            if bot.find("trade_repair_all.png", region=(300, 460, 120, 100), threshold=0.8) is not None:
+                break
+        else:
+            bot.save_failure("hratli_trade_not_opened")
+            bot.press("esc")
+            return False
+        bot.click(*h["repair_all"])
+        bot.kill.sleep(1.0)
+        buy_keys(bot, h)
+        bot.press("esc")
+        bot.kill.sleep(0.5)
+        log.info("repaired at Hratli")
+        return True
+    bot.save_failure("hratli_not_found")
+    log.warning("Hratli not found; no repair")
     return False
 
 

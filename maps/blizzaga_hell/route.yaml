@@ -12,15 +12,16 @@ targets:
   - name: hut1_bonfire_sw          # big thatched hut SW of the WP (the "bonfire" NE of it is a WP brazier)
     hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
     chests: [[690, 344]]           # one Locked Chest (uses a key)
-  - name: wp_west                  # chest W of the WP, by the hollow logs (scouted 2026-10-25 23:57)
-    world: [-800, 40]              # stand close: from (-500,133) the chest sat at the view edge, often missed
-    chests_world: [[-919, -37]]
   # Bonfire targets: `world` = where to stand, `bonfire` = landmark to re-anchor odometry on,
   # `chests_world` = hover points that showed a "Chest" tooltip (scouted 2026-10-25 with tools/visit.py).
   - name: hut3_bonfire_e           # hut NW of the east bonfire
     world: [1208, 585]
     bonfire: [1629, 776]
     chests_world: [[1048, 495]]
+  - name: hut3_deep                # 2nd chest in the same hut, deep inside (Stephen spotted it missed)
+    world: [845, 403]
+    bonfire: [1629, 776]
+    chests_world: [[672, 400]]
   - name: east_bonfire_ne          # hut NE of the east bonfire
     world: [2340, 495]
     bonfire: [1629, 776]
@@ -39,3 +40,7 @@ targets:
   #   world: [1629, 776]
   #   bonfire: [1629, 776]
   #   chests_world: [[1891, 850]]
+  # Removed 2026-10-26: Stephen says it isn't a super chest (outdoor, by the hollow logs W of the WP).
+  # - name: wp_west                  # chest W of the WP, by the hollow logs (scouted 2026-10-25 23:57)
+  #   world: [-800, 40]              # stand close: from (-500,133) the chest sat at the view edge, often missed
+  #   chests_world: [[-919, -37]]

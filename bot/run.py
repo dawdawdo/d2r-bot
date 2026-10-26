@@ -19,7 +19,7 @@ from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
-from .town import heal_at_ormus, needs_heal, recover_corpse, town_to_lower_kurast
+from .town import heal_at_ormus, needs_heal, recover_corpse, repair_at_hratli, town_to_lower_kurast
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
@@ -27,15 +27,21 @@ RUNS_CSV = ROOT / "runs.csv"
 FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 
-def one_run(bot: Controller, cfg: dict, mode: str) -> dict:
+def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
         bot.wait_for("in_game", 10)
         recover_corpse(bot)
-        if needs_heal(bot):
-            log.info("HP %.0f%% at spawn -> heal at Ormus, then a fresh game", bot.hp)
-            heal_at_ormus(bot)
+        if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
+            if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:
+                log.info("HP %.0f%% at spawn -> heal at Ormus", bot.hp)
+                heal_at_ormus(bot)
+                if repair:  # Ormus is on the way to Hratli but the route starts at spawn
+                    save_and_exit(bot)
+                    create_game(bot, cfg["game"]["difficulty"])
+            if repair:
+                repair_at_hratli(bot)
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
     bot._labels_known = False
@@ -84,7 +90,8 @@ def main() -> int:
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
-                    stats = one_run(bot, cfg, args.mode)
+                    repair = args.mode == "chests" and i % cfg["town"]["repair_every"] == 0
+                    stats = one_run(bot, cfg, args.mode, repair=repair)
                     row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
                     ok += 1
                     streak = 0
