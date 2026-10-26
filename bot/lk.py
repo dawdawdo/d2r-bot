@@ -27,7 +27,9 @@ class MapChanged(BotError):
 
 
 def load_route(name: str) -> dict:
-    return yaml.safe_load((ROOT / "maps" / name / "route.yaml").read_text())
+    route = yaml.safe_load((ROOT / "maps" / name / "route.yaml").read_text())
+    route.setdefault("name", name)
+    return route
 
 
 def check_fingerprint(bot: Controller, route: dict) -> None:
@@ -81,9 +83,9 @@ def _is_chest(frame: np.ndarray, box) -> bool:
     return False
 
 
-def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> bool:
+def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> tuple[int, int] | None:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
-    tooltip, hover-scan outward in rings (nearest first) up to `radius`."""
+    tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found."""
     pts = [(x, y)]
     for r in range(step, radius + 1, step):
         ring = [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
@@ -104,10 +106,10 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
             bot.click(px, py)
             bot.wait_still(timeout=2.5, min_wait=0.6)
-            return True
+            return px, py
     bot.save_failure("chest_not_found")
     log.warning("no chest tooltip near (%d, %d)", x, y)
-    return False
+    return None
 
 
 def _label_text_px(frame: np.ndarray, ignore) -> int:
@@ -166,52 +168,101 @@ def loot(bot: Controller, max_picks: int = 8) -> list[str]:
     return picked
 
 
+REANCHOR_AFTER = 1500  # px of travel before odometry drift is worth a landmark fix
+LEARN_KEEP = 9         # found-chest samples kept per chest (median is used)
+
+
+def _learned_path(route: dict) -> Path:
+    return ROOT / "maps" / route["name"] / "learned.json"
+
+
+def load_learned(route: dict) -> dict:
+    """Chest world positions where the search actually found them: {target: {index: [[x, y], ...]}}."""
+    import json
+
+    p = _learned_path(route)
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def chest_world(t: dict, i: int, learned: dict) -> tuple[float, float]:
+    """Median of learned positions for chest i of target t, else the scouted one."""
+    samples = learned.get(t["name"], {}).get(str(i))
+    if samples:
+        return tuple(np.median(np.asarray(samples, float), axis=0))
+    return tuple(t["chests_world"][i])
+
+
+LEARN_MAX_OFF = 150  # px from the scouted spot; farther finds are probably a different object
+
+
+def learn_chest(route: dict, learned: dict, t: dict, i: int, world) -> None:
+    import json
+
+    if np.hypot(*(np.asarray(world, float) - t["chests_world"][i])) > LEARN_MAX_OFF:
+        log.info("%s chest %d found %s, too far from the scouted spot to learn", t["name"], i, np.round(world).tolist())
+        return
+    lst = learned.setdefault(t["name"], {}).setdefault(str(i), [])
+    lst.append([round(float(world[0])), round(float(world[1]))])
+    del lst[:-LEARN_KEEP]
+    _learned_path(route).write_text(json.dumps(learned, indent=1))
+
+
+def _in_view(a, b) -> bool:
+    """Is world point b on screen when standing at world point a?"""
+    return abs(b[0] - a[0]) < 560 and abs(b[1] - a[1]) < 230
+
+
 def run_route(bot: Controller, route: dict) -> dict:
     """From the LK waypoint: visit each target, open its chests, loot. Returns stats.
 
     A target is either `hops` (relative teleports) + `chests` (screen coords after the last hop),
     or `world` (teleport_to target, world coords from the WP arrival view) + `chests_world`.
     Odometry runs throughout, so both kinds can be mixed in one route.
+
+    Get in, open, get out: no fighting unless a target sets `fight: true`. Bonfire targets re-anchor
+    odometry only when it's lost or has drifted a while; if the bonfire isn't visible from the stand
+    point, it's visited first. Where chests were actually found is learned (maps/<route>/learned.json).
     """
-    from .nav import Odometer, reanchor, fight, hop, movers, teleport_to, world_to_screen
+    from .nav import CENTER as C, Odometer, fight, hop, reanchor, teleport_to, world_to_screen
 
     check_fingerprint(bot, route)
+    learned = load_learned(route)
     stats = {"chests": 0, "picked": []}
     odo = Odometer(bot.capture.grab())
     for t in route["targets"]:
         log.info("-> %s", t["name"])
         if "world" in t:
+            bf = t.get("bonfire")
+            need_anchor = bf is not None and (odo.lost or odo.since_anchor > REANCHOR_AFTER)
+            if need_anchor and not _in_view(t["world"], bf):
+                teleport_to(bot, odo, bf, tol=150)  # bonfire first, then the stand point
+                need_anchor = not reanchor(bot, odo, bf)
             if not teleport_to(bot, odo, t["world"]):
-                continue
-            if t.get("fight", True):
-                fight(bot, odo=odo)
-                odo.update(bot.capture.grab())
-                n = len(movers(bot, odo=odo))
-                if n >= bot.cfg["safety"].get("hot_movers", 99):
-                    log.warning("%s: %d monsters still active -> skipping", t["name"], n)
-                    stats.setdefault("skipped", []).append(t["name"])
+                gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))
+                if gap > 200:
                     continue
-            if "bonfire" in t:  # re-anchor: fights/teleport-on-hit make odometry drift or jump
-                if not reanchor(bot, odo, t["bonfire"]) and odo.lost:
+                log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
+            if t.get("fight", False):
+                fight(bot, odo=odo)
+            if need_anchor:
+                if not reanchor(bot, odo, bf) and odo.lost:
                     log.warning("%s: odometry lost and no bonfire in view -> skipping", t["name"])
                     stats.setdefault("skipped", []).append(t["name"])
                     continue
-                # Anchoring shifts our position estimate, so close the gap again. Teleports can't
-                # land closer than ~50 px; the chest search tolerates ~200 px, so go on anyway.
-                if not teleport_to(bot, odo, t["world"]):
-                    gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))
-                    if gap > 200:
-                        continue
-                    log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
-            points = [world_to_screen(odo, *c) for c in t["chests_world"]]
+            points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(t["chests_world"]))]
         else:
             for dx, dy in t["hops"]:
                 hop(bot, odo, dx, dy)
             points = [tuple(c) for c in t["chests"]]
         bot.wait_still(timeout=1.5, min_wait=0.1)
         odo.update(bot.capture.grab())
-        for cx, cy in points:
-            if open_chest(bot, cx, cy):
+        if "world" in t:  # the settle may have moved the view a little
+            points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
+        for i, (cx, cy) in enumerate(points):
+            found = open_chest(bot, cx, cy)
+            if found:
+                if "world" in t and not odo.lost:
+                    learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
                 stats["chests"] += 1
                 stats["picked"] += loot(bot)
                 odo.update(bot.capture.grab())  # picking items walks us around

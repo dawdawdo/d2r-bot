@@ -10,7 +10,8 @@ from bot.vision.labels import find_labels
 CFG = load_config()
 RAW = Path(__file__).resolve().parent.parent / "fixtures" / "raw"
 FALSE_UNIQUES = ["pick_unique_1025-234423.png", "pick_unique_1026-002023.png",
-                 "pick_unique_1026-002024.png", "pick_unique_1026-002026.png"]
+                 "pick_unique_1026-002024.png", "pick_unique_1026-002026.png",
+                 "pick_unique_1026-055328.png", "pick_unique_1026-055330.png"]
 
 
 @pytest.mark.parametrize("name", FALSE_UNIQUES)

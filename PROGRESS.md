@@ -92,6 +92,17 @@
   were huts skipped after re-anchoring (post-anchor tolerance 40 px was too tight; fixed). Chickens are
   now the main loss: ~1 in 3 runs, all "energy shield broken" at the bonfires.
 
+- **Stephen: "hit the chest and leave"** — no fighting by default now (route `fight: true` opts in).
+  Re-anchor only when lost or > 1500 px since the last fix; bonfire-first when it's not visible from the
+  stand point. Chest positions are learned from real finds (`maps/blizzaga_hell/learned.json`, median of
+  the last 9, finds > 150 px from the scouted spot ignored). Result: 3/3 clean, 5-6 chests, LK part 44-80 s
+  (was ~80-110 s), no chickens.
+- Label detector: also requires near-black pixels between the letters (gold piles between two gold
+  labels still passed the above/below check).
+- wp_west chest is unreliable (found 140 px and 350 px from the scouted spot): re-scout it.
+- D2R working set grew 1.4 -> 4.3 GB over ~12 games, then held flat. Restart it between long soaks to be safe.
+- 05:53 F12 pressed mid-run (Stephen?): Blizzaga left standing at the west hut in LK.
+
 **Next step:** M6: 50-run soak with runs.csv (re-run `python -m bot.run --runs 10 --mode chests` first). Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
 

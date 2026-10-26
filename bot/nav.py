@@ -45,6 +45,7 @@ class Odometer:
         self.win = cv2.createHanningWindow(self.prev.shape[::-1], cv2.CV_32F)
         self.lost = False
         self.resp = 1.0
+        self.since_anchor = 0.0  # px travelled since the last landmark fix (drift grows with it)
 
     def update(self, frame: np.ndarray) -> tuple[float, float]:
         cur = _small(frame)
@@ -52,6 +53,7 @@ class Odometer:
         self.prev = cur
         moved = np.array([-dx * 2, -dy * 2])
         self.pos += moved
+        self.since_anchor += math.hypot(*moved)
         if self.resp < MIN_RESPONSE or abs(moved[0]) > MAX_STEP_X or abs(moved[1]) > MAX_STEP_Y:
             if not self.lost:
                 log.warning("odometry lost: step %s resp %.3f", moved.round().tolist(), self.resp)
@@ -169,6 +171,7 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
     odo.pos += np.array([px - fx, py - fy], float)  # seen further right = we are further left
     log.info("anchor: corrected odometry by (%d, %d)%s", px - fx, py - fy, " [was lost]" if odo.lost else "")
     odo.lost = False
+    odo.since_anchor = 0.0
     return True
 
 
