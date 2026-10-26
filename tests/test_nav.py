@@ -58,3 +58,81 @@ def test_anchor_bonfire_none_in_view():
     bot = SimpleNamespace(capture=FakeCapture([frame]), save_failure=lambda note: None)
     assert not anchor_bonfire(bot, odo, (500, 100))
     assert np.allclose(odo.pos, (10, 10), atol=3)
+
+
+class SimBot:
+    """Camera over WORLD that right-click teleports move; a bonfire drawn at a fixed world spot."""
+
+    def __init__(self, cam, bonfire):
+        self.cam = np.array(cam, float)
+        self.bonfire = bonfire
+        self.capture = SimpleNamespace(grab=self.grab)
+        self.saved = []
+
+    def grab(self):
+        x, y = self.cam.round().astype(int)
+        bx, by = self.bonfire[0] - x + 640, self.bonfire[1] - y + 330
+        on = 0 < bx < 1280 and 0 < by < 590
+        return view(x, y, [(bx, by, 20)] if on else [])
+
+    def click(self, x, y, button="left", hover=0.08):
+        self.cam += (x - 640, y - 330)
+
+    def sleep(self, s):
+        pass
+
+    def check(self):
+        pass
+
+    def save_failure(self, note):
+        self.saved.append(note)
+
+
+def test_search_bonfire_recovers_lost_odometry():
+    from bot.nav import search_bonfire
+
+    bot = SimBot((0, 0), bonfire=(1250, 200))  # off screen from the start; ring 2 sees it
+    odo = Odometer(bot.grab())
+    odo.pos = np.array([700.0, -600.0])  # a jump left odometry far off
+    odo.lost = True
+    assert search_bonfire(bot, odo, (1250, 200))
+    assert not odo.lost
+    assert np.allclose(odo.pos, bot.cam, atol=6)
+
+
+def test_search_bonfire_gives_up():
+    from bot.nav import search_bonfire
+
+    bot = SimBot((0, 0), bonfire=(9000, 9000))
+    odo = Odometer(bot.grab())
+    odo.lost = True
+    assert not search_bonfire(bot, odo, (9000, 9000))
+    assert bot.saved == ["bonfire_search_failed"]
+
+
+def test_teleport_detours_stay_in_window():
+    """Blocked hops rotate the step; a rotated sideways hop once right-clicked the desktop."""
+    from bot.nav import teleport_to
+
+    bot = SimBot((0, 0), bonfire=(9000, 9000))
+    clicks = []
+    bot.click = lambda x, y, button="left", hover=0.08: clicks.append((x, y))  # walled in: never moves
+    odo = Odometer(bot.grab())
+    bot.save_failure = lambda note: None
+    assert not teleport_to(bot, odo, (3000, 0))
+    assert len(clicks) > 4
+    assert all(0 <= x < 1280 and 40 <= y < 590 for x, y in clicks), clicks
+
+
+def test_odometer_ignores_zone_banner():
+    """A screen-fixed banner over a low-texture world must not pin the step at zero."""
+    world = (WORLD // 8).astype(np.uint8)  # dark, low contrast like LK at night
+
+    def banner_view(wx, wy):
+        f = world[1000 + wy : 1720 + wy, 1000 + wx : 2280 + wx].copy()
+        cv2.putText(f, "ENTERING LOWER KURAST", (493, 173), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (60, 60, 255), 2)
+        return f
+
+    odo = Odometer(banner_view(0, 0))
+    odo.update(banner_view(0, 220))
+    assert np.allclose(odo.pos, (0, 220), atol=6), odo.pos

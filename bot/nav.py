@@ -24,7 +24,8 @@ TP_SETTLE = 0.2  # live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/1
 
 def _small(frame: np.ndarray) -> np.ndarray:
     g = cv2.cvtColor(frame[:VIEW_H], cv2.COLOR_BGR2GRAY)
-    return cv2.resize(g, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA).astype(np.float32)
+    s = cv2.resize(g, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA).astype(np.float32)
+    return s - s.mean()  # else the window's own shape (holes included) correlates at zero shift
 
 
 MIN_RESPONSE = 0.04  # phase-correlation peak below this = frames barely overlap (tracking lost)
@@ -35,6 +36,21 @@ MAX_STEP_X, MAX_STEP_Y = 520, 280
 MAX_HOP_Y = 220
 
 
+# Screen-fixed overlays pull phase correlation toward "didn't move": the "Entering <zone>" banner
+# (x 493-789, y 158-173 for Lower Kurast; wider names are wider) plus a hut roof fading out lost
+# a hop every run start (2026-10-26). Also the merc portrait and the clock. Full-res (x, y, w, h).
+STATIC_OVERLAYS = [(360, 145, 560, 45), (0, 0, 90, 85), (1150, 0, 130, 40)]
+
+
+def _odo_window(shape) -> np.ndarray:
+    """Hanning window with soft holes over the static overlays (hard edges would be static too)."""
+    mask = np.ones(shape, np.float32)
+    for x, y, w, h in STATIC_OVERLAYS:
+        mask[y // 2 : (y + h) // 2, x // 2 : (x + w) // 2] = 0
+    mask = cv2.GaussianBlur(cv2.erode(mask, np.ones((9, 9), np.uint8)), (0, 0), 4)
+    return cv2.createHanningWindow(shape[::-1], cv2.CV_32F) * mask
+
+
 class Odometer:
     """`lost` is set when a step can't be trusted (Blizzaga's teleport-on-hit item jumps her
     randomly mid-fight); re-anchor on a landmark (anchor_bonfire) to clear it."""
@@ -42,7 +58,7 @@ class Odometer:
     def __init__(self, frame: np.ndarray) -> None:
         self.pos = np.array([0.0, 0.0])
         self.prev = _small(frame)
-        self.win = cv2.createHanningWindow(self.prev.shape[::-1], cv2.CV_32F)
+        self.win = _odo_window(self.prev.shape)
         self.lost = False
         self.resp = 1.0
         self.since_anchor = 0.0  # px travelled since the last landmark fix (drift grows with it)
@@ -62,9 +78,19 @@ class Odometer:
 
 
 def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, float]:
+    before, was_lost = getattr(bot, "frame", None), odo.lost
     bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
     bot.sleep(TP_SETTLE)
-    return odo.update(bot.capture.grab())
+    bot.frame = bot.capture.grab()
+    moved = odo.update(bot.frame)
+    if odo.lost and not was_lost:  # keep the frame pair for review
+        log.info("lost on hop (%d, %d)", dx, dy)
+        bot.save_failure("odo_lost_after")
+        if before is not None:
+            bot.frame, after = before, bot.frame
+            bot.save_failure("odo_lost_before")
+            bot.frame = after
+    return moved
 
 
 def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hops: int = 30) -> bool:
@@ -81,6 +107,7 @@ def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hop
             ang = [60, -60, 110, -110][(stuck - 1) % 4]
             c, s = math.cos(math.radians(ang)), math.sin(math.radians(ang))
             step = np.array([c * step[0] - s * step[1], s * step[0] + c * step[1]])
+            step *= min(1.0, MAX_HOP_Y / max(abs(step[1]), 1e-6))  # rotated, it can point off the window
         mx, my = hop(bot, odo, *step)
         if math.hypot(mx, my) < 30:
             stuck += 1
@@ -153,6 +180,9 @@ def find_fires(frame: np.ndarray, min_area: int = 120) -> list[tuple[int, int, i
 BONFIRE_AREA = 450  # torches are ~100-300 px of flame at 1280x720; bonfires 600-1500
 
 
+MAX_LOST_FIX = 1500  # a lost fix bigger than this is probably a different fire (WP braziers, a burning monster)
+
+
 def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float = 450) -> bool:
     """Snap odometry to a bonfire at known world coords. Picks the bonfire-sized fire nearest to
     where odometry predicts it. Returns False (odometry unchanged) if none is close enough."""
@@ -169,7 +199,7 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
         return False
     fx, fy, _ = min(fires, key=lambda f: math.hypot(f[0] - px, f[1] - py))
     err = math.hypot(fx - px, fy - py)
-    if err > max_err and not odo.lost:
+    if err > (MAX_LOST_FIX if odo.lost else max_err):
         log.info("anchor: nearest bonfire %d px off prediction; not trusting it", err)
         return False
     odo.pos += np.array([px - fx, py - fy], float)  # seen further right = we are further left
@@ -194,6 +224,30 @@ def reanchor(bot: Controller, odo: Odometer, bonfire_world) -> bool:
         return True
     teleport_to(bot, odo, bonfire_stand(bonfire_world), tol=120, max_hops=8)
     return anchor_bonfire(bot, odo, bonfire_world)
+
+
+# Lost-odometry search: waypoints relative to where the search starts, ring by ring. The view is
+# ~1280 x 590, so ring 1 sees about +-1000 x +-530 px around the start, ring 2 about twice that.
+SEARCH_PATTERN = [(400, 0), (400, 250), (0, 250), (-400, 250), (-400, 0), (-400, -250), (0, -250), (400, -250),
+                  (800, -250), (800, 250), (0, 500), (-800, 250), (-800, -250), (0, -500)]
+
+
+def search_bonfire(bot: Controller, odo: Odometer, bonfire_world) -> bool:
+    """Odometry is lost and the bonfire isn't where it should be: teleport around the current spot
+    until a bonfire-sized fire shows up, then anchor on it. False if none turns up."""
+    start = odo.pos.copy()
+    for i, off in enumerate(SEARCH_PATTERN):
+        bot.check()
+        teleport_to(bot, odo, start + off, tol=120, max_hops=3)
+        if not any(f[2] >= BONFIRE_AREA for f in find_fires(bot.capture.grab())):
+            continue
+        odo.lost = True  # this fire is the reference now, whatever odometry predicts
+        if anchor_bonfire(bot, odo, bonfire_world):
+            log.info("search: found the bonfire after %d waypoints", i + 1)
+            return True
+    log.warning("search: no bonfire within %d waypoints", len(SEARCH_PATTERN))
+    bot.save_failure("bonfire_search_failed")
+    return False
 
 
 def world_to_screen(odo: Odometer, wx: float, wy: float) -> tuple[int, int]:
@@ -221,5 +275,5 @@ def scan_tooltips(bot: Controller, region=(160, 60, 960, 500), step: int = 40) -
     return hits
 
 
-__all__ = ["Odometer", "anchor_bonfire", "reanchor", "find_fires", "teleport_to", "hop", "world_to_screen",
+__all__ = ["Odometer", "anchor_bonfire", "reanchor", "search_bonfire", "find_fires", "teleport_to", "hop", "world_to_screen",
            "scan_tooltips", "BotError"]

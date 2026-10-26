@@ -48,6 +48,7 @@ class Win32Window(Window):
         fg = _user32.GetForegroundWindow()
         if fg == self.hwnd:
             return
+        log.info("focus taken by %s", _describe(fg))
         me = ctypes.windll.kernel32.GetCurrentThreadId()
         other = _user32.GetWindowThreadProcessId(fg, None) if fg else 0
         attached = bool(other) and other != me and _user32.AttachThreadInput(me, other, True)
@@ -58,6 +59,28 @@ class Win32Window(Window):
         finally:
             if attached:
                 _user32.AttachThreadInput(me, other, False)
+
+
+def _describe(hwnd: int) -> str:
+    """'title' [class] exe of a window, for logging who stole focus."""
+    if not hwnd:
+        return "no window"
+    buf = ctypes.create_unicode_buffer(256)
+    _user32.GetWindowTextW(hwnd, buf, 256)
+    title = buf.value
+    _user32.GetClassNameW(hwnd, buf, 256)
+    cls = buf.value
+    pid = wt.DWORD()
+    _user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    exe = "?"
+    h = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid.value)  # PROCESS_QUERY_LIMITED_INFORMATION
+    if h:
+        size = wt.DWORD(260)
+        path = ctypes.create_unicode_buffer(260)
+        if ctypes.windll.kernel32.QueryFullProcessImageNameW(h, 0, path, ctypes.byref(size)):
+            exe = path.value.rsplit("\\", 1)[-1]
+        ctypes.windll.kernel32.CloseHandle(h)
+    return f"{title!r} [{cls}] {exe} (pid {pid.value})"
 
 
 def find_window(title: str) -> bool:

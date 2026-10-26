@@ -197,6 +197,10 @@ class Controller:
             self.kill.sleep(0.25)
 
     def click(self, x: int, y: int, button: str = "left", hover: float = 0.08) -> None:
+        _, _, w, h = self.window.client_rect()
+        if not (0 <= x < w and 0 <= y < h):  # outside the client = clicking the desktop (2026-10-26:
+            log.warning("click (%d, %d) outside the game window; clamped", x, y)  # opened its menu)
+            x, y = min(max(int(x), 2), w - 3), min(max(int(y), 2), h - 3)
         if self.guarding:
             self.observe()
         self._ensure_foreground()

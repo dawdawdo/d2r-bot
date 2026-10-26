@@ -277,17 +277,22 @@ def run_route(bot: Controller, route: dict) -> dict:
     odometry only when it's lost or has drifted a while; if the bonfire isn't visible from the stand
     point, it's visited first. Where chests were actually found is learned (maps/<route>/learned.json).
     """
-    from .nav import CENTER as C, Odometer, bonfire_stand, fight, hop, reanchor, teleport_to, world_to_screen
+    from .nav import CENTER as C, Odometer, bonfire_stand, fight, hop, reanchor, search_bonfire, teleport_to, world_to_screen
 
     check_fingerprint(bot, route)
     learned = load_learned(route)
     stats = {"chests": 0, "picked": []}
     odo = Odometer(bot.capture.grab())
+    unfound = set()  # bonfires a lost-odometry search couldn't find this run
     for t in route["targets"]:
         log.info("-> %s", t["name"])
         if "world" in t:
             bf = t.get("bonfire")
-            need_anchor = bf is not None and (odo.lost or odo.since_anchor > REANCHOR_AFTER)
+            if bf is not None and tuple(bf) in unfound:
+                stats.setdefault("skipped", []).append(t["name"])
+                continue
+            leg = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))  # the leg ahead drifts too
+            need_anchor = bf is not None and (odo.lost or odo.since_anchor + leg > REANCHOR_AFTER)
             if need_anchor and not _in_view(t["world"], bf):
                 teleport_to(bot, odo, bonfire_stand(bf), tol=120)  # bonfire first, then the stand point
                 need_anchor = not reanchor(bot, odo, bf)
@@ -298,11 +303,18 @@ def run_route(bot: Controller, route: dict) -> dict:
                 log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
             if t.get("fight", False):
                 fight(bot, odo=odo)
-            if need_anchor:
+            need_anchor = bf is not None and (need_anchor or odo.lost)  # lost on the way: a blind chest
+            if need_anchor:                                              # scan costs ~30 s for nothing
                 if not reanchor(bot, odo, bf) and odo.lost:
-                    log.warning("%s: odometry lost and no bonfire in view -> skipping", t["name"])
-                    stats.setdefault("skipped", []).append(t["name"])
-                    continue
+                    log.warning("%s: odometry lost and no bonfire in view -> searching", t["name"])
+                    if not search_bonfire(bot, odo, bf):
+                        unfound.add(tuple(bf))  # don't search again for this camp's other chests
+                    if odo.lost or not teleport_to(bot, odo, t["world"]):
+                        stats.setdefault("skipped", []).append(t["name"])
+                        continue
+                    stats["recovered"] = stats.get("recovered", 0) + 1
+                elif not teleport_to(bot, odo, t["world"]):  # the fix may have moved the stand point
+                    continue                                 # (cheap when it didn't)
             points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(t["chests_world"]))]
         else:
             for dx, dy in t["hops"]:
