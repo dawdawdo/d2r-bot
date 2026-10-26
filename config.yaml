@@ -120,6 +120,7 @@ vision:
     - [1140, 10, 140, 40]
     - [180, 565, 230, 30]
     - [880, 565, 230, 30]
+    - [0, 420, 420, 150]           # chat messages (Terror Zone notices have orange = rune-colored text)
   # Screen states: list of cues {template, region, threshold}; templates live in
   # bot/assets/templates/. Checked in order; first full match wins.
   states:

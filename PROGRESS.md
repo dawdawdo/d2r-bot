@@ -1,154 +1,43 @@
 # Progress
 
-**Current milestone:** M6 soak. Route: hut1 + 2 bonfire camps x 3 chests = **7 chests**. M1–M5 done.
+**Current milestone:** M6 speed + soak. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
-**Works (2026-10-25, live):**
-- `python -m bot.run --runs N --mode chests`: launch/recover → Hell game → corpse pickup at spawn →
-  (heal at Ormus + fresh game if HP < 70%) → town route → WP → Lower Kurast (area-name check)
-  → map fingerprint → teleport route (`maps/blizzaga_hell/route.yaml`) → open chest (hover-scan
-  finds it despite landing jitter) → Alt labels → pick rune/unique labels → save & exit. About 30 s per run.
-  Logs `runs.csv` (result, chests, picked). Stops on `map_changed` (route stale).
-- Guardian (controller): on every observe/click/sleep while out of town: potion < 70% (skips empty
-  belt slots), chicken < 50%, death detection. Only reads HP on frames classified in-game.
-- Modes: `lifecycle` (M2, 20/20), `lk` (M3, 13/13), `chests` (M4/M5, last 8 runs ok).
-- Tools: `goto_lk.py`, `explore.py` (teleport + stitch + fires + hover-scan + actions; always ends
-  with save & exit), `npc_probe.py`, `hover_scan.py`, `peek.py`, `act.py`, `state_check.py`.
+**Works (live, 2026-10-26 afternoon):**
+- `python -m bot.run --runs N --mode chests`: launch/recover → Hell game → `/players 7` once per session →
+  corpse pickup → (Ormus heal / Hratli repair + keys / **Asheara merc revive** when needed, then a fresh game)
+  → buffs → town route → belt restock from stash → WP → LK → teleport route (odometry + bonfire re-anchor)
+  → open chests → loot rune/unique labels → save & exit. Logs `runs.csv`.
+- **Speed:** best runs now 54–63 s, 6 chests (were ~66–110 s). Town part ~21 s (was 27), LK part ~25–30 s (was 37–52).
+  Teleport settle 0.45 → 0.2 s (0.15 still 10/10, 0.1 only 6/10), hops up to 420 px (520 loses tracking),
+  no hover on teleport clicks, WP arrival detected by view change (was a 5 s loading-screen timeout every run),
+  tighter walk-leg settle, shorter buff waits. `tools/profile_run.py` times every phase; `tools/tp_rate.py` measures teleports.
+- Merc (Waheed) revived 2026-10-26 (50k gold). `town.merc_alive` = portrait template top-left; revive is automatic.
+- Game window refocuses itself when a popup steals focus (AttachThreadInput trick).
+- Guardian: potion at HP < 70% or MP < 25%, chicken at HP < 50% or ES broken (MP < 8% and HP < 75%), death, run timeout.
 
 **Broken / risks:**
-- Only one chest (hut1, a Locked Chest SW of the WP: uses keys from inventory, which run out).
-- Monsters (Hell Buzzards) sometimes attack in hut1; the bot never fights. Two deaths so far, while
-  developing (both corpses recovered).
-- Potions: belt row has 3 rejuvs left (slot 1 empty). Ormus heals for free; potion restock not built.
-- Ormus is sometimes not found (wanders); the run continues anyway.
+- **Stash is out of Full Rejuvs.** Belt restock now falls back to plain Rejuvs (`stash.rejuv_slots`); only ~1 left.
+  Stephen's choice: no buying; sustain from chest drops (not built yet; see next step). MP threshold back to 25%
+  (45% burned all 98 rejuvs in a few hours).
+- **Odometry loss cascades:** once lost with no bonfire in view, every later target is skipped (0–1 chest runs).
+  Triggers: when-struck Teleport item jumps, and focus loss mid-teleport. Needs a recovery (e.g. go back toward
+  the last good position / the camp's bonfire with a wider search) instead of skipping.
+- Chickens still ~1 in 4–6 runs (ES broken at the camps). Stephen: speed is the cure; keep cutting LK time.
+- Game window lost focus 3× in 20 min on 2026-10-26 (Zoom reminder toast, then unknown while Stephen was on the PC).
 
-**Update 2026-10-25 evening:**
-- Every run now casts Frozen Armor (q) and Energy Shield (w), and restocks the belt from the stash Materials tab
-  (99 Full Rejuvs; stash is next to the town WP). Skills: q armor, w e-shield, e static, a frozen orb,
-  s teleport, d blizzard, f ice blast. Inventory key = B.
-- HP orb reads correctly when poisoned (green); the guardian also potions on low mana (Energy Shield drains it).
-- `bot/nav.py`: odometry plus `teleport_to(world xy)`, `fight()` (frozen orb at moving blobs),
-  `scan_tooltips()`. `tools/visit.py` scouts targets.
-- East bonfire found at about world (1600..1900, 750..1100) relative to the LK WP, with a hut beside it.
-  Heavily guarded (Hell Buzzard packs, champions): burned about 10 potions; chest not found yet.
-  West bonfire at about (-2250, -450) (from the lk_west scan), not visited yet.
-- **Keys: only 2 left.** Ormus doesn't sell keys; Hratli does, but I haven't found a walking route to
-  his forge yet (the WP ledge is blocked by a cliff, and there's no teleport in town). Stephen: buy for
-  now, eventually collect keys and rejuvs from chests (the filter already shows them).
-- Can't read the weekly /usage figure; see the chat.
+**Next step:**
+1. Odometry-loss recovery (biggest chest loss now).
+2. Chest pickup of keys + rejuvs: white labels; widths measured live: "Key" 37 px, "Rejuvenation" 133 px,
+   "Potion" 68 px, "Gold" 51 px, gold amounts 32–49 px. Merc name label "Waheed" is also 51 px (top-left: ignore).
+   Keys: count +1; rejuvs: only when the belt has room. Templates better than widths.
+3. More speed: `open_chest` ~1.5–2.8 s per chest (hover-scan rings), town walk 12.5 s (7 legs).
+4. Soak (foreground, 3 runs per command; see memory note on the reaper).
 
-**Update 2026-10-25 later:**
-- Keys: **24 bought from Lysander (A2)**. Route: town WP → Act II tab → Lut Gholein; Lysander's stall is
-  south-east of the WP; Trade, shift+right-click the key = buy a stack. Must return to A3 via the WP before exiting
-  (new games start in the act you exited from). Hratli's forge was not reachable on foot (automap marker
-  in the east ruin, but he wasn't there).
-- `bot/vision/tooltip.py`: shape-based tooltip detection (dark box + text). Robust to moving NPCs.
-- West bonfire is at about world (-2250, -380) from the LK WP; hut to its NW; Doom Ape champion pack there.
-- Goal recorded: portable Python app (Windows + Linux). Keys target = 12; runes → stash Materials tab.
-
-**Session end 2026-10-25 ~20:33 (Stephen pressed F12; he needed the PC). Game may be left mid-run.**
-- Route now has 3 huts (hut1 SW near the WP, hut3 east bonfire, hut2 west bonfire), with world-coord targets
-  via odometry. Best runs: **3 chests per run** (20:20-20:22). Chest search reads tooltip text
-  (tt_chest*.png templates) so Armor Stands are skipped.
-- **Stephen: each bonfire has THREE super chests** (I only open one per hut). Next: scan each bonfire
-  hut fully (tools/visit.py), record all chest world coords, add them to route.yaml.
-- Late runs often missed the hut2/hut3 chests (search started 70+ px off): odometry drift after
-  fighting/potions. Fix idea: re-anchor on the bonfire (fire blob) before searching for chests.
-- One more death (champion Doom Ape pack at hut3, 20:23). Added: guardian check on every chest-scan
-  point and an energy-shield-broken chicken (MP < 8% and HP < 75%). Gold was lost on death; corpse picked up at the next spawn.
-- `hot_movers` skip rule disabled: the motion detector counts orb shards/torches. Needs a real
-  monster detector.
-- One "unique" pick was a false positive (nothing new in the inventory). Valuable picks now save an
-  evidence frame `fixtures/raw/pick_*.png`.
-
-- **Stephen: Blizzaga has an item that casts Teleport when she's struck** → random jumps during fights.
-  This likely causes the odometry "drift". Plan (agreed): keep the item; detect jumps (big shift or low
-  phase-correlation response), then re-anchor on a landmark (bonfire / LK WP) before every chest
-  search; if no landmark is found, go back toward the last good position, else skip the hut. Fallback:
-  Stephen removes the item.
-
-**Session 2026-10-25 23:10 → 10-26 (Stephen: "pick up where you left off"):**
-- Odometry: `Odometer.lost` flags untrustworthy steps (phase-corr response < 0.04 or a step near the
-  wrap limit: > 520 px across / 280 px down); `teleport_to` caps vertical hops at 220 px. `fight()`
-  feeds odometry every frame. Bonfire targets re-anchor (`nav.reanchor`) before the chest search;
-  corrections are usually < 15 px, and live jumps of 600 px were caught and recovered.
-- Chests scouted (`tools/visit.py --bonfire=x,y` prints chest world coords): east bonfire NW hut +
-  NE hut; west bonfire NW hut + NE hut; a chest W of the WP by the hollow logs. The "bonfire" by hut1
-  is really the WP braziers. The east chest just E of the bonfire was seen once, then not found live:
-  disabled in route.yaml. West bonfire 3rd chest: not found yet (SE hut has a closed roof; entrance unknown).
-- **Big bug found:** belt restock clicked the empty slot beside the rejuv stack, so it never moved a
-  potion (98 Full Rejuvs still in stash). All of today's chickens ran on an empty belt. Fixed
-  (`stash.full_rejuv: [57, 250]`). The stash is now found by template (`town_stash.png`) with
-  Esc+retry when Cain stands on it; walk_route re-clicks a leg if the view didn't move.
-- One unique pick: evidence in `fixtures/raw/pick_unique_1025-234423.png` (not verified).
-
-- After the potion fix, 3 clean runs in a row (5 chests each). Earlier "unique" picks were gold piles
-  (label detector now requires the dark backdrop above/below the text; `tests/test_labels_real.py`).
-- Per-run timeout enforced: `safety.run_timeout_s` (180 s for the LK part) -> `RunTimeout`, logged as
-  `timeout` in runs.csv.
-- Background soaks get killed by Claude Code when memory is low (D2R launch spike). Memory hogs are idle apps:
-  vmmem VM ~4 GB (likely the Claude desktop sandbox), D2R ~3 GB, ChatGPT ~1.9 GB, Steam ~1.4 GB. Stephen
-  will close Steam + ChatGPT. Workaround: launch D2R detached, run soaks in the FOREGROUND, 3 runs/command.
-- 2026-10-26 05:00-05:13: 6 runs: 4 ok (6, 1, 3, 6 chests), 2 chickens (ES broken). The 1/3-chest runs
-  were huts skipped after re-anchoring (post-anchor tolerance 40 px was too tight; fixed). Chickens are
-  now the main loss: ~1 in 3 runs, all "energy shield broken" at the bonfires.
-
-- **Stephen: "hit the chest and leave"** — no fighting by default now (route `fight: true` opts in).
-  Re-anchor only when lost or > 1500 px since the last fix; bonfire-first when it's not visible from the
-  stand point. Chest positions are learned from real finds (`maps/blizzaga_hell/learned.json`, median of
-  the last 9, finds > 150 px from the scouted spot ignored). Result: 3/3 clean, 5-6 chests, LK part 44-80 s
-  (was ~80-110 s), no chickens.
-- Label detector: also requires near-black pixels between the letters (gold piles between two gold
-  labels still passed the above/below check).
-- wp_west chest is unreliable (found 140 px and 350 px from the scouted spot): re-scout it.
-- D2R working set grew 1.4 -> 4.3 GB over ~12 games, then held flat. Restart it between long soaks to be safe.
-- 05:53 F12 pressed mid-run (Stephen?): Blizzaga left standing at the west hut in LK.
-
-- **Repair + keys at Hratli** (route from Stephen: E across the plaza from Ormus, SE bridge, landing, NE
-  bridge to the forge). `town.repair_at_hratli` on run 1 of a session and every `town.repair_every` (10)
-  runs: Trade/Repair -> Repair All -> Misc tab -> shift+right-click Key (buys a stack). Tested live 3/3.
-- Route: wp_west removed (Stephen: not a super chest). Added `hut3_deep` (2nd chest inside the east NW
-  hut, world (672, 400)). 2 runs at 6 chests after that.
-- West NW hut (hut2): Stephen says it has a 2nd chest too. Not found: the scan spot matching hut3's layout
-  held baskets, and 3 longer scans there ended in chickens (Doom Ape champions). One near-death
-  (18/635 life) when I tried "drink a rejuv instead of chickening on broken ES": reverted.
-- Ideas from Stephen: merc (Prayer, tank) could help survival; player count 7 instead of 8.
-
-- **2026-10-26 07:00:** Stephen's answers applied:
-  - `/players 7` typed once per bot session (`game.players`); chat confirms "difficulty scale set to 7".
-    Holds until D2R exits. Since then 8 of 10 runs ok (6-7 chests), vs ~50% chickens before.
-  - Bonfire camps share one layout: `bot/lk.py BONFIRE_LAYOUT` (nw, nw_deep, ne offsets from the fire);
-    route.yaml just lists each camp's bonfire + visit order. West nw_deep chest found first try.
-  - Keys: counted, not read. A "Locked Chest" tooltip (134-140 px wide vs 59-65 for "Chest") = 1 key used.
-    Estimate in `logs/state.json`; Hratli buys a stack when it's <= 3 (and on the first run if unknown).
-    Reading the real count would need digit OCR of the hover tooltip; maybe later.
-  - Merc teleports with her (no waiting needed).
-
-- **2026-10-26 ~08:00 (Stephen paused; he's using the PC).** Since `/players 7`: 17/22 runs ok, 5 chickens.
-  Route is exactly 6 chests (hut1 dropped: not a super chest).
-  - Chickens: every chicken frame had an EMPTY mana orb (Energy Shield drained it). Changed: potion at
-    MP < 45% (was 25%), cooldown 0.7 s (was 1.5 s). **Not tested live yet.**
-  - **Merc is dead** (no portrait top-left since at least 2026-10-25 17:25). Revive at Asheara:
-    Stephen: "walk directly northwest from Ormus, all the way until you get into her hut." To build:
-    `town.revive_merc` (detect missing portrait -> Asheara -> Resurrect), then re-check chickens.
-  - Loot ideas (Stephen: keys + rejuvs from chests should sustain). The filter shows gold, keys, rejuvs
-    as white labels. Gold splits into 2 pieces (amount + a 51 px "Gold" word): skip it via a "Gold"
-    word template, pick other whites (keys: count +1; rejuvs: only when the belt row has room).
-    Needs live frames with Key / Rejuvenation labels first.
-  - Speed is the priority (Stephen). Chickens -> 0 may eventually need killing champions.
-
-**Next step:** (when Stephen frees the PC) test potion tuning; merc revive at Asheara; white-label pickup for keys/rejuvs; then soak. Optional: find the
-west bonfire's 3rd chest and re-check the east-bonfire E chest.
-
-**Open questions for Stephen:**
-- Where are the super-chest huts relative to the LK waypoint?
-- Blizzaga's skill hotkeys? (Which key is Teleport / Blizzard / Frozen Armor.) The bot could cast
-  an armor or kill buzzards instead of only fleeing.
-- Keys and potions: OK to buy keys and potions from vendors automatically later?
-- Usage: I can't run `/usage`, but I see its output when Stephen runs it. Last reading 2026-10-25 ~19:50:
-  week 23% (resets Oct 29 10pm ET), session 68% (resets Oct 25 11:10pm ET).
+**Open questions for Stephen:** none right now.
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
-The A3 town WP is east of the temple (platform with two blue braziers). Show Items = toggle (Alt).
-Automap Full Screen, no transparency. Skills on Q W E R A S D F; Teleport = right-click.
-The game keeps .fltr files in memory and overwrites them; install filters only while D2R is closed.
-`LK Bot.fltr` repo version adds "Hide gems" (not yet installed; needs a game restart).
+Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
+Show Items = Alt toggle. Inventory key B. Automap full screen. Asheara: NW of Ormus along the boardwalk.
+Hratli: E across the plaza, SE bridge, NE bridge. Keys also at Lysander (A2). Stash next to the A3 WP.
+The game keeps .fltr files in memory; install filters only while D2R is closed. Terror Zone chat notices are
+orange (rune color): the chat area is in `vision.label_ignore`.

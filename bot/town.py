@@ -25,7 +25,7 @@ def walk_route(bot: Controller, route: list, retries: int = 2) -> None:
         for attempt in range(retries + 1):
             before = bot.capture.grab()
             bot.click(x, y)
-            if not bot.wait_still(timeout=6):
+            if not bot.wait_still(timeout=6, settle=1, poll=0.1, min_wait=0.2):
                 log.info("leg %d: view still moving after timeout", i)
             if _view_moved(before, bot.capture.grab()):
                 break
@@ -258,7 +258,7 @@ def cast_buffs(bot: Controller) -> None:
         bot.press(hk["skills"][name])
         bot.kill.sleep(0.15)
         bot.click(*bot.cfg["town"]["corpse_click"], "right")
-        bot.kill.sleep(0.7)
+        bot.kill.sleep(0.45)  # casts take < 0.2 s (tools/tp_rate.py)
     bot.press(hk["skills"]["teleport"])
     bot.kill.sleep(0.15)
 
@@ -334,6 +334,31 @@ def restock_belt(bot: Controller) -> int:
     return moved
 
 
+ARRIVAL_CHANGED = 0.05  # share of changed pixels: town -> LK measured 0.20, same spot with NPCs moving 0.002
+
+
+def arrived(town_view: np.ndarray, frame: np.ndarray) -> bool:
+    """The view's right half (the waypoint panel covers the left) no longer shows the town."""
+    a, b = town_view[:560, 700:], frame[:560, 700:]
+    return float((np.abs(a.astype(np.int16) - b).max(axis=2) > 40).mean()) > ARRIVAL_CHANGED
+
+
+def wait_arrival(bot: Controller, town_view: np.ndarray, timeout: float = 30) -> None:
+    """After picking a waypoint the town frame lingers a moment, then a loading screen shows,
+    often too briefly to catch. Done once we're in game after a loading screen, or the view changed."""
+    deadline = bot.clock() + timeout
+    loaded = False
+    while True:
+        s = bot.observe()
+        loaded = loaded or s == "loading"
+        if s == "in_game" and (loaded or arrived(town_view, bot.frame)):
+            return
+        if bot.clock() >= deadline:
+            bot.save_failure(f"no_arrival_{s}")
+            raise BotError(f"waypoint travel: no arrival after {timeout}s; last state {s!r}")
+        bot.kill.sleep(0.05)
+
+
 def town_to_lower_kurast(bot: Controller) -> None:
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
@@ -341,12 +366,9 @@ def town_to_lower_kurast(bot: Controller) -> None:
     walk_route(bot, tcfg["route"])
     restock_belt(bot)
     open_town_wp(bot, tcfg)
+    town_view = bot.capture.grab()
     bot.click_ui("wp_lower_kurast")
-    try:  # the town frame lingers for a moment; wait for the load to actually start
-        bot.wait_for("loading", 5, poll=0.05)
-    except BotError:
-        log.info("didn't catch the loading screen (fast load?)")
-    bot.wait_for("in_game", 30)
+    wait_arrival(bot, town_view)
     bot.guard(True)  # out of town from here on
     bot.wait_still(timeout=5)
     if not check_area(bot, "area_lower_kurast.png"):

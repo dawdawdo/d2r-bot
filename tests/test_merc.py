@@ -45,3 +45,12 @@ def test_fingerprint_with_merc(frame, expected):
 
 def test_asheara_not_in_town_frame():
     assert _score("alive.png", "npc_asheara.png", (0, 0, 1280, 500))[0] < 0.85
+
+
+def test_arrival_view_change():
+    from bot.town import arrived
+
+    town = cv2.imread(str(FIX / "alive.png"))
+    lk = cv2.imread(str(FIX / "lk_wp_merc_left.png"))
+    assert arrived(town, lk)
+    assert not arrived(town, town)

@@ -23,3 +23,17 @@ def test_gold_pile_is_not_unique(name):
     labels = find_labels(cv2.imread(str(p)), kinds, ignore=CFG["vision"]["label_ignore"])
     assert not [l for l in labels if l.kind != "white"]
     assert len(labels) >= 10  # the real gold labels around it are still found
+
+
+def test_chat_terror_zone_text_is_not_a_rune():
+    from pathlib import Path
+
+    import cv2
+
+    from bot.config import load_config
+    from bot.vision.labels import find_labels
+
+    cfg = load_config()
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "merc" / "chat_terror_zone.png"))
+    kinds = {k: cfg["vision"]["labels"][k] for k in ("rune", "unique")}
+    assert find_labels(img, kinds, ignore=cfg["vision"]["label_ignore"]) == []
