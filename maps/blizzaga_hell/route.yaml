@@ -18,11 +18,12 @@ bonfires:
     world: [-2208, -389]
     order: [ne, nw, nw_deep]
 
-# Other targets (visited before the camps).
+# Other targets (visited before the camps). A run is exactly 6 super chests = the 2 camps (Stephen).
 targets:
-  - name: hut1_bonfire_sw          # big thatched hut SW of the WP (the "bonfire" NE of it is a WP brazier)
-    hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
-    chests: [[690, 344]]           # one Locked Chest (uses a key)
+  # Removed 2026-10-26: not a super chest (hut SW of the WP; its "bonfire" is the WP braziers).
+  # - name: hut1_bonfire_sw
+  #   hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]
+  #   chests: [[690, 344]]
   # Disabled: the scout saw a "Chest" tooltip here, but the live run didn't find it (23:43), and
   # the bonfire itself is the most dangerous spot (Doom Ape champions). Re-scout before enabling.
   # - name: east_bonfire_e
