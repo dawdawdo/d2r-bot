@@ -74,6 +74,11 @@ town:
     repair_all: [362, 516]       # trade window: right anvil button ("Repair all equipment")
     misc_tab: [370, 77]          # trade window tabs: Armor, Weapons, Weapons, Misc
     key: [395, 110]              # Misc tab: Key (shift+right-click buys a stack)
+  asheara:                       # merc revive. Legs after the Ormus legs: NW along the boardwalk into her hut
+    route: [[640, 100], [420, 180], [340, 200], [300, 200], [330, 190], [410, 135]]
+    region: [300, 120, 500, 260]   # where she wanders inside the hut at the end of the route
+    resurrect_offset: [38, 53]     # "Resurrect <merc>" relative to the npc_asheara.png match (dialog line 2)
+  merc_region: [0, 0, 78, 74]    # merc portrait (top-left) shows only while the merc is alive
 
 debug_loot_frames: false         # save the first loot-scan frame of each chest to fixtures/raw/
 

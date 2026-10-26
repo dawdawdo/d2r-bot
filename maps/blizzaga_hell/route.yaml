@@ -7,6 +7,7 @@ fingerprint:
   template: lk_wp.png
   region: [520, 290, 240, 140]
   threshold: 0.6
+  half_threshold: 0.5  # left or right half alone (merc on a brazier): arrivals score >= 0.55, other views <= 0.44
 
 # Super-chest bonfire camps: every camp has the same layout (bot/lk.py BONFIRE_LAYOUT), so a camp
 # is just its bonfire's world position + the order to visit its 3 chest spots (Stephen, 2026-10-26).

@@ -203,6 +203,49 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
     return False
 
 
+def merc_alive(bot: Controller, tries: int = 3) -> bool:
+    """The merc portrait (top-left) shows only while the merc is alive. Retries a few times:
+    it may not be drawn yet right after a game loads."""
+    for i in range(tries):
+        if i:
+            bot.kill.sleep(0.5)
+        if bot.find("merc_portrait.png", region=tuple(bot.cfg["town"]["merc_region"]),
+                    threshold=0.85) is not None:
+            return True
+    return False
+
+
+def revive_merc(bot: Controller) -> bool:
+    """From spawn: walk past Ormus, NW along the boardwalk into Asheara's hut (route from Stephen,
+    recorded 2026-10-26), Resurrect (50k gold). Leaves us far from the WP: caller starts a new game."""
+    tcfg = bot.cfg["town"]
+    a = tcfg["asheara"]
+    walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]] + a["route"])
+    for attempt, (x, y) in enumerate(_name_points(bot, a["region"])):
+        if attempt >= 5:
+            break
+        bot.click(x, y)
+        bot.kill.sleep(2.0)
+        loc = bot.find("npc_asheara.png", region=(0, 0, 1280, 500), threshold=0.85)
+        if loc is None:
+            bot.press("esc")  # someone else's dialog (or nothing); keep looking
+            bot.kill.sleep(0.3)
+            continue
+        bot.click(loc[0] + a["resurrect_offset"][0], loc[1] + a["resurrect_offset"][1])
+        bot.kill.sleep(1.5)
+        bot.press("esc")
+        bot.kill.sleep(0.5)
+        if merc_alive(bot):
+            log.info("merc resurrected at Asheara")
+            return True
+        bot.save_failure("merc_not_resurrected")
+        log.warning("merc still dead after Resurrect (not enough gold?)")
+        return False
+    bot.save_failure("asheara_not_found")
+    log.warning("Asheara not found; merc not revived")
+    return False
+
+
 def needs_heal(bot: Controller) -> bool:
     bot.observe()
     return bot.hp is not None and bot.hp < bot.cfg["town"]["heal_below_pct"]

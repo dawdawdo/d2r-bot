@@ -56,11 +56,32 @@ def load_route(name: str) -> dict:
     return route
 
 
+def fingerprint_match(frame: np.ndarray, template: np.ndarray, region, threshold: float,
+                      half_threshold: float | None = None) -> bool:
+    """Whole template, or its left or right half: the merc often stands on one brazier."""
+    from .vision.screen import match_score
+
+    if match_score(frame, template, region)[0] >= threshold:
+        return True
+    w = template.shape[1]
+    half = threshold if half_threshold is None else half_threshold
+    return any(match_score(frame, p, region)[0] >= half for p in (template[:, : w // 2], template[:, w // 2 :]))
+
+
 def check_fingerprint(bot: Controller, route: dict) -> None:
+    """Retries for ~2 s: the merc arriving next to us (with a glow) can cover the platform."""
+    from .vision.screen import ASSETS
+
     fp = route["fingerprint"]
-    if bot.find(fp["template"], region=fp["region"], threshold=fp["threshold"]) is None:
-        bot.save_failure("map_fingerprint_mismatch")
-        raise MapChanged("LK waypoint view doesn't match the stored map fingerprint")
+    tpl = cv2.imread(str(ASSETS / fp["template"]))
+    for i in range(5):
+        if i:
+            bot.kill.sleep(0.5)
+        bot.observe()
+        if fingerprint_match(bot.frame, tpl, fp["region"], fp["threshold"], fp.get("half_threshold")):
+            return
+    bot.save_failure("map_fingerprint_mismatch")
+    raise MapChanged("LK waypoint view doesn't match the stored map fingerprint")
 
 
 def teleport(bot: Controller, dx: int, dy: int) -> None:
