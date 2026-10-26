@@ -120,23 +120,21 @@ def world_to_screen(odo: Odometer, wx: float, wy: float) -> tuple[int, int]:
 
 def scan_tooltips(bot: Controller, region=(160, 60, 960, 500), step: int = 40) -> list[tuple[int, int, np.ndarray]]:
     """Hover a grid; return points where an object name tooltip appears, with the tooltip crop."""
+    from .vision.tooltip import find_tooltip
+
     rx, ry, rw, rh = region
     hits = []
-    for row, y in enumerate(range(ry, ry + rh, step)):
-        bot.check()
-        bot.input.move(1270, 590)
-        bot.sleep(0.12)
-        base = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
+    for y in range(ry, ry + rh, step):
         for i, x in enumerate(range(rx, rx + rw, step)):
-            if i and i % 6 == 0:
+            if i % 6 == 0:
                 bot.check()  # HP guardian every ~0.5 s
             bot.input.move(x, y)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
-            g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.int16)
-            y0, x0 = max(0, y - 70), max(0, x - 110)
-            if (np.abs(g[y0:y, x0 : x + 110] - base[y0:y, x0 : x + 110]) > 60).mean() > 0.03:
-                hits.append((x, y, f[y0:y, x0 : x + 110].copy()))
+            box = find_tooltip(f, x, y)
+            if box is not None:
+                bx, by, bw, bh = box
+                hits.append((x, y, f[by : by + bh, bx : bx + bw].copy()))
     bot.input.move(1270, 590)
     return hits
 

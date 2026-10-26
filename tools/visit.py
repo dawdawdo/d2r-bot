@@ -48,7 +48,7 @@ def main() -> int:
             print(f"target {i} ({tx:.0f},{ty:.0f}) reached={ok} at {odo.pos.round().tolist()} "
                   f"tooltips={[(x, y) for x, y, _ in hits]}")
             small = cv2.resize(view, None, fx=0.5, fy=0.5)
-            crops = [cv2.resize(c, (220, 140)) for _, _, c in hits[:8]] or [np.zeros((140, 220, 3), np.uint8)]
+            crops = [cv2.resize(c, (220, 40)) for _, _, c in hits[:16]] or [np.zeros((40, 220, 3), np.uint8)]
             col = np.vstack(crops)
             h = max(small.shape[0], col.shape[0])
             sheet = np.hstack([cv2.copyMakeBorder(small, 0, h - small.shape[0], 0, 0, cv2.BORDER_CONSTANT),

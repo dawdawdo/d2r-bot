@@ -14,12 +14,14 @@ def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: in
     roi = cv2.cvtColor(frame[y0:y, x0 : x + half_w], cv2.COLOR_BGR2GRAY)
     if roi.size == 0:
         return None
-    dark = (roi < 22).astype(np.uint8)
-    dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, np.ones((3, 7), np.uint8))  # bridge the letters
+    # Tooltip boxes are pure black (~0-3); scenery shadows rarely are, so a low threshold keeps
+    # the box from merging with dark surroundings.
+    dark = (roi < 8).astype(np.uint8)
+    dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, np.ones((3, 5), np.uint8))  # bridge the letters
     n, _, st, _ = cv2.connectedComponentsWithStats(dark)
     for i in range(1, n):
         bx, by, bw, bh, area = st[i]
-        if not (40 <= bw <= 260 and 14 <= bh <= 60):
+        if not (36 <= bw <= 260 and 14 <= bh <= 60):
             continue
         box = roi[by : by + bh, bx : bx + bw]
         fill = area / (bw * bh)

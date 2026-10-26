@@ -12,3 +12,6 @@ targets:
   - name: hut1_bonfire_sw          # big thatched hut SW of the WP, bonfire to its NE
     hops: [[0, 225], [0, 225], [-240, 135], [-40, 190]]   # last hop lands inside the hut
     chests: [[690, 344]]           # one Locked Chest (uses a key)
+  - name: hut2_bonfire_w           # hut NW of the west bonfire; Doom Ape champions nearby
+    world: [-2611, -557]           # where the scan stood (world = px from the WP arrival view)
+    chests_world: [[-2711, -667]]

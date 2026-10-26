@@ -54,6 +54,33 @@ def _tooltip_near(bot: Controller, x: int, y: int) -> bool:
     return (np.abs(g[y0:y, x0 : x + 120] - base[y0:y, x0 : x + 120]) > 60).mean() > 0.02
 
 
+_CHEST_TMPLS: list | None = None
+
+
+def _is_chest(frame: np.ndarray, box) -> bool:
+    """Tooltip text says Chest / Locked Chest (templates in bot/assets/templates/tt_chest*.png).
+    With no templates yet, accept anything and save the crop for labeling."""
+    global _CHEST_TMPLS
+    from .vision.screen import ASSETS
+
+    bx, by, bw, bh = box
+    crop = frame[by : by + bh, bx : bx + bw]
+    if _CHEST_TMPLS is None:
+        _CHEST_TMPLS = [cv2.imread(str(p)) for p in sorted(ASSETS.glob("tt_chest*.png"))]
+    if not _CHEST_TMPLS:
+        import time
+
+        d = ROOT / "fixtures" / "raw"
+        cv2.imwrite(str(d / f"tooltip_{time.strftime('%H%M%S')}_{bx}_{by}.png"), crop)
+        return True
+    for t in _CHEST_TMPLS:
+        if t.shape[0] <= crop.shape[0] + 2 and t.shape[1] <= crop.shape[1] + 2:
+            c = cv2.copyMakeBorder(crop, 2, 2, 2, 2, cv2.BORDER_REPLICATE)
+            if cv2.minMaxLoc(cv2.matchTemplate(c, t, cv2.TM_CCOEFF_NORMED))[1] > 0.8:
+                return True  # "Chest" also matches inside "Locked Chest"
+    return False
+
+
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> bool:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
     tooltip, hover-scan outward in rings (nearest first) up to `radius`."""
@@ -62,18 +89,18 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         ring = [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
                 if max(abs(dx), abs(dy)) == r]
         pts += [(px, py) for px, py in ring if 20 < px < 1260 and 60 < py < 560]
-    base = None
+    from .vision.tooltip import find_tooltip
+
     for i, (px, py) in enumerate(pts):
         if i % 6 == 0:
             bot.check()
-            bot.input.move(1270, 590)
-            bot.sleep(0.12)
-            base = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
         bot.input.move(px, py)
         bot.kill.sleep(0.09)
-        g = cv2.cvtColor(bot.capture.grab(), cv2.COLOR_BGR2GRAY).astype(np.int16)
-        y0, x0 = max(0, py - 90), max(0, px - 120)
-        if (np.abs(g[y0:py, x0 : px + 120] - base[y0:py, x0 : px + 120]) > 60).mean() > 0.02:
+        f = bot.capture.grab()
+        box = find_tooltip(f, px, py)
+        if box is not None and not _is_chest(f, box):
+            continue
+        if box is not None:
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
             bot.click(px, py)
@@ -127,6 +154,13 @@ def loot(bot: Controller, max_picks: int = 8) -> list[str]:
             break
         lab = min(labels, key=lambda l: abs(l.center[0] - CENTER[0]) + abs(l.center[1] - CENTER[1]))
         log.info("pick %s label at %s", lab.kind, lab.center)
+        if lab.kind != "white":  # keep evidence of every valuable pick for review
+            import time
+
+            p = ROOT / "fixtures" / "raw" / f"pick_{lab.kind}_{time.strftime('%m%d-%H%M%S')}.png"
+            img = bot.frame.copy()
+            cv2.rectangle(img, (lab.x, lab.y), (lab.x + lab.w, lab.y + lab.h), (0, 255, 255), 1)
+            cv2.imwrite(str(p), img)
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
         picked.append(lab.kind)
@@ -134,16 +168,35 @@ def loot(bot: Controller, max_picks: int = 8) -> list[str]:
 
 
 def run_route(bot: Controller, route: dict) -> dict:
-    """From the LK waypoint: visit each target, open its chests, loot. Returns stats."""
+    """From the LK waypoint: visit each target, open its chests, loot. Returns stats.
+
+    A target is either `hops` (relative teleports) + `chests` (screen coords after the last hop),
+    or `world` (teleport_to target, world coords from the WP arrival view) + `chests_world`.
+    Odometry runs throughout, so both kinds can be mixed in one route.
+    """
+    from .nav import Odometer, fight, hop, teleport_to, world_to_screen
+
     check_fingerprint(bot, route)
     stats = {"chests": 0, "picked": []}
+    odo = Odometer(bot.capture.grab())
     for t in route["targets"]:
         log.info("-> %s", t["name"])
-        for dx, dy in t["hops"]:
-            teleport(bot, dx, dy)
+        if "world" in t:
+            if not teleport_to(bot, odo, t["world"]):
+                continue
+            if t.get("fight", True):
+                fight(bot)
+                odo.update(bot.capture.grab())
+            points = [world_to_screen(odo, *c) for c in t["chests_world"]]
+        else:
+            for dx, dy in t["hops"]:
+                hop(bot, odo, dx, dy)
+            points = [tuple(c) for c in t["chests"]]
         bot.wait_still(timeout=1.5, min_wait=0.1)
-        for cx, cy in t["chests"]:
+        odo.update(bot.capture.grab())
+        for cx, cy in points:
             if open_chest(bot, cx, cy):
                 stats["chests"] += 1
                 stats["picked"] += loot(bot)
+                odo.update(bot.capture.grab())  # picking items walks us around
     return stats

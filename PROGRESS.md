@@ -53,7 +53,8 @@
 - Blizzaga's skill hotkeys? (Which key is Teleport / Blizzard / Frozen Armor.) The bot could cast
   an armor or kill buzzards instead of only fleeing.
 - Keys and potions: OK to buy keys and potions from vendors automatically later?
-- I can't run `/usage` myself; tell me if weekly usage nears 85%.
+- Usage: I can't run `/usage`, but I see its output when Stephen runs it. Last reading 2026-10-25 ~19:50:
+  week 23% (resets Oct 29 10pm ET), session 68% (resets Oct 25 11:10pm ET).
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 The A3 town WP is east of the temple (platform with two blue braziers). Show Items = toggle (Alt).
