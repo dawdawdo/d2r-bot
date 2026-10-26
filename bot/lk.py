@@ -107,7 +107,7 @@ def _is_chest(frame: np.ndarray, box) -> bool:
     return False
 
 
-LOCKED_MIN_W = 110  # tooltip box px: "Chest" is ~60-80 wide, "Locked Chest" about twice that
+LOCKED_MIN_W = 100  # tooltip box px, measured live: "Chest" 59-65, "Locked Chest" 134-140
 
 
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> tuple[int, int] | None:
@@ -134,7 +134,7 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         if box is not None:
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
-            log.info("chest tooltip %dx%d", box[2], box[3])
+            log.debug("chest tooltip %dx%d", box[2], box[3])
             if box[2] > LOCKED_MIN_W:  # "Locked Chest" tooltip: opening it uses a key
                 bot.keys_used = getattr(bot, "keys_used", 0) + 1
             bot.click(px, py)

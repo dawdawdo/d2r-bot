@@ -1,6 +1,6 @@
 # Progress
 
-**Current milestone:** M4/M5: route has **6 chests** (5–6 per clean run). M1–M3 done. Next: M6 soak.
+**Current milestone:** M6 soak. Route: hut1 + 2 bonfire camps x 3 chests = **7 chests**. M1–M5 done.
 
 **Works (2026-10-25, live):**
 - `python -m bot.run --runs N --mode chests`: launch/recover → Hell game → corpse pickup at spawn →
@@ -113,7 +113,17 @@
   (18/635 life) when I tried "drink a rejuv instead of chickening on broken ES": reverted.
 - Ideas from Stephen: merc (Prayer, tank) could help survival; player count 7 instead of 8.
 
-**Next step:** M6: 50-run soak with runs.csv (re-run `python -m bot.run --runs 10 --mode chests` first). Optional: find the
+- **2026-10-26 07:00:** Stephen's answers applied:
+  - `/players 7` typed once per bot session (`game.players`); chat confirms "difficulty scale set to 7".
+    Holds until D2R exits. Since then 8 of 10 runs ok (6-7 chests), vs ~50% chickens before.
+  - Bonfire camps share one layout: `bot/lk.py BONFIRE_LAYOUT` (nw, nw_deep, ne offsets from the fire);
+    route.yaml just lists each camp's bonfire + visit order. West nw_deep chest found first try.
+  - Keys: counted, not read. A "Locked Chest" tooltip (134-140 px wide vs 59-65 for "Chest") = 1 key used.
+    Estimate in `logs/state.json`; Hratli buys a stack when it's <= 3 (and on the first run if unknown).
+    Reading the real count would need digit OCR of the hover tooltip; maybe later.
+  - Merc teleports with her (no waiting needed).
+
+**Next step:** M6: 50-run soak, run in the foreground in 3-run batches (see memory note). Optional: find the
 west bonfire's 3rd chest and re-check the east-bonfire E chest.
 
 **Open questions for Stephen:**
