@@ -27,6 +27,18 @@ class Label:
 
 
 WHITE_TEXT = {"lo": [0, 0, 190], "hi": [179, 40, 255]}
+MAX_COLOR_H = 16  # rune labels in 22 live picks: 13-14 px tall
+MAX_RUN = 14      # longest horizontal run of text pixels: runes <= 12 ("M"), coin piles 16-17
+
+
+def _max_run(m: np.ndarray) -> int:
+    best = 0
+    for row in m:
+        d = np.diff(np.concatenate(([0], row.astype(np.int8), [0])))
+        starts, ends = np.nonzero(d == 1)[0], np.nonzero(d == -1)[0]
+        if starts.size:
+            best = max(best, int((ends - starts).max()))
+    return best
 
 
 def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 11,
@@ -55,6 +67,9 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
                 # coins underneath show through (2026-10-27 read as a unique next to "1818 Gold")
                 white = hsv_mask(frame[y : y + h, x : x + w], WHITE_TEXT) > 0
                 if white.sum() > 0.15 * text.sum():  # real rune labels: 0 white px
+                    continue
+                # coin piles are solid blobs: real label text is 13-14 px tall with strokes of <= 12 px
+                if h > MAX_COLOR_H or _max_run(text) > MAX_RUN:
                     continue
             bg = gray[y : y + h, x : x + w][~text]
             if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):

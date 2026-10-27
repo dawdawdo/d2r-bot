@@ -82,3 +82,19 @@ def test_gap_between_gold_labels_is_not_unique():
     img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / "false_unique_between_gold.png"))
     kinds = {k: CFG["vision"]["labels"][k] for k in ("unique", "rune", "set")}
     assert not find_labels(img, kinds, ignore=CFG["vision"]["label_ignore"])
+
+
+def test_coin_blob_between_gold_labels_is_not_unique():
+    """2026-10-27 04:20: a 19 px tall coin blob next to "426 Gold" / "1762 Gold" read as a unique."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / "false_unique_coins_19px.png"))
+    kinds = {k: CFG["vision"]["labels"][k] for k in ("unique", "rune", "set")}
+    assert not find_labels(img, kinds, ignore=CFG["vision"]["label_ignore"])
+
+
+@pytest.mark.parametrize("name", sorted(p.name for p in (Path(__file__).resolve().parent.parent / "fixtures" / "loot").glob("pick_rune_*.png")))
+def test_real_rune_labels_found(name):
+    """Live rune picks (file name = label box x_y_w_h): the detector must still find them."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / name))
+    x, y, w, h = map(int, name[:-4].split("_")[3:7])
+    labels = find_labels(img, {"rune": CFG["vision"]["labels"]["rune"]}, ignore=CFG["vision"]["label_ignore"])
+    assert any(abs(l.x - x) < 5 and abs(l.y - y) < 5 for l in labels)
