@@ -365,7 +365,7 @@ def run_route(bot: Controller, route: dict) -> dict:
             for dx, dy in t["hops"]:
                 hop(bot, odo, dx, dy)
             points = [tuple(c) for c in t["chests"]]
-        bot.wait_still(timeout=1.5, min_wait=0.1)
+        bot.wait_still(timeout=1.0, settle=1, poll=0.05, min_wait=0.0)  # teleports already settle 0.2 s
         odo.update(bot.capture.grab())
         if "world" in t:  # the settle may have moved the view a little
             points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]

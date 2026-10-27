@@ -58,3 +58,24 @@ def scan(frame: np.ndarray, key_template: np.ndarray, protected=()) -> dict[str,
             else:
                 out["other"].append((c, r))
     return out
+
+
+# Stash Runes tab: one slot per rune, El..Zod row by row, 9 per row (measured 2026-10-26).
+RUNES = ("El Eld Tir Nef Eth Ith Tal Ral Ort Thul Amn Sol Shael Dol Hel Io Lum Ko Fal Lem Pul Um Mal Ist "
+         "Gul Vex Ohm Lo Sur Ber Jah Cham Zod").split()
+RUNE_X0, RUNE_Y0, RUNE_PITCH_X, RUNE_PITCH_Y = 63, 125, 40.3, 40
+
+
+def rune_slot_center(i: int) -> tuple[int, int]:
+    return int(round(RUNE_X0 + (i % 9) * RUNE_PITCH_X)), int(round(RUNE_Y0 + (i // 9) * RUNE_PITCH_Y))
+
+
+def runes_added(before: np.ndarray, after: np.ndarray) -> list[str]:
+    """Rune slots whose picture (icon brightness or count digit) changed between two Runes-tab frames."""
+    out = []
+    for i, name in enumerate(RUNES):
+        x, y = rune_slot_center(i)
+        a, b = before[y - 18 : y + 18, x - 18 : x + 18], after[y - 18 : y + 18, x - 18 : x + 18]
+        if int((np.abs(a.astype(np.int16) - b).max(axis=2) > 40).sum()) > 8:
+            out.append(name)
+    return out

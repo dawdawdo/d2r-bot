@@ -10,6 +10,7 @@ import logging
 import cv2
 import numpy as np
 
+from .config import ROOT
 from .controller import BotError, Controller
 from .vision.screen import ASSETS
 
@@ -448,13 +449,40 @@ def _scan_inventory(bot: Controller) -> dict:
     return scan(bot.capture.grab(), tpl, protected_cells(bot.cfg["inventory"]["protected"]))
 
 
+LOOT_CSV = ROOT / "logs" / "loot.csv"
+
+
+def _log_loot(items: list[str]) -> None:
+    """Append stashed items to logs/loot.csv (time, item) so Stephen can see what the bot found."""
+    import time
+
+    if not items:
+        return
+    LOOT_CSV.parent.mkdir(exist_ok=True)
+    with open(LOOT_CSV, "a") as f:
+        for it in items:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')},{it}\n")
+    log.info("stashed: %s", ", ".join(items))
+
+
+def _save_tooltip(bot: Controller, x: int, y: int) -> None:
+    """Hover an inventory item and keep its tooltip (logs/loot/<time>.png): names unique rings."""
+    import time
+
+    bot.input.move(x, y)
+    bot.kill.sleep(0.35)
+    out = LOOT_CSV.parent / "loot"
+    out.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(out / f"{time.strftime('%Y%m%d-%H%M%S')}_{x}_{y}.png"), bot.capture.grab()[:, 400:1280])
+
+
 def stowaway(bot: Controller) -> dict:
     """At the stash stop: Ctrl+click loot (runes, unique rings: anything outside Stephen's protected
     cells that isn't a key) into the stash, then drop key stacks beyond one (pickups add whole stacks;
     2026-10-26 eight full stacks had filled the inventory). Runes auto-route to the Runes tab; the rest
     goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12."""
     from . import state
-    from .vision.inventory import cell_center
+    from .vision.inventory import cell_center, runes_added
 
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
@@ -464,12 +492,25 @@ def stowaway(bot: Controller) -> dict:
     done = {"stashed": 0, "dropped": 0}
     if inv["other"]:
         if open_stash(bot):
-            bot.click(*bot.cfg["stash"]["shared_tab"])
+            scfg = bot.cfg["stash"]
+            bot.click(*scfg["runes_tab"])  # before/after shots of the Runes tab name the runes
+            bot.input.move(640, 600)
+            bot.kill.sleep(0.4)
+            runes_before = bot.capture.grab()
+            bot.click(*scfg["shared_tab"])
             bot.kill.sleep(0.4)
             for c, r in inv["other"]:
+                _save_tooltip(bot, *cell_center(c, r))
                 _ctrl_click(bot, *cell_center(c, r))
             left = _scan_inventory(bot)["other"]
             done["stashed"] = len(inv["other"]) - len(left)
+            bot.click(*scfg["runes_tab"])
+            bot.input.move(640, 600)
+            bot.kill.sleep(0.4)
+            runes = runes_added(runes_before, bot.capture.grab())
+            others = done["stashed"] - len(runes)
+            _log_loot([f"{n} Rune" for n in runes] + ["item to shared tab"] * max(0, others))
+            done["runes"] = runes
             if left:
                 bot.save_failure("stowaway_left_items")
                 log.warning("stowaway: %d item(s) stayed in the inventory (stash page full?): %s", len(left), left)

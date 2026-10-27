@@ -26,3 +26,12 @@ def test_helm_rune_key_and_empties():
 
 def test_protected_cells():
     assert len(PROT) == 30 and (2, 2) in PROT and (2, 1) not in PROT
+
+
+def test_runes_added_hel():
+    from bot.vision.inventory import runes_added
+
+    a = cv2.imread(str(FIX / "runes_tab_before.png"))
+    b = cv2.imread(str(FIX / "runes_tab_hel_added.png"))
+    assert runes_added(a, b) == ["Hel"]
+    assert runes_added(a, a) == []

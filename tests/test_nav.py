@@ -154,6 +154,9 @@ def test_hop_match():
     assert _matches_hop(np.array([-402.0, -257.0]), (-340, -220))
     assert not _matches_hop(np.array([-153.0, -288.0]), (-265, -220))  # a real mis-track (live 18:34)
     assert not _matches_hop(np.array([-402.0, -257.0]), None)
+    assert _matches_hop(np.array([307.0, 154.0]), (378, 183))  # cut short, same line (live 23:05)
+    assert _matches_hop(np.array([308.0, 173.0]), (378, 183))
+    assert not _matches_hop(np.array([150.0, 150.0]), (378, 183))
 
 
 def test_find_town_wp_with_npc_on_brazier():

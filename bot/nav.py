@@ -59,7 +59,18 @@ def _matches_hop(moved: np.ndarray, expect) -> bool:
     if expect is None:
         return False
     want = np.asarray(expect, float) * HOP_GAIN
-    return float(np.hypot(*(moved - want))) < 0.15 * float(np.hypot(*want)) + 20
+    n_want, n_moved = float(np.hypot(*want)), float(np.hypot(*moved))
+    if float(np.hypot(*(moved - want))) < 0.15 * n_want + 20:
+        return True
+    # A landing that isn't walkable cuts the hop short along the same line (live: the first LK hop
+    # (378, 183) always lands at ~(307, 160), resp 0.034-0.039).
+    if n_want < 1 or n_moved < 1:
+        return False
+    cos = float(np.dot(moved, want)) / (n_want * n_moved)
+    return cos > math.cos(math.radians(HOP_SHORT_DEG)) and 0.5 <= n_moved / n_want <= 1.0
+
+
+HOP_SHORT_DEG = 8
 
 
 class Odometer:
