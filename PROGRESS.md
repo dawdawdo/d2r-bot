@@ -1,35 +1,37 @@
 # Progress
 
-**Current milestone:** M6 soak + stowaway. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
+**Current milestone:** M6 soak; map learning built. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
-**Works (live, 2026-10-26 night):**
+**Works (live, 2026-10-27 ~01:20):**
 - `python -m bot.run --runs N --mode chests` (conda env d2r: `~/miniconda3/envs/d2r/python.exe`): launch/recover →
-  Hell game → `/players 7` once per session → (corpse pickup only after a death) → (Ormus / Hratli every 10 runs,
-  counter persisted in `logs/state.json` / Asheara) → buffs → town route → stash stop: belt restock (skipped, stash
-  empty) + **stowaway** → WP → LK (arrival checked by map fingerprint) → 6 chests → loot → save & exit. `runs.csv`.
-- **Speed:** clean runs 45–51 s (6 chests). Repair runs ~87 s.
-- **Stowaway** (`town.stowaway`, after runs that picked anything but rejuvs, and at session start): inventory scan
-  (`vision/inventory.py`: empty / key / other; Stephen's items are `inventory.protected` cells in config), Ctrl+click
-  loot into the stash (runes auto-route to the Runes tab; rings to shared page 1), drop key stacks beyond one
-  (Ctrl+click with only the inventory open). An extra stack ⇒ kept stack is full ⇒ `keys_left = 12`.
-  Stashed runes are named by diffing the Runes tab → `logs/loot.csv`; tooltips saved to `logs/loot/`.
-  Found so far: Hel ×2, **Ohm** (23:20).
-- Keys are picked only while the estimate is < 8 (`town.keys_pick_below`): one pickup can be a whole stack.
-- Batches tonight: 30 runs since 23:00, 28 ok, 1 chicken (mana drained at east camp), 1 run lost odometry (2 chests).
+  Hell game (Hell button checked before clicking: another difficulty regenerates the map) → `/players 7` once per
+  D2R window → (corpse click only if the last run died; flag in `logs/state.json`) → (Ormus / Hratli every 10 chest
+  runs / Asheara) → buffs → **chained town walk** (odometry, 9.1 s) → stash stop: stowaway → WP → LK → 6 chests →
+  loot → save & exit. `runs.csv`, `logs/loot.csv` (stashed runes by name), `logs/loot/` (item tooltips).
+- **Stats since 23:00:** 137 runs, 125 ok, 7 chickens (before the ES rescue), 542 chests. Clean runs avg 44 s.
+  Last batch 11/11. Found: Hel ×3, Dol ×2, **Ohm**.
+- **Stowaway** (`town.stowaway`): inventory scan (`vision/inventory.py`; Stephen's items = `inventory.protected`),
+  Ctrl+click loot to the stash (runes auto-route to the Runes tab), drop key stacks beyond one; keys picked only
+  while the estimate < 8.
+- **Energy shield broken** → drink a belt potion first; chicken only if still broken / belt empty.
+- **Map learning** (`bot/learn.py`, `tools/learn_map.py --name X --all --games 15`): explore LK from the WP over
+  several games, bonfire sightings, verify camps by chest tooltips, shortest route (nw before nw_deep).
+  `bot.run --relearn`: two fingerprint misses in a row → learn the new map and keep farming (route saved in
+  `logs/state.json` key `route`; delete it to go back to config). Tested live with a forced mismatch: 2 games found
+  and verified both camps.
 
 **Broken / risks:**
-- Chickens ~1 in 10–20 (ES broken by mana burn at camps). Belt rejuvs only come from chests.
-- Lost-odometry recovery sometimes can't find the west bonfire (search fails → camp skipped).
+- Chickens ~1 in 15 (mana burn at camps); the ES rescue costs belt potions.
 - If Stephen rearranges his inventory, update `inventory.protected` (else his items get stashed).
 - `logs/state.json` has `stash_rejuvs_empty: true`. **If Stephen puts rejuvs in the stash, delete that key.**
+- Map hunting (reroll = play another difficulty, then Hell) is NOT built: it destroys the current map. Needs Stephen.
 
 **Next step (exact):**
-1. Keep soaking (foreground, ~9 runs per command ≈ 8 min).
-2. Speed: chained town walk (legs are consistent by odometry, see `town walk legs` log line) ~2.5 s/run.
-3. Recovery: better relocalization when lost (e.g. match against a stitched LK map).
-4. Long term (Stephen): map hunting — reroll Hell maps until a good super-chest layout, learn it, run it.
+1. Keep soaking (foreground, ~11 runs per command ≈ 9 min).
+2. Map hunting design: score a fresh map from a short exploration; only with Stephen's go-ahead.
+3. Linux backend (later; GLaDOS not in scope yet).
 
-**Open questions for Stephen:** none.
+**Open questions for Stephen:** none blocking. (Map hunting: when you want it, it will replace Blizzaga's map.)
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
