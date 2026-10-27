@@ -151,11 +151,15 @@ def _is_chest(frame: np.ndarray, box) -> bool:
 LOCKED_MIN_W = 100  # tooltip box px, measured live: "Chest" 59-65, "Locked Chest" 134-140
 
 
+SCAN_JUMP = 80  # px the view may move during a chest hover scan before we call it a jump
+
+
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35,
-               click: bool = True) -> tuple[int, int] | None:
+               click: bool = True, odo=None) -> tuple[int, int] | None:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
     tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found.
-    `click=False` only looks (map learning: is there a chest here?)."""
+    `click=False` only looks (map learning: is there a chest here?). With `odo`, the scan stops early
+    when the view jumps (teleport-when-struck moved us; 2026-10-27 a scan ran 28 s for nothing)."""
     pts = [(x, y)]
     for r in range(step, radius + 1, step):
         pts += [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
@@ -168,6 +172,11 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
 
     for i, (px, py) in enumerate(pts):
         bot.check()  # every point: bursts from champion packs kill in about a second
+        if odo is not None and i and i % 10 == 0:
+            dx, dy = odo.update(bot.frame)
+            if np.hypot(dx, dy) > SCAN_JUMP:
+                log.info("view jumped (%d, %d) during the chest scan; giving up on this chest", dx, dy)
+                return None
         bot.input.move(px, py)
         bot.kill.sleep(0.09)
         f = bot.capture.grab()
@@ -406,7 +415,7 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
     if "world" in t:  # the settle may have moved the view a little
         points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
     for i, (cx, cy) in enumerate(points):
-        found = open_chest(bot, cx, cy)
+        found = open_chest(bot, cx, cy, odo=odo)
         if found and "world" in t and not odo.lost:  # before the update below: opening walks us to it
             learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
         odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
