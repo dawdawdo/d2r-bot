@@ -14,7 +14,7 @@ import time
 
 from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, RunTimeout
-from .lk import MapChanged, load_route, run_route
+from .lk import MapChanged, fingerprint_ok, load_route, run_route
 from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
@@ -30,14 +30,15 @@ FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 
 def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
-            players: int | None = None) -> dict:
+            players: int | None = None, corpse: bool = True, stow: bool = False) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
         bot.wait_for("in_game", 10)
         if players:
             set_players(bot, players)
-        recover_corpse(bot)
+        if corpse:  # only after a death (or at session start: the last session may have ended in one)
+            recover_corpse(bot)
         if mode == "chests" and bot.merc_revive and not merc_alive(bot):
             log.info("merc is dead -> Asheara")
             bot.merc_revive = revive_merc(bot)  # failed (no gold?) -> don't retry every run
@@ -61,10 +62,12 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     stats: dict = {}
     try:
         if mode in ("lk", "chests"):
-            town_to_lower_kurast(bot)
+            route = load_route(cfg["game"]["route"]) if mode == "chests" else None
+            town_to_lower_kurast(bot, arrived_check=(lambda: fingerprint_ok(bot, route)) if route else None,
+                                 stow=stow)
         if mode == "chests":
             bot.deadline = bot.clock() + cfg["safety"]["run_timeout_s"]  # Lower Kurast part only
-            stats = run_route(bot, load_route(cfg["game"]["route"]))
+            stats = run_route(bot, route)
         if mode == "lifecycle":
             bot.kill.sleep(1.0)
     finally:
@@ -95,6 +98,8 @@ def main() -> int:
     bot.keys_left = state.load().get("keys_left")  # estimate; None = unknown -> buy on the first run
     log.info("keys left (estimate): %s", bot.keys_left)
     bot.merc_revive = True
+    corpse = True
+    stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
     ok = streak = 0
     try:
@@ -107,19 +112,24 @@ def main() -> int:
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
                     chests = args.mode == "chests"
-                    repair = chests and i % cfg["town"]["repair_every"] == 0
+                    since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
+                    repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"])
+                    state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1})
                     keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
                     bot.keys_used = 0
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
-                                        players=cfg["game"].get("players") if i == 0 else None)
+                                        players=cfg["game"].get("players") if i == 0 else None, corpse=corpse,
+                                        stow=stow and chests)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
                         state.save({**state.load(), "keys_left": bot.keys_left})
                     row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
+                    stow = any(p != "rejuv" for p in stats.get("picked", []))
                     ok += 1
                     streak = 0
+                    corpse = False
                 except MapChanged as e:
                     row.update(result="map_changed", error=str(e))
                     w.writerow({**row, "duration_s": round(time.time() - t0, 1)})
@@ -128,12 +138,15 @@ def main() -> int:
                 except (Chicken, Died) as e:
                     row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
                     log.warning("run %d: %s", i + 1, e)
+                    corpse = isinstance(e, Died)
+                    stow = True  # it may have picked things before bailing
                 except KillSwitchTripped:
                     raise
                 except Exception as e:  # noqa: BLE001 - one bad run must not end an unattended soak
                     if not isinstance(e, BotError):
                         log.exception("run %d: unexpected error", i + 1)
                     row.update(result="timeout" if isinstance(e, RunTimeout) else "fail", error=str(e))
+                    corpse = stow = True  # a death we didn't see may be behind it
                     streak += 1
                     log.error("run %d failed: %s", i + 1, e)
                 row["duration_s"] = round(time.time() - t0, 1)

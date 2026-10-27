@@ -68,6 +68,17 @@ def fingerprint_match(frame: np.ndarray, template: np.ndarray, region, threshold
     return any(match_score(frame, p, region)[0] >= half for p in (template[:, : w // 2], template[:, w // 2 :]))
 
 
+def fingerprint_ok(bot: Controller, route: dict) -> bool:
+    """One quick look: does the view match the LK waypoint fingerprint? (Skips the slower automap
+    area-name check on arrival; check_fingerprint still retries before the route.)"""
+    from .vision.screen import ASSETS
+
+    fp = route["fingerprint"]
+    tpl = cv2.imread(str(ASSETS / fp["template"]))
+    bot.observe()
+    return bool(fingerprint_match(bot.frame, tpl, fp["region"], fp["threshold"], fp.get("half_threshold")))
+
+
 def check_fingerprint(bot: Controller, route: dict) -> None:
     """Retries for ~2 s: the merc arriving next to us (with a glow) can cover the platform."""
     from .vision.screen import ASSETS

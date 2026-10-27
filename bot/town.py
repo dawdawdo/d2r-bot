@@ -20,19 +20,45 @@ def _view_moved(a: np.ndarray, b: np.ndarray) -> bool:
     return float(np.abs(a[:560].astype(np.int16) - b[:560]).mean()) > 4
 
 
-def walk_route(bot: Controller, route: list, retries: int = 2) -> None:
+def walk_route(bot: Controller, route: list, retries: int = 2) -> list[tuple[float, float]]:
     """Click each leg in turn. If the view didn't move (click swallowed right after the game
-    loads, or a wandering NPC was in the way), click the leg again."""
+    loads, or a wandering NPC was in the way), click the leg again. Returns each leg's view
+    displacement measured by odometry (logged; used to calibrate chained walking)."""
+    from .nav import Odometer
+
+    odo = Odometer(bot.capture.grab())
+    disps = []
     for i, (x, y) in enumerate(route):
         for attempt in range(retries + 1):
             before = bot.capture.grab()
+            start = odo.pos.copy()
+            odo.update(before)
             bot.click(x, y)
-            if not bot.wait_still(timeout=6, settle=1, poll=0.1, min_wait=0.2):
+            if not _walk_settle(bot, odo):
                 log.info("leg %d: view still moving after timeout", i)
             if _view_moved(before, bot.capture.grab()):
                 break
             log.info("leg %d: didn't move (attempt %d), clicking again", i, attempt + 1)
             bot.kill.sleep(0.5)
+        disps.append(tuple(float(v) for v in (odo.pos - start).round(1)))
+    log.info("town walk legs %s%s", disps, " (odometry lost)" if odo.lost else "")
+    return disps
+
+
+def _walk_settle(bot: Controller, odo, timeout: float = 6, min_wait: float = 0.2, poll: float = 0.05) -> bool:
+    """Track the walk by odometry until the view stops (3 polls without movement)."""
+    bot.kill.sleep(min_wait)
+    deadline = bot.clock() + timeout
+    calm = 0
+    while bot.clock() < deadline:
+        f = bot.capture.grab()
+        bot._guard_frame(f)
+        dx, dy = odo.update(f)
+        calm = calm + 1 if abs(dx) < 1.5 and abs(dy) < 1.5 else 0
+        if calm >= 3:
+            return True
+        bot.kill.sleep(poll)
+    return False
 
 
 ROUTE_END = ASSETS / "town_route_end.png"  # the view where the town route normally ends (saved on
@@ -317,9 +343,9 @@ def cast_buffs(bot: Controller) -> None:
     hk = bot.cfg["hotkeys"]
     for name in hk.get("buffs", []):
         bot.press(hk["skills"][name])
-        bot.kill.sleep(0.15)
+        bot.kill.sleep(0.1)
         bot.click(*bot.cfg["town"]["corpse_click"], "right")
-        bot.kill.sleep(0.45)  # casts take < 0.2 s (tools/tp_rate.py)
+        bot.kill.sleep(0.3)  # casts take < 0.2 s (tools/tp_rate.py)
     bot.press(hk["skills"]["teleport"])
     bot.kill.sleep(0.15)
 
@@ -402,6 +428,82 @@ def restock_belt(bot: Controller) -> int:
     return moved
 
 
+def _ctrl_click(bot: Controller, x: int, y: int) -> None:
+    bot.input.key_down("ctrl")
+    bot.kill.sleep(0.05)
+    bot.click(x, y)
+    bot.kill.sleep(0.05)
+    bot.input.key_up("ctrl")
+    bot.kill.sleep(0.3)
+
+
+def _scan_inventory(bot: Controller) -> dict:
+    from .vision.inventory import protected_cells, scan
+
+    bot.input.move(640, 600)  # no tooltip over the grid
+    bot.kill.sleep(0.15)
+    tpl = bot._templates.get("inv_key.png")
+    if tpl is None:
+        tpl = bot._templates["inv_key.png"] = cv2.imread(str(ASSETS / "inv_key.png"))
+    return scan(bot.capture.grab(), tpl, protected_cells(bot.cfg["inventory"]["protected"]))
+
+
+def stowaway(bot: Controller) -> dict:
+    """At the stash stop: Ctrl+click loot (runes, unique rings: anything outside Stephen's protected
+    cells that isn't a key) into the stash, then drop key stacks beyond one (pickups add whole stacks;
+    2026-10-26 eight full stacks had filled the inventory). Runes auto-route to the Runes tab; the rest
+    goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12."""
+    from . import state
+    from .vision.inventory import cell_center
+
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.35)
+    inv = _scan_inventory(bot)
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.2)
+    done = {"stashed": 0, "dropped": 0}
+    if inv["other"]:
+        if open_stash(bot):
+            bot.click(*bot.cfg["stash"]["shared_tab"])
+            bot.kill.sleep(0.4)
+            for c, r in inv["other"]:
+                _ctrl_click(bot, *cell_center(c, r))
+            left = _scan_inventory(bot)["other"]
+            done["stashed"] = len(inv["other"]) - len(left)
+            if left:
+                bot.save_failure("stowaway_left_items")
+                log.warning("stowaway: %d item(s) stayed in the inventory (stash page full?): %s", len(left), left)
+            bot.press("esc")
+            bot.kill.sleep(0.4)
+    keys = inv["key"]
+    st = state.load()
+    if len(keys) > 1:
+        kept = tuple(st.get("key_cell") or ())
+        kept = kept if kept in keys else keys[0]
+        bot.press(bot.cfg["hotkeys"]["inventory"])
+        bot.kill.sleep(0.35)
+        for cell in keys:
+            if cell != kept:
+                _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
+                done["dropped"] += 1
+        still = _scan_inventory(bot)["key"]
+        bot.press(bot.cfg["hotkeys"]["inventory"])
+        bot.kill.sleep(0.2)
+        if len(still) > 1:
+            log.warning("stowaway: %d key stacks still in the inventory", len(still))
+        bot.keys_left = bot.cfg["town"]["keys_full"]
+        st = {**st, "key_cell": list(kept), "keys_left": bot.keys_left}
+    elif len(keys) == 1:
+        st = {**st, "key_cell": list(keys[0])}
+    else:
+        bot.keys_left = 0
+        st = {**st, "key_cell": None, "keys_left": 0}
+    state.save(st)
+    log.info("stowaway: stashed %d, dropped %d key stack(s), %d free cells", done["stashed"], done["dropped"],
+             len(inv["empty"]) + done["stashed"] + done["dropped"])
+    return done
+
+
 ARRIVAL_CHANGED = 0.05  # share of changed pixels: town -> LK measured 0.20, same spot with NPCs moving 0.002
 
 
@@ -427,12 +529,16 @@ def wait_arrival(bot: Controller, town_view: np.ndarray, timeout: float = 30) ->
         bot.kill.sleep(0.05)
 
 
-def town_to_lower_kurast(bot: Controller) -> None:
+def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False) -> None:
+    """`arrived_check`: optional quick test that we're in Lower Kurast (the route's map fingerprint);
+    when it passes, the slower automap area-name check is skipped."""
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
     cast_buffs(bot)
     walk_route(bot, tcfg["route"])
     restock_belt(bot)
+    if stow:
+        stowaway(bot)
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
     open_town_wp(bot, tcfg)
     town_view = bot.capture.grab()
@@ -440,7 +546,7 @@ def town_to_lower_kurast(bot: Controller) -> None:
     wait_arrival(bot, town_view)
     bot.guard(True)  # out of town from here on
     bot.wait_still(timeout=5)
-    if not check_area(bot, "area_lower_kurast.png"):
+    if not (arrived_check and arrived_check()) and not check_area(bot, "area_lower_kurast.png"):
         bot.save_failure("not_in_lower_kurast")
         raise BotError("arrived somewhere that isn't Lower Kurast")
     log.info("arrived in Lower Kurast")
