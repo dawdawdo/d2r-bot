@@ -2,36 +2,31 @@
 
 **Current milestone:** M6 soak; map learning built. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
-**Works (live, 2026-10-27 ~01:20):**
-- `python -m bot.run --runs N --mode chests` (conda env d2r: `~/miniconda3/envs/d2r/python.exe`): launch/recover →
-  Hell game (Hell button checked before clicking: another difficulty regenerates the map) → `/players 7` once per
-  D2R window → (corpse click only if the last run died; flag in `logs/state.json`) → (Ormus / Hratli every 10 chest
-  runs / Asheara) → buffs → **chained town walk** (odometry, 9.1 s) → stash stop: stowaway → WP → LK → 6 chests →
-  loot → save & exit. `runs.csv`, `logs/loot.csv` (stashed runes by name), `logs/loot/` (item tooltips).
-- **Stats since 23:00:** 137 runs, 125 ok, 7 chickens (before the ES rescue), 542 chests. Clean runs avg 44 s.
-  Last batch 11/11. Found: Hel ×3, Dol ×2, **Ohm**.
-- **Stowaway** (`town.stowaway`): inventory scan (`vision/inventory.py`; Stephen's items = `inventory.protected`),
-  Ctrl+click loot to the stash (runes auto-route to the Runes tab), drop key stacks beyond one; keys picked only
-  while the estimate < 8.
-- **Energy shield broken** → drink a belt potion first; chicken only if still broken / belt empty.
-- **Map learning** (`bot/learn.py`, `tools/learn_map.py --name X --all --games 15`): explore LK from the WP over
-  several games, bonfire sightings, verify camps by chest tooltips, shortest route (nw before nw_deep).
-  `bot.run --relearn`: two fingerprint misses in a row → learn the new map and keep farming (route saved in
-  `logs/state.json` key `route`; delete it to go back to config). Tested live with a forced mismatch: 2 games found
-  and verified both camps.
+**Works (live, 2026-10-27 ~03:45):**
+- `python -m bot.run --runs 20 --max-minutes 8 --mode chests` (conda env d2r): launch/recover → Hell game (Hell
+  button checked before clicking) → `/players 7` once per D2R window → buffs → chained town walk (9.1 s) → stash
+  stop: stowaway → WP → LK → 6 chests → loot → save & exit. `runs.csv`, `logs/loot.csv`, `logs/loot/`.
+  `tools/batch_summary.py "<since>"` prints one line per batch. `--max-minutes` ends a batch at the menu.
+- **Stats 01:20–03:40:** 148 runs, 145 ok (3 chickens), 862 chests, avg 49.7 s incl. repairs (clean ~43 s).
+  Found tonight: Hel ×5, Dol ×4, Lum ×2, Lem, **Ohm**, **Vex**.
+- **Upkeep without OCR** ("X of Y" compared as pictures, `vision/durability.py`): every 10 runs hover each equipped
+  item; first wear seen → repair 20 runs later (backstop 60). Live wear in ~20 runs: Shako 11/12, Viper 23/24,
+  boots 13/14, gloves 15/18. Keys: count the stack (`key_count`: 12/11/10/"3-9"/2/1) before buying; buy only < 3.
+- **Danger handling:** ES broken → drink; still broken and life ≥ 60% → flee to the next camp (lose 3 chests, not 6);
+  life < 50% → chicken. Chest hidden by a pack → short scan, 3 Frozen Orbs, rescan. Scans stop on view jumps.
+- **Map learning** (`bot/learn.py`, `tools/learn_map.py`, `bot.run --relearn`): see roadmap; tested live.
 
 **Broken / risks:**
-- Chickens ~1 in 15 (mana burn at camps); the ES rescue costs belt potions.
+- Chickens ~1 in 50 now. Teleport-when-struck jumps still cost a chest now and then.
 - If Stephen rearranges his inventory, update `inventory.protected` (else his items get stashed).
 - `logs/state.json` has `stash_rejuvs_empty: true`. **If Stephen puts rejuvs in the stash, delete that key.**
 - Map hunting (reroll = play another difficulty, then Hell) is NOT built: it destroys the current map. Needs Stephen.
 
 **Next step (exact):**
-1. Keep soaking (foreground, ~11 runs per command ≈ 9 min).
+1. Keep soaking (`--runs 20 --max-minutes 8`, foreground).
 2. Map hunting design: score a fresh map from a short exploration; only with Stephen's go-ahead.
-3. Linux backend (later; GLaDOS not in scope yet).
 
-**Open questions for Stephen:** none blocking. (Map hunting: when you want it, it will replace Blizzaga's map.)
+**Open questions for Stephen:** none blocking.
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
