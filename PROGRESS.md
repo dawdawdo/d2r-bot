@@ -1,38 +1,35 @@
 # Progress
 
-**Current milestone:** M6 speed + soak. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
+**Current milestone:** M6 soak + stowaway. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
-**Works (live, 2026-10-26 late evening):**
+**Works (live, 2026-10-26 night):**
 - `python -m bot.run --runs N --mode chests` (conda env d2r: `~/miniconda3/envs/d2r/python.exe`): launch/recover →
-  Hell game → `/players 7` once per session → corpse pickup → (Ormus heal / Hratli repair + keys / Asheara merc
-  revive when needed) → buffs → town route → (stash restock, skipped once known empty) → route-end fix → WP → LK →
-  teleport route (odometry + bonfire re-anchor + spiral search when lost) → open chests → loot → save & exit. `runs.csv`.
-- **Speed:** best runs 49.8 s and 52.4 s with 6 chests. Session-start run ~135 s (repair/keys/players).
-- **Supply pickup (new):** white labels classified by word template (`label_key.png`, `label_rejuv.png`,
-  `vision.labels.white_word`). Keys picked while `keys_left` < 12, rejuvs while a belt slot is empty. Gold scores ≤ 0.41 vs 1.0.
-  Since 20:06: 43 runs, 33 ok, 5 chickens, 187 chests, 35 keys, 14 rejuvs picked. keys_left = 12 (no buying needed).
-- Town WP found with an NPC on the right brazier (`town.find_town_wp`: full / left-half / near `wp_typical` fallbacks).
-- Route-end correction by phase correlation vs `town_route_end.png`; skipped when the WP is already visible.
-- Odometry: masked Hann window over static overlays, mean-subtracted; weak peaks trusted when they match the hop
-  (landing ≈ 1.17× click offset). A chest missing at its spot marks the position suspect → re-anchor.
-- Learned chest spots: learned BEFORE the post-scan odometry update (bug fixed in be8f2dc; learned.json restored
-  from c6785b8). `LEARN_MAX_OFF = 150`.
+  Hell game → `/players 7` once per session → (corpse pickup only after a death) → (Ormus / Hratli every 10 runs,
+  counter persisted in `logs/state.json` / Asheara) → buffs → town route → stash stop: belt restock (skipped, stash
+  empty) + **stowaway** → WP → LK (arrival checked by map fingerprint) → 6 chests → loot → save & exit. `runs.csv`.
+- **Speed:** clean runs 45–51 s (6 chests). Repair runs ~87 s.
+- **Stowaway** (`town.stowaway`, after runs that picked anything but rejuvs, and at session start): inventory scan
+  (`vision/inventory.py`: empty / key / other; Stephen's items are `inventory.protected` cells in config), Ctrl+click
+  loot into the stash (runes auto-route to the Runes tab; rings to shared page 1), drop key stacks beyond one
+  (Ctrl+click with only the inventory open). An extra stack ⇒ kept stack is full ⇒ `keys_left = 12`.
+  Stashed runes are named by diffing the Runes tab → `logs/loot.csv`; tooltips saved to `logs/loot/`.
+  Found so far: Hel ×2, **Ohm** (23:20).
+- Keys are picked only while the estimate is < 8 (`town.keys_pick_below`): one pickup can be a whole stack.
+- Batches tonight: 30 runs since 23:00, 28 ok, 1 chicken (mana drained at east camp), 1 run lost odometry (2 chests).
 
 **Broken / risks:**
-- Chickens ~1 in 9 runs (ES breaks at camps; belt mostly empty, stash has 0 rejuvs).
-- Occasional silent odometry error — now caught by "chest missing → suspect", costs time not the run.
+- Chickens ~1 in 10–20 (ES broken by mana burn at camps). Belt rejuvs only come from chests.
+- Lost-odometry recovery sometimes can't find the west bonfire (search fails → camp skipped).
+- If Stephen rearranges his inventory, update `inventory.protected` (else his items get stashed).
 - `logs/state.json` has `stash_rejuvs_empty: true`. **If Stephen puts rejuvs in the stash, delete that key.**
 
-**In the middle of:** nothing half-done. Last commit be8f2dc verified live (135.8 s/5, 52.4 s/6, 49.8 s/6). 85 tests pass.
-
 **Next step (exact):**
-1. Soak a few more batches (foreground, `--runs 3`) to confirm the learning fix: chest scans should stay ~1.5–2.8 s,
-   no 8–10 s scans. Check `runs.csv` chests/run and chicken rate.
-2. Speed: `lk.open_chest` hover-scan rings (~1.5–2.8 s/chest) — try learned spot first with a tighter ring;
-   town walk 12.5 s (7 legs) — fewer/longer legs; session-start overhead.
-3. Check `east_nw` learned spot (895,470 vs scouted 1047,495) — probably an artifact of the old learning bug.
+1. Keep soaking (foreground, ~9 runs per command ≈ 8 min).
+2. Speed: chained town walk (legs are consistent by odometry, see `town walk legs` log line) ~2.5 s/run.
+3. Recovery: better relocalization when lost (e.g. match against a stitched LK map).
+4. Long term (Stephen): map hunting — reroll Hell maps until a good super-chest layout, learn it, run it.
 
-**Open questions for Stephen:** none. (Optional: refill the stash with rejuvs to cut chickens.)
+**Open questions for Stephen:** none.
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.

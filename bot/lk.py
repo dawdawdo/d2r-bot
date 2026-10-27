@@ -209,8 +209,8 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     from .vision.orbs import belt_slots
 
     if word == "key":
-        left = getattr(bot, "keys_left", None)
-        return left is None or left < bot.cfg["town"]["keys_full"]
+        left = getattr(bot, "keys_left", None)  # a pickup can be a whole stack: wait until we're low
+        return left is None or left < bot.cfg["town"].get("keys_pick_below", bot.cfg["town"]["keys_full"])
     if word == "rejuv":
         return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"]))
     return False

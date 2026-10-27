@@ -70,6 +70,7 @@ town:
   repair_every: 10               # runs between repairs at Hratli (Stephen: armor ran low)
   keys_min: 3                    # buy keys at Hratli when the estimate is <= this (Stephen)
   keys_full: 12                  # a bought stack tops the inventory keys up to this
+  keys_pick_below: 8             # pick keys from chests only below this estimate (drops are stacks of several)
   hratli:                        # legs after the Ormus legs: E across the plaza, SE bridge, landing, NE bridge
     route: [[1000, 560], [1150, 380], [1040, 480], [900, 470], [860, 510], [900, 540], [1118, 262], [880, 220], [1000, 170]]
     region: [600, 60, 500, 300]  # where Hratli stands at the end of the route
