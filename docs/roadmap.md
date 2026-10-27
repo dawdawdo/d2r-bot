@@ -32,6 +32,8 @@ be replaced, probably by accident.
    `-resetofflinemaps` instead gives a new map every game: useless for farming.) Consequence:
    one wrong difficulty click wipes the current map, so `lifecycle.create_game` checks the Hell
    button label before clicking. Map hunting must only run with Stephen's go-ahead.
+   **Built, never run:** `tools/hunt_map.py --replaces-current-map` (reroll via a Normal game, learn with
+   bot/learn.py, keep the first map with `--min-camps` verified camps, switch `logs/state.json` route).
 
 Routes are stored as data per map (`maps/<fingerprint-id>/route.yaml`), never hard-coded.
 
