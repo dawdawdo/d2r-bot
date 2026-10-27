@@ -1,0 +1,163 @@
+"""Learn a Lower Kurast map: explore from the waypoint, find the bonfire camps, verify their chests,
+write a route (maps/<name>/route.yaml). The groundwork for relearning after a map change and for
+map hunting (docs/roadmap.md).
+
+Every super-chest camp has the same layout around its bonfire (lk.BONFIRE_LAYOUT), so learning a
+map = finding bonfire world positions. World coords are odometry from the LK waypoint arrival view,
+as in nav.py; every game starts there, so exploration can resume across games (explore.json).
+"""
+from __future__ import annotations
+
+import json
+import logging
+import math
+from pathlib import Path
+
+import numpy as np
+
+from .controller import Controller
+
+log = logging.getLogger(__name__)
+
+CELL = (400, 200)       # explore grid: about one teleport hop (nav.MAX_HOP x MAX_HOP_Y)
+LIMIT = (12, 20)        # |cell index| bounds: LK is ~ +-4000 x +-3000 px around the waypoint
+WP_EXCLUDE = 450        # px around the waypoint: its braziers look like bonfires
+FIRE_MERGE = 350        # px: sightings closer than this are the same fire
+MAX_FAILS = 2           # a cell we failed to reach this often is treated as unreachable
+
+
+class Explorer:
+    """Grid frontier exploration state (pure logic, no I/O)."""
+
+    def __init__(self) -> None:
+        self.visited: set[tuple[int, int]] = set()
+        self.fails: dict[tuple[int, int], int] = {}
+        self.fires: list[dict] = []  # {"x", "y", "n", "area"}: running mean of a fire's world position
+
+    @staticmethod
+    def cell(pos) -> tuple[int, int]:
+        return int(round(pos[0] / CELL[0])), int(round(pos[1] / CELL[1]))
+
+    @staticmethod
+    def center(c) -> tuple[float, float]:
+        return float(c[0] * CELL[0]), float(c[1] * CELL[1])
+
+    def mark_visited(self, pos) -> None:
+        self.visited.add(self.cell(pos))
+
+    def fail(self, target) -> None:
+        c = self.cell(target)
+        self.fails[c] = self.fails.get(c, 0) + 1
+
+    def frontier(self) -> list[tuple[int, int]]:
+        out = set()
+        for cx, cy in self.visited:
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    c = (cx + dx, cy + dy)
+                    if (c not in self.visited and self.fails.get(c, 0) < MAX_FAILS
+                            and abs(c[0]) <= LIMIT[0] and abs(c[1]) <= LIMIT[1]):
+                        out.add(c)
+        return sorted(out)
+
+    def next_target(self, pos) -> tuple[float, float] | None:
+        """Nearest frontier cell center (ties: the order of `frontier`)."""
+        fr = self.frontier()
+        if not fr:
+            return None
+        best = min(fr, key=lambda c: math.hypot(*(np.subtract(self.center(c), pos))))
+        return self.center(best)
+
+    def add_fires(self, pos, fires_screen, center=(640, 330)) -> None:
+        """Bonfire-sized fires seen from world `pos` (screen x, y, area) -> merged world sightings."""
+        for x, y, area in fires_screen:
+            wx, wy = pos[0] + x - center[0], pos[1] + y - center[1]
+            if math.hypot(wx, wy) < WP_EXCLUDE:
+                continue
+            for f in self.fires:
+                if math.hypot(f["x"] - wx, f["y"] - wy) < FIRE_MERGE:
+                    f["x"] = (f["x"] * f["n"] + wx) / (f["n"] + 1)
+                    f["y"] = (f["y"] * f["n"] + wy) / (f["n"] + 1)
+                    f["n"] += 1
+                    f["area"] = max(f["area"], area)
+                    break
+            else:
+                self.fires.append({"x": wx, "y": wy, "n": 1, "area": area})
+
+    def bonfires(self, min_seen: int = 2) -> list[tuple[float, float]]:
+        """Fires seen from at least `min_seen` spots (one-off flames: burning monsters, spells)."""
+        return [(round(f["x"]), round(f["y"])) for f in self.fires if f["n"] >= min_seen]
+
+    def to_dict(self) -> dict:
+        return {"visited": sorted(self.visited), "fails": [[*c, n] for c, n in sorted(self.fails.items())],
+                "fires": self.fires}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Explorer":
+        e = cls()
+        e.visited = {tuple(c) for c in d.get("visited", [])}
+        e.fails = {(a, b): n for a, b, n in d.get("fails", [])}
+        e.fires = list(d.get("fires", []))
+        return e
+
+    def save(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(self.to_dict(), indent=1))
+
+    @classmethod
+    def load(cls, path: Path) -> "Explorer":
+        return cls.from_dict(json.loads(path.read_text())) if path.exists() else cls()
+
+
+def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120) -> str:
+    """Teleport to the nearest unexplored cell until done, out of hops, or odometry is lost.
+    Returns "done", "budget" or "lost". The caller saves & exits (never idle outside town)."""
+    from .nav import BONFIRE_AREA, find_fires, teleport_to
+
+    hops0 = getattr(bot, "hops", 0)
+    while True:
+        bot.check()
+        frame = bot.capture.grab()
+        odo.update(frame)
+        if odo.lost:
+            return "lost"
+        ex.mark_visited(odo.pos)
+        ex.add_fires(odo.pos, [f for f in find_fires(frame) if f[2] >= BONFIRE_AREA])
+        t = ex.next_target(odo.pos)
+        if t is None:
+            return "done"
+        if getattr(bot, "hops", 0) - hops0 >= max_hops:
+            return "budget"
+        if not teleport_to(bot, odo, t, tol=150, max_hops=4, quiet=True):
+            ex.fail(t)
+
+
+def _dist(a, b) -> float:
+    return math.hypot(a[0] - b[0], a[1] - b[1])
+
+
+def plan_route(bonfires: list[tuple[float, float]], layout: dict) -> list[dict]:
+    """Route `bonfires` entries: the camp order and per-camp chest order with the shortest total
+    teleport path from the waypoint (brute force: a map has only a few camps)."""
+    from itertools import permutations
+
+    stands = [{k: (b[0] + v["stand"][0], b[1] + v["stand"][1]) for k, v in layout.items()} for b in bonfires]
+    best, best_len = None, float("inf")
+    for camps in permutations(range(len(bonfires))):
+        pos, total, plan = (0.0, 0.0), 0.0, []
+        for ci in camps:  # each camp: best slot order from where we are (exact within the camp)
+            sl = min(permutations(stands[ci]), key=lambda o: _path_len(pos, [stands[ci][k] for k in o]))
+            total += _path_len(pos, [stands[ci][k] for k in sl])
+            pos = stands[ci][sl[-1]]
+            plan.append((ci, list(sl)))
+        if total < best_len:
+            best, best_len = plan, total
+    return [{"name": f"camp{i + 1}", "world": [int(bonfires[ci][0]), int(bonfires[ci][1])], "order": order}
+            for i, (ci, order) in enumerate(best or [])]
+
+
+def _path_len(start, pts) -> float:
+    total, pos = 0.0, start
+    for p in pts:
+        total, pos = total + _dist(pos, p), p
+    return total

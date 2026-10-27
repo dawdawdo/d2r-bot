@@ -105,6 +105,7 @@ class Odometer:
 
 def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, float]:
     before, was_lost = getattr(bot, "frame", None), odo.lost
+    bot.hops = getattr(bot, "hops", 0) + 1
     bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
     bot.sleep(TP_SETTLE)
     bot.frame = bot.capture.grab()
@@ -119,7 +120,8 @@ def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, fl
     return moved
 
 
-def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hops: int = 30) -> bool:
+def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hops: int = 30,
+                quiet: bool = False) -> bool:
     """Teleport until within `tol` px of world `target`. Detours sideways when blocked."""
     target = np.asarray(target, float)
     stuck = 0
@@ -141,8 +143,9 @@ def teleport_to(bot: Controller, odo: Odometer, target, tol: float = 70, max_hop
                 break
         else:
             stuck = 0
-    bot.save_failure("teleport_to_failed")
-    log.warning("teleport_to %s failed at %s", target.tolist(), odo.pos.round().tolist())
+    if not quiet:  # exploring: unreachable cells are normal
+        bot.save_failure("teleport_to_failed")
+        log.warning("teleport_to %s failed at %s", target.tolist(), odo.pos.round().tolist())
     return False
 
 

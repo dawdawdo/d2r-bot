@@ -14,7 +14,7 @@ fingerprint:
 bonfires:
   - name: east
     world: [1629, 776]
-    order: [nw, nw_deep, ne]
+    order: [nw_deep, nw, ne]   # shortest path (bot.learn.plan_route); hand order was nw, nw_deep, ne
   - name: west
     world: [-2208, -389]
     order: [ne, nw, nw_deep]
