@@ -279,7 +279,7 @@ def chest_world(t: dict, i: int, learned: dict) -> tuple[float, float]:
     return tuple(t["chests_world"][i])
 
 
-LEARN_MAX_OFF = 150  # px from the scouted spot; farther finds are probably a different object
+LEARN_MAX_OFF = 200  # px from the scouted spot; farther finds are probably a different object (east_nw: 153)
 
 
 def learn_chest(route: dict, learned: dict, t: dict, i: int, world) -> None:
@@ -359,6 +359,10 @@ def run_route(bot: Controller, route: dict) -> dict:
             points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
         for i, (cx, cy) in enumerate(points):
             found = open_chest(bot, cx, cy)
+            odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
+            if not found and "world" in t and not odo.lost:
+                log.info("chest missing: position suspect, re-anchor at the next target")
+                odo.lost = True  # (2026-10-26: a 470 px jump in a scan cost the rest of the run)
             if found:
                 if "world" in t and not odo.lost:
                     learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
