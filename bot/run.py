@@ -15,7 +15,8 @@ import time
 from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, RunTimeout
 from .learn import learn_map
-from .lk import MapChanged, fingerprint_ok, load_route, run_route
+from .lk import MapChanged
+from .tasks import get_task
 from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
@@ -32,7 +33,7 @@ FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
             players: int | None = None, corpse: bool = True, stow: bool = False,
-            check_durability: bool = False) -> dict:
+            check_durability: bool = False, task=None) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
@@ -76,13 +77,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     bot._labels_known = False
     stats: dict = {}
     try:
-        if mode in ("lk", "chests"):
-            route = load_route(cfg["game"]["route"]) if mode == "chests" else None
-            town_to_lower_kurast(bot, arrived_check=(lambda: fingerprint_ok(bot, route)) if route else None,
-                                 stow=stow)
+        if mode == "lk":  # M3 check: town -> Lower Kurast only
+            town_to_lower_kurast(bot)
         if mode == "chests":
-            bot.deadline = bot.clock() + cfg["safety"]["run_timeout_s"]  # Lower Kurast part only
-            stats = run_route(bot, route)
+            task.enter(bot, stow=stow)
+            stats = task.farm(bot)
         if mode == "lifecycle":
             bot.kill.sleep(1.0)
     finally:
@@ -101,6 +100,7 @@ def main() -> int:
                          "chests = M4/M5 full run (route, chests, loot)")
     ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
     ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
+    ap.add_argument("--task", default="lk", help="farming task for --mode chests (bot/tasks): lk")
     ap.add_argument("--relearn", action="store_true",
                     help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
     ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
@@ -116,6 +116,7 @@ def main() -> int:
     if args.route:
         cfg["game"]["route"] = args.route
     log.info("route: %s", cfg["game"]["route"])
+    task = get_task(args.task, cfg) if args.mode == "chests" else None
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -160,7 +161,7 @@ def main() -> int:
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
                                         players=cfg["game"].get("players") if players_due and i == 0 else None, corpse=corpse,
-                                        stow=stow and chests, check_durability=dur)
+                                        stow=stow and chests, check_durability=dur, task=task)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
@@ -187,6 +188,7 @@ def main() -> int:
                             break
                         cfg["game"]["route"] = name
                         state.save({**state.load(), "route": name})
+                        task = get_task(args.task, cfg)  # reload with the learned route
                         map_misses = 0
                         log.warning("now running the learned route %s: camps %s", name,
                                     [c["world"] for c in route["bonfires"]])
