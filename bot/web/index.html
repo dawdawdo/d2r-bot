@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D2R Bot</title>
+<style>
+  :root {
+    --bg: #f4f2ee; --card: #ffffff; --ink: #1d1b18; --muted: #6b665e; --line: #e2ddd4;
+    --accent: #9a5b13; --ok: #2f7d3b; --warn: #a86b00; --bad: #b3261e; --chip: #efe9df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141210; --card: #1e1b18; --ink: #ece6dc; --muted: #a39b8f; --line: #34302a;
+      --accent: #e0a24a; --ok: #6cc07a; --warn: #e3b04b; --bad: #ef6b62; --chip: #2a2622;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 16px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
+  .pill { padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 13px; background: var(--chip); }
+  .pill.running { color: var(--ok); } .pill.stopping { color: var(--warn); } .pill.idle { color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .task { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); }
+  .task:first-of-type { border-top: 0; padding-top: 0; }
+  .task input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); }
+  .task .t { font-weight: 600; } .task .a { color: var(--muted); font-size: 13px; }
+  .task.off { opacity: .55; }
+  .soon { font-size: 11px; font-weight: 700; color: var(--accent); margin-left: 6px; text-transform: uppercase; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 12px; }
+  label.f { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); gap: 4px; }
+  label.f input { width: 110px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+                  background: var(--bg); color: var(--ink); font-size: 15px; }
+  button { padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--chip);
+           color: var(--ink); font-size: 15px; font-weight: 600; cursor: pointer; }
+  button.go { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.danger { color: var(--bad); }
+  button:disabled { opacity: .45; cursor: default; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .stat .v { font-size: 22px; font-weight: 700; } .stat .k { color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; border-top: 0; }
+  td.err { white-space: normal; color: var(--muted); }
+  .r-ok { color: var(--ok); } .r-chicken, .r-stopped { color: var(--warn); } .r-fail, .r-died, .r-timeout, .r-map_changed { color: var(--bad); }
+  .scroll { overflow-x: auto; }
+  .loot li { padding: 4px 0; border-top: 1px solid var(--line); list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+  .loot { margin: 0; padding: 0; } .loot li:first-child { border-top: 0; }
+  .muted { color: var(--muted); } #msg { min-height: 1.2em; color: var(--bad); font-size: 13px; margin-top: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 680px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>D2R Bot <span class="muted" style="font-weight:400">· Blizzaga</span></h1>
+    <span id="pill" class="pill idle">…</span>
+  </header>
+
+  <section class="card">
+    <h2>Tasks</h2>
+    <div id="tasks"></div>
+    <div class="row">
+      <label class="f">Runs <input id="runs" type="number" min="1" max="10000" value="100"></label>
+      <label class="f">Stop after (min) <input id="minutes" type="number" min="1" placeholder="no limit"></label>
+      <button id="start" class="go">Start</button>
+      <button id="stopRun">Stop after this run</button>
+      <button id="stopNow" class="danger">Stop now</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:8px">Checked tasks take turns, one game each. "Stop now" saves &amp; exits right away; F12 on the PC is the emergency stop.</div>
+    <div id="msg"></div>
+  </section>
+
+  <section class="card">
+    <h2>This session</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>Loot stashed</h2>
+      <ul class="loot" id="loot"></ul>
+    </section>
+    <section class="card">
+      <h2>Recent runs</h2>
+      <div class="scroll"><table id="runsT"><thead><tr><th>Start</th><th>Task</th><th>Result</th><th>s</th><th>Chests</th><th>Picked</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let catalog = null, lastStatus = null;
+
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function saved(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+function renderTasks(tasks) {
+  const picked = new Set(saved("tasks", ["lk"]));
+  $("tasks").innerHTML = tasks.map(t => `
+    <label class="task ${t.ready ? "" : "off"}">
+      <input type="checkbox" value="${esc(t.name)}" ${t.ready && picked.has(t.name) ? "checked" : ""} ${t.ready ? "" : "disabled"}>
+      <span><span class="t">${esc(t.title)}</span>${t.ready ? "" : '<span class="soon">coming</span>'}
+      <div class="a">${esc(t.about)}</div></span>
+    </label>`).join("");
+  $("tasks").querySelectorAll("input").forEach(i => i.addEventListener("change", () =>
+    save("tasks", [...$("tasks").querySelectorAll("input:checked")].map(x => x.value))));
+}
+
+function fmtDur(s) { if (!s) return "–"; const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m/60)} h ${m%60} min` : `${m} min`; }
+
+function render(d) {
+  lastStatus = d;
+  if (!catalog) { catalog = d.tasks; renderTasks(catalog); }
+  const b = d.bot, running = b.running;
+  const stopping = running && b.stop;
+  $("pill").className = "pill " + (stopping ? "stopping" : running ? "running" : "idle");
+  $("pill").textContent = stopping ? (b.stop === "now" ? "Stopping now…" : "Stopping after this run")
+    : running ? (b.state === "starting" ? "Starting…" : `Running ${esc(b.task || "")} · run ${b.run || "–"}/${b.runs || "–"}`) : "Idle";
+  $("start").disabled = running; $("stopRun").disabled = !running || !!b.stop; $("stopNow").disabled = !running;
+
+  const t = b.tally || {}, total = Object.values(t).reduce((a, x) => a + x, 0);
+  const sinceStart = b.started ? (Date.now() / 1000 - b.started) : 0;
+  const chests = (d.runs || []).filter(r => b.started && Date.parse(r.start.replace(" ", "T")) / 1000 >= b.started - 1)
+    .reduce((a, r) => a + (parseInt(r.chests) || 0), 0);
+  $("stats").innerHTML = [
+    ["Runs ok", `${t.ok || 0} / ${total}`], ["Chickens", t.chicken || 0],
+    ["Failures", (t.fail || 0) + (t.timeout || 0) + (t.died || 0)], ["Chests (recent)", chests],
+    ["Running for", running || total ? fmtDur(sinceStart) : "–"],
+  ].map(([k, v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join("");
+
+  $("loot").innerHTML = (d.loot || []).slice(0, 15).map(l =>
+    `<li><span>${esc(l.item)}</span><span class="muted">${esc(l.time.slice(5, 16))}</span></li>`).join("") || '<li class="muted">nothing yet</li>';
+  $("runsT").querySelector("tbody").innerHTML = (d.runs || []).slice(0, 15).map(r => `
+    <tr><td>${esc(r.start.slice(11, 19))}</td><td>${esc(r.task || "lk")}</td>
+    <td class="r-${esc(r.result)}">${esc(r.result)}</td><td>${esc(r.duration_s)}</td><td>${esc(r.chests)}</td>
+    <td>${esc(r.picked)}${r.error ? `<div class="muted" style="white-space:normal">${esc(r.error.slice(0, 60))}</div>` : ""}</td></tr>`).join("");
+}
+
+async function poll() {
+  try {
+    const r = await fetch("/api/status", {cache: "no-store"});
+    if (r.ok) render(await r.json());
+  } catch {}
+}
+
+async function post(path, body) {
+  $("msg").textContent = "";
+  const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  if (!r.ok) { try { $("msg").textContent = (await r.json()).error; } catch { $("msg").textContent = "request failed"; } }
+  poll();
+}
+
+$("start").onclick = () => {
+  const tasks = [...$("tasks").querySelectorAll("input:checked")].map(x => x.value);
+  if (!tasks.length) { $("msg").textContent = "Pick at least one task."; return; }
+  save("runs", $("runs").value); save("minutes", $("minutes").value);
+  post("/api/start", {tasks, runs: +$("runs").value || 1, minutes: +$("minutes").value || null});
+};
+$("stopRun").onclick = () => post("/api/stop", {mode: "after_run"});
+$("stopNow").onclick = () => { if (confirm("Save & exit now?")) post("/api/stop", {mode: "now"}); };
+$("runs").value = saved("runs", 100); $("minutes").value = saved("minutes", "");
+poll(); setInterval(poll, 2000);
+</script>
+</body>
+</html>

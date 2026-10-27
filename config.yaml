@@ -164,3 +164,10 @@ vision:
       - {template: main_menu.png, region: [25, 400, 210, 85], threshold: 0.8}
     in_game:
       - {template: in_game.png, region: [160, 600, 100, 120], threshold: 0.8}
+
+# Web page (python -m bot.web): start/stop tasks from a browser. 127.0.0.1 = this PC only;
+# 0.0.0.0 = also from the phone on home Wi-Fi (Windows asks once to allow it through the firewall).
+# The password is in logs/web_password.txt (created on first start).
+web:
+  host: 127.0.0.1
+  port: 8765

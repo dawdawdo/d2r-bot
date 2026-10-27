@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 since = sys.argv[1] if len(sys.argv) > 1 else ""
-FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]  # the file's header predates chests/picked
+FIELDS = ["start", "duration_s", "result", "chests", "picked", "error", "task"]  # the file's header predates chests/picked
 with open(Path(__file__).resolve().parent.parent / "runs.csv") as f:
     next(f)
     rows = [r for r in csv.DictReader(f, FIELDS) if r["start"] >= since]

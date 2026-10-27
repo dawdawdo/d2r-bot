@@ -21,14 +21,14 @@ from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
-from . import state
+from . import control, state
 from .town import (count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
                    set_players, town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
 RUNS_CSV = ROOT / "runs.csv"
-FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
+FIELDS = ["start", "duration_s", "result", "chests", "picked", "error", "task"]
 
 
 def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
@@ -91,6 +91,16 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     return stats
 
 
+def _upgrade_header() -> None:
+    """runs.csv predates some columns: rewrite its header line to FIELDS (rows only ever gain columns)."""
+    if not RUNS_CSV.exists():
+        return
+    lines = RUNS_CSV.read_text().splitlines(True)
+    if lines and lines[0].strip() != ",".join(FIELDS):
+        lines[0] = ",".join(FIELDS) + "\n"
+        RUNS_CSV.write_text("".join(lines))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1)
@@ -100,7 +110,8 @@ def main() -> int:
                          "chests = M4/M5 full run (route, chests, loot)")
     ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
     ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
-    ap.add_argument("--task", default="lk", help="farming task for --mode chests (bot/tasks): lk")
+    ap.add_argument("--task", "--tasks", dest="tasks", default="lk",
+                    help="farming tasks for --mode chests, comma-separated, one game each in turn (bot/tasks)")
     ap.add_argument("--relearn", action="store_true",
                     help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
     ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
@@ -116,7 +127,8 @@ def main() -> int:
     if args.route:
         cfg["game"]["route"] = args.route
     log.info("route: %s", cfg["game"]["route"])
-    task = get_task(args.task, cfg) if args.mode == "chests" else None
+    tasks = [get_task(t, cfg) for t in args.tasks.split(",")] if args.mode == "chests" else [None]
+    log.info("tasks: %s", ", ".join(t.name for t in tasks if t) or "-")
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -131,18 +143,29 @@ def main() -> int:
     stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
     ok = streak = map_misses = 0
+    tally: dict[str, int] = {}
+    stop = False
+    control.clear()  # a request left over from an earlier session
+    t_start = time.time()
+    _upgrade_header()
     try:
         with open(RUNS_CSV, "a", newline="") as f:
             w = csv.DictWriter(f, FIELDS)
             if new_file:
                 w.writeheader()
-            t_start = time.time()
             for i in range(args.runs):
                 if args.max_minutes and time.time() - t_start > args.max_minutes * 60:
                     log.info("time budget of %.1f min used; stopping before run %d", args.max_minutes, i + 1)
                     break
+                if stop or control.read():
+                    log.info("stop requested (web page); not starting run %d", i + 1)
+                    break
+                task = tasks[i % len(tasks)]
+                control.write_status(state="running", run=i + 1, runs=args.runs, task=task.name if task else args.mode,
+                                     tally=tally, started=t_start)
                 t0 = time.time()
-                row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
+                row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": "",
+                       "task": task.name if task else args.mode}
                 try:
                     chests = args.mode == "chests"
                     since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
@@ -188,7 +211,7 @@ def main() -> int:
                             break
                         cfg["game"]["route"] = name
                         state.save({**state.load(), "route": name})
-                        task = get_task(args.task, cfg)  # reload with the learned route
+                        tasks = [get_task(t.name, cfg) for t in tasks]  # reload with the learned route
                         map_misses = 0
                         log.warning("now running the learned route %s: camps %s", name,
                                     [c["world"] for c in route["bonfires"]])
@@ -199,6 +222,9 @@ def main() -> int:
                     stow = True  # it may have picked things before bailing
                 except KillSwitchTripped:
                     raise
+                except control.StopNow:  # save & exit already happened in one_run's finally
+                    row.update(result="stopped", error="stop requested from the web page")
+                    stop = True
                 except Exception as e:  # noqa: BLE001 - one bad run must not end an unattended soak
                     if not isinstance(e, BotError):
                         log.exception("run %d: unexpected error", i + 1)
@@ -211,12 +237,18 @@ def main() -> int:
                 w.writerow(row)
                 f.flush()
                 log.info("run %d/%d %s in %.1fs", i + 1, args.runs, row["result"], row["duration_s"])
+                tally[row["result"]] = tally.get(row["result"], 0) + 1
+                control.write_status(state="running", run=i + 1, runs=args.runs, task=row["task"], tally=tally,
+                                     started=t_start, last=row)
                 if streak >= args.max_fail_streak:
                     log.error("%d failures in a row; stopping", streak)
                     break
     except KillSwitchTripped as e:
         log.warning("stopped by kill switch: %s", e)
+        tally["kill switch"] = 1
     finally:
+        control.write_status(state="idle", tally=tally, started=t_start)
+        control.clear()
         bot.release_all()
         backend.capture.close()
         session.close()

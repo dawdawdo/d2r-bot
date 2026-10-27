@@ -62,16 +62,31 @@ class Controller:
         self.flee_ok = False      # run_route: Danger (skip the camp) instead of Chicken while life is fine
         self._flee_quiet = -99.0  # after a flee: don't raise Danger again while teleporting away
         self.scan_jumped = False  # lk.open_chest: the last hover scan ended on a view jump
+        self._stop_raised = False
+        self._stop_next = 0.0
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
         self.kill.check()
+        self._check_stop()
         self.frame = self.capture.grab()
         self.state = self.classifier.classify(self.frame)
         if self.state == "in_game":
             self._check_vitals()
         self._check_deadline()
         return self.state
+
+    def _check_stop(self) -> None:
+        """A "stop now" from the web page (bot/control.py): raised once, from a guarded (out-of-town)
+        or town tick, so the caller's save & exit still runs."""
+        from . import control
+
+        if self._stop_raised or self.clock() < self._stop_next:
+            return
+        self._stop_next = self.clock() + 1.0  # a file check per second is plenty
+        if control.read() == "now":
+            self._stop_raised = True
+            raise control.StopNow("stop requested from the web page")
 
     def guard(self, on: bool) -> None:
         self.guarding = on

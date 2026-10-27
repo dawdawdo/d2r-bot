@@ -24,6 +24,12 @@
 - `logs/state.json` has `stash_rejuvs_empty: true`. **If Stephen puts rejuvs in the stash, delete that key.**
 - Map hunting (reroll = play another difficulty, then Hell) is NOT built: it destroys the current map. Needs Stephen.
 
+**Web page (branch `tasks`, 2026-10-27):** `bot_page.bat` or `python -m bot.web` -> http://127.0.0.1:8765
+(password in `logs/web_password.txt`). Task checkboxes (LK ready, Mephisto "coming"), runs, time limit,
+Start / Stop after this run / Stop now, session stats, loot, recent runs. The bot runs as its own process;
+they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone access: set `web.host: 0.0.0.0`
+(Windows firewall prompt once). Not yet used live.
+
 **Next step (exact):**
 1. Stephen is on the PC: no live runs until he says he's off.
 2. When he is: start D2R, check the new filter loads (9 rules; Esc -> Loot Filter) and that a run still picks
