@@ -70,8 +70,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             if repair:
                 st = {k: v for k, v in state.load().items() if k != "repair_due"}
                 state.save({**st, "runs_since_repair": 0, "runs_since_dur_check": 0})
-                if repair_at_hratli(bot, keys=buy_keys) and buy_keys:
-                    bot.keys_left = cfg["town"]["keys_full"]
+                repair_at_hratli(bot, keys=buy_keys)  # buy_keys sets keys_left from the stack it reads
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
     bot._labels_known = False

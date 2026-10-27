@@ -308,18 +308,37 @@ def set_players(bot: Controller, n: int) -> None:
     log.info("set /players %d", n)
 
 
-def buy_keys(bot: Controller, h: dict) -> None:
-    """Trade window open: Misc tab, shift+right-click the key = buy a stack (tops the inventory
-    stack up; Stephen: keys ran out)."""
+def buy_keys(bot: Controller, h: dict) -> int | None:
+    """Trade window open: Misc tab, buy keys until the inventory stack reads full (key_count 12).
+    2026-10-27: one shift+right-click left the stack at 1 of 12 while the estimate said 12, so the
+    bot stopped picking keys up. Returns the last count read (None: no stack found)."""
+    from .vision.durability import key_count
+    from .vision.inventory import cell_center
+
     bot.click(*h["misc_tab"])
     bot.kill.sleep(0.5)
-    bot.input.key_down("shift")
-    bot.kill.sleep(0.05)
-    bot.click(*h["key"], "right")
-    bot.kill.sleep(0.05)
-    bot.input.key_up("shift")
-    bot.kill.sleep(0.5)
-    log.info("bought keys")
+    n = None
+    for i in range(12):
+        bot.input.key_down("shift")
+        bot.kill.sleep(0.05)
+        bot.click(*h["key"], "right")
+        bot.kill.sleep(0.05)
+        bot.input.key_up("shift")
+        bot.kill.sleep(0.5)
+        keys = _scan_inventory(bot)["key"]
+        if not keys:
+            continue
+        bot.input.move(*cell_center(*keys[0]))
+        bot.kill.sleep(0.35)
+        n = key_count(bot.capture.grab())
+        if i == 0:
+            bot.save_failure("keys_after_first_buy")  # evidence while this is new
+        if n == 12:
+            break
+    log.info("bought keys: stack reads %s", n)
+    if n is not None:
+        bot.keys_left = 6 if n == 3 else n  # 3 = "3 to 9"
+    return n
 
 
 def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
