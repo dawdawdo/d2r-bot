@@ -63,9 +63,18 @@ def cfg(tmp_path):
     return c
 
 
-def make_bot(cfg, game, window=None, kill=None, clock=None):
+def _difficulty_frame():
+    import cv2
+
+    from bot.config import ROOT
+
+    return cv2.imread(str(ROOT / "fixtures" / "labeled" / "difficulty" / "difficulty_20261025-154418.png"))
+
+
+def make_bot(cfg, game, window=None, kill=None, clock=None, frame=None):
     kw = {"clock": clock} if clock else {}
-    bot = Controller(window or FakeWindow(), FakeCapture([np.zeros((720, 1280, 3), np.uint8)]),
+    frame = _difficulty_frame() if frame is None else frame  # the Hell button check looks at it
+    bot = Controller(window or FakeWindow(), FakeCapture([frame]),
                      game, game, kill or KillSwitch(), cfg, **kw)
     bot.poll = 0
     return bot
@@ -216,3 +225,25 @@ def test_run_timeout_raises_once(cfg):
     with pytest.raises(C.RunTimeout):
         bot.observe()
     bot.observe()  # cleared: save & exit can still observe
+
+
+def test_hell_button_template_matches_fixture():
+    import cv2
+
+    from bot.config import ROOT, load_config
+    from bot.vision.screen import ASSETS, match_score
+
+    f = cv2.imread(str(ROOT / "fixtures" / "labeled" / "difficulty" / "difficulty_20261025-154418.png"))
+    x, y = load_config()["ui"]["difficulty_hell"]
+    tpl = cv2.imread(str(ASSETS / "difficulty_hell.png"))
+    assert match_score(f, tpl, (x - 60, y - 25, 120, 50))[0] >= 0.8
+    nx, ny = load_config()["ui"]["difficulty_nightmare"]  # the label isn't at the Nightmare spot
+    assert match_score(f, tpl, (nx - 60, ny - 25, 120, 50))[0] < 0.8
+
+
+def test_no_click_when_hell_button_missing(cfg):
+    game = SimGame(cfg["ui"])
+    bot = make_bot(cfg, game, frame=np.zeros((720, 1280, 3), np.uint8))
+    with pytest.raises(BotError, match="resets the map"):
+        create_game(bot)
+    assert not any(e.startswith("difficulty_") for e in game.log)

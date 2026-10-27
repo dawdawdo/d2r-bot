@@ -19,12 +19,19 @@ be replaced, probably by accident.
 1. **Detect** (build with M4): store a *map fingerprint*, minimap crops at the LK waypoint and
    at the first checkpoint. If arrival doesn't match the fingerprint, mark the route stale,
    stop runs and notify Stephen instead of teleporting blind.
-2. **Relearn** (later): explore LK from the waypoint (teleport frontier exploration, stitching
-   the minimap as it goes, i.e. M4 option B), detect super-chest huts on screen, then build a new
-   route (a list of hops plus checkpoints) and fingerprint automatically.
+2. **Relearn** (built 2026-10-27, `tools/learn_map.py` + `bot/learn.py`): grid-frontier teleport
+   exploration from the WP over several games (resumes from `maps/<name>/explore.json`), bonfire
+   sightings from ≥ 2 grid cells, verification by chest tooltips at the 3 standard camp spots
+   (`--verify`), shortest-path route + fingerprint (`--plan --write`). On Blizzaga's map it found
+   both camps (within ~60 px) after ~12 games; runs on the learned route got 6/6 chests.
 3. **Map hunting** (end goal): create game → score the LK layout (number of huts, distance from
    the waypoint) → if bad, reroll the map → repeat until good → relearn → resume runs.
    Rerolling the seed must be done through the game itself, never by editing save files.
+   **How (researched 2026-10-27):** entering a game on another difficulty (e.g. Normal) makes D2R
+   regenerate the character's maps, so Normal → exit → Hell gives a new Hell map. (The launch flag
+   `-resetofflinemaps` instead gives a new map every game: useless for farming.) Consequence:
+   one wrong difficulty click wipes the current map, so `lifecycle.create_game` checks the Hell
+   button label before clicking. Map hunting must only run with Stephen's go-ahead.
 
 Routes are stored as data per map (`maps/<fingerprint-id>/route.yaml`), never hard-coded.
 

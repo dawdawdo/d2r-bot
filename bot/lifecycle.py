@@ -23,6 +23,21 @@ def to_main_menu(bot: Controller) -> None:
         bot.wait_for("main_menu", T_MENU)
 
 
+def check_difficulty_button(bot: Controller, difficulty: str) -> None:
+    """Before clicking: the button's label must be right under the click point. Entering another
+    difficulty, even once, makes D2R regenerate the character's Hell map (Stephen's map with the
+    learned route would be gone). Templates: bot/assets/templates/difficulty_<name>.png."""
+    from .vision.screen import ASSETS
+
+    if not (ASSETS / f"difficulty_{difficulty}.png").exists():
+        return
+    x, y = bot.cfg["ui"][f"difficulty_{difficulty}"]
+    if bot.find(f"difficulty_{difficulty}.png", region=(x - 60, y - 25, 120, 50), threshold=0.8) is None:
+        bot.save_failure(f"difficulty_{difficulty}_not_found")
+        bot.press("esc")
+        raise BotError(f"{difficulty} button not where expected; not clicking (a wrong difficulty resets the map)")
+
+
 def create_game(bot: Controller, difficulty: str = "hell") -> None:
     state = bot.wait_for({"title", "main_menu", "in_game"}, T_MENU)
     if state == "in_game":
@@ -31,6 +46,7 @@ def create_game(bot: Controller, difficulty: str = "hell") -> None:
         to_main_menu(bot)
     bot.click_ui("play")
     bot.wait_for("difficulty", 10)
+    check_difficulty_button(bot, difficulty)
     bot.click_ui(f"difficulty_{difficulty}")
     bot.wait_for("in_game", T_LOAD)
     log.info("in game (%s)", difficulty)
