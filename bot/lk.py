@@ -371,7 +371,8 @@ def run_route(bot: Controller, route: dict) -> dict:
     return stats
 
 
-FRESH_ANCHOR = 600  # px travelled since a bonfire fix: chests are then within ~35 px of their learned spot
+FRESH_ANCHOR = 1000  # px travelled since a bonfire fix (stand points are up to ~800 px from the fire): chests
+                    # are then within ~35 px of their learned spot
                     # (2026-10-27), so scan 105 px, not 220 (25 s when a monster pack hides the chest)
 
 
