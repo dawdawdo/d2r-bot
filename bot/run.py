@@ -86,12 +86,15 @@ def main() -> int:
                     help="lifecycle = M2 create/exit; lk = M3 town -> Lower Kurast; "
                          "chests = M4/M5 full run (route, chests, loot)")
     ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
+    ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
     args = ap.parse_args()
 
     session = start_session()
     cfg = session.cfg
     if args.pick:
         cfg["loot"]["pick"] = args.pick.split(",")
+    if args.route:
+        cfg["game"]["route"] = args.route
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)

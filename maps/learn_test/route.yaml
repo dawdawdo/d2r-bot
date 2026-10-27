@@ -1,0 +1,27 @@
+fingerprint:
+  template: lk_wp_learn_test.png
+  region:
+  - 520
+  - 290
+  - 240
+  - 140
+  threshold: 0.6
+  half_threshold: 0.5
+bonfires:
+- name: camp1
+  world:
+  - 1616
+  - 715
+  order:
+  - nw_deep
+  - nw
+  - ne
+- name: camp2
+  world:
+  - -2213
+  - -378
+  order:
+  - ne
+  - nw
+  - nw_deep
+targets: []

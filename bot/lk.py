@@ -68,13 +68,22 @@ def fingerprint_match(frame: np.ndarray, template: np.ndarray, region, threshold
     return any(match_score(frame, p, region)[0] >= half for p in (template[:, : w // 2], template[:, w // 2 :]))
 
 
+def _fp_template(route: dict) -> np.ndarray:
+    """The fingerprint template: maps/<route>/ (learned maps) or bot/assets/templates/."""
+    from .vision.screen import ASSETS
+
+    name = route["fingerprint"]["template"]
+    p = ROOT / "maps" / route.get("name", "") / name
+    return cv2.imread(str(p if p.exists() else ASSETS / name))
+
+
 def fingerprint_ok(bot: Controller, route: dict) -> bool:
     """One quick look: does the view match the LK waypoint fingerprint? (Skips the slower automap
     area-name check on arrival; check_fingerprint still retries before the route.)"""
     from .vision.screen import ASSETS
 
     fp = route["fingerprint"]
-    tpl = cv2.imread(str(ASSETS / fp["template"]))
+    tpl = _fp_template(route)
     bot.observe()
     return bool(fingerprint_match(bot.frame, tpl, fp["region"], fp["threshold"], fp.get("half_threshold")))
 
@@ -84,7 +93,7 @@ def check_fingerprint(bot: Controller, route: dict) -> None:
     from .vision.screen import ASSETS
 
     fp = route["fingerprint"]
-    tpl = cv2.imread(str(ASSETS / fp["template"]))
+    tpl = _fp_template(route)
     for i in range(5):
         if i:
             bot.kill.sleep(0.5)
@@ -142,9 +151,11 @@ def _is_chest(frame: np.ndarray, box) -> bool:
 LOCKED_MIN_W = 100  # tooltip box px, measured live: "Chest" 59-65, "Locked Chest" 134-140
 
 
-def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35) -> tuple[int, int] | None:
+def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35,
+               click: bool = True) -> tuple[int, int] | None:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
-    tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found."""
+    tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found.
+    `click=False` only looks (map learning: is there a chest here?)."""
     pts = [(x, y)]
     for r in range(step, radius + 1, step):
         pts += [(x + dx, y + dy) for dx in range(-r, r + 1, step) for dy in range(-r, r + 1, step)
@@ -167,6 +178,8 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
             log.debug("chest tooltip %dx%d", box[2], box[3])
+            if not click:
+                return px, py
             if box[2] > LOCKED_MIN_W:  # "Locked Chest" tooltip: opening it uses a key
                 bot.keys_used = getattr(bot, "keys_used", 0) + 1
             bot.click(px, py)

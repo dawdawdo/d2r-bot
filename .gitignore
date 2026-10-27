@@ -9,3 +9,4 @@ __pycache__/
 runs.csv
 scratch/
 .claude/settings.local.json
+maps/*/fires/

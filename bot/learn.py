@@ -23,6 +23,7 @@ CELL = (400, 200)       # explore grid: about one teleport hop (nav.MAX_HOP x MA
 LIMIT = (12, 20)        # |cell index| bounds: LK is ~ +-4000 x +-3000 px around the waypoint
 WP_EXCLUDE = 450        # px around the waypoint: its braziers look like bonfires
 FIRE_MERGE = 350        # px: sightings closer than this are the same fire
+SELF_RADIUS = 150       # px around the character: her own spell/hit glows read as flames
 MAX_FAILS = 2           # a cell we failed to reach this often is treated as unreachable
 
 
@@ -32,7 +33,7 @@ class Explorer:
     def __init__(self) -> None:
         self.visited: set[tuple[int, int]] = set()
         self.fails: dict[tuple[int, int], int] = {}
-        self.fires: list[dict] = []  # {"x", "y", "n", "area"}: running mean of a fire's world position
+        self.fires: list[dict] = []  # {"x", "y", "n", "area", "cells"}: running mean of a fire's world position
 
     @staticmethod
     def cell(pos) -> tuple[int, int]:
@@ -61,16 +62,20 @@ class Explorer:
         return sorted(out)
 
     def next_target(self, pos) -> tuple[float, float] | None:
-        """Nearest frontier cell center (ties: the order of `frontier`)."""
+        """Nearest frontier cell center in hops; ties go to the cell nearest the waypoint (explore
+        outward in rings rather than down one long corridor)."""
         fr = self.frontier()
         if not fr:
             return None
-        best = min(fr, key=lambda c: math.hypot(*(np.subtract(self.center(c), pos))))
+        here = self.cell(pos)  # distance in hops (cells), not px: cells are 2:1 like the hop limits
+        best = min(fr, key=lambda c: (math.hypot(c[0] - here[0], c[1] - here[1]), math.hypot(*c)))
         return self.center(best)
 
     def add_fires(self, pos, fires_screen, center=(640, 330)) -> None:
         """Bonfire-sized fires seen from world `pos` (screen x, y, area) -> merged world sightings."""
         for x, y, area in fires_screen:
+            if math.hypot(x - center[0], y - center[1]) < SELF_RADIUS:
+                continue
             wx, wy = pos[0] + x - center[0], pos[1] + y - center[1]
             if math.hypot(wx, wy) < WP_EXCLUDE:
                 continue
@@ -80,13 +85,16 @@ class Explorer:
                     f["y"] = (f["y"] * f["n"] + wy) / (f["n"] + 1)
                     f["n"] += 1
                     f["area"] = max(f["area"], area)
+                    if list(self.cell(pos)) not in f.setdefault("cells", []):
+                        f["cells"].append(list(self.cell(pos)))
                     break
             else:
-                self.fires.append({"x": wx, "y": wy, "n": 1, "area": area})
+                self.fires.append({"x": wx, "y": wy, "n": 1, "area": area, "cells": [list(self.cell(pos))]})
 
     def bonfires(self, min_seen: int = 2) -> list[tuple[float, float]]:
-        """Fires seen from at least `min_seen` spots (one-off flames: burning monsters, spells)."""
-        return [(round(f["x"]), round(f["y"])) for f in self.fires if f["n"] >= min_seen]
+        """Fires seen from at least `min_seen` grid cells (flames in a fight are seen many times
+        from one spot: spells, burning monsters)."""
+        return [(round(f["x"]), round(f["y"])) for f in self.fires if len(f.get("cells", [])) >= min_seen]
 
     def to_dict(self) -> dict:
         return {"visited": sorted(self.visited), "fails": [[*c, n] for c, n in sorted(self.fails.items())],
@@ -109,7 +117,7 @@ class Explorer:
         return cls.from_dict(json.loads(path.read_text())) if path.exists() else cls()
 
 
-def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120) -> str:
+def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120, debug_dir: Path | None = None) -> str:
     """Teleport to the nearest unexplored cell until done, out of hops, or odometry is lost.
     Returns "done", "budget" or "lost". The caller saves & exits (never idle outside town)."""
     from .nav import BONFIRE_AREA, find_fires, teleport_to
@@ -122,7 +130,14 @@ def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120) -> str:
         if odo.lost:
             return "lost"
         ex.mark_visited(odo.pos)
-        ex.add_fires(odo.pos, [f for f in find_fires(frame) if f[2] >= BONFIRE_AREA])
+        fires = [f for f in find_fires(frame) if f[2] >= BONFIRE_AREA]
+        ex.add_fires(odo.pos, fires)
+        if fires and debug_dir is not None:  # review what counted as a bonfire
+            import cv2
+
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(debug_dir / f"fire_{int(odo.pos[0])}_{int(odo.pos[1])}.jpg"),
+                        cv2.resize(frame, None, fx=0.5, fy=0.5))
         t = ex.next_target(odo.pos)
         if t is None:
             return "done"
