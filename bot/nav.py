@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 CENTER = (640, 330)
 VIEW_H = 590
 MAX_HOP = 420     # live 2026-10-26: 450 px hops tracked fine, 520 px lost tracking
-TP_SETTLE = 0.2  # live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/10 (tools/tp_rate.py)
+TP_SETTLE = 0.16  # 2026-10-27 trial (was 0.2); live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/10 (tools/tp_rate.py)
 
 
 def _small(frame: np.ndarray) -> np.ndarray:

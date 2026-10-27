@@ -21,7 +21,7 @@ from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import state
-from .town import (durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
+from .town import (durability_ok, heal_at_ormus, keys_full, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
                    set_players, town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
 
@@ -53,6 +53,9 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             repair = not durability_ok(bot)
             if repair:
                 state.save({**state.load(), "runs_since_repair": 0})
+        if buy_keys and keys_full(bot):
+            log.info("key stack is full after all (estimate %s); not buying", bot.keys_left)
+            bot.keys_left, buy_keys = cfg["town"]["keys_full"], False
         repair = repair or buy_keys  # same vendor
         if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:

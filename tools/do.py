@@ -32,16 +32,17 @@ def main() -> int:
         for step in sys.argv[1:]:
             t0 = time.perf_counter()
             name, _, arg = step.partition(":")
+            ret = None
             if name == "walk_route":
                 legs = cfg["town"]["route"][: int(arg)] if arg else cfg["town"]["route"]
                 town.walk_route(bot, legs)
             elif name == "create_game":
                 lifecycle.create_game(bot, cfg["game"]["difficulty"])
             elif hasattr(town, name):
-                getattr(town, name)(bot)
+                ret = getattr(town, name)(bot)
             else:
-                getattr(lifecycle, name)(bot)
-            print(f"done {step} in {time.perf_counter() - t0:.1f}s")
+                ret = getattr(lifecycle, name)(bot)
+            print(f"done {step} in {time.perf_counter() - t0:.1f}s" + (f" -> {ret!r}" if ret is not None else ""))
     finally:
         bot.release_all()
         s.close()

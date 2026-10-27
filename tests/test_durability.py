@@ -35,3 +35,14 @@ def test_lower_durability_is_not_full():
 
 def test_no_tooltip():
     assert durability_full(np.zeros((720, 1280, 3), np.uint8)) is None
+
+
+def test_key_stack_full():
+    f = cv2.imread(str(FIX.parent / "inventory" / "key_tooltip_12of12.png"))
+    assert durability_full(f, "tt_quantity.png") is True
+    assert durability_full(f) is None  # keys have no durability line
+
+
+def test_key_stack_not_full():
+    f = cv2.imread(str(FIX.parent / "inventory" / "key_tooltip_8of12.png"))
+    assert durability_full(f, "tt_quantity.png") is False

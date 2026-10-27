@@ -1,5 +1,5 @@
 """Is an equipped item at full durability? From its tooltip line "Durability: X of Y", without OCR:
-the item is full exactly when the pictures of X and Y are the same.
+the item is full exactly when the pictures of X and Y are the same. Also "Quantity: X of 12" (keys).
 
 Templates (bot/assets/templates): tt_durability.png ("Durability:"), tt_of.png ("of"), cut from
 the Shako tooltip on 2026-10-27.
@@ -26,10 +26,11 @@ def _trim(b: np.ndarray) -> np.ndarray:
     return b[:, cols[0] : cols[-1] + 1] if cols.size else b[:, :0]
 
 
-def durability_numbers(frame: np.ndarray) -> tuple[np.ndarray, np.ndarray] | None:
-    """Binary pictures of X and Y, or None when there's no durability line (item has none, no tooltip)."""
+def durability_numbers(frame: np.ndarray, word_tpl: str = "tt_durability.png") -> tuple[np.ndarray, np.ndarray] | None:
+    """Binary pictures of X and Y in "<word> X of Y", or None when there's no such line (item has none,
+    no tooltip). `word_tpl`: tt_durability.png or tt_quantity.png (key stacks)."""
     g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    word = _tpl("tt_durability.png")
+    word = _tpl(word_tpl)
     r = cv2.matchTemplate(g, word, cv2.TM_CCOEFF_NORMED)
     _, score, _, (x, y) = cv2.minMaxLoc(r)
     if score < 0.8:
@@ -56,9 +57,9 @@ def durability_numbers(frame: np.ndarray) -> tuple[np.ndarray, np.ndarray] | Non
     return left, right
 
 
-def durability_full(frame: np.ndarray) -> bool | None:
-    """True = X == Y (full), False = lower, None = no durability line found."""
-    nums = durability_numbers(frame)
+def durability_full(frame: np.ndarray, word_tpl: str = "tt_durability.png") -> bool | None:
+    """True = X == Y (full), False = lower, None = no such line found."""
+    nums = durability_numbers(frame, word_tpl)
     if nums is None:
         return None
     a, b = nums
