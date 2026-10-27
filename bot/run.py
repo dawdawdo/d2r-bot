@@ -90,6 +90,7 @@ def main() -> int:
     ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
     ap.add_argument("--relearn", action="store_true",
                     help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
+    ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
     ap.add_argument("--relearn-games", type=int, default=15, help="exploration games when relearning")
     args = ap.parse_args()
 
@@ -121,7 +122,11 @@ def main() -> int:
             w = csv.DictWriter(f, FIELDS)
             if new_file:
                 w.writeheader()
+            t_start = time.time()
             for i in range(args.runs):
+                if args.max_minutes and time.time() - t_start > args.max_minutes * 60:
+                    log.info("time budget of %.1f min used; stopping before run %d", args.max_minutes, i + 1)
+                    break
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": ""}
                 try:
