@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import logging
 
+import cv2
 import numpy as np
 
 from .controller import BotError, Controller
+from .vision.screen import ASSETS
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +35,61 @@ def walk_route(bot: Controller, route: list, retries: int = 2) -> None:
             bot.kill.sleep(0.5)
 
 
+ROUTE_END = ASSETS / "town_route_end.png"  # the view where the town route normally ends (saved on
+                                           # the first clean WP open); corrects a walk an NPC cut short
+ROUTE_END_TOL = 60  # px
+
+
+def route_end_offset(ref: np.ndarray, frame: np.ndarray) -> tuple[float, float] | None:
+    """Where the reference view's features are in `frame`, relative to the reference (phase
+    correlation, as LK odometry). None if the views don't overlap enough to tell."""
+    from .nav import MIN_RESPONSE, _odo_window, _small
+
+    a, b = _small(ref), _small(frame)
+    (dx, dy), resp = cv2.phaseCorrelate(a, b, _odo_window(a.shape))
+    return (dx * 2, dy * 2) if resp >= MIN_RESPONSE else None
+
+
+def fix_route_end(bot: Controller) -> None:
+    """2026-10-26: an NPC cut the last leg short and the WP was off screen. Walk the difference."""
+    from .nav import CENTER
+
+    if not ROUTE_END.exists():
+        return
+    off = route_end_offset(cv2.imread(str(ROUTE_END)), bot.capture.grab())
+    if off is None or np.hypot(*off) < ROUTE_END_TOL:
+        return
+    log.info("town route ended %s px off; walking the difference", np.round(off).tolist())
+    bot.click(int(CENTER[0] + off[0]), int(CENTER[1] + off[1]))
+    bot.wait_still(timeout=4, settle=1, poll=0.1, min_wait=0.2)
+
+
+def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict) -> tuple[int, int] | None:
+    """Top-left of the WP template (platform + right brazier). An NPC at the right brazier spoils
+    the full match (0.66 live), so also accept the left half alone, or a weaker full match right
+    where the route normally ends."""
+    from .vision.screen import match_score
+
+    t = bot._templates.get("town_wp_full")
+    if t is None:
+        t = bot._templates["town_wp_full"] = cv2.imread(str(ASSETS / tcfg["wp_template"]))
+    score, loc = match_score(frame, t, None)
+    if score >= tcfg.get("wp_threshold", 0.7):
+        return loc
+    half, hloc = match_score(frame, t[:, : t.shape[1] // 2], None)
+    if half >= 0.8:  # live: 0.86-0.87 with someone on the right brazier
+        return hloc
+    typ = tcfg.get("wp_typical")
+    if typ and score >= 0.6 and np.hypot(loc[0] - typ[0], loc[1] - typ[1]) < 40:
+        return loc
+    log.info("town WP not matched: full %.2f at %s, left half %.2f at %s", score, loc, half, hloc)
+    return None
+
+
 def open_town_wp(bot: Controller, tcfg: dict) -> None:
     for attempt in range(3):
-        loc = bot.find(tcfg["wp_template"], threshold=tcfg.get("wp_threshold", 0.7))
+        view = bot.capture.grab()
+        loc = find_town_wp(bot, view, tcfg)
         if loc is None:
             bot.save_failure(f"town_wp_not_found_{attempt}")
             raise BotError("town waypoint not visible at end of route")
@@ -43,6 +97,11 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
         bot.click(loc[0] + ox, loc[1] + oy)
         try:
             bot.wait_for("wp_menu", 5)
+            typ = tcfg.get("wp_typical")
+            log.info("town WP template at %s", loc)
+            if not ROUTE_END.exists() and attempt == 0 and typ and np.hypot(loc[0] - typ[0], loc[1] - typ[1]) < 40:
+                cv2.imwrite(str(ROUTE_END), view)  # only a typical end (the first one saved was 190 px off)
+                log.info("saved the town route end view")
             return
         except BotError:
             log.info("waypoint menu didn't open (attempt %d)", attempt + 1)
@@ -365,6 +424,7 @@ def town_to_lower_kurast(bot: Controller) -> None:
     cast_buffs(bot)
     walk_route(bot, tcfg["route"])
     restock_belt(bot)
+    fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
     open_town_wp(bot, tcfg)
     town_view = bot.capture.grab()
     bot.click_ui("wp_lower_kurast")

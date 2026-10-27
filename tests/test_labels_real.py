@@ -41,3 +41,37 @@ def test_chat_terror_zone_text_is_not_a_rune():
     img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "merc" / "chat_terror_zone.png"))
     kinds = {k: cfg["vision"]["labels"][k] for k in ("rune", "unique")}
     assert find_labels(img, kinds, ignore=cfg["vision"]["label_ignore"]) == []
+
+
+@pytest.mark.parametrize("name,word,count", [("rejuv_and_gold.png", "rejuv", 1), ("key_and_gold.png", "key", 1)])
+def test_white_words(name, word, count):
+    """Keys and rejuvs are told apart from the gold labels around them by their first word."""
+    from bot.vision.labels import white_word
+
+    img = cv2.imread(str(RAW.parent / "loot" / name))
+    labels = find_labels(img, {"white": CFG["vision"]["labels"]["white"]}, ignore=CFG["vision"]["label_ignore"])
+    words = [white_word(img, l) for l in labels]
+    assert words.count(word) == count
+    assert len([w for w in words if w is None]) >= 8  # gold
+
+
+def test_loot_picks_key_not_gold():
+    """loot() clicks the key (keys below a full stack) and none of the gold labels around it."""
+    from types import SimpleNamespace
+
+    from bot.lk import loot
+
+    frame = cv2.imread(str(RAW.parent / "loot" / "key_and_gold.png"))
+    clicks = []
+
+    def click(x, y, *a, **k):  # picking the item removes its label
+        clicks.append((x, y))
+        cv2.rectangle(bot.frame, (x - 25, y - 10), (x + 25, y + 10), (60, 60, 60), -1)
+
+    bot = SimpleNamespace(cfg=CFG, frame=frame.copy(), keys_left=2, _labels_known=True, check=lambda: None,
+                          click=click, wait_still=lambda **k: True)
+    assert loot(bot) == ["key"]
+    assert clicks == [(717 + 37 // 2, 474 + 13 // 2)]
+    assert bot.keys_left == 3
+    bot.frame, bot.keys_left, clicks[:] = frame.copy(), 12, []
+    assert loot(bot) == []  # full stack: leave it

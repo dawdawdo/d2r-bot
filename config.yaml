@@ -42,6 +42,7 @@ loot:
   # rings; the bot then picks up visible labels of these colors. See docs/loot.md.
   filter_name: "LK Bot"
   pick: [rune, unique]
+  supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
@@ -60,6 +61,7 @@ town:
   wp_template: town_wp.png       # platform + right brazier
   wp_click_offset: [35, 40]      # template top-left -> platform center
   wp_threshold: 0.7
+  wp_typical: [1051, 356]        # WP template top-left at a normal route end (2026-10-26); route end reference
   corpse_click: [638, 334]       # character's feet at spawn (where the corpse lies after a death)
   heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
   ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs

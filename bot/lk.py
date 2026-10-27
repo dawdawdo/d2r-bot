@@ -192,11 +192,32 @@ def ensure_labels_on(bot: Controller) -> None:
     bot._labels_known = True
 
 
-def loot(bot: Controller, max_picks: int = 8) -> list[str]:
-    """Pick up every visible label of the configured kinds. Returns kinds picked."""
+def _want_supply(bot: Controller, word: str | None) -> bool:
+    """Keys while below a full stack; rejuvs while the belt has an empty slot (picked potions
+    go straight to the belt then). Stephen: sustain from chest drops, no buying (2026-10-26)."""
+    from .vision.orbs import belt_slots
+
+    if word == "key":
+        left = getattr(bot, "keys_left", None)
+        return left is None or left < bot.cfg["town"]["keys_full"]
+    if word == "rejuv":
+        return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"]))
+    return False
+
+
+def loot(bot: Controller, max_picks: int = 10) -> list[str]:
+    """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
+    (white labels, told apart from gold by their first word). Returns what was picked."""
+    from .vision.labels import white_word
+
     ensure_labels_on(bot)
-    kinds = {k: v for k, v in bot.cfg["vision"]["labels"].items() if k in bot.cfg["loot"]["pick"]}
+    labels_cfg = bot.cfg["vision"]["labels"]
+    kinds = {k: v for k, v in labels_cfg.items() if k in bot.cfg["loot"]["pick"]}
+    supplies = bot.cfg["loot"].get("supplies", [])
+    if supplies:
+        kinds.setdefault("white", labels_cfg["white"])
     picked: list[str] = []
+    tried: dict[tuple[int, int], int] = {}
     for i in range(max_picks):
         bot.check()
         if i == 0 and bot.cfg.get("debug_loot_frames"):
@@ -204,20 +225,33 @@ def loot(bot: Controller, max_picks: int = 8) -> list[str]:
 
             cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"loot_{time.strftime('%H%M%S')}.png"),
                         bot.frame)
-        labels = find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"])
-        if not labels:
+        found = []
+        for lab in find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"]):
+            what = lab.kind
+            if lab.kind == "white":
+                what = white_word(bot.frame, lab)
+                if what not in supplies or not _want_supply(bot, what):
+                    continue
+            if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2:
+                continue  # still there after two clicks: can't pick it up (full, or not an item)
+            found.append((what, lab))
+        if not found:
             break
-        lab = min(labels, key=lambda l: abs(l.center[0] - CENTER[0]) + abs(l.center[1] - CENTER[1]))
-        log.info("pick %s label at %s", lab.kind, lab.center)
+        what, lab = min(found, key=lambda f: abs(f[1].center[0] - CENTER[0]) + abs(f[1].center[1] - CENTER[1]))
+        log.info("pick %s label at %s", what, lab.center)
         if lab.kind != "white":  # keep evidence of every valuable pick for review
             import time
 
             # clean frame (a drawn box spoils it as a test fixture); the label box is in the name
             name = f"pick_{lab.kind}_{time.strftime('%m%d-%H%M%S')}_{lab.x}_{lab.y}_{lab.w}_{lab.h}.png"
             cv2.imwrite(str(ROOT / "fixtures" / "raw" / name), bot.frame)
+        cell = (lab.center[0] // 10, lab.center[1] // 10)
+        tried[cell] = tried.get(cell, 0) + 1
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
-        picked.append(lab.kind)
+        if what == "key" and getattr(bot, "keys_left", None) is not None:
+            bot.keys_left += 1
+        picked.append(what)
     return picked
 
 

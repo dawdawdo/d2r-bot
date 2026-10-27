@@ -51,6 +51,17 @@ def _odo_window(shape) -> np.ndarray:
     return cv2.createHanningWindow(shape[::-1], cv2.CV_32F) * mask
 
 
+WEAK_RESPONSE = 0.01  # floor for a peak that agrees with the commanded hop
+HOP_GAIN = 1.17      # live 2026-10-26: commanded (-340, -220) landed (-402, -257), 4 times
+
+
+def _matches_hop(moved: np.ndarray, expect) -> bool:
+    if expect is None:
+        return False
+    want = np.asarray(expect, float) * HOP_GAIN
+    return float(np.hypot(*(moved - want))) < 0.15 * float(np.hypot(*want)) + 20
+
+
 class Odometer:
     """`lost` is set when a step can't be trusted (Blizzaga's teleport-on-hit item jumps her
     randomly mid-fight); re-anchor on a landmark (anchor_bonfire) to clear it."""
@@ -63,14 +74,17 @@ class Odometer:
         self.resp = 1.0
         self.since_anchor = 0.0  # px travelled since the last landmark fix (drift grows with it)
 
-    def update(self, frame: np.ndarray) -> tuple[float, float]:
+    def update(self, frame: np.ndarray, expect=None) -> tuple[float, float]:
+        """`expect` = the commanded hop: a weak peak (long diagonal hops overlap little) is still
+        trusted when the step matches it (live: landings are ~1.17x the click offset)."""
         cur = _small(frame)
         (dx, dy), self.resp = cv2.phaseCorrelate(self.prev, cur, self.win)
         self.prev = cur
         moved = np.array([-dx * 2, -dy * 2])
         self.pos += moved
         self.since_anchor += math.hypot(*moved)
-        if self.resp < MIN_RESPONSE or abs(moved[0]) > MAX_STEP_X or abs(moved[1]) > MAX_STEP_Y:
+        weak = self.resp < MIN_RESPONSE and not (self.resp >= WEAK_RESPONSE and _matches_hop(moved, expect))
+        if weak or abs(moved[0]) > MAX_STEP_X or abs(moved[1]) > MAX_STEP_Y:
             if not self.lost:
                 log.warning("odometry lost: step %s resp %.3f", moved.round().tolist(), self.resp)
             self.lost = True
@@ -82,7 +96,7 @@ def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, fl
     bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
     bot.sleep(TP_SETTLE)
     bot.frame = bot.capture.grab()
-    moved = odo.update(bot.frame)
+    moved = odo.update(bot.frame, expect=(dx, dy))
     if odo.lost and not was_lost:  # keep the frame pair for review
         log.info("lost on hop (%d, %d)", dx, dy)
         bot.save_failure("odo_lost_after")

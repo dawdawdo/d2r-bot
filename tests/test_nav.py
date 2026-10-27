@@ -136,3 +136,36 @@ def test_odometer_ignores_zone_banner():
     odo = Odometer(banner_view(0, 0))
     odo.update(banner_view(0, 220))
     assert np.allclose(odo.pos, (0, 220), atol=6), odo.pos
+
+
+def test_town_route_end_offset():
+    """Stopped short of the usual end point (camera up-left of it): walk down-right by the difference."""
+    from bot.town import route_end_offset
+
+    off = route_end_offset(view(0, 0), view(-444, -254))
+    assert np.allclose(off, (444, 254), atol=6), off
+    assert np.hypot(*route_end_offset(view(0, 0), view(0, 0))) < 2
+
+
+def test_hop_match():
+    """Long diagonal hops give a weak peak; trust it when it agrees with the commanded hop."""
+    from bot.nav import _matches_hop
+
+    assert _matches_hop(np.array([-402.0, -257.0]), (-340, -220))
+    assert not _matches_hop(np.array([-153.0, -288.0]), (-265, -220))  # a real mis-track (live 18:34)
+    assert not _matches_hop(np.array([-402.0, -257.0]), None)
+
+
+def test_find_town_wp_with_npc_on_brazier():
+    """Live failures: the WP was in view but an NPC on the right brazier spoiled the full match."""
+    from pathlib import Path
+
+    import cv2
+
+    from bot.config import load_config
+    from bot.town import find_town_wp
+
+    cfg = load_config()
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "bot" / "assets" / "templates" / "town_route_end.png"))
+    bot = SimpleNamespace(_templates={})
+    assert find_town_wp(bot, img, cfg["town"]) == (1051, 360)

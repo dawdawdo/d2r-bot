@@ -59,3 +59,30 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
                 continue
             out.append(Label(kind, int(x), int(y), int(w), int(h)))
     return sorted(out, key=lambda l: (l.y, l.x))
+
+
+WORD_TEMPLATES = {"key": "label_key.png", "rejuv": "label_rejuv.png"}  # "Rejuvenation" word: also Full Rejuvs
+_words: dict[str, np.ndarray] = {}
+
+
+def white_word(frame: np.ndarray, lab: Label, min_score: float = 0.75) -> str | None:
+    """Which wanted white label this is ("key", "rejuv"), by matching the label's first word
+    against a template; None for gold amounts and anything else."""
+    from .screen import ASSETS
+
+    gray = None
+    for word, fname in WORD_TEMPLATES.items():
+        t = _words.get(word)
+        if t is None:
+            t = _words[word] = cv2.imread(str(ASSETS / fname), cv2.IMREAD_GRAYSCALE)
+        th, tw = t.shape
+        if abs(lab.w - tw) > 4 or abs(lab.h - th) > 3:
+            continue
+        if gray is None:
+            y0, x0 = max(0, lab.y - 3), max(0, lab.x - 3)
+            gray = cv2.cvtColor(frame[y0 : lab.y + lab.h + 3, x0 : lab.x + lab.w + 3], cv2.COLOR_BGR2GRAY)
+        if gray.shape[0] < th or gray.shape[1] < tw:
+            continue
+        if cv2.minMaxLoc(cv2.matchTemplate(gray, t, cv2.TM_CCOEFF_NORMED))[1] >= min_score:
+            return word
+    return None
