@@ -61,6 +61,7 @@ class Controller:
         self._last_potion = -99.0
         self.flee_ok = False      # run_route: Danger (skip the camp) instead of Chicken while life is fine
         self._flee_quiet = -99.0  # after a flee: don't raise Danger again while teleporting away
+        self.scan_jumped = False  # lk.open_chest: the last hover scan ended on a view jump
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:

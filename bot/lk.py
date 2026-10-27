@@ -175,7 +175,8 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         if odo is not None and i and i % 10 == 0:
             dx, dy = odo.update(bot.frame)
             if np.hypot(dx, dy) > SCAN_JUMP:
-                log.info("view jumped (%d, %d) during the chest scan; giving up on this chest", dx, dy)
+                log.info("view jumped (%d, %d) during the chest scan", dx, dy)
+                bot.scan_jumped = True
                 return None
         bot.input.move(px, py)
         bot.kill.sleep(0.09)
@@ -433,7 +434,17 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
         points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
     for i, (cx, cy) in enumerate(points):
         fresh = "world" in t and not odo.lost and odo.since_anchor < FRESH_ANCHOR
+        bot.scan_jumped = False
         found = open_chest(bot, cx, cy, odo=odo, radius=105 if fresh else 220)
+        if not found and bot.scan_jumped and "world" in t:  # teleport-when-struck: go back, try once more
+            bf = t.get("bonfire")
+            if odo.lost and bf is not None:
+                reanchor(bot, odo, bf)
+            if not odo.lost and teleport_to(bot, odo, t["world"]):
+                log.info("%s: back at the stand point after the jump; scanning again", t["name"])
+                odo.update(bot.capture.grab())
+                cx, cy = world_to_screen(odo, *chest_world(t, i, learned))
+                found = open_chest(bot, cx, cy, odo=odo, radius=105)
         if not found and fresh and not odo.lost:  # we know where it is: monsters standing on it?
             log.info("%s: chest hidden at (%d, %d); frozen orbs, then look again", t["name"], cx, cy)
             clear_spot(bot, cx, cy)
