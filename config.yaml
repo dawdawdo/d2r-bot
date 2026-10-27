@@ -34,6 +34,8 @@ safety:
   potion_cooldown_s: 1.5
   es_broken_mp_pct: 8  # chicken if mana < 8% AND life < 75% (shield gone under attack)
   es_broken_hp_pct: 75
+  flee_hp_pct: 60      # ES broken, no potion helps, life >= this: skip the camp (teleport to the next) instead of chicken
+  flee_quiet_s: 4      # after fleeing, no second flee for this long (HP chicken still applies)
   hot_movers: 99       # DISABLED: nav.movers() counts orb shards/torch flicker as monsters (8-28 blobs
                        # even when calm). Needs a real monster detector before it can gate huts.
   run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)

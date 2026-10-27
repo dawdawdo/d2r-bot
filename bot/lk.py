@@ -13,7 +13,7 @@ import numpy as np
 import yaml
 
 from .config import ROOT
-from .controller import BotError, Controller
+from .controller import BotError, Controller, Danger
 from .vision.labels import find_labels
 
 log = logging.getLogger(__name__)
@@ -335,63 +335,85 @@ def run_route(bot: Controller, route: dict) -> dict:
     odometry only when it's lost or has drifted a while; if the bonfire isn't visible from the stand
     point, it's visited first. Where chests were actually found is learned (maps/<route>/learned.json).
     """
-    from .nav import CENTER as C, Odometer, bonfire_stand, fight, hop, reanchor, search_bonfire, teleport_to, world_to_screen
+    from .nav import Odometer
 
     check_fingerprint(bot, route)
     learned = load_learned(route)
     stats = {"chests": 0, "picked": []}
     odo = Odometer(bot.capture.grab())
     unfound = set()  # bonfires a lost-odometry search couldn't find this run
-    for t in route["targets"]:
-        log.info("-> %s", t["name"])
-        if "world" in t:
+    bot.flee_ok = True
+    try:
+        for t in route["targets"]:
             bf = t.get("bonfire")
             if bf is not None and tuple(bf) in unfound:
                 stats.setdefault("skipped", []).append(t["name"])
                 continue
-            leg = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))  # the leg ahead drifts too
-            need_anchor = bf is not None and (odo.lost or odo.since_anchor + leg > REANCHOR_AFTER)
-            if need_anchor and not _in_view(t["world"], bf):
-                teleport_to(bot, odo, bonfire_stand(bf), tol=120)  # bonfire first, then the stand point
-                need_anchor = not reanchor(bot, odo, bf)
-            if not teleport_to(bot, odo, t["world"]):
-                gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))
-                if gap > 200:
-                    continue
-                log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
-            if t.get("fight", False):
-                fight(bot, odo=odo)
-            need_anchor = bf is not None and (need_anchor or odo.lost)  # lost on the way: a blind chest
-            if need_anchor:                                              # scan costs ~30 s for nothing
-                if not reanchor(bot, odo, bf) and odo.lost:
-                    log.warning("%s: odometry lost and no bonfire in view -> searching", t["name"])
-                    if not search_bonfire(bot, odo, bf):
-                        unfound.add(tuple(bf))  # don't search again for this camp's other chests
-                    if odo.lost or not teleport_to(bot, odo, t["world"]):
-                        stats.setdefault("skipped", []).append(t["name"])
-                        continue
-                    stats["recovered"] = stats.get("recovered", 0) + 1
-                elif not teleport_to(bot, odo, t["world"]):  # the fix may have moved the stand point
-                    continue                                 # (cheap when it didn't)
-            points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(t["chests_world"]))]
-        else:
-            for dx, dy in t["hops"]:
-                hop(bot, odo, dx, dy)
-            points = [tuple(c) for c in t["chests"]]
-        bot.wait_still(timeout=1.0, settle=1, poll=0.05, min_wait=0.0)  # teleports already settle 0.2 s
-        odo.update(bot.capture.grab())
-        if "world" in t:  # the settle may have moved the view a little
-            points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
-        for i, (cx, cy) in enumerate(points):
-            found = open_chest(bot, cx, cy)
-            if found and "world" in t and not odo.lost:  # before the update below: opening walks us to it
-                learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
-            odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
-            if not found and "world" in t and not odo.lost:
-                log.info("chest missing: position suspect, re-anchor at the next target")
-                odo.lost = True  # (2026-10-26: a 470 px jump in a scan cost the rest of the run)
-            if found:
-                stats["chests"] += 1
-                stats["picked"] += loot(bot)
-                odo.update(bot.capture.grab())  # picking items walks us around
+            try:
+                _visit(bot, t, odo, learned, route, stats, unfound)
+            except Danger as e:  # mana burned out at a camp: give up its chests, not the whole run
+                log.warning("%s: %s -> fleeing to the next camp", t["name"], e)
+                stats["fled"] = stats.get("fled", 0) + 1
+                odo.lost = True  # cut off mid-hop: re-anchor at the next camp
+                if bf is not None:
+                    unfound.add(tuple(bf))
+    finally:
+        bot.flee_ok = False
     return stats
+
+
+def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dict, unfound: set) -> None:
+    """One route target: get there (re-anchoring as needed), open its chests, loot."""
+    from .nav import CENTER as C, bonfire_stand, fight, hop, reanchor, search_bonfire, teleport_to, world_to_screen
+
+    log.info("-> %s", t["name"])
+    if "world" in t:
+        bf = t.get("bonfire")
+        if bf is not None and tuple(bf) in unfound:
+            stats.setdefault("skipped", []).append(t["name"])
+            return
+        leg = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))  # the leg ahead drifts too
+        need_anchor = bf is not None and (odo.lost or odo.since_anchor + leg > REANCHOR_AFTER)
+        if need_anchor and not _in_view(t["world"], bf):
+            teleport_to(bot, odo, bonfire_stand(bf), tol=120)  # bonfire first, then the stand point
+            need_anchor = not reanchor(bot, odo, bf)
+        if not teleport_to(bot, odo, t["world"]):
+            gap = float(np.hypot(*(np.asarray(t["world"], float) - odo.pos)))
+            if gap > 200:
+                return
+            log.info("%s: %d px from the stand point; searching anyway", t["name"], gap)
+        if t.get("fight", False):
+            fight(bot, odo=odo)
+        need_anchor = bf is not None and (need_anchor or odo.lost)  # lost on the way: a blind chest
+        if need_anchor:                                              # scan costs ~30 s for nothing
+            if not reanchor(bot, odo, bf) and odo.lost:
+                log.warning("%s: odometry lost and no bonfire in view -> searching", t["name"])
+                if not search_bonfire(bot, odo, bf):
+                    unfound.add(tuple(bf))  # don't search again for this camp's other chests
+                if odo.lost or not teleport_to(bot, odo, t["world"]):
+                    stats.setdefault("skipped", []).append(t["name"])
+                    return
+                stats["recovered"] = stats.get("recovered", 0) + 1
+            elif not teleport_to(bot, odo, t["world"]):  # the fix may have moved the stand point
+                return                                 # (cheap when it didn't)
+        points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(t["chests_world"]))]
+    else:
+        for dx, dy in t["hops"]:
+            hop(bot, odo, dx, dy)
+        points = [tuple(c) for c in t["chests"]]
+    bot.wait_still(timeout=1.0, settle=1, poll=0.05, min_wait=0.0)  # teleports already settle 0.2 s
+    odo.update(bot.capture.grab())
+    if "world" in t:  # the settle may have moved the view a little
+        points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
+    for i, (cx, cy) in enumerate(points):
+        found = open_chest(bot, cx, cy)
+        if found and "world" in t and not odo.lost:  # before the update below: opening walks us to it
+            learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
+        odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
+        if not found and "world" in t and not odo.lost:
+            log.info("chest missing: position suspect, re-anchor at the next target")
+            odo.lost = True  # (2026-10-26: a 470 px jump in a scan cost the rest of the run)
+        if found:
+            stats["chests"] += 1
+            stats["picked"] += loot(bot)
+            odo.update(bot.capture.grab())  # picking items walks us around

@@ -31,6 +31,10 @@ class Died(BotError):
     """HP orb is empty: the character is dead."""
 
 
+class Danger(BotError):
+    """Energy shield broken and no potion helps, but life is still fine: leave this camp (flee)."""
+
+
 class RunTimeout(BotError):
     """The run went past its deadline while out of town (stuck somewhere)."""
 
@@ -55,6 +59,8 @@ class Controller:
         self.hp: float | None = None
         self.mp: float | None = None
         self._last_potion = -99.0
+        self.flee_ok = False      # run_route: Danger (skip the camp) instead of Chicken while life is fine
+        self._flee_quiet = -99.0  # after a flee: don't raise Danger again while teleporting away
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
@@ -94,6 +100,12 @@ class Controller:
                 self._ensure_foreground()
                 self.input.press(key)
                 return
+            if self.flee_ok and self.hp >= s.get("flee_hp_pct", 60):
+                if self.clock() < self._flee_quiet:
+                    return  # already fleeing; the HP chicken above still applies
+                self._flee_quiet = self.clock() + s.get("flee_quiet_s", 4.0)
+                self.save_failure(f"flee_es_hp{int(self.hp)}_mp{int(self.mp)}")
+                raise Danger(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
         low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)

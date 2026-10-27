@@ -264,3 +264,29 @@ def test_no_click_when_hell_button_missing(cfg):
     with pytest.raises(BotError, match="resets the map"):
         create_game(bot)
     assert not any(e.startswith("difficulty_") for e in game.log)
+
+
+def test_guardian_flee_instead_of_chicken(cfg):
+    from bot import controller as C
+
+    f = hp_frame(cfg, 70)
+    mx, my, mw, mh = cfg["vision"]["orbs"]["mp"]["region"]
+    f[my : my + mh, mx : mx + mw] = 0
+    by0, by1 = cfg["vision"]["belt"]["y"]
+    f[by0:by1, :] = 0  # nothing to drink
+    game = SimGame(cfg["ui"], state="in_game")
+    t = [0.0]
+    bot = Controller(FakeWindow(), FakeCapture([f]), game, game, KillSwitch(), cfg, clock=lambda: t[0])
+    bot.guard(True)
+    bot.flee_ok = True
+    with pytest.raises(C.Danger):
+        bot.observe()
+    t[0] += 1.0
+    bot.observe()  # still fleeing: no second Danger, no chicken
+    t[0] += 10.0
+    with pytest.raises(C.Danger):
+        bot.observe()
+    bot.flee_ok = False
+    t[0] += 10.0
+    with pytest.raises(C.Chicken):
+        bot.observe()
