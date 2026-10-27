@@ -129,6 +129,23 @@ def test_guardian_es_broken(cfg):
     game = SimGame(cfg["ui"], state="in_game")
     bot = Controller(FakeWindow(), FakeCapture([f]), game, game, KillSwitch(), cfg)
     bot.guard(True)
+    bot.observe()  # first: drink a rejuv (belt slots 2-4 hold potions)
+    assert "key:2" in game.log
+    with pytest.raises(C.Chicken, match="energy shield"):
+        bot.observe()  # still broken within the potion cooldown -> chicken
+
+
+def test_guardian_es_broken_empty_belt(cfg):
+    from bot import controller as C
+
+    f = hp_frame(cfg, 70)
+    mx, my, mw, mh = cfg["vision"]["orbs"]["mp"]["region"]
+    f[my : my + mh, mx : mx + mw] = 0
+    by0, by1 = cfg["vision"]["belt"]["y"]
+    f[by0:by1, :] = 0  # nothing to drink
+    game = SimGame(cfg["ui"], state="in_game")
+    bot = Controller(FakeWindow(), FakeCapture([f]), game, game, KillSwitch(), cfg)
+    bot.guard(True)
     with pytest.raises(C.Chicken, match="energy shield"):
         bot.observe()
 

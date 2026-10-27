@@ -85,6 +85,15 @@ class Controller:
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
         # Energy Shield gone (mana empty) while already hurt: life falls very fast from here.
         if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):
+            # A belt rejuv refills mana and the shield is back: drink once; still broken after the
+            # cooldown (or nothing to drink) -> chicken. (2026-10-27: most chickens were this, HP ~70%.)
+            key = self.potion_key() if self.clock() - self._last_potion > s.get("potion_cooldown_s", 1.5) else None
+            if key is not None:
+                self._last_potion = self.clock()
+                log.info("energy shield broken (HP %.0f%% MP %.0f%%) -> potion %s", self.hp, self.mp, key)
+                self._ensure_foreground()
+                self.input.press(key)
+                return
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
         low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
