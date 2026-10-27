@@ -49,8 +49,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             create_game(bot, cfg["game"]["difficulty"])
             bot.wait_for("in_game", 10)
         if check_durability and not repair:
-            state.save({**state.load(), "runs_since_dur_check": 0})
-            repair = not durability_ok(bot)
+            st = state.load()
+            if not durability_ok(bot):  # first wear seen: ~1 point per 10 runs, the Shako has 12
+                st["repair_due"] = cfg["town"]["repair_after_wear"]
+                log.info("wear seen; repairing in %d runs", st["repair_due"])
+            state.save({**st, "runs_since_dur_check": 0})
         if buy_keys:
             n = count_keys(bot)
             if n is not None and n >= 3:  # 3 = "3 to 9": count it as 6
@@ -65,7 +68,8 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                     save_and_exit(bot)
                     create_game(bot, cfg["game"]["difficulty"])
             if repair:
-                state.save({**state.load(), "runs_since_repair": 0, "runs_since_dur_check": 0})
+                st = {k: v for k, v in state.load().items() if k != "repair_due"}
+                state.save({**st, "runs_since_repair": 0, "runs_since_dur_check": 0})
                 if repair_at_hratli(bot, keys=buy_keys) and buy_keys:
                     bot.keys_left = cfg["town"]["keys_full"]
             save_and_exit(bot)
@@ -142,9 +146,13 @@ def main() -> int:
                 try:
                     chests = args.mode == "chests"
                     since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
-                    repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"])
+                    due = state.load().get("repair_due")
+                    repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"]
+                                         or (due is not None and due <= 0))
+                    if chests and due is not None:
+                        state.save({**state.load(), "repair_due": due - 1})
                     since_dur = state.load().get("runs_since_dur_check")
-                    dur = chests and (since_dur is None or since_dur >= cfg["town"]["durability_every"])
+                    dur = chests and due is None and (since_dur is None or since_dur >= cfg["town"]["durability_every"])
                     if chests:
                         state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1,
                                     "runs_since_dur_check": 0 if repair else (since_dur or 0) + 1})
