@@ -25,12 +25,15 @@
 - Map hunting (reroll = play another difficulty, then Hell) is NOT built: it destroys the current map. Needs Stephen.
 
 **Next step (exact):**
-1. Stephen is back on the PC (F12 at 08:13; D2R was closed). No live runs until he says so.
-2. Stephen asked when the bot is "done" and wants more farming tasks: proposed a task-plugin refactor
-   (LK becomes one task; lifecycle, safety, vision, nav, stash shared). Waiting for which task comes next.
-3. Then: 100-run untouched soak -> tag v1.0.
+1. Stephen is on the PC: no live runs until he says he's off.
+2. When he is: start D2R, check the new filter loads (9 rules; Esc -> Loot Filter) and that a run still picks
+   runes; then the 100-run LK sign-off -> tag v1.0.
+3. Next target (Stephen, 2026-10-27): **Dracul's Grasp via Hell Mephisto runs** (proposal accepted; research
+   in docs/loot.md). Build `bot/tasks/meph.py` on top of branch `tasks`: A3 WP -> Durance 2 -> learned route to
+   Level 3 stairs (fixed map) -> moat trick -> Static Field + Frozen Orb -> loot -> save & exit.
+   Ask: LK + Meph in one game, or Meph alone? Check Blizzaga's total MF on the character screen.
 
-**Open questions for Stephen:** which farming task next (Pindle, Meph, Countess, chaos...)?
+**Open questions for Stephen:** Mephisto alone or combined with LK in the same game?
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
