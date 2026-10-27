@@ -41,10 +41,10 @@ safety:
   run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)
 
 loot:
-  # The in-game filter (filters/LK Bot.fltr) hides everything except Dol+ runes and unique
-  # rings; the bot then picks up visible labels of these colors. See docs/loot.md.
+  # The in-game filter (filters/LK Bot.fltr) hides everything except Dol+ runes, unique rings and a few BiS
+  # items (docs/loot.md); the bot then picks up visible labels of these colors.
   filter_name: "LK Bot"
-  pick: [rune, unique]
+  pick: [rune, unique, set]    # set = green: Tal Rasha's Lidless Eye (the only set item the filter shows)
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.

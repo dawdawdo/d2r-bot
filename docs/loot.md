@@ -5,11 +5,20 @@
 - Unique rings (SoJ chance).
 - Optional: gems used to cube Dol+ upward (he probably already has them; off by default).
 
-## What the filter shows (checked 2026-10-27: repo file = installed copy in Saved Games)
+## What the filter shows (installed 2026-10-27 with D2R closed; previous copy in backups/filter-*)
+
+Chosen with Stephen for Mephisto runs (Hell, /players 7, 0 MF, Silospen dropcalc D2R_ROW_3_0, per Mephisto kill):
+Dracul's 1:2211, Arachnid Mesh 1:2199, Lidless Eye 1:1455, Andariel's Visage 1:3049, Gheed's 1:7101,
+Mara's 1:7709, Rainbow Facet 1:8115, SoJ / BK 1:15,470. Mephisto can't drop Death's Fathom, Griffon's Eye,
+Crown of Ages or Tal Rasha's armor (Baal / level-85 zones): add their codes if we ever farm there.
+To verify on the next D2R start: the game accepts rules that combine itemCode with equipmentRarity
+(9 rules should load), and the bot picks green (set) labels.
 | Rule | Items |
 |---|---|
 | Show Dol and higher runes | r14 Dol, r15 Hel, r16 Io, r17 Lum, r18 Ko, r19 Fal, r20 Lem, r21 Pul, r22 Um, r23 Mal, r24 Ist, r25 Gul, r26 Vex, r27 Ohm, r28 Lo, r29 Sur, r30 Ber, r31 Jah, r32 Cham, r33 Zod (all 20) |
 | Show unique rings | any unique ring (SoJ, BK, Nagel, Manald, Raven Frost, Dwarf Star, Wisp…) |
+| Show BiS uniques (added 2026-10-27, Stephen) | unique `uvg` Dracul's Grasp, `ulc` Arachnid Mesh, `usk` Andariel's Visage, `amu` amulets (Mara's, Highlord's, Atma's), `jew` Rainbow Facet, `cm3` Gheed's Fortune |
+| Show Tal Rasha Lidless Eye | set `oba` |
 | Show rejuvenation potions and keys | rvs, rvl, key (picked only when the belt / key stack needs them) |
 | Hidden | all gear, El–Amn (r01–r13), gold, potions, scrolls, ammo, gems, skulls |
 
