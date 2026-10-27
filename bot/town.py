@@ -54,9 +54,10 @@ def fix_route_end(bot: Controller) -> None:
     """2026-10-26: an NPC cut the last leg short and the WP was off screen. Walk the difference."""
     from .nav import CENTER
 
-    if not ROUTE_END.exists():
-        return
-    off = route_end_offset(cv2.imread(str(ROUTE_END)), bot.capture.grab())
+    frame = bot.capture.grab()
+    if not ROUTE_END.exists() or find_town_wp(bot, frame, bot.cfg["town"], quiet=True) is not None:
+        return  # WP in view: good enough (without a stash visit we stop ~(160, 110) px short of the reference)
+    off = route_end_offset(cv2.imread(str(ROUTE_END)), frame)
     if off is None or np.hypot(*off) < ROUTE_END_TOL:
         return
     log.info("town route ended %s px off; walking the difference", np.round(off).tolist())
@@ -64,7 +65,7 @@ def fix_route_end(bot: Controller) -> None:
     bot.wait_still(timeout=4, settle=1, poll=0.1, min_wait=0.2)
 
 
-def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict) -> tuple[int, int] | None:
+def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict, quiet: bool = False) -> tuple[int, int] | None:
     """Top-left of the WP template (platform + right brazier). An NPC at the right brazier spoils
     the full match (0.66 live), so also accept the left half alone, or a weaker full match right
     where the route normally ends."""
@@ -82,7 +83,8 @@ def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict) -> tuple[int, i
     typ = tcfg.get("wp_typical")
     if typ and score >= 0.6 and np.hypot(loc[0] - typ[0], loc[1] - typ[1]) < 40:
         return loc
-    log.info("town WP not matched: full %.2f at %s, left half %.2f at %s", score, loc, half, hloc)
+    if not quiet:
+        log.info("town WP not matched: full %.2f at %s, left half %.2f at %s", score, loc, half, hloc)
     return None
 
 
@@ -352,11 +354,15 @@ def restock_belt(bot: Controller) -> int:
     Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
     from .vision.orbs import belt_slots
 
+    from . import state
+
     scfg = bot.cfg["stash"]
     belt = bot.cfg["vision"]["belt"]
     bot.observe()
     if all(belt_slots(bot.frame, belt)):
         return 0
+    if state.load().get("stash_rejuvs_empty"):  # 4 s a run for nothing; delete the flag from
+        return 0                                 # logs/state.json after putting rejuvs in the stash
     if not open_stash(bot):
         return 0
     bot.click(*scfg["materials_tab"])
@@ -390,6 +396,9 @@ def restock_belt(bot: Controller) -> int:
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("restocked belt with %d potions", moved)
+    if moved <= 0 and not slots:  # every stash potion slot came up empty
+        state.save({**state.load(), "stash_rejuvs_empty": True})
+        log.warning("stash is out of rejuvs; skipping restocks until logs/state.json says otherwise")
     return moved
 
 
