@@ -28,6 +28,7 @@ class Label:
 
 WHITE_TEXT = {"lo": [0, 0, 190], "hi": [179, 40, 255]}
 MAX_COLOR_H = 16  # rune labels in 22 live picks: 13-14 px tall
+COLOR_BG_DARK, COLOR_BG_MEAN = 0.78, 25
 MAX_RUN = 14      # longest horizontal run of text pixels: runes <= 12 ("M"), coin piles 16-17
 
 
@@ -71,6 +72,9 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
                 # coin piles are solid blobs: real label text is 13-14 px tall with strokes of <= 12 px
                 if h > MAX_COLOR_H or _max_run(text) > MAX_RUN:
                     continue
+                bgc = gray[y : y + h, x : x + w][~text]  # the backdrop box: 34 live rune picks >= 81% dark,
+                if bgc.size and ((bgc < 25).mean() < COLOR_BG_DARK or bgc.mean() > COLOR_BG_MEAN):  # mean <= 20;
+                    continue  # coins/monsters between gold labels: <= 73% dark, mean >= 28
             bg = gray[y : y + h, x : x + w][~text]
             if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):
                 continue  # label text sits on a near-black box; gold piles sit on lit ground

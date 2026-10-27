@@ -98,3 +98,10 @@ def test_real_rune_labels_found(name):
     x, y, w, h = map(int, name[:-4].split("_")[3:7])
     labels = find_labels(img, {"rune": CFG["vision"]["labels"]["rune"]}, ignore=CFG["vision"]["label_ignore"])
     assert any(abs(l.x - x) < 5 and abs(l.y - y) < 5 for l in labels)
+
+
+def test_monster_between_gold_labels_is_not_unique():
+    """2026-10-27 06:29: tan pixels (monster, coins) at the end of "1827 Gold" read as a unique."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / "false_unique_monster_head.png"))
+    kinds = {k: CFG["vision"]["labels"][k] for k in ("unique", "rune", "set")}
+    assert not find_labels(img, kinds, ignore=CFG["vision"]["label_ignore"])
