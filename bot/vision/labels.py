@@ -26,6 +26,9 @@ class Label:
         return self.x + self.w // 2, self.y + self.h // 2
 
 
+WHITE_TEXT = {"lo": [0, 0, 190], "hi": [179, 40, 255]}
+
+
 def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 11,
                 max_h: int = 30, ignore: list | None = None, max_bg: float = 45.0,
                 min_pad_dark: float = 0.6, min_bg_dark: float = 0.6) -> list[Label]:
@@ -48,6 +51,11 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
             text = mask[y : y + h, x : x + w] > 0
             if not 0.08 <= text.mean() <= 0.22:  # label text fills 12-14% of its 13 px tall box (live);
                 continue                         # coins between two labels: 27%, 8 px tall
+            if kind != "white":  # white text in the box: the gap between two gold labels where the
+                # coins underneath show through (2026-10-27 read as a unique next to "1818 Gold")
+                white = hsv_mask(frame[y : y + h, x : x + w], WHITE_TEXT) > 0
+                if white.sum() > 0.15 * text.sum():  # real rune labels: 0 white px
+                    continue
             bg = gray[y : y + h, x : x + w][~text]
             if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):
                 continue  # label text sits on a near-black box; gold piles sit on lit ground

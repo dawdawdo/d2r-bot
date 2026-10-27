@@ -75,3 +75,10 @@ def test_loot_picks_key_not_gold():
     assert bot.keys_left == 3
     bot.frame, bot.keys_left, clicks[:] = frame.copy(), 12, []
     assert loot(bot) == []  # full stack: leave it
+
+
+def test_gap_between_gold_labels_is_not_unique():
+    """2026-10-27: coins showing through between "495 Gold" and "1818 Gold" read as a unique."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / "false_unique_between_gold.png"))
+    kinds = {k: CFG["vision"]["labels"][k] for k in ("unique", "rune", "set")}
+    assert not find_labels(img, kinds, ignore=CFG["vision"]["label_ignore"])
