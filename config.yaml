@@ -70,7 +70,8 @@ town:
   heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
   ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs
   ormus_region: [300, 40, 860, 480]
-  repair_every: 10               # runs between repairs at Hratli (Stephen: armor ran low)
+  repair_every: 30               # runs between repairs at Hratli (Stephen: armor ran low; 2026-10-27: all items still
+                                 # at max durability after 10 runs: Shako 12/12, Viper 24/24 -> 30; recheck)
   keys_min: 3                    # buy keys at Hratli when the estimate is <= this (Stephen)
   keys_full: 12                  # a bought stack tops the inventory keys up to this
   keys_pick_below: 8             # pick keys from chests only below this estimate (drops are stacks of several)
