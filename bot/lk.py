@@ -371,6 +371,22 @@ def run_route(bot: Controller, route: dict) -> dict:
     return stats
 
 
+FRESH_ANCHOR = 600  # px travelled since a bonfire fix: chests are then within ~35 px of their learned spot
+                    # (2026-10-27), so scan 105 px, not 220 (25 s when a monster pack hides the chest)
+
+
+def clear_spot(bot: Controller, x: int, y: int, casts: int = 3) -> None:
+    """Frozen Orbs at a screen point (a pack standing on a chest hides its tooltip), then Teleport back."""
+    sk = bot.cfg["hotkeys"]["skills"]
+    bot.press(sk["frozen_orb"])
+    try:
+        for _ in range(casts):
+            bot.click(x, y, "right", hover=0)
+            bot.sleep(0.45)
+    finally:
+        bot.press(sk["teleport"])
+
+
 def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dict, unfound: set) -> None:
     """One route target: get there (re-anchoring as needed), open its chests, loot."""
     from .nav import CENTER as C, bonfire_stand, fight, hop, reanchor, search_bonfire, teleport_to, world_to_screen
@@ -415,7 +431,14 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
     if "world" in t:  # the settle may have moved the view a little
         points = [world_to_screen(odo, *chest_world(t, i, learned)) for i in range(len(points))]
     for i, (cx, cy) in enumerate(points):
-        found = open_chest(bot, cx, cy, odo=odo)
+        fresh = "world" in t and not odo.lost and odo.since_anchor < FRESH_ANCHOR
+        found = open_chest(bot, cx, cy, odo=odo, radius=105 if fresh else 220)
+        if not found and fresh and not odo.lost:  # we know where it is: monsters standing on it?
+            log.info("%s: chest hidden at (%d, %d); frozen orbs, then look again", t["name"], cx, cy)
+            clear_spot(bot, cx, cy)
+            odo.update(bot.capture.grab())
+            cx, cy = world_to_screen(odo, *chest_world(t, i, learned))
+            found = open_chest(bot, cx, cy, odo=odo, radius=70)
         if found and "world" in t and not odo.lost:  # before the update below: opening walks us to it
             learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
         odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
