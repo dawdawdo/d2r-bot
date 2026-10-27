@@ -8,6 +8,7 @@ game:
   character: Blizzaga
   route: blizzaga_hell                      # maps/<route>/route.yaml
   players: 7                                # /players N once per session (monsters weaker, chest loot same)
+  act4_exit: true                           # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
 
 paths:
   save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
@@ -56,6 +57,9 @@ ui:
   save_and_exit: [640, 314]
   esc_loot_filter: [640, 420]
   wp_lower_kurast: [190, 314]  # waypoint panel, Act III tab (default when in A3)
+  wp_tab_act3: [224, 90]       # waypoint panel act tabs (live 2026-10-27); the panel opens on the current act
+  wp_tab_act4: [292, 90]
+  wp_town: [240, 128]          # first entry of a tab = its town (Kurast Docks, Pandemonium Fortress)
   exit_game: [165, 430]        # main menu "Exit Diablo II"
 
 # M3: walking route from the new-game spawn (by Meshif) to the waypoint, recorded 2026-10-25.
@@ -78,6 +82,9 @@ town:
                                  # below full (2026-10-27: nothing lost in 10 runs, Shako 12/12, Viper 24/24)
   keys_min: 3                    # buy keys at Hratli when the estimate is <= this (Stephen)
   keys_full: 12                  # a bought stack tops the inventory keys up to this
+  a4_wp_template: a4_wp.png      # Pandemonium Fortress WP (braziers + platform), seen from the A4 spawn
+  a4_wp_region: [880, 0, 280, 160]
+  a4_wp_click_offset: [90, 55]   # template top-left -> platform center
   keys_pick_below: 8             # pick keys from chests only below this estimate (drops are stacks of several)
   hratli:                        # legs after the Ormus legs: E across the plaza, SE bridge, landing, NE bridge
     route: [[1000, 560], [1150, 380], [1040, 480], [900, 470], [860, 510], [900, 540], [1118, 262], [880, 220], [1000, 170]]
@@ -155,7 +162,8 @@ vision:
     title:
       - {template: title.png, region: [450, 540, 380, 80], threshold: 0.8}
     difficulty:
-      - {template: difficulty.png, region: [530, 220, 220, 80], threshold: 0.8}
+      # the opaque Hell button: the "Select Difficulty" title is see-through (failed over the A4 menu background)
+      - {template: difficulty_hell.png, region: [570, 350, 140, 80], threshold: 0.8}
     esc_menu:   # the opaque "Save and Exit" button text (the "Paused" title is see-through)
       - {template: esc_menu.png, region: [573, 296, 134, 42], threshold: 0.8}
     wp_menu:

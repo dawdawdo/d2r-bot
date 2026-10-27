@@ -22,8 +22,9 @@ from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import control, state
-from .town import (count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
-                   set_players, town_to_lower_kurast)
+from .town import (belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
+                   repair_at_hratli, restart_in_act3, revive_merc, set_players, spawn_act, stowaway,
+                   town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
@@ -43,6 +44,13 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             state.save({**state.load(), "players_window": bot.game_window_id})
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
+        bot.act = spawn_act(bot) if mode == "chests" else 3
+        if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
+            stow = stowaway(bot, stash=False) is None
+        if bot.act == 4 and (stow or repair or buy_keys or needs_heal(bot) or belt_needs_restock(bot)
+                             or (bot.merc_revive and not merc_alive(bot))):
+            restart_in_act3(bot)  # stash and vendors are all in Act 3
+            bot.act = 3
         if mode == "chests" and bot.merc_revive and not merc_alive(bot):
             log.info("merc is dead -> Asheara")
             bot.merc_revive = revive_merc(bot)  # failed (no gold?) -> don't retry every run
@@ -179,6 +187,9 @@ def main() -> int:
                     if chests:
                         state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1,
                                     "runs_since_dur_check": 0 if repair else (since_dur or 0) + 1})
+                    # the next run repairs (Act 3): this one shouldn't end in Act 4 (tasks/lk.py town_due)
+                    bot.repair_next = chests and not repair and (
+                        (since_repair or 0) + 1 >= cfg["town"]["repair_every"] or (due is not None and due - 1 <= 0))
                     keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
                     bot.keys_used = 0
                     try:

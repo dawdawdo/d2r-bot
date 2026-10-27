@@ -88,6 +88,62 @@ def fingerprint_ok(bot: Controller, route: dict) -> bool:
     return bool(fingerprint_match(bot.frame, tpl, fp["region"], fp["threshold"], fp.get("half_threshold")))
 
 
+WP_CLICK = (78, 42)  # fingerprint template (160x60) top-left -> platform center (live 2026-10-27: +-45 px in x
+                    # opens the menu even with us standing on it; the front step, +23 px lower, walks away)
+WP_SEARCH = (200, 100, 880, 450)
+
+
+def _find_lk_wp(bot: Controller, route: dict) -> tuple[int, int] | None:
+    """Top-left of the LK waypoint fingerprint in the view: the whole template, else its better half
+    (the merc on a brazier)."""
+    from .vision.screen import match_score
+
+    tpl = _fp_template(route)
+    fp = route["fingerprint"]
+    bot.observe()
+    score, loc = match_score(bot.frame, tpl, WP_SEARCH)
+    if score >= fp["threshold"]:
+        return loc
+    w = tpl.shape[1]
+    (score, (x, y)), dx = max([(match_score(bot.frame, tpl[:, : w // 2], WP_SEARCH), 0),
+                               (match_score(bot.frame, tpl[:, w // 2 :], WP_SEARCH), w // 2)], key=lambda m: m[0][0])
+    return (x - dx, y) if score >= fp.get("half_threshold", 0.5) else None
+
+
+def leave_to_act4(bot: Controller, route: dict, odo) -> bool:
+    """End of the route: teleport back to the LK waypoint, take it to the Pandemonium Fortress, so the
+    next game spawns next to the A4 waypoint. False if anything doesn't work out (the caller then just
+    saves & exits here, as before). Safety exceptions (chicken etc.) propagate."""
+    from .nav import teleport_to
+    from .town import wp_travel
+
+    t0 = bot.clock()
+    if not teleport_to(bot, odo, (0, 0), tol=60, quiet=True):
+        log.info("act 4 exit: couldn't get back to the LK waypoint")
+        return False
+    t1 = bot.clock()
+    for attempt in range(2):
+        loc = _find_lk_wp(bot, route)
+        if loc is None:
+            bot.save_failure("lk_wp_not_found")
+            log.info("act 4 exit: LK waypoint not in view")
+            return False
+        bot.click(loc[0] + WP_CLICK[0], loc[1] + WP_CLICK[1])
+        try:
+            bot.wait_for("wp_menu", 3)
+            break
+        except BotError:
+            log.info("act 4 exit: waypoint menu didn't open (attempt %d)", attempt + 1)
+    else:
+        return False
+    t2 = bot.clock()
+    wp_travel(bot, "wp_tab_act4", "wp_town")
+    bot.guard(False)  # in town
+    log.info("act 4 exit: in the Pandemonium Fortress (teleport %.1fs, wp menu %.1fs, travel %.1fs)",
+             t1 - t0, t2 - t1, bot.clock() - t2)
+    return True
+
+
 def check_fingerprint(bot: Controller, route: dict) -> None:
     """Retries for ~2 s: the merc arriving next to us (with a glow) can cover the platform."""
     from .vision.screen import ASSETS
@@ -334,7 +390,7 @@ def _in_view(a, b) -> bool:
     return abs(b[0] - a[0]) < 560 and abs(b[1] - a[1]) < 230
 
 
-def run_route(bot: Controller, route: dict) -> dict:
+def run_route(bot: Controller, route: dict, end=None) -> dict:
     """From the LK waypoint: visit each target, open its chests, loot. Returns stats.
 
     A target is either `hops` (relative teleports) + `chests` (screen coords after the last hop),
@@ -369,6 +425,8 @@ def run_route(bot: Controller, route: dict) -> dict:
                     unfound.add(tuple(bf))
     finally:
         bot.flee_ok = False
+    if end is not None:  # e.g. back to the waypoint (`end(odo, stats)`)
+        end(odo, stats)
     return stats
 
 

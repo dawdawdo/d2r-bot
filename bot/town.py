@@ -466,6 +466,16 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
     return False
 
 
+def belt_needs_restock(bot: Controller) -> bool:
+    """An empty belt slot and rejuvs left in the stash (what restock_belt would act on)."""
+    from .vision.orbs import belt_slots
+
+    from . import state
+
+    bot.observe()
+    return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) and not state.load().get("stash_rejuvs_empty")
+
+
 def restock_belt(bot: Controller) -> int:
     """If any visible belt slot is empty, open the stash (next to the town WP) and shift-click
     Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
@@ -613,11 +623,12 @@ def durability_ok(bot: Controller) -> bool:
     return not worn
 
 
-def stowaway(bot: Controller) -> dict:
+def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     """At the stash stop: Ctrl+click loot (runes, unique rings: anything outside Stephen's protected
     cells that isn't a key) into the stash, then drop key stacks beyond one (pickups add whole stacks;
     2026-10-26 eight full stacks had filled the inventory). Runes auto-route to the Runes tab; the rest
-    goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12."""
+    goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12.
+    `stash=False` (no stash nearby, e.g. the A4 spawn): keys only; None if there's loot for the stash."""
     from . import state
     from .vision.inventory import cell_center, runes_added
 
@@ -626,6 +637,8 @@ def stowaway(bot: Controller) -> dict:
     inv = _scan_inventory(bot)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
+    if inv["other"] and not stash:
+        return None
     done = {"stashed": 0, "dropped": 0}
     if inv["other"]:
         if open_stash(bot):
@@ -730,3 +743,71 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
         bot.save_failure("not_in_lower_kurast")
         raise BotError("arrived somewhere that isn't Lower Kurast")
     log.info("arrived in Lower Kurast")
+
+
+# --- Act 4 starts --------------------------------------------------------------------------------
+# A new game starts in the town of the act the character was saved in. Clean LK runs end with the
+# LK waypoint -> Pandemonium Fortress, so the next game spawns 1.6 s from a waypoint instead of the
+# ~12 s Kurast Docks walk (live 2026-10-27). Town upkeep (stash, Ormus, Hratli, Asheara) stays in
+# Act 3: an Act 4 spawn that needs it takes the waypoint to Kurast Docks and starts a fresh game.
+
+def spawn_act(bot: Controller) -> int:
+    """4 if the Pandemonium Fortress waypoint is in view (it is from the A4 spawn), else 3."""
+    return 4 if find_a4_wp(bot) else 3
+
+
+def find_a4_wp(bot: Controller) -> tuple[int, int] | None:
+    tcfg = bot.cfg["town"]
+    return bot.find(tcfg["a4_wp_template"], tcfg["a4_wp_region"], 0.7)
+
+
+def open_a4_wp(bot: Controller) -> None:
+    tcfg = bot.cfg["town"]
+    for attempt in range(3):
+        loc = find_a4_wp(bot)
+        if loc is None:
+            bot.save_failure(f"a4_wp_not_found_{attempt}")
+            raise BotError("Act 4 waypoint not visible from the spawn")
+        ox, oy = tcfg["a4_wp_click_offset"]
+        bot.click(loc[0] + ox, loc[1] + oy)
+        try:
+            bot.wait_for("wp_menu", 5)
+            return
+        except BotError:
+            log.info("A4 waypoint menu didn't open (attempt %d)", attempt + 1)
+    raise BotError("could not open the Act 4 waypoint")
+
+
+def wp_travel(bot: Controller, tab: str, dest: str) -> None:
+    """With the waypoint panel open: pick the act tab, then the destination; wait until we're there."""
+    bot.click_ui(tab)
+    bot.kill.sleep(0.25)
+    view = bot.capture.grab()
+    bot.click_ui(dest)
+    wait_arrival(bot, view)
+
+
+def act4_to(bot: Controller, dest: str, arrived_check=None, area: str = "area_lower_kurast.png") -> None:
+    """From the A4 spawn: buffs, waypoint -> `dest` on the Act III tab (out of town)."""
+    bot.wait_for("in_game", 10)
+    cast_buffs(bot)
+    open_a4_wp(bot)
+    wp_travel(bot, "wp_tab_act3", dest)
+    bot.guard(True)
+    bot.wait_still(timeout=5)
+    if not (arrived_check and arrived_check()) and not check_area(bot, area):
+        bot.save_failure(f"not_at_{dest}")
+        raise BotError(f"waypoint {dest}: arrived somewhere else")
+    log.info("arrived at %s (from Act 4)", dest)
+
+
+def restart_in_act3(bot: Controller) -> None:
+    """A4 spawn -> waypoint to Kurast Docks -> save & exit -> new game (spawns in Act 3)."""
+    from .lifecycle import create_game, save_and_exit
+
+    log.info("town upkeep due: back to Act 3")
+    open_a4_wp(bot)
+    wp_travel(bot, "wp_tab_act3", "wp_town")
+    save_and_exit(bot)
+    create_game(bot, bot.cfg["game"]["difficulty"])
+    bot.wait_for("in_game", 10)
