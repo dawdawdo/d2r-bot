@@ -1,7 +1,8 @@
 backups/
 fixtures/raw/
 fixtures/failures/
-logs/
+logs/*
+!logs/loot.csv
 *.d2s
 __pycache__/
 *.pyc
