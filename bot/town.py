@@ -547,22 +547,24 @@ def _save_tooltip(bot: Controller, x: int, y: int) -> None:
     cv2.imwrite(str(out / f"{time.strftime('%Y%m%d-%H%M%S')}_{x}_{y}.png"), bot.capture.grab()[:, 400:1280])
 
 
-def keys_full(bot: Controller) -> bool | None:
-    """Is a key stack in the inventory full ("Quantity: 12 of 12")? None if no key stack is found.
-    The estimate in logs/state.json drifts (one pickup can be several keys): check before buying."""
-    from .vision.durability import durability_full
+def count_keys(bot: Controller) -> int | None:
+    """Keys in the inventory, as a lower bound (vision/durability.key_count: 12, 11, 10, 3 = "3-9",
+    2, 1 per stack, summed). None if there's no key stack. The estimate in logs/state.json drifts
+    (one pickup can be several keys), so check before buying."""
+    from .vision.durability import key_count
     from .vision.inventory import cell_center
 
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
     try:
         keys = _scan_inventory(bot)["key"]
+        total = None
         for cell in keys:
             bot.input.move(*cell_center(*cell))
             bot.kill.sleep(0.35)
-            if durability_full(bot.capture.grab(), "tt_quantity.png"):
-                return True
-        return False if keys else None
+            n = key_count(bot.capture.grab())
+            total = (total or 0) + (n or 0)
+        return total
     finally:
         bot.input.move(640, 600)
         bot.press(bot.cfg["hotkeys"]["inventory"])

@@ -46,3 +46,10 @@ def test_key_stack_full():
 def test_key_stack_not_full():
     f = cv2.imread(str(FIX.parent / "inventory" / "key_tooltip_8of12.png"))
     assert durability_full(f, "tt_quantity.png") is False
+
+
+def test_key_count():
+    from bot.vision.durability import key_count
+
+    assert key_count(cv2.imread(str(FIX.parent / "inventory" / "key_tooltip_12of12.png"))) == 12
+    assert key_count(cv2.imread(str(FIX.parent / "inventory" / "key_tooltip_8of12.png"))) == 3  # "3-9"

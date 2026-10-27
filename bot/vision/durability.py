@@ -66,3 +66,37 @@ def durability_full(frame: np.ndarray, word_tpl: str = "tt_durability.png") -> b
     if a.shape != b.shape:
         return False
     return float((a != b).mean()) < 0.08
+
+
+def _glyphs(b: np.ndarray) -> list[np.ndarray]:
+    """Split a binary number picture into digit pictures at blank columns."""
+    cols = b.any(axis=0)
+    out, start = [], None
+    for i, c in enumerate(list(cols) + [False]):
+        if c and start is None:
+            start = i
+        elif not c and start is not None:
+            out.append(b[:, start:i])
+            start = None
+    return out
+
+
+def _same(a: np.ndarray, b: np.ndarray) -> bool:
+    return a.shape == b.shape and float((a != b).mean()) < 0.08
+
+
+def key_count(frame: np.ndarray) -> int | None:
+    """Lower bound on the keys in a hovered stack, from "Quantity: N of 12" using the "1" and "2"
+    of the "12" as the only known glyphs: 12, 11, 10, 3 (meaning 3-9), 2 or 1. None: no such line."""
+    nums = durability_numbers(frame, "tt_quantity.png")
+    if nums is None:
+        return None
+    left, right = (_glyphs(x) for x in nums)
+    if len(right) != 2:
+        return None
+    one, two = right
+    if len(left) == 2:
+        return 12 if _same(left[1], two) else 11 if _same(left[1], one) else 10
+    if len(left) == 1:
+        return 1 if _same(left[0], one) else 2 if _same(left[0], two) else 3
+    return None
