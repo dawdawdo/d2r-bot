@@ -14,6 +14,7 @@ import time
 
 from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, RunTimeout
+from .learn import learn_map
 from .lk import MapChanged, fingerprint_ok, load_route, run_route
 from .io import open_backend
 from .killswitch import KillSwitchTripped
@@ -87,14 +88,20 @@ def main() -> int:
                          "chests = M4/M5 full run (route, chests, loot)")
     ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
     ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
+    ap.add_argument("--relearn", action="store_true",
+                    help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
+    ap.add_argument("--relearn-games", type=int, default=15, help="exploration games when relearning")
     args = ap.parse_args()
 
     session = start_session()
     cfg = session.cfg
     if args.pick:
         cfg["loot"]["pick"] = args.pick.split(",")
+    if state.load().get("route"):  # a map learned after a map change (see --relearn)
+        cfg["game"]["route"] = state.load()["route"]
     if args.route:
         cfg["game"]["route"] = args.route
+    log.info("route: %s", cfg["game"]["route"])
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -108,7 +115,7 @@ def main() -> int:
     corpse = state.load().get("corpse", True)  # persisted: a session that ended clean has none
     stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
-    ok = streak = 0
+    ok = streak = map_misses = 0
     try:
         with open(RUNS_CSV, "a", newline="") as f:
             w = csv.DictWriter(f, FIELDS)
@@ -136,13 +143,28 @@ def main() -> int:
                     row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
                     stow = any(p != "rejuv" for p in stats.get("picked", []))
                     ok += 1
-                    streak = 0
+                    streak = map_misses = 0
                     corpse = False
                 except MapChanged as e:
                     row.update(result="map_changed", error=str(e))
-                    w.writerow({**row, "duration_s": round(time.time() - t0, 1)})
-                    log.error("map changed: %s -- stopping; the route needs relearning", e)
-                    break
+                    map_misses += 1
+                    if not args.relearn:
+                        w.writerow({**row, "duration_s": round(time.time() - t0, 1)})
+                        log.error("map changed: %s -- stopping; the route needs relearning (--relearn)", e)
+                        break
+                    if map_misses >= 2:  # twice in a row: not a merc on the platform
+                        name = f"auto_{time.strftime('%Y%m%d_%H%M')}"
+                        log.warning("map changed twice in a row -> learning it as maps/%s", name)
+                        route = learn_map(bot, name, games=args.relearn_games)
+                        if route is None:
+                            w.writerow({**row, "duration_s": round(time.time() - t0, 1)})
+                            log.error("relearning found no super-chest camps; stopping")
+                            break
+                        cfg["game"]["route"] = name
+                        state.save({**state.load(), "route": name})
+                        map_misses = 0
+                        log.warning("now running the learned route %s: camps %s", name,
+                                    [c["world"] for c in route["bonfires"]])
                 except (Chicken, Died) as e:
                     row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
                     log.warning("run %d: %s", i + 1, e)

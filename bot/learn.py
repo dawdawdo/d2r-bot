@@ -176,3 +176,131 @@ def _path_len(start, pts) -> float:
     for p in pts:
         total, pos = total + _dist(pos, p), p
     return total
+
+
+FP_REGION = [520, 290, 240, 140]  # same crop as the hand route's fingerprint
+
+
+def to_lk(bot: Controller):
+    """Main menu -> Hell game -> Lower Kurast; returns a fresh odometer at the arrival view."""
+    from .lifecycle import create_game, ensure_main_menu
+    from .nav import Odometer
+    from .town import town_to_lower_kurast
+
+    ensure_main_menu(bot)
+    create_game(bot, bot.cfg["game"]["difficulty"])
+    town_to_lower_kurast(bot)
+    return Odometer(bot.capture.grab())
+
+
+def _out_of_lk(bot: Controller) -> None:
+    from .lifecycle import save_and_exit
+
+    bot.deadline = None
+    if bot.state != "main_menu":
+        save_and_exit(bot)  # never idle outside town
+
+
+def verify_camp(bot: Controller, odo, bonfire) -> dict:
+    """Anchor on the bonfire, then hover each layout chest spot. Returns {slot: found}."""
+    from .lk import BONFIRE_LAYOUT, open_chest
+    from .nav import reanchor, teleport_to, world_to_screen
+
+    out = {}
+    if not reanchor(bot, odo, bonfire):
+        log.warning("verify: no bonfire at %s", bonfire)
+        return out
+    for slot, lay in BONFIRE_LAYOUT.items():
+        stand = (bonfire[0] + lay["stand"][0], bonfire[1] + lay["stand"][1])
+        teleport_to(bot, odo, stand)
+        bot.wait_still(timeout=1.0, settle=1, poll=0.05, min_wait=0.0)
+        odo.update(bot.capture.grab())
+        cx, cy = world_to_screen(odo, bonfire[0] + lay["chest"][0], bonfire[1] + lay["chest"][1])
+        out[slot] = open_chest(bot, cx, cy, click=False) is not None
+        log.info("verify %s %s: %s", bonfire, slot, "chest" if out[slot] else "no chest")
+    return out
+
+
+def explore_games(bot: Controller, mdir: Path, games: int, hops: int) -> Explorer:
+    """Explore over up to `games` games (resumes explore.json). Stops early when the frontier is
+    empty or two games in a row add fewer than 5 cells (what's left is unreachable)."""
+    import cv2
+
+    from .controller import BotError
+
+    ex_path = mdir / "explore.json"
+    ex = Explorer.load(ex_path)
+    slow = 0
+    for g in range(games):
+        before, result = len(ex.visited), "error"
+        try:
+            odo = to_lk(bot)
+            fp = mdir / f"lk_wp_{mdir.name}.png"
+            if not fp.exists():
+                x, y, w, h = FP_REGION
+                mdir.mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(fp), bot.capture.grab()[y : y + h, x : x + w])
+            bot.deadline = bot.clock() + 240
+            result = explore(bot, odo, ex, max_hops=hops, debug_dir=mdir / "fires")
+        except BotError as e:
+            log.warning("explore game %d: %s", g + 1, e)
+        finally:
+            _out_of_lk(bot)
+            ex.save(ex_path)
+        log.info("explore game %d: %s; %d cells visited, %d frontier, bonfires %s", g + 1, result,
+                 len(ex.visited), len(ex.frontier()), ex.bonfires())
+        slow = slow + 1 if len(ex.visited) - before < 5 else 0
+        if result == "done" or slow >= 2:
+            break
+    return ex
+
+
+def verify_games(bot: Controller, mdir: Path, ex: Explorer) -> dict:
+    """One game per unverified bonfire candidate; results in verified.json."""
+    from .controller import BotError
+
+    path = mdir / "verified.json"
+    verified = json.loads(path.read_text()) if path.exists() else {}
+    for bf in ex.bonfires():
+        key = f"{bf[0]},{bf[1]}"
+        if key in verified:
+            continue
+        try:
+            odo = to_lk(bot)
+            bot.deadline = bot.clock() + 120
+            verified[key] = verify_camp(bot, odo, bf)
+        except BotError as e:
+            log.warning("verify %s: %s", bf, e)
+        finally:
+            _out_of_lk(bot)
+        mdir.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(verified, indent=1))
+    return verified
+
+
+def write_route(mdir: Path, verified: dict) -> dict | None:
+    """Route from camps with >= 2 verified chest spots -> maps/<name>/route.yaml. None if no camps."""
+    import yaml
+
+    from .lk import BONFIRE_LAYOUT
+
+    camps = [tuple(map(int, k.split(","))) for k, v in verified.items() if sum(v.values()) >= 2]
+    if not camps:
+        return None
+    route = {"fingerprint": {"template": f"lk_wp_{mdir.name}.png", "region": FP_REGION,
+                             "threshold": 0.6, "half_threshold": 0.5},
+             "bonfires": plan_route(camps, BONFIRE_LAYOUT), "targets": []}
+    mdir.mkdir(parents=True, exist_ok=True)
+    (mdir / "route.yaml").write_text("# Learned by bot/learn.py\n" + yaml.safe_dump(route, sort_keys=False))
+    return route
+
+
+def learn_map(bot: Controller, name: str, games: int = 15, hops: int = 70) -> dict | None:
+    """Explore, verify, write maps/<name>/route.yaml. Returns the route (None: no camps found)."""
+    from .config import ROOT
+
+    mdir = ROOT / "maps" / name
+    ex = explore_games(bot, mdir, games, hops)
+    route = write_route(mdir, verify_games(bot, mdir, ex))
+    log.info("learned map %s: %s", name, [c["world"] for c in route["bonfires"]] if route else "no camps")
+    return route
