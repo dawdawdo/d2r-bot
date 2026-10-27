@@ -1,15 +1,15 @@
 # Progress
 
-**Current milestone:** M6 soak; map learning built. M1–M5 done. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
+**Current milestone:** Phase 1 (LK) effectively done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
 **Works (live, 2026-10-27 ~05:10):**
 - `python -m bot.run --runs 20 --max-minutes 8 --mode chests` (conda env d2r): launch/recover → Hell game (Hell
   button checked before clicking) → `/players 7` once per D2R window → buffs → chained town walk (9.1 s) → stash
   stop: stowaway → WP → LK → 6 chests → loot → save & exit. `runs.csv`, `logs/loot.csv`, `logs/loot/`.
   `tools/batch_summary.py "<since>"` prints one line per batch. `--max-minutes` ends a batch at the menu.
-- **Stats 03:40–05:12:** 113/113 runs ok, 665 chests, avg 47.7 s incl. repairs (clean ~43-45 s).
-  Stashed since 23:00 (`logs/loot.csv`): Dol ×11, Hel ×10, Lum ×3, Lem, Fal, Mal, **Vex**, **Ohm**. No real unique yet
-  (two false "uniques" from coins between gold labels; label filter tightened, see tests/test_labels_real.py).
+- **Stats 22:40 (10-26) – 08:10 (10-27):** 622 runs, 602 ok, 3361 chests, avg 47 s incl. repairs (clean ~44 s).
+  Last 219 runs: 214 ok. Stashed (`logs/loot.csv`, tracked in git): Dol ×11, Hel ×10, Lum ×5, Io ×2, Ko, Fal,
+  Lem, Mal, **Gul**, **Vex**, **Ohm**. No real unique ring yet (3 false "uniques" fixed in the label filter).
 - **Upkeep without OCR** ("X of Y" compared as pictures, `vision/durability.py`): every 10 runs hover each equipped
   item; first wear seen → repair 20 runs later (backstop 60). Live wear in ~20 runs: Shako 11/12, Viper 23/24,
   boots 13/14, gloves 15/18. Keys: count the stack (`key_count`: 12/11/10/"3-9"/2/1) before buying; buy only < 3.
@@ -25,10 +25,12 @@
 - Map hunting (reroll = play another difficulty, then Hell) is NOT built: it destroys the current map. Needs Stephen.
 
 **Next step (exact):**
-1. Keep soaking (`--runs 20 --max-minutes 8`, foreground).
-2. Map hunting design: score a fresh map from a short exploration; only with Stephen's go-ahead.
+1. Stephen is back on the PC (F12 at 08:13; D2R was closed). No live runs until he says so.
+2. Stephen asked when the bot is "done" and wants more farming tasks: proposed a task-plugin refactor
+   (LK becomes one task; lifecycle, safety, vision, nav, stash shared). Waiting for which task comes next.
+3. Then: 100-run untouched soak -> tag v1.0.
 
-**Open questions for Stephen:** none blocking.
+**Open questions for Stephen:** which farming task next (Pindle, Meph, Countess, chaos...)?
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
