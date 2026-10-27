@@ -547,6 +547,29 @@ def _save_tooltip(bot: Controller, x: int, y: int) -> None:
     cv2.imwrite(str(out / f"{time.strftime('%Y%m%d-%H%M%S')}_{x}_{y}.png"), bot.capture.grab()[:, 400:1280])
 
 
+def durability_ok(bot: Controller) -> bool:
+    """Hover each equipped item (inventory open) and compare "Durability: X of Y" (vision/durability.py).
+    False if any item is below full. Items without a durability line (or no tooltip) don't count."""
+    from .vision.durability import durability_full
+
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.35)
+    worn = []
+    try:
+        for name, (x, y) in bot.cfg["inventory"]["equipment"].items():
+            bot.input.move(x, y)
+            bot.kill.sleep(0.35)
+            if durability_full(bot.capture.grab()) is False:
+                worn.append(name)
+    finally:
+        bot.input.move(640, 600)
+        bot.press(bot.cfg["hotkeys"]["inventory"])
+        bot.kill.sleep(0.2)
+    if worn:
+        log.info("durability below full: %s", ", ".join(worn))
+    return not worn
+
+
 def stowaway(bot: Controller) -> dict:
     """At the stash stop: Ctrl+click loot (runes, unique rings: anything outside Stephen's protected
     cells that isn't a key) into the stash, then drop key stacks beyond one (pickups add whole stacks;

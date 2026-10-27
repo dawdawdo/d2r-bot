@@ -70,8 +70,9 @@ town:
   heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
   ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs
   ormus_region: [300, 40, 860, 480]
-  repair_every: 30               # runs between repairs at Hratli (Stephen: armor ran low; 2026-10-27: all items still
-                                 # at max durability after 10 runs: Shako 12/12, Viper 24/24 -> 30; recheck)
+  repair_every: 60               # backstop: repair at Hratli at least this often (Stephen: armor ran low)
+  durability_every: 10           # check every equipped item's durability (tooltips) this often; repair if any is
+                                 # below full (2026-10-27: nothing lost in 10 runs, Shako 12/12, Viper 24/24)
   keys_min: 3                    # buy keys at Hratli when the estimate is <= this (Stephen)
   keys_full: 12                  # a bought stack tops the inventory keys up to this
   keys_pick_below: 8             # pick keys from chests only below this estimate (drops are stacks of several)
@@ -104,6 +105,14 @@ stash:
 # Update this if he rearranges the inventory (anything outside it that isn't a key gets stashed).
 inventory:
   protected: [[3, 0, 7, 4], [2, 2, 1, 2]]
+  equipment:                     # hover points of equipped items (inventory open)
+    helm: [1055, 105]
+    armor: [1055, 225]
+    weapon: [1205, 170]
+    shield: [910, 170]
+    gloves: [910, 300]
+    boots: [1205, 300]
+    belt: [1055, 315]
 
 capture:
   fps: 2                      # tools/capture.py interval mode

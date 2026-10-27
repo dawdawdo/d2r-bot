@@ -21,7 +21,7 @@ from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import state
-from .town import (heal_at_ormus, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
+from .town import (durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse, repair_at_hratli, revive_merc,
                    set_players, town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
 
@@ -31,7 +31,8 @@ FIELDS = ["start", "duration_s", "result", "chests", "picked", "error"]
 
 
 def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
-            players: int | None = None, corpse: bool = True, stow: bool = False) -> dict:
+            players: int | None = None, corpse: bool = True, stow: bool = False,
+            check_durability: bool = False) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
@@ -47,6 +48,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
             bot.wait_for("in_game", 10)
+        if check_durability and not repair:
+            state.save({**state.load(), "runs_since_dur_check": 0})
+            repair = not durability_ok(bot)
+            if repair:
+                state.save({**state.load(), "runs_since_repair": 0})
         repair = repair or buy_keys  # same vendor
         if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:
@@ -133,14 +139,17 @@ def main() -> int:
                     chests = args.mode == "chests"
                     since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
                     repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"])
+                    since_dur = state.load().get("runs_since_dur_check")
+                    dur = chests and (since_dur is None or since_dur >= cfg["town"]["durability_every"])
                     if chests:
-                        state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1})
+                        state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1,
+                                    "runs_since_dur_check": 0 if repair else (since_dur or 0) + 1})
                     keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
                     bot.keys_used = 0
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
                                         players=cfg["game"].get("players") if players_due and i == 0 else None, corpse=corpse,
-                                        stow=stow and chests)
+                                        stow=stow and chests, check_durability=dur)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
