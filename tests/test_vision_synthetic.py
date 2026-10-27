@@ -60,8 +60,8 @@ def test_label_colors_classified():
     # The short Hershey "Ber Rune" fails the dark-backdrop check (70% dark; live D2R labels >= 81%):
     # rune labels are covered by real picks in test_labels_real.py::test_real_rune_labels_found.
     assert kinds == ["set", "unique"], labels
-    rune = next(l for l in labels if l.kind == "rune")
-    assert 600 <= rune.center[0] <= 680 and 285 <= rune.center[1] <= 305
+    unique = next(l for l in labels if l.kind == "unique")
+    assert 200 <= unique.center[0] <= 330 and 185 <= unique.center[1] <= 205
 
 
 def test_label_ignore_region():
