@@ -38,8 +38,9 @@ MAX_HOP_Y = 220
 
 # Screen-fixed overlays pull phase correlation toward "didn't move": the "Entering <zone>" banner
 # (x 493-789, y 158-173 for Lower Kurast; wider names are wider) plus a hut roof fading out lost
-# a hop every run start (2026-10-26). Also the merc portrait and the clock. Full-res (x, y, w, h).
-STATIC_OVERLAYS = [(360, 145, 560, 45), (0, 0, 90, 85), (1150, 0, 130, 40)]
+# a hop every run start (2026-10-26). Also the merc portrait, the clock and the chat lines (Terror Zone
+# notices, "/players" replies: they stalled the chained town walk). Full-res (x, y, w, h).
+STATIC_OVERLAYS = [(360, 145, 560, 45), (0, 0, 90, 85), (1150, 0, 130, 40), (0, 420, 420, 150)]
 
 
 def _odo_window(shape) -> np.ndarray:

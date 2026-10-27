@@ -37,6 +37,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         bot.wait_for("in_game", 10)
         if players:
             set_players(bot, players)
+            state.save({**state.load(), "players_window": bot.game_window_id})
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
         if mode == "chests" and bot.merc_revive and not merc_alive(bot):
@@ -98,7 +99,10 @@ def main() -> int:
     bot.keys_left = state.load().get("keys_left")  # estimate; None = unknown -> buy on the first run
     log.info("keys left (estimate): %s", bot.keys_left)
     bot.merc_revive = True
-    corpse = True
+    # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
+    bot.game_window_id = getattr(backend.window, "hwnd", None)
+    players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
+    corpse = state.load().get("corpse", True)  # persisted: a session that ended clean has none
     stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
     ok = streak = 0
@@ -114,12 +118,13 @@ def main() -> int:
                     chests = args.mode == "chests"
                     since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
                     repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"])
-                    state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1})
+                    if chests:
+                        state.save({**state.load(), "runs_since_repair": 0 if repair else (since_repair or 0) + 1})
                     keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
                     bot.keys_used = 0
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
-                                        players=cfg["game"].get("players") if i == 0 else None, corpse=corpse,
+                                        players=cfg["game"].get("players") if players_due and i == 0 else None, corpse=corpse,
                                         stow=stow and chests)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
@@ -149,6 +154,7 @@ def main() -> int:
                     corpse = stow = True  # a death we didn't see may be behind it
                     streak += 1
                     log.error("run %d failed: %s", i + 1, e)
+                state.save({**state.load(), "corpse": corpse})
                 row["duration_s"] = round(time.time() - t0, 1)
                 w.writerow(row)
                 f.flush()

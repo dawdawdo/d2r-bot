@@ -46,6 +46,77 @@ def walk_route(bot: Controller, route: list, retries: int = 2) -> list[tuple[flo
     return disps
 
 
+WALK_GAIN = (1.04, 1.18)  # view displacement per px of click offset (live legs 2026-10-26; cf. nav.HOP_GAIN)
+WALK_LEAD = 45           # px before a leg's end to click the next one (60 once cut the temple corner into a wall)
+WALK_NEAR = 150          # stalled this close to a leg's end (a wall the recorded walk didn't meet): next leg
+ESCAPES = [(-200, 0), (0, 150), (0, -150), (200, 0), (-150, 120), (150, -120)]
+WALK_BOX = (30, 1250, 50, 550)  # clickable part of the view (x0, x1, y0, y1): not the HUD or the edges
+
+
+def walk_chain(bot: Controller, route: list, disps: list, timeout: float = 30) -> int | None:
+    """Walk the recorded legs without stopping: track the view by odometry and click the next leg's
+    end (world = cumulative recorded displacements) when the current one is WALK_LEAD px away.
+    Re-clicks when the view stalls (swallowed click, NPC in the way). Returns None when done, else the
+    leg it gave up on (odometry lost, stuck): the caller walks the remaining legs one by one."""
+    from .nav import CENTER, Odometer
+
+    targets = np.cumsum(np.asarray(disps, float), axis=0)
+    gain = np.asarray(WALK_GAIN)
+    odo = Odometer(bot.capture.grab())
+
+    def click_toward(t) -> None:
+        x, y = np.asarray(CENTER, float) + (t - odo.pos) / gain
+        x0, x1, y0, y1 = WALK_BOX
+        bot.click(int(min(max(x, x0), x1)), int(min(max(y, y0), y1)))
+
+    bot.click(*route[0])
+    k, t0, stall_since, stalls, calm = 0, bot.clock(), bot.clock(), 0, 0
+    while bot.clock() - t0 < timeout:
+        bot.kill.sleep(0.03)
+        f = bot.capture.grab()
+        bot._guard_frame(f)
+        dx, dy = odo.update(f)
+        if odo.lost:
+            log.info("chained walk: odometry lost at leg %d", k)
+            return k
+        moving = abs(dx) >= 1.5 or abs(dy) >= 1.5
+        calm = 0 if moving else calm + 1
+        rem = float(np.hypot(*(targets[k] - odo.pos)))
+        last = k == len(targets) - 1
+        if last and calm >= 3 and rem < 120:
+            log.info("chained walk done in %.1fs, %.0f px from the recorded end", bot.clock() - t0, rem)
+            return None
+        if not last and rem < WALK_LEAD:
+            k += 1
+            click_toward(targets[k])
+            stall_since = bot.clock()
+            continue
+        if moving:
+            stall_since = bot.clock()
+        elif bot.clock() - stall_since > 0.4 and not last and rem < WALK_NEAR:
+            k += 1
+            click_toward(targets[k])
+            stall_since = bot.clock()
+        elif bot.clock() - stall_since > 0.4:
+            stalls += 1
+            if stalls > 2 * len(ESCAPES) + 1:
+                log.info("chained walk: stuck at leg %d (%.0f px to go)", k, rem)
+                return k
+            if stalls % 2:  # boxed in (2026-10-26: temple stairs, merc + NPC in the gap): step out, retry
+                back = targets[k - 2] if k >= 2 else np.zeros(2)  # back along the way we came first
+                esc = [back] + [odo.pos + np.asarray(d, float) for d in ESCAPES]
+                log.info("chained walk: stalled at leg %d, escape %d", k, stalls // 2)
+                bot.frame = f
+                bot.save_failure(f"walk_stall_leg{k}_{stalls // 2}")
+                click_toward(esc[stalls // 2])
+                bot.kill.sleep(0.4)
+            else:
+                click_toward(targets[k])
+            stall_since = bot.clock()
+    log.info("chained walk: timeout at leg %d", k)
+    return k
+
+
 def _walk_settle(bot: Controller, odo, timeout: float = 6, min_wait: float = 0.2, poll: float = 0.05) -> bool:
     """Track the walk by odometry until the view stops (3 polls without movement)."""
     bot.kill.sleep(min_wait)
@@ -576,7 +647,9 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
     cast_buffs(bot)
-    walk_route(bot, tcfg["route"])
+    gave_up = walk_chain(bot, tcfg["route"], tcfg["route_disp"]) if tcfg.get("route_disp") else 0
+    if gave_up is not None:  # roughly where that leg would have ended; fix_route_end corrects the rest
+        walk_route(bot, tcfg["route"][gave_up:] if tcfg.get("route_disp") else tcfg["route"])
     restock_belt(bot)
     if stow:
         stowaway(bot)

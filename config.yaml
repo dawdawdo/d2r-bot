@@ -59,6 +59,9 @@ ui:
 # M3: walking route from the new-game spawn (by Meshif) to the waypoint, recorded 2026-10-25.
 town:
   route: [[1180, 330], [773, 170], [900, 160], [1050, 170], [810, 250], [1180, 420], [1150, 200]]
+  # View displacement of each leg by odometry (median of clean runs 2026-10-26): walk_chain walks these
+  # without stopping. Remove to go back to leg-by-leg walking.
+  route_disp: [[498, -19], [287, -124], [345, -172], [422, -191], [193, -115], [498, 77], [536, -153]]
   wp_template: town_wp.png       # platform + right brazier
   wp_click_offset: [35, 40]      # template top-left -> platform center
   wp_threshold: 0.7
