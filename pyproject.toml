@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "d2r-bot"
+version = "0.6.0"
+description = "Pixel-only Lower Kurast super-chest bot for offline D2R (screen capture + simulated input)"
+requires-python = ">=3.12"
+dependencies = [
+    "mss>=10",
+    "opencv-python>=4.9",
+    "numpy>=1.26",
+    "pynput>=1.7",
+    "pyyaml>=6",
+    "pydirectinput>=1.0; sys_platform == 'win32'",  # Windows input backend (bot/io/windows.py)
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+# Run from the repo checkout (config.yaml, maps/, logs/ live next to bot/): pip install -e .
+d2r-bot = "bot.run:main"
+
+[tool.setuptools.packages.find]
+include = ["bot*"]
