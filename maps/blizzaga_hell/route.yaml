@@ -14,7 +14,7 @@ fingerprint:
 bonfires:
   - name: east
     world: [1629, 776]
-    order: [nw_deep, nw, ne]   # shortest path (bot.learn.plan_route); hand order was nw, nw_deep, ne
+    order: [nw, nw_deep, ne]   # nw before nw_deep: nw_deep drops gold labels over the nw chest (2026-10-27)
   - name: west
     world: [-2208, -389]
     order: [ne, nw, nw_deep]

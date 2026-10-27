@@ -161,7 +161,8 @@ def plan_route(bonfires: list[tuple[float, float]], layout: dict) -> list[dict]:
     for camps in permutations(range(len(bonfires))):
         pos, total, plan = (0.0, 0.0), 0.0, []
         for ci in camps:  # each camp: best slot order from where we are (exact within the camp)
-            sl = min(permutations(stands[ci]), key=lambda o: _path_len(pos, [stands[ci][k] for k in o]))
+            orders = [o for o in permutations(stands[ci]) if _order_ok(o)]
+            sl = min(orders, key=lambda o: _path_len(pos, [stands[ci][k] for k in o]))
             total += _path_len(pos, [stands[ci][k] for k in sl])
             pos = stands[ci][sl[-1]]
             plan.append((ci, list(sl)))
@@ -169,6 +170,13 @@ def plan_route(bonfires: list[tuple[float, float]], layout: dict) -> list[dict]:
             best, best_len = plan, total
     return [{"name": f"camp{i + 1}", "world": [int(bonfires[ci][0]), int(bonfires[ci][1])], "order": order}
             for i, (ci, order) in enumerate(best or [])]
+
+
+ORDER_BEFORE = [("nw", "nw_deep")]  # nw_deep's drops land as labels over the nw chest (2026-10-27)
+
+
+def _order_ok(order) -> bool:
+    return all(a not in order or b not in order or order.index(a) < order.index(b) for a, b in ORDER_BEFORE)
 
 
 def _path_len(start, pts) -> float:

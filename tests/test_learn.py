@@ -43,7 +43,7 @@ def test_plan_is_shortest_and_complete():
     camps = plan_route([(-2208, -389), (1629, 776)], BONFIRE_LAYOUT)
     assert [c["world"] for c in camps] == [[1629, 776], [-2208, -389]]  # east camp first, as by hand
     assert all(sorted(c["order"]) == sorted(BONFIRE_LAYOUT) for c in camps)
-    assert camps[0]["order"] == ["nw_deep", "nw", "ne"]  # 770 px shorter than the hand order
+    assert camps[0]["order"] == ["nw", "nw_deep", "ne"]  # nw first: nw_deep's labels cover the nw chest
 
 
 def test_path_len():
