@@ -51,8 +51,6 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         if check_durability and not repair:
             state.save({**state.load(), "runs_since_dur_check": 0})
             repair = not durability_ok(bot)
-            if repair:
-                state.save({**state.load(), "runs_since_repair": 0})
         if buy_keys and keys_full(bot):
             log.info("key stack is full after all (estimate %s); not buying", bot.keys_left)
             bot.keys_left, buy_keys = cfg["town"]["keys_full"], False
@@ -65,6 +63,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                     save_and_exit(bot)
                     create_game(bot, cfg["game"]["difficulty"])
             if repair:
+                state.save({**state.load(), "runs_since_repair": 0, "runs_since_dur_check": 0})
                 if repair_at_hratli(bot, keys=buy_keys) and buy_keys:
                     bot.keys_left = cfg["town"]["keys_full"]
             save_and_exit(bot)
