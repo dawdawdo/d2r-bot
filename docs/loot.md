@@ -5,6 +5,17 @@
 - Unique rings (SoJ chance).
 - Optional: gems used to cube Dol+ upward (he probably already has them; off by default).
 
+## What the filter shows (checked 2026-10-27: repo file = installed copy in Saved Games)
+| Rule | Items |
+|---|---|
+| Show Dol and higher runes | r14 Dol, r15 Hel, r16 Io, r17 Lum, r18 Ko, r19 Fal, r20 Lem, r21 Pul, r22 Um, r23 Mal, r24 Ist, r25 Gul, r26 Vex, r27 Ohm, r28 Lo, r29 Sur, r30 Ber, r31 Jah, r32 Cham, r33 Zod (all 20) |
+| Show unique rings | any unique ring (SoJ, BK, Nagel, Manald, Raven Frost, Dwarf Star, Wisp…) |
+| Show rejuvenation potions and keys | rvs, rvl, key (picked only when the belt / key stack needs them) |
+| Hidden | all gear, El–Amn (r01–r13), gold, potions, scrolls, ammo, gems, skulls |
+
+Picked items are stashed by the stowaway at the stash stop; stashed runes are logged by name in
+`logs/loot.csv` (tracked in git), item tooltips in `logs/loot/` (local).
+
 ## Approach: let D2R's native loot filter decide
 D2R loot filters (`*.fltr`, JSON rules, later rules override earlier) hide items, labels
 included. With `filters/LK Bot.fltr` active, Alt shows labels **only** for wanted items, so
@@ -22,17 +33,17 @@ Gotchas learned:
 
 - Real drop seen 2026-10-25: gold ("967 Gold") still shows (`gld` doesn't hide it) and gems
   showed because no rule hid them; a "Hide gems" rule was added (installed at the next game restart).
-- Super-chest hut #1 has a **Locked Chest**: opening it uses a key from inventory. Keys run out;
-  restocking (buy from a vendor) needs handling eventually.
+- Locked Chests use a key. Keys come from chest drops (picked while the stack is low) and from Hratli
+  when the stack reads below 3 (`town.count_keys` / `buy_keys`, verified by the stack tooltip).
 
-Still to verify with real drops: that show rules override earlier hide rules.
+Verified with real drops (2026-10-27): show rules override the earlier hide rules (Dol–Ohm runes shown).
 
 Original status: draft. Category and item codes still need checking in-game: whether the
 "hide all gear" rule is accepted, and that low runes, potions and gold are hidden. The file
 must sit in the save folder to be selectable, which needs Stephen's OK to add (it's a new
 file there; no save files are touched).
 
-## Cube gems for Dol+ upgrades (D2R recipes)
+## Cube gems for Dol+ upgrades (D2R recipes; reference only, the gem rule is off)
 | Upgrade | Gem |
 |---|---|
 | Dol→Hel | chipped emerald (gcg) |
