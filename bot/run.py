@@ -238,6 +238,7 @@ def main() -> int:
                 f.flush()
                 log.info("run %d/%d %s in %.1fs", i + 1, args.runs, row["result"], row["duration_s"])
                 tally[row["result"]] = tally.get(row["result"], 0) + 1
+                tally["chests"] = tally.get("chests", 0) + int(row.get("chests") or 0)
                 control.write_status(state="running", run=i + 1, runs=args.runs, task=row["task"], tally=tally,
                                      started=t_start, last=row)
                 if streak >= args.max_fail_streak:

@@ -113,6 +113,8 @@ function renderTasks(tasks) {
     save("tasks", [...$("tasks").querySelectorAll("input:checked")].map(x => x.value))));
 }
 
+function title(name) { const t = (catalog || []).find(x => x.name === name); return t ? t.title : (name || "Running"); }
+
 function fmtDur(s) { if (!s) return "–"; const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m/60)} h ${m%60} min` : `${m} min`; }
 
 function render(d) {
@@ -122,16 +124,14 @@ function render(d) {
   const stopping = running && b.stop;
   $("pill").className = "pill " + (stopping ? "stopping" : running ? "running" : "idle");
   $("pill").textContent = stopping ? (b.stop === "now" ? "Stopping now…" : "Stopping after this run")
-    : running ? (b.state === "starting" ? "Starting…" : `Running ${esc(b.task || "")} · run ${b.run || "–"}/${b.runs || "–"}`) : "Idle";
+    : running ? (b.state === "starting" ? "Starting…" : `${esc(title(b.task))} · run ${b.run || "–"}/${b.runs || "–"}`) : "Idle";
   $("start").disabled = running; $("stopRun").disabled = !running || !!b.stop; $("stopNow").disabled = !running;
 
-  const t = b.tally || {}, total = Object.values(t).reduce((a, x) => a + x, 0);
+  const t = b.tally || {}, total = Object.entries(t).filter(([k]) => k !== "chests").reduce((a, [, x]) => a + x, 0);
   const sinceStart = b.started ? (Date.now() / 1000 - b.started) : 0;
-  const chests = (d.runs || []).filter(r => b.started && Date.parse(r.start.replace(" ", "T")) / 1000 >= b.started - 1)
-    .reduce((a, r) => a + (parseInt(r.chests) || 0), 0);
   $("stats").innerHTML = [
     ["Runs ok", `${t.ok || 0} / ${total}`], ["Chickens", t.chicken || 0],
-    ["Failures", (t.fail || 0) + (t.timeout || 0) + (t.died || 0)], ["Chests (recent)", chests],
+    ["Failures", (t.fail || 0) + (t.timeout || 0) + (t.died || 0)], ["Chests", t.chests || 0],
     ["Running for", running || total ? fmtDur(sinceStart) : "–"],
   ].map(([k, v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join("");
 
