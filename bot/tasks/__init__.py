@@ -32,7 +32,7 @@ class Task:
 # What the web page lists. `ready: False` = shown but not selectable yet.
 CATALOG = [
     {"name": "lk", "title": "Lower Kurast super chests", "ready": True,
-     "about": "6 super chests at the two bonfire camps. Runes Dol+, keys, rejuvs. ~45 s a run."},
+     "about": "6 super chests at the two bonfire camps. Runes Pul+, keys, rejuvs. ~45 s a run."},
     {"name": "meph", "title": "Mephisto (Dracul's Grasp)", "ready": False,
      "about": "Durance of Hate 3, moat trick. Dracul's 1:2211 per kill at 0 MF. Coming next."},
 ]

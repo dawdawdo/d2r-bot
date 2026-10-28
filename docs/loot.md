@@ -1,7 +1,7 @@
 # Loot (M5)
 
 ## What Stephen wants
-- Runes **Dol (r14) and up**.
+- Runes **Pul (r21) and up** (Stephen, 2026-10-27 22:20; was Dol r14+ until then).
 - Unique rings (SoJ chance).
 - Optional: gems used to cube Dol+ upward (he probably already has them; off by default).
 
@@ -15,7 +15,7 @@ To verify on the next D2R start: the game accepts rules that combine itemCode wi
 (9 rules should load), and the bot picks green (set) labels.
 | Rule | Items |
 |---|---|
-| Show Dol and higher runes | r14 Dol, r15 Hel, r16 Io, r17 Lum, r18 Ko, r19 Fal, r20 Lem, r21 Pul, r22 Um, r23 Mal, r24 Ist, r25 Gul, r26 Vex, r27 Ohm, r28 Lo, r29 Sur, r30 Ber, r31 Jah, r32 Cham, r33 Zod (all 20) |
+| Show Pul and higher runes | r21 Pul, r22 Um, r23 Mal, r24 Ist, r25 Gul, r26 Vex, r27 Ohm, r28 Lo, r29 Sur, r30 Ber, r31 Jah, r32 Cham, r33 Zod (13; Dol–Lem r14–r20 are in "Hide misc") |
 | Show unique rings | any unique ring (SoJ, BK, Nagel, Manald, Raven Frost, Dwarf Star, Wisp…) |
 | Show BiS uniques (added 2026-10-27, Stephen) | unique `uvg` Dracul's Grasp, `ulc` Arachnid Mesh, `usk` Andariel's Visage, `amu` amulets (Mara's, Highlord's, Atma's), `jew` Rainbow Facet, `cm3` Gheed's Fortune |
 | Show Tal Rasha Lidless Eye | set `oba` |

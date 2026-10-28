@@ -125,10 +125,13 @@ def main() -> int:
                     help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
     ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
     ap.add_argument("--relearn-games", type=int, default=15, help="exploration games when relearning")
+    ap.add_argument("--no-act4", action="store_true", help="end every run in LK (new games start in Act 3)")
     args = ap.parse_args()
 
     session = start_session()
     cfg = session.cfg
+    if args.no_act4:
+        cfg["game"]["act4_exit"] = False
     if args.pick:
         cfg["loot"]["pick"] = args.pick.split(",")
     if state.load().get("route"):  # a map learned after a map change (see --relearn)
