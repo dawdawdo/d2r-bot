@@ -742,7 +742,7 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
     if not (arrived_check and arrived_check()) and not check_area(bot, "area_lower_kurast.png"):
         bot.save_failure("not_in_lower_kurast")
         raise BotError("arrived somewhere that isn't Lower Kurast")
-    log.info("arrived in Lower Kurast")
+    log.info("arrived in Lower Kurast (HP %.0f%% MP %.0f%%)", bot.hp or 0, bot.mp or 0)
 
 
 # --- Act 4 starts --------------------------------------------------------------------------------
@@ -798,7 +798,7 @@ def act4_to(bot: Controller, dest: str, arrived_check=None, area: str = "area_lo
     if not (arrived_check and arrived_check()) and not check_area(bot, area):
         bot.save_failure(f"not_at_{dest}")
         raise BotError(f"waypoint {dest}: arrived somewhere else")
-    log.info("arrived at %s (from Act 4)", dest)
+    log.info("arrived at %s from Act 4 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
 
 
 def restart_in_act3(bot: Controller) -> None:

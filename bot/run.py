@@ -45,6 +45,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
+        log.info("spawn: act %d, HP %.0f%% MP %.0f%%", bot.act, bot.hp or 0, bot.mp or 0)
         if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
             stow = stowaway(bot, stash=False) is None
         if bot.act == 4 and (stow or repair or buy_keys or needs_heal(bot) or belt_needs_restock(bot)
