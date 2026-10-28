@@ -23,6 +23,9 @@
   in A4 but end in LK: ~37 s). Upkeep/stash runs go back through Act 3 automatically. Off switch
   `game.act4_exit: false`. The difficulty screen is now detected by the opaque Hell button (the title is
   see-through over the A4 menu art). **Filter check done:** runs picked and stashed Dol, Fal and other runes.
+  Incident check: A4 starts 8 in 140 runs (5 of them clustered 20:50–21:15), A3 starts 0 in 58 (`--no-act4`
+  A/B). No mechanism found (buffs cast, HP/MP 100% on arrival, merc alive). Keep watching `spawn: act` lines.
+- **Filter raised to Pul+ runes** (Stephen, 22:20): installed with D2R closed, seen loaded in game.
 
 **Broken / risks:**
 - Chickens ~1 in 50 now. Teleport-when-struck jumps still cost a chest now and then.
