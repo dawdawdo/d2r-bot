@@ -721,8 +721,13 @@ def wait_arrival(bot: Controller, town_view: np.ndarray, timeout: float = 30) ->
 
 
 def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False) -> None:
-    """`arrived_check`: optional quick test that we're in Lower Kurast (the route's map fingerprint);
-    when it passes, the slower automap area-name check is skipped."""
+    town_to_wp(bot, "wp_lower_kurast", "area_lower_kurast.png", arrived_check, stow)
+
+
+def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None, stow: bool = False) -> None:
+    """A3 spawn -> waypoint -> `dest` (a ui point on the Act III tab). `arrived_check`: optional quick
+    test that we're there (e.g. the LK route's map fingerprint); when it passes, the slower automap
+    area-name check (`area` template; None = skip) is skipped."""
     tcfg = bot.cfg["town"]
     bot.wait_for("in_game", 10)
     cast_buffs(bot)
@@ -735,14 +740,14 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
     open_town_wp(bot, tcfg)
     town_view = bot.capture.grab()
-    bot.click_ui("wp_lower_kurast")
+    bot.click_ui(dest)
     wait_arrival(bot, town_view)
     bot.guard(True)  # out of town from here on
     bot.wait_still(timeout=5)
-    if not (arrived_check and arrived_check()) and not check_area(bot, "area_lower_kurast.png"):
-        bot.save_failure("not_in_lower_kurast")
-        raise BotError("arrived somewhere that isn't Lower Kurast")
-    log.info("arrived in Lower Kurast (HP %.0f%% MP %.0f%%)", bot.hp or 0, bot.mp or 0)
+    if not (arrived_check and arrived_check()) and area and not check_area(bot, area):
+        bot.save_failure(f"not_at_{dest}")
+        raise BotError(f"waypoint {dest}: arrived somewhere else")
+    log.info("arrived at %s (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
 
 
 # --- Act 4 starts --------------------------------------------------------------------------------
@@ -787,7 +792,7 @@ def wp_travel(bot: Controller, tab: str, dest: str) -> None:
     wait_arrival(bot, view)
 
 
-def act4_to(bot: Controller, dest: str, arrived_check=None, area: str = "area_lower_kurast.png") -> None:
+def act4_to(bot: Controller, dest: str, arrived_check=None, area: str | None = "area_lower_kurast.png") -> None:
     """From the A4 spawn: buffs, waypoint -> `dest` on the Act III tab (out of town)."""
     bot.wait_for("in_game", 10)
     cast_buffs(bot)
@@ -795,7 +800,7 @@ def act4_to(bot: Controller, dest: str, arrived_check=None, area: str = "area_lo
     wp_travel(bot, "wp_tab_act3", dest)
     bot.guard(True)
     bot.wait_still(timeout=5)
-    if not (arrived_check and arrived_check()) and not check_area(bot, area):
+    if not (arrived_check and arrived_check()) and area and not check_area(bot, area):
         bot.save_failure(f"not_at_{dest}")
         raise BotError(f"waypoint {dest}: arrived somewhere else")
     log.info("arrived at %s from Act 4 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)

@@ -28,6 +28,17 @@ def _small(frame: np.ndarray) -> np.ndarray:
     return s - s.mean()  # else the window's own shape (holes included) correlates at zero shift
 
 
+def _small_dungeon(frame: np.ndarray) -> np.ndarray:
+    """Dark dungeons: the character's light circle moves with her, so plain brightness says "didn't
+    move". High-pass, then normalize local contrast (live Durance 2 pairs, 2026-10-27: plain measured
+    (-2, 126) for a true (0, -211); this measures (0, -211))."""
+    g = cv2.cvtColor(frame[:VIEW_H], cv2.COLOR_BGR2GRAY).astype(np.float32)
+    hp = g - cv2.GaussianBlur(g, (0, 0), 12)
+    s = hp / (np.sqrt(cv2.GaussianBlur(hp * hp, (0, 0), 20)) + 2)
+    s = cv2.resize(s, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+    return s - s.mean()
+
+
 MIN_RESPONSE = 0.04  # phase-correlation peak below this = frames barely overlap (tracking lost)
 # Phase correlation wraps at half the frame (640 x 295 px), so steps near that are ambiguous.
 # Live: 420 px across and 270 px down measured fine (resp > 0.1); 530 px at resp 0.03 did not.
@@ -72,15 +83,18 @@ def _matches_hop(moved: np.ndarray, expect) -> bool:
 
 
 HOP_SHORT_DEG = 8
+BLOCKED = 60  # dungeon hop into a wall: she barely moves (live Durance: 37 px, resp 0.03-0.04)
 
 
 class Odometer:
     """`lost` is set when a step can't be trusted (Blizzaga's teleport-on-hit item jumps her
     randomly mid-fight); re-anchor on a landmark (anchor_bonfire) to clear it."""
 
-    def __init__(self, frame: np.ndarray) -> None:
+    def __init__(self, frame: np.ndarray, dungeon: bool = False) -> None:
+        self.dungeon = dungeon  # dark areas (Durance): other preprocessing; short steps = blocked hops
+        self._prep = _small_dungeon if dungeon else _small
         self.pos = np.array([0.0, 0.0])
-        self.prev = _small(frame)
+        self.prev = self._prep(frame)
         self.win = _odo_window(self.prev.shape)
         self.lost = False
         self.resp = 1.0
@@ -89,13 +103,14 @@ class Odometer:
     def update(self, frame: np.ndarray, expect=None) -> tuple[float, float]:
         """`expect` = the commanded hop: a weak peak (long diagonal hops overlap little) is still
         trusted when the step matches it (live: landings are ~1.17x the click offset)."""
-        cur = _small(frame)
+        cur = self._prep(frame)
         (dx, dy), self.resp = cv2.phaseCorrelate(self.prev, cur, self.win)
         self.prev = cur
         moved = np.array([-dx * 2, -dy * 2])
         self.pos += moved
         self.since_anchor += math.hypot(*moved)
-        weak = self.resp < MIN_RESPONSE and not (self.resp >= WEAK_RESPONSE and _matches_hop(moved, expect))
+        weak = self.resp < MIN_RESPONSE and not (self.resp >= WEAK_RESPONSE and (
+            _matches_hop(moved, expect) or (self.dungeon and expect is not None and math.hypot(*moved) < BLOCKED)))
         if weak or abs(moved[0]) > MAX_STEP_X or abs(moved[1]) > MAX_STEP_Y:
             if not self.lost:
                 log.warning("odometry lost: step %s resp %.3f", moved.round().tolist(), self.resp)

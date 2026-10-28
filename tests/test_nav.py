@@ -172,3 +172,17 @@ def test_find_town_wp_with_npc_on_brazier():
     img = cv2.imread(str(Path(__file__).resolve().parent.parent / "bot" / "assets" / "templates" / "town_route_end.png"))
     bot = SimpleNamespace(_templates={})
     assert find_town_wp(bot, img, cfg["town"]) == (1051, 360)
+
+
+def test_dungeon_odometry_sees_through_the_light_circle():
+    """Durance 2, hop (0, -199) (live 2026-10-27): the plain odometer measured (-2, 126) and lost track."""
+    import cv2
+
+    from bot.config import ROOT
+    from bot.nav import Odometer
+
+    d = ROOT / "fixtures" / "durance"
+    odo = Odometer(cv2.imread(str(d / "hop_up_before.png")), dungeon=True)
+    moved = odo.update(cv2.imread(str(d / "hop_up_after.png")), expect=(0, -199))
+    assert abs(moved[0]) < 20 and abs(moved[1] + 211) < 20
+    assert not odo.lost

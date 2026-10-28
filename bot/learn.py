@@ -117,9 +117,12 @@ class Explorer:
         return cls.from_dict(json.loads(path.read_text())) if path.exists() else cls()
 
 
-def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120, debug_dir: Path | None = None) -> str:
+def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120, debug_dir: Path | None = None,
+            on_frame=None, find_bonfires: bool = True) -> str:
     """Teleport to the nearest unexplored cell until done, out of hops, or odometry is lost.
-    Returns "done", "budget" or "lost". The caller saves & exits (never idle outside town)."""
+    Returns "done", "budget" or "lost". The caller saves & exits (never idle outside town).
+    `on_frame(frame, pos)` sees the view at every stop (scouting other areas); `find_bonfires=False` skips
+    the bonfire search (LK only)."""
     from .nav import BONFIRE_AREA, find_fires, teleport_to
 
     hops0 = getattr(bot, "hops", 0)
@@ -130,6 +133,17 @@ def explore(bot: Controller, odo, ex: Explorer, max_hops: int = 120, debug_dir: 
         if odo.lost:
             return "lost"
         ex.mark_visited(odo.pos)
+        if on_frame is not None:
+            on_frame(frame, odo.pos)
+        if not find_bonfires:
+            t = ex.next_target(odo.pos)
+            if t is None:
+                return "done"
+            if getattr(bot, "hops", 0) - hops0 >= max_hops:
+                return "budget"
+            if not teleport_to(bot, odo, t, tol=150, max_hops=4, quiet=True):
+                ex.fail(t)
+            continue
         fires = [f for f in find_fires(frame) if f[2] >= BONFIRE_AREA]
         ex.add_fires(odo.pos, fires)
         if fires and debug_dir is not None:  # review what counted as a bonfire
