@@ -23,7 +23,7 @@ from pathlib import Path
 
 from .. import control
 from ..config import ROOT, load_config
-from ..tasks import CATALOG
+from ..tasks import catalog
 
 log = logging.getLogger("bot.web")
 PAGE = Path(__file__).with_name("index.html")
@@ -79,7 +79,7 @@ class BotProcess:
         return st.get("state") == "running" and time.time() - float(st.get("updated", 0)) < STALE_S
 
     def start(self, tasks: list[str], runs: int, minutes: float | None) -> None:
-        ready = {t["name"] for t in CATALOG if t["ready"]}
+        ready = {t["name"] for t in catalog(load_config()) if t["ready"]}
         if not tasks or any(t not in ready for t in tasks):
             raise ValueError(f"pick tasks from: {', '.join(sorted(ready))}")
         if not 1 <= runs <= 10000:
@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/status":
             st = control.read_status()
             self._json(200, {"bot": {**st, "running": BOT.running(), "stop": control.read()},
-                             "tasks": CATALOG, "runs": recent_runs(), "loot": recent_loot()})
+                             "tasks": catalog(load_config()), "runs": recent_runs(), "loot": recent_loot()})
         else:
             self._send(404, b"{}")
 

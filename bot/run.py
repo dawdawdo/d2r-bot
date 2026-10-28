@@ -16,7 +16,7 @@ from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, RunTimeout
 from .learn import learn_map
 from .lk import MapChanged
-from .tasks import get_task
+from .tasks import get_tasks
 from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
@@ -34,7 +34,7 @@ FIELDS = ["start", "duration_s", "result", "chests", "picked", "error", "task"]
 
 def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_keys: bool = False,
             players: int | None = None, corpse: bool = True, stow: bool = False,
-            check_durability: bool = False, task=None) -> dict:
+            check_durability: bool = False, tasks=()) -> dict:
     ensure_main_menu(bot)
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
@@ -89,14 +89,30 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         if mode == "lk":  # M3 check: town -> Lower Kurast only
             town_to_lower_kurast(bot)
         if mode == "chests":
-            task.enter(bot, stow=stow)
-            stats = task.farm(bot)
+            stats = run_tasks(bot, tasks, stow)
         if mode == "lifecycle":
             bot.kill.sleep(1.0)
     finally:
         bot.deadline = None
         if bot.state != "main_menu":
             save_and_exit(bot)
+    return stats
+
+
+def run_tasks(bot: Controller, tasks, stow: bool) -> dict:
+    """The game's tasks in order (bot/tasks): the first from town, each next one from the waypoint the
+    previous one ended at. Stats are summed; a failed hand-off skips the rest of the game."""
+    stats: dict = {"chests": 0, "picked": []}
+    for k, task in enumerate(tasks):
+        if k and not stats.get("chained"):
+            log.info("no hand-off to %s; ending the game", task.name)
+            break
+        stats.pop("chained", None)
+        task.enter(bot, stow=stow, chained=k > 0)
+        s = task.farm(bot)
+        stats["chests"] += s.get("chests", 0)
+        stats["picked"] += s.get("picked", [])
+        stats.update({key: v for key, v in s.items() if key not in ("chests", "picked")})
     return stats
 
 
@@ -120,7 +136,8 @@ def main() -> int:
     ap.add_argument("--pick", help="override loot.pick, e.g. rune,unique,white (testing)")
     ap.add_argument("--route", help="override game.route (maps/<route>/route.yaml)")
     ap.add_argument("--task", "--tasks", dest="tasks", default="lk",
-                    help="farming tasks for --mode chests, comma-separated, one game each in turn (bot/tasks)")
+                    help="farming tasks for --mode chests, comma-separated: all of them in each game, in "
+                         "catalog order (bot/tasks)")
     ap.add_argument("--relearn", action="store_true",
                     help="on a map change (2 fingerprint misses in a row): learn the new map, then go on")
     ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
@@ -139,8 +156,9 @@ def main() -> int:
     if args.route:
         cfg["game"]["route"] = args.route
     log.info("route: %s", cfg["game"]["route"])
-    tasks = [get_task(t, cfg) for t in args.tasks.split(",")] if args.mode == "chests" else [None]
-    log.info("tasks: %s", ", ".join(t.name for t in tasks if t) or "-")
+    tasks = get_tasks(args.tasks.split(","), cfg) if args.mode == "chests" else []
+    log.info("tasks: %s", ", ".join(t.name for t in tasks) or "-")
+    task_name = "+".join(t.name for t in tasks) or args.mode
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -172,12 +190,11 @@ def main() -> int:
                 if stop or control.read():
                     log.info("stop requested (web page); not starting run %d", i + 1)
                     break
-                task = tasks[i % len(tasks)]
-                control.write_status(state="running", run=i + 1, runs=args.runs, task=task.name if task else args.mode,
+                control.write_status(state="running", run=i + 1, runs=args.runs, task=task_name,
                                      tally=tally, started=t_start)
                 t0 = time.time()
                 row = {"start": time.strftime("%Y-%m-%d %H:%M:%S"), "result": "ok", "error": "",
-                       "task": task.name if task else args.mode}
+                       "task": task_name}
                 try:
                     chests = args.mode == "chests"
                     since_repair = state.load().get("runs_since_repair")  # persisted: soaks run in short batches
@@ -199,7 +216,7 @@ def main() -> int:
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
                                         players=cfg["game"].get("players") if players_due and i == 0 else None, corpse=corpse,
-                                        stow=stow and chests, check_durability=dur, task=task)
+                                        stow=stow and chests, check_durability=dur, tasks=tasks)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
@@ -226,7 +243,7 @@ def main() -> int:
                             break
                         cfg["game"]["route"] = name
                         state.save({**state.load(), "route": name})
-                        tasks = [get_task(t.name, cfg) for t in tasks]  # reload with the learned route
+                        tasks = get_tasks([t.name for t in tasks], cfg)  # reload with the learned route
                         map_misses = 0
                         log.warning("now running the learned route %s: camps %s", name,
                                     [c["world"] for c in route["bonfires"]])

@@ -2,11 +2,12 @@
 
 New games spawn in Act 3 (Kurast Docks, ~12 s walk to the WP) or, after a clean run that ended through
 the LK waypoint, in Act 4 (Pandemonium Fortress, 1.6 s from the WP): see town.py "Act 4 starts".
+With a next task in the same game (Mephisto), the run ends at the LK waypoint -> that task's waypoint.
 """
 from __future__ import annotations
 
 from ..controller import Controller
-from ..lk import fingerprint_ok, leave_to_act4, load_route, run_route
+from ..lk import fingerprint_ok, leave_to_act4, leave_via_wp, load_route, run_route
 from ..town import act4_to, town_to_lower_kurast
 from . import Task
 
@@ -14,14 +15,17 @@ from . import Task
 class LowerKurast(Task):
     name = "lk"
     act = 3
+    enter_wp = "wp_lower_kurast"
 
     def __init__(self, cfg: dict) -> None:
         super().__init__(cfg)
         self.route = load_route(cfg["game"]["route"])
 
-    def enter(self, bot: Controller, stow: bool = False) -> None:
+    def enter(self, bot: Controller, stow: bool = False, chained: bool = False) -> None:
         arrived = lambda: fingerprint_ok(bot, self.route)  # noqa: E731
-        if getattr(bot, "act", 3) == 4:  # one_run sends A4 spawns that need the stash back to Act 3
+        if chained:
+            bot.wait_still(timeout=5)
+        elif getattr(bot, "act", 3) == 4:  # one_run sends A4 spawns that need the stash back to Act 3
             act4_to(bot, "wp_lower_kurast", arrived_check=arrived)
         else:
             town_to_lower_kurast(bot, arrived_check=arrived, stow=stow)
@@ -31,7 +35,11 @@ class LowerKurast(Task):
         return run_route(bot, self.route, end=lambda odo, stats: self._end(bot, odo, stats))
 
     def _end(self, bot: Controller, odo, stats: dict) -> None:
-        """Leave through Act 4 unless the next game needs Act 3 anyway (stash, vendors)."""
+        """Hand off to the next task's waypoint; else leave through Act 4 unless the next game needs
+        Act 3 anyway (stash, vendors)."""
+        if self.next is not None and self.next.enter_wp:
+            stats["chained"] = leave_via_wp(bot, self.route, odo, "wp_tab_act3", self.next.enter_wp)
+            return
         if not self.cfg["game"].get("act4_exit") or town_due(bot, stats):
             return
         stats["act4"] = leave_to_act4(bot, self.route, odo)

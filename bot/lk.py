@@ -115,23 +115,32 @@ def leave_to_act4(bot: Controller, route: dict, odo) -> bool:
     """End of the route: teleport back to the LK waypoint, take it to the Pandemonium Fortress, so the
     next game spawns next to the A4 waypoint. False if anything doesn't work out (the caller then just
     saves & exits here, as before). Safety exceptions (chicken etc.) propagate."""
+    if not leave_via_wp(bot, route, odo, "wp_tab_act4", "wp_town"):
+        return False
+    bot.guard(False)  # in town
+    return True
+
+
+def leave_via_wp(bot: Controller, route: dict, odo, tab: str, dest: str) -> bool:
+    """Teleport back to the LK waypoint and take it to `dest` on the `tab` waypoint tab (Act 4 town, or
+    the next task's waypoint). False if that doesn't work out."""
     from .nav import HOP_GAIN, teleport_to
     from .town import wp_travel
 
     t0 = bot.clock()
     if not teleport_to(bot, odo, (0, 0), tol=60, quiet=True):
-        log.info("act 4 exit: couldn't get back to the LK waypoint")
+        log.info("leaving LK: couldn't get back to the LK waypoint")
         return False
     t1 = bot.clock()
     for attempt in range(3):
         loc = _find_lk_wp(bot, route)
         if loc is None:
             bot.save_failure("lk_wp_not_found")
-            log.info("act 4 exit: LK waypoint not in view")
+            log.info("leaving LK: LK waypoint not in view")
             return False
         dx, dy = loc[0] - WP_AT[0], loc[1] - WP_AT[1]
         if np.hypot(dx, dy) > 45:  # odometry drifted (2026-10-27: 230 px off): hop onto the platform first
-            log.info("act 4 exit: waypoint %d px off, hopping onto it", np.hypot(dx, dy))
+            log.info("leaving LK: waypoint %d px off, hopping onto it", np.hypot(dx, dy))
             teleport(bot, round(dx / HOP_GAIN), round(dy / HOP_GAIN))
             continue
         bot.click(loc[0] + WP_CLICK[0], loc[1] + WP_CLICK[1])
@@ -139,14 +148,13 @@ def leave_to_act4(bot: Controller, route: dict, odo) -> bool:
             bot.wait_for("wp_menu", 3)
             break
         except BotError:
-            log.info("act 4 exit: waypoint menu didn't open (attempt %d)", attempt + 1)
+            log.info("leaving LK: waypoint menu didn't open (attempt %d)", attempt + 1)
     else:
         return False
     t2 = bot.clock()
-    wp_travel(bot, "wp_tab_act4", "wp_town")
-    bot.guard(False)  # in town
-    log.info("act 4 exit: in the Pandemonium Fortress (teleport %.1fs, wp menu %.1fs, travel %.1fs)",
-             t1 - t0, t2 - t1, bot.clock() - t2)
+    wp_travel(bot, tab, dest)
+    log.info("LK waypoint -> %s (teleport %.1fs, wp menu %.1fs, travel %.1fs)",
+             dest, t1 - t0, t2 - t1, bot.clock() - t2)
     return True
 
 

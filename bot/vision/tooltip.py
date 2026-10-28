@@ -8,7 +8,8 @@ import cv2
 import numpy as np
 
 
-def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: int = 140) -> tuple[int, int, int, int] | None:
+def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: int = 140,
+                 max_w: int = 260) -> tuple[int, int, int, int] | None:
     """Look for a tooltip box in the area above (x, y). Returns its (x, y, w, h) or None."""
     x0, y0 = max(0, x - half_w), max(0, y - above)
     crop = frame[y0:y, x0 : x + half_w]
@@ -22,7 +23,7 @@ def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: in
     n, _, st, _ = cv2.connectedComponentsWithStats(dark)
     for i in range(1, n):
         bx, by, bw, bh, area = st[i]
-        if not (36 <= bw <= 260 and 14 <= bh <= 60):
+        if not (36 <= bw <= max_w and 14 <= bh <= 60):
             continue
         box = roi[by : by + bh, bx : bx + bw]
         fill = area / (bw * bh)
