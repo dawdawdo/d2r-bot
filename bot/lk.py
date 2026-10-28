@@ -90,7 +90,8 @@ def fingerprint_ok(bot: Controller, route: dict) -> bool:
 
 WP_CLICK = (78, 42)  # fingerprint template (160x60) top-left -> platform center (live 2026-10-27: +-45 px in x
                     # opens the menu even with us standing on it; the front step, +23 px lower, walks away)
-WP_SEARCH = (200, 100, 880, 450)
+WP_SEARCH = (100, 40, 1080, 550)
+WP_AT = (560, 330)  # fingerprint top-left when standing on the platform (the arrival view)
 
 
 def _find_lk_wp(bot: Controller, route: dict) -> tuple[int, int] | None:
@@ -114,7 +115,7 @@ def leave_to_act4(bot: Controller, route: dict, odo) -> bool:
     """End of the route: teleport back to the LK waypoint, take it to the Pandemonium Fortress, so the
     next game spawns next to the A4 waypoint. False if anything doesn't work out (the caller then just
     saves & exits here, as before). Safety exceptions (chicken etc.) propagate."""
-    from .nav import teleport_to
+    from .nav import HOP_GAIN, teleport_to
     from .town import wp_travel
 
     t0 = bot.clock()
@@ -122,12 +123,17 @@ def leave_to_act4(bot: Controller, route: dict, odo) -> bool:
         log.info("act 4 exit: couldn't get back to the LK waypoint")
         return False
     t1 = bot.clock()
-    for attempt in range(2):
+    for attempt in range(3):
         loc = _find_lk_wp(bot, route)
         if loc is None:
             bot.save_failure("lk_wp_not_found")
             log.info("act 4 exit: LK waypoint not in view")
             return False
+        dx, dy = loc[0] - WP_AT[0], loc[1] - WP_AT[1]
+        if np.hypot(dx, dy) > 45:  # odometry drifted (2026-10-27: 230 px off): hop onto the platform first
+            log.info("act 4 exit: waypoint %d px off, hopping onto it", np.hypot(dx, dy))
+            teleport(bot, round(dx / HOP_GAIN), round(dy / HOP_GAIN))
+            continue
         bot.click(loc[0] + WP_CLICK[0], loc[1] + WP_CLICK[1])
         try:
             bot.wait_for("wp_menu", 3)

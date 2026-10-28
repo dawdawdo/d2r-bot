@@ -64,3 +64,10 @@ def test_town_due():
     assert town_due(_b(keys_left=5, keys_used=2), {})   # keys to buy
     assert town_due(_b(keys_left=None), {})
     assert town_due(_b(repair_next=True), {})
+
+
+def test_lk_wp_found_far_off_center(cfg):
+    """Odometry drifted 230 px (live 2026-10-27): the WP must still be found where it is (then hopped onto)."""
+    f = cv2.imread(str(ROOT / "fixtures" / "labeled" / "in_game" / "lk_wp_off_20261027-200301.png"))
+    loc = _find_lk_wp(_bot(cfg, f), load_route(cfg["game"]["route"]))
+    assert loc is not None and abs(loc[0] - 771) < 10 and abs(loc[1] - 416) < 10
