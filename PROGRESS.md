@@ -47,7 +47,11 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
    Level 3 stairs (fixed map) -> moat trick -> Static Field + Frozen Orb -> loot -> save & exit.
    Ask: LK + Meph in one game, or Meph alone? Check Blizzaga's total MF on the character screen.
 
-**Open questions for Stephen:** Mephisto alone or combined with LK in the same game?
+**Mephisto (started 2026-10-27 22:30, v1.0 tagged before):** see docs/meph-navigation.md. Durance 2 WP
+works; dungeon odometry added; exploration found no stairs yet and its positions drift. Waiting on Stephen:
+teach the route once (option 1) or let the bot search (option 2).
+
+**Open questions for Stephen:** Meph navigation option 1 or 2? Mephisto alone or combined with LK in one game?
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
