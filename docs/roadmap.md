@@ -11,7 +11,18 @@ A **portable Python application** that runs on Windows or Linux. Requirements th
 - Keys: keep exactly 12 (one stack). Today: bought from Lysander (A2). Goal: collect from chests.
 - Rejuvs: belt restocked from the stash Materials tab. Goal: collect from chests.
 - Runes: deposit into the shared stash **Materials** tab at the stash stop each run (to build).
-- Traveling to Act 2 changes the act new games start in: always return to A3 before exiting.
+- New games start in the town of the act the character was saved in. Act 2 trips must return to A3 before
+  exiting. Act 4 is used on purpose: see "Act 4 shortcut" below.
+
+## Act 4 shortcut (built 2026-10-27, Stephen's idea)
+Clean LK runs end with: teleport back to the LK waypoint -> Pandemonium Fortress -> save & exit. The next
+game spawns 1.6 s from the A4 waypoint (A3: ~12 s walk). Measured: exit costs ~5.8 s (teleport 2.6, menu 0.3,
+load 2.5), the A4 start saves ~8 s, so a clean A4->A4 run is ~42.8 s vs ~44.6 s (median), and runs that start
+in A4 but must end in LK take ~37 s. Upkeep stays in Act 3: an A4 spawn that needs the stash (runes etc.),
+vendors, Ormus or the merc takes the WP to Kurast Docks and starts a fresh game; extra key stacks are dropped
+at the A4 spawn. Runs that pick stash loot, need keys or a repair end in LK as before (`tasks/lk.py town_due`).
+For Mephisto runs the A4 start is free: the red portal after the kill leads to A4, and the Durance 2 WP is on
+the A4 WP's Act III tab. Off switch: `game.act4_exit: false`.
 
 ## Map change detection and relearning (requested by Stephen)
 The LK route is only valid for the current map seed (`Blizzaga.map`), which will eventually

@@ -18,6 +18,12 @@
   struck) stops the scan; the bot re-anchors, teleports back and scans once more.
 - **Map learning** (`bot/learn.py`, `tools/learn_map.py`, `bot.run --relearn`): see roadmap; tested live.
 
+**Act 4 shortcut (2026-10-27 evening, Stephen's idea; docs/roadmap.md):** clean runs end LK WP -> Pandemonium
+  Fortress, so the next game spawns 1.6 s from a WP. ~46 live runs since: median 44.6 -> 42.9 s (runs that start
+  in A4 but end in LK: ~37 s). Upkeep/stash runs go back through Act 3 automatically. Off switch
+  `game.act4_exit: false`. The difficulty screen is now detected by the opaque Hell button (the title is
+  see-through over the A4 menu art). **Filter check done:** runs picked and stashed Dol, Fal and other runes.
+
 **Broken / risks:**
 - Chickens ~1 in 50 now. Teleport-when-struck jumps still cost a chest now and then.
 - If Stephen rearranges his inventory, update `inventory.protected` (else his items get stashed).
@@ -31,9 +37,8 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
 (Windows firewall prompt once). Not yet used live.
 
 **Next step (exact):**
-1. Stephen is on the PC: no live runs until he says he's off.
-2. When he is: start D2R, check the new filter loads (9 rules; Esc -> Loot Filter) and that a run still picks
-   runes; then the 100-run LK sign-off -> tag v1.0.
+1. No live runs while Stephen is on the PC.
+2. 100-run LK sign-off (with the Act 4 shortcut) -> tag v1.0. Started 2026-10-27 ~20:20.
 3. Next target (Stephen, 2026-10-27): **Dracul's Grasp via Hell Mephisto runs** (proposal accepted; research
    in docs/loot.md). Build `bot/tasks/meph.py` on top of branch `tasks`: A3 WP -> Durance 2 -> learned route to
    Level 3 stairs (fixed map) -> moat trick -> Static Field + Frozen Orb -> loot -> save & exit.
