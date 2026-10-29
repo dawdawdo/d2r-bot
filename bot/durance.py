@@ -216,6 +216,15 @@ class AutomapOdometer:
         return cls(frame, hits, seen, json.loads(meta.read_text())["origin"])
 
 
+def view_offset(ref: np.ndarray, cur: np.ndarray) -> tuple[np.ndarray, float]:
+    """Where she stands in `cur` relative to where she stood in `ref` (world px), from the two automap
+    views alone (no canvas). Teach-and-repeat compares each landing with the recorded one this way."""
+    a, b = view_mask(ref), view_mask(cur)
+    win = cv2.createHanningWindow(a.shape[::-1], cv2.CV_32F)
+    (dx, dy), resp = cv2.phaseCorrelate(a, b, win)
+    return -np.array([dx, dy]) * SCALE, float(resp)
+
+
 # --- stop graph --------------------------------------------------------------------------------
 SAME_STOP = 130  # world px: landings closer than this to a known stop are that stop
 # Where the automap draws HER (full-res screen px). The waypoint room's outline is drawn around the WP
@@ -367,8 +376,28 @@ def ensure_automap(bot) -> np.ndarray:
     raise BotError("automap won't show")
 
 
+_AREA: dict = {}
+
+
+def _area_tmpl(path: Path) -> np.ndarray:
+    if path not in _AREA:
+        _AREA[path] = cv2.imread(str(path))
+    return _AREA[path]
+
+
+def durance_level(frame: np.ndarray) -> int | None:
+    """2 or 3 from the area name (top right, automap open), None if neither. The names differ in one
+    digit, so each template matches both at >= 0.95: the better one wins (recorded views 2026-10-29)."""
+    from .vision.screen import ASSETS, match_score
+
+    scores = {lvl: match_score(frame, _area_tmpl(ASSETS / f"area_durance_{lvl}.png"), AREA_REGION)[0]
+              for lvl in (2, 3)}
+    best = max(scores, key=scores.get)
+    return best if scores[best] >= 0.8 else None
+
+
 def on_level2(bot) -> bool:
-    return bot.find("area_durance_2.png", region=AREA_REGION, threshold=0.8) is not None
+    return durance_level(bot.capture.grab()) == 2
 
 
 def scan_due(g: StopGraph, pos) -> bool:
@@ -537,3 +566,48 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
             g.failed.append([float(target[0]), float(target[1])])
         save()
     return "hops"
+
+
+# --- the learned route: waypoint -> Level 3 stairs (Stephen's trip, tools/record_route.py) ---------
+# His recording (2026-10-29): the stairs view (route view 001) places on the search canvas at
+# (5804, 631) world, resp 0.46 against every guess; he then clicked the stairs at (636, 251).
+# Stop 79 of the search graph is 140 px away, so the graph already knows the way.
+STAIRS = {"stand": (5804.0, 631.0), "click": (636, 251), "view": "views/001.jpg"}
+
+
+def stairs_click(ref: np.ndarray, cur: np.ndarray, stairs: dict = STAIRS) -> tuple[int, int] | None:
+    """Screen point of the stairs in `cur`, from the recorded stairs view `ref`; None if the views
+    don't match (she isn't near the stand spot)."""
+    d, resp = view_offset(ref, cur)
+    if resp < GOOD_RESP or math.hypot(*d) > 400:
+        return None
+    return int(round(stairs["click"][0] - d[0])), int(round(stairs["click"][1] - d[1]))
+
+
+def to_level3(bot, odo: AutomapOdometer, g: StopGraph, ref: np.ndarray, folder: Path,
+              stairs: dict = STAIRS, tries: int = 3) -> None:
+    """From the waypoint: follow the stop graph to the stairs, line up on the recorded view, click.
+    Raises BotError if Level 3 doesn't show."""
+    from .controller import BotError
+    from .nav import world_to_screen
+
+    walker = Walker(bot, odo, g, folder, scan=False)
+    goal = g.nearest(stairs["stand"], within=400)
+    if goal is not None and not walker.travel(goal):
+        log.info("stairs: graph path broke at stop %d; heading straight there", walker.cur)
+    for attempt in range(tries):
+        walker.go(stairs["stand"], tol=120, max_hops=8)
+        f = bot.capture.grab()
+        pt = stairs_click(ref, f, stairs)
+        if pt is None:  # no view match: aim by the automap fix alone
+            pt = world_to_screen(odo, stairs["stand"][0] + stairs["click"][0] - 640,
+                                 stairs["stand"][1] + stairs["click"][1] - 330)
+        x, y = int(np.clip(pt[0], 60, 1220)), int(np.clip(pt[1], 40, 560))
+        log.info("stairs: click (%d, %d) from %s (try %d)", x, y, odo.pos.round().tolist(), attempt + 1)
+        bot.click(x, y)
+        bot.sleep(2.5)
+        if durance_level(bot.capture.grab()) == 3:
+            log.info("on Durance of Hate Level 3")
+            return
+    bot.save_failure("stairs_missed")
+    raise BotError("Level 3 stairs: still on Level 2")
