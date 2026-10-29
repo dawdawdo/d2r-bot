@@ -54,12 +54,15 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
 - Fixed 2026-10-28 evening: firelight/lit floors polluted the canvas (blob filter); canvas = hits / views since
   first seen (a plain average hid newly revealed walls); `AM_CHAR` (640, 500) -> (640, 370) (frontier targets
   were ~1000 px too far south); scans stop when struck; heal at Ormus before exploring.
-- Status 23:30: 167 stops, **no level exit (long tooltip) found yet**, not even the Level 1 stairs. ~10-45 new
-  stops per game; nearly every game ends in a chicken or a broken Energy Shield, and the belt empties in one game.
-  Cycle used: 3 LK runs (refill rejuvs from chests) -> 3 Durance games.
-- Not verified: that `find_tooltip` sees a level-exit tooltip at all (no known example yet).
+- 2026-10-29: Stephen taught the route (`tools/record_route.py`). **Stairs found: (5804, 631) world, east of
+  the WP**; the search had been 140 px away (stop 79) but its tooltip scan missed them. Replay built
+  (`durance.to_level3`), tested offline only. Blizzaga was left on Level 3 after the recording (kill switch
+  tripped on save & exit): Stephen to save & exit by hand.
 
-**Open questions for Stephen:** search is slow and costly in chickens; teach the route once (option 1) after all?
+**Next step (exact):** when Stephen is off the PC: `python tools/goto_level3.py --games 3` (conda env d2r).
+Then Level 3: moat trick spot, Static Field + Frozen Orb, kill detection, loot, then wire into `bot/tasks/meph.py`.
+
+**Open questions for Stephen:** none right now.
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
