@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 
-from .base import Capture, GuardedInput, HotkeyListener, Input, Region, Window
+from .base import Capture, ClickListener, GuardedInput, HotkeyListener, Input, Region, Window
 
 
 @dataclass
@@ -52,5 +52,14 @@ def open_hotkeys() -> HotkeyListener:
     raise NotImplementedError(f"no hotkey backend for {sys.platform} yet")
 
 
-__all__ = ["Backend", "Capture", "GuardedInput", "HotkeyListener", "Input", "Region", "Window",
-           "open_backend", "open_hotkeys"]
+def open_clicks() -> ClickListener:
+    """The user's mouse clicks (screen coords)."""
+    if sys.platform == "win32":
+        from .windows import PynputClicks
+
+        return PynputClicks()
+    raise NotImplementedError(f"no click listener for {sys.platform} yet")
+
+
+__all__ = ["Backend", "Capture", "ClickListener", "GuardedInput", "HotkeyListener", "Input", "Region", "Window",
+           "open_backend", "open_clicks", "open_hotkeys"]

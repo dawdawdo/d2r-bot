@@ -326,6 +326,35 @@ SCAN_COVER = (430, 200)  # a scan covers about this much (world px) around where
 SCAN_ABORT = (10, 20)  # HP, MP points lost during a scan (Energy Shield drains MP first) -> stop scanning
 
 
+def to_durance2(bot, say=print) -> None:
+    """New Hell game -> (heal at Ormus if hurt: life carries over between games) -> WP Durance 2."""
+    from .controller import BotError
+    from .lifecycle import create_game, ensure_main_menu, save_and_exit
+    from .town import act4_to, heal_at_ormus, needs_heal, recover_corpse, restart_in_act3, spawn_act, town_to_wp
+
+    diff = bot.cfg["game"]["difficulty"]
+    ensure_main_menu(bot)
+    create_game(bot, diff)
+    bot.wait_for("in_game", 10)
+    recover_corpse(bot)
+    act = spawn_act(bot)
+    if needs_heal(bot):
+        say(f"HP {bot.hp:.0f}% -> heal at Ormus, fresh game")
+        if act == 4:
+            restart_in_act3(bot)
+        heal_at_ormus(bot)
+        save_and_exit(bot)
+        create_game(bot, diff)
+        bot.wait_for("in_game", 10)
+        act = 3
+        if needs_heal(bot):  # Ormus not found: try again next game, don't go in hurt
+            raise BotError(f"still at HP {bot.hp:.0f}% after Ormus")
+    if act == 4:
+        act4_to(bot, "wp_durance_2", area=None)
+    else:
+        town_to_wp(bot, "wp_durance_2", None)
+
+
 def ensure_automap(bot) -> np.ndarray:
     from .controller import BotError
 

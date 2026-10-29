@@ -18,12 +18,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.config import ROOT  # noqa: E402
 from bot.controller import BotError, Controller  # noqa: E402
-from bot.durance import AutomapOdometer, StopGraph, ensure_automap, explore_game  # noqa: E402
+from bot.durance import AutomapOdometer, StopGraph, ensure_automap, explore_game, to_durance2  # noqa: E402
 from bot.io import open_backend  # noqa: E402
-from bot.lifecycle import create_game, ensure_main_menu, save_and_exit  # noqa: E402
+from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
-from bot.town import (act4_to, heal_at_ormus, needs_heal, recover_corpse, restart_in_act3, spawn_act,  # noqa: E402
-                      town_to_wp)
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
@@ -50,26 +48,7 @@ def main() -> int:
             result = "error"
             odo = None
             try:
-                ensure_main_menu(bot)
-                create_game(bot, cfg["game"]["difficulty"])
-                bot.wait_for("in_game", 10)
-                recover_corpse(bot)
-                act = spawn_act(bot)
-                if needs_heal(bot):  # life carries over between games (same as bot.run)
-                    print(f"game {n + 1}: HP {bot.hp:.0f}% -> heal at Ormus, fresh game", flush=True)
-                    if act == 4:
-                        restart_in_act3(bot)
-                    heal_at_ormus(bot)
-                    save_and_exit(bot)
-                    create_game(bot, cfg["game"]["difficulty"])
-                    bot.wait_for("in_game", 10)
-                    act = 3
-                    if needs_heal(bot):  # Ormus not found: try again next game, don't explore hurt
-                        raise BotError(f"still at HP {bot.hp:.0f}% after Ormus")
-                if act == 4:
-                    act4_to(bot, "wp_durance_2", area=None)
-                else:
-                    town_to_wp(bot, "wp_durance_2", None)
+                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True))
                 bot.sleep(2.0)  # the "Entering ..." banner fades
                 odo = AutomapOdometer.load(folder, ensure_automap(bot))
                 print(f"game {n + 1}: arrival fix {odo.pos.round().tolist()} (resp {odo.resp:.2f})", flush=True)

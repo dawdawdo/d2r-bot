@@ -9,9 +9,9 @@ from typing import Callable
 import mss
 import numpy as np
 import pydirectinput
-from pynput import keyboard
+from pynput import keyboard, mouse
 
-from .base import Capture, HotkeyListener, Input, Region, Window
+from .base import Capture, ClickListener, HotkeyListener, Input, Region, Window
 
 log = logging.getLogger(__name__)
 
@@ -222,3 +222,24 @@ class PynputHotkeys(HotkeyListener):
             self.listener.stop()
             self.listener = None
         self.bindings.clear()
+
+
+class PynputClicks(ClickListener):
+    def __init__(self) -> None:
+        self.listener: mouse.Listener | None = None
+
+    def start(self, callback: Callable[[int, int, str], None]) -> None:
+        def on_click(x, y, button, pressed) -> None:
+            if pressed and button in (mouse.Button.left, mouse.Button.right):
+                try:
+                    callback(int(x), int(y), button.name)
+                except Exception:
+                    log.exception("click callback failed")
+
+        self.listener = mouse.Listener(on_click=on_click, daemon=True)
+        self.listener.start()
+
+    def stop(self) -> None:
+        if self.listener:
+            self.listener.stop()
+            self.listener = None

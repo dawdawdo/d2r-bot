@@ -7,7 +7,7 @@ from typing import Callable, Iterable
 import cv2
 import numpy as np
 
-from .base import Capture, HotkeyListener, Input, Region, Window
+from .base import ClickListener, Capture, HotkeyListener, Input, Region, Window
 
 
 class FakeWindow(Window):
@@ -84,3 +84,18 @@ class FakeHotkeys(HotkeyListener):
 
     def fire(self, key: str) -> None:
         self.bindings[key]()
+
+
+class FakeClicks(ClickListener):
+    def __init__(self) -> None:
+        self.callback = None
+
+    def start(self, callback):
+        self.callback = callback
+
+    def stop(self):
+        self.callback = None
+
+    def press(self, x: int, y: int, button: str = "right") -> None:
+        if self.callback:
+            self.callback(x, y, button)

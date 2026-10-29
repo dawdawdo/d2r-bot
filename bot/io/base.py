@@ -72,6 +72,17 @@ class HotkeyListener(ABC):
     def stop(self) -> None: ...
 
 
+class ClickListener(ABC):
+    """The user's own mouse clicks (recording a route Stephen plays)."""
+
+    @abstractmethod
+    def start(self, callback: Callable[[int, int, str], None]) -> None:
+        """Call `callback(x, y, button)` (screen coords, "left"/"right"; background thread) on each press."""
+
+    @abstractmethod
+    def stop(self) -> None: ...
+
+
 class GuardedInput(Input):
     """Wraps an Input so every action first checks the kill switch.
 
