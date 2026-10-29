@@ -22,7 +22,8 @@ from bot.durance import AutomapOdometer, StopGraph, ensure_automap, explore_game
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import create_game, ensure_main_menu, save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
-from bot.town import act4_to, recover_corpse, spawn_act, town_to_wp  # noqa: E402
+from bot.town import (act4_to, heal_at_ormus, needs_heal, recover_corpse, restart_in_act3, spawn_act,  # noqa: E402
+                      town_to_wp)
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
@@ -53,7 +54,19 @@ def main() -> int:
                 create_game(bot, cfg["game"]["difficulty"])
                 bot.wait_for("in_game", 10)
                 recover_corpse(bot)
-                if spawn_act(bot) == 4:
+                act = spawn_act(bot)
+                if needs_heal(bot):  # life carries over between games (same as bot.run)
+                    print(f"game {n + 1}: HP {bot.hp:.0f}% -> heal at Ormus, fresh game", flush=True)
+                    if act == 4:
+                        restart_in_act3(bot)
+                    heal_at_ormus(bot)
+                    save_and_exit(bot)
+                    create_game(bot, cfg["game"]["difficulty"])
+                    bot.wait_for("in_game", 10)
+                    act = 3
+                    if needs_heal(bot):  # Ormus not found: try again next game, don't explore hurt
+                        raise BotError(f"still at HP {bot.hp:.0f}% after Ormus")
+                if act == 4:
                     act4_to(bot, "wp_durance_2", area=None)
                 else:
                     town_to_wp(bot, "wp_durance_2", None)
@@ -74,6 +87,7 @@ def main() -> int:
                 if odo is not None:
                     odo.save(folder)
                 g.save(folder / "graph.json")
+                bot.guard(False)  # a chicken must not fire again while we look and leave
                 if bot.observe() != "main_menu":
                     save_and_exit(bot)
             warps = [(i, w["w"], w["dest"], w.get("level3")) for i, w in enumerate(g.warps)]

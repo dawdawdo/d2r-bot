@@ -6,7 +6,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from bot.durance import AutomapOdometer, StopGraph, automap_shown, frontier
+from bot.durance import AutomapOdometer, StopGraph, automap_shown, frontier, view_mask
 
 FIX = Path(__file__).resolve().parent.parent / "fixtures" / "durance"
 
@@ -67,3 +67,38 @@ def test_frontier_is_away_from_stops():
     odo = AutomapOdometer(frames()[0])
     g = StopGraph()
     assert all(np.hypot(*t) >= 600 for t in frontier(odo, g))
+
+
+def test_firelight_is_not_automap():
+    """Live 2026-10-28: braziers and lit floor share the automap's tan; as solid areas they're dropped
+    (they filled the canvas and broke the fix). Before the blob filter: 15402 px."""
+    from bot.durance import automap_pixels
+
+    assert automap_pixels(cv2.imread(str(FIX / "firelight.png"))).sum() < 5000
+    assert automap_pixels(frames()[0]).sum() > 4500  # thin lines untouched
+
+
+def test_canvas_averages_out_one_off_noise():
+    f = frames()
+    odo = AutomapOdometer(f[0])
+    x, y = np.round(odo._tl((0, 0))).astype(int)
+    speck = np.zeros_like(view_mask(f[0]))
+    speck[200, 100] = 1.0  # a torch flicker: one hit, then gone for the next four views
+    odo._add(speck, (0, 0))
+    for _ in range(4):
+        odo._add(np.zeros_like(speck), (0, 0))
+    assert odo.canvas[y + 200, x + 100] < 0.3
+
+
+def test_newly_revealed_walls_count_fully():
+    """The automap shows a place only after she's been near: dark views before that don't dilute it."""
+    f = frames()
+    odo = AutomapOdometer(f[0])
+    x, y = np.round(odo._tl((0, 0))).astype(int)
+    blank = np.zeros_like(view_mask(f[0]))
+    for _ in range(10):
+        odo._add(blank, (0, 0))
+    m = blank.copy()
+    m[200, 100] = 1.0
+    odo._add(m, (0, 0))
+    assert odo.canvas[y + 200, x + 100] > 0.9

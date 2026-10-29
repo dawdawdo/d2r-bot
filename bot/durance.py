@@ -5,8 +5,11 @@ odometry drifts (docs/meph-navigation.md). The automap overlay (Tab) is drawn in
 the scene, unaffected by light, and shows far more of the level than the screen. Its scale is fixed
 (~1/8 of the world: a 287 px hop moved it 36 px, live 2026-10-28).
 
-AutomapOdometer keeps the union of every automap view seen (`canvas`, persisted across games: the map
-is fixed and every game starts at the waypoint) and places each new view on it by phase correlation.
+AutomapOdometer keeps the average of every automap view seen (`canvas` = line hits / times in view
+since the pixel first showed a line,
+persisted across games: the map is fixed and every game starts at the waypoint) and places each new
+view on it by phase correlation. Averaging lets torches, spells and monsters fade out; a plain union
+filled up with them and stopped matching (live 2026-10-28).
 That's an absolute fix, so errors don't add up over hops. It has the same interface as nav.Odometer
 (pos, lost, resp, update), so nav.hop / nav.teleport_to work with it unchanged.
 
@@ -31,6 +34,7 @@ VIEW = (40, 0, 1240, 590)  # full-res screen area used (x, y, w, h): above the H
 # Screen boxes (full res) that never scroll with the map: portrait, area/time text, the character herself
 STATIC = [(0, 0, 90, 85), (1040, 0, 240, 80), (590, 230, 110, 140)]
 LIGHT = ((640, 290), (300, 200))  # ellipse (center, half axes) of her light circle, full res
+BLOB = 4  # px: a BLOB x BLOB square fits inside firelight and lit floors, never inside an automap line
 MIN_PIXELS = 1500  # mask pixels (full res) for "the automap is showing"; live: 7000-11000 in Durance 2
 GOOD_RESP = 0.08   # phase-correlation peak for a trusted fix (live hops: 0.20-0.30)
 HOP_GAIN = 1.17    # landing / commanded offset (nav.HOP_GAIN)
@@ -54,6 +58,8 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
     m = ((h >= 15) & (h <= 30) & (s >= 60) & (s <= 170) & (v >= 90)).astype(np.uint8)
+    k = np.ones((BLOB, BLOB), np.uint8)
+    m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, k), np.ones((7, 7), np.uint8))
     for x, y, w, hh in STATIC:
         m[y : y + hh, x : x + w] = 0
     m &= _outside_light()
@@ -75,17 +81,35 @@ def view_mask(frame: np.ndarray) -> np.ndarray:
     return cv2.GaussianBlur(m, (3, 3), 0.8)
 
 
+_SEEN: np.ndarray | None = None
+
+
+def seen_mask() -> np.ndarray:
+    """1 where a view can show automap lines (VIEW minus static boxes and her light), half size."""
+    global _SEEN
+    if _SEEN is None:
+        full = _outside_light().copy()
+        for x, y, w, hh in STATIC:
+            full[y : y + hh, x : x + w] = 0
+        x, y, w, h = VIEW
+        _SEEN = cv2.resize(full[y : y + h, x : x + w].astype(np.float32), (w // 2, h // 2),
+                           interpolation=cv2.INTER_AREA)
+    return _SEEN
+
+
 class AutomapOdometer:
     """World position (px from the arrival spot) from automap views placed on a growing canvas."""
 
-    def __init__(self, frame: np.ndarray | None = None, canvas: np.ndarray | None = None,
-                 origin=(0, 0)) -> None:
+    def __init__(self, frame: np.ndarray | None = None, hits: np.ndarray | None = None,
+                 seen: np.ndarray | None = None, origin=(0, 0)) -> None:
         self.dungeon = True
         self.pos = np.array([0.0, 0.0])
         self.lost = False
         self.resp = 1.0
         self.since_anchor = 0.0
-        self.canvas = canvas if canvas is not None else np.zeros((0, 0), np.float32)
+        self.hits = hits if hits is not None else np.zeros((0, 0), np.float32)
+        self.seen = seen if seen is not None else np.zeros((0, 0), np.float32)
+        self.canvas = self._average(self.hits, self.seen)
         self.origin = np.array(origin, float)  # canvas px of the arrival view's top-left
         self.added = 0
         if frame is not None:
@@ -95,19 +119,25 @@ class AutomapOdometer:
                 self._add(view_mask(frame), np.zeros(2))
 
     # --- canvas ------------------------------------------------------------------------------
+    @staticmethod
+    def _average(hits: np.ndarray, seen: np.ndarray) -> np.ndarray:
+        return np.divide(hits, seen, out=np.zeros_like(hits), where=seen > 0.5)
+
     def _ensure(self, tl: np.ndarray, shape) -> None:
         """Grow the canvas so a view at canvas top-left `tl` fits (with a margin)."""
         h, w = shape
         H, W = self.canvas.shape if self.canvas.size else (0, 0)
         if not self.canvas.size:
-            self.canvas = np.zeros((h + 200, w + 200), np.float32)
+            self.canvas, self.hits, self.seen = (np.zeros((h + 200, w + 200), np.float32) for _ in range(3))
             self.origin = np.array([100.0, 100.0]) - tl + self.origin
             return
         x0, y0 = int(math.floor(tl[0])), int(math.floor(tl[1]))
         left, top = max(0, 100 - x0), max(0, 100 - y0)
         right, bottom = max(0, x0 + w + 100 - W), max(0, y0 + h + 100 - H)
         if left or top or right or bottom:
-            self.canvas = cv2.copyMakeBorder(self.canvas, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+            self.canvas, self.hits, self.seen = (
+                cv2.copyMakeBorder(a, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+                for a in (self.canvas, self.hits, self.seen))
             self.origin += (left, top)
 
     def _tl(self, pos) -> np.ndarray:
@@ -117,7 +147,12 @@ class AutomapOdometer:
         self._ensure(self._tl(pos), mask.shape)
         x, y = np.round(self._tl(pos)).astype(int)
         h, w = mask.shape
-        np.maximum(self.canvas[y : y + h, x : x + w], mask, out=self.canvas[y : y + h, x : x + w])
+        win = (slice(y, y + h), slice(x, x + w))
+        # Count views only from a pixel's first line on: the automap shows a place only once she's
+        # been near it, so the dark views before that say nothing about it.
+        self.seen[win] += seen_mask() * ((self.hits[win] > 0.05) | (mask > 0.05))
+        self.hits[win] += mask
+        self.canvas[win] = self._average(self.hits[win], self.seen[win])
         self.added += 1
 
     def _crop(self, pos, shape) -> np.ndarray:
@@ -167,23 +202,27 @@ class AutomapOdometer:
     # --- persistence ---------------------------------------------------------------------------
     def save(self, folder: Path) -> None:
         folder.mkdir(parents=True, exist_ok=True)
-        cv2.imwrite(str(folder / "automap.png"), np.clip(self.canvas * 255, 0, 255).astype(np.uint8))
+        cv2.imwrite(str(folder / "automap.png"), np.clip(self.canvas * 255, 0, 255).astype(np.uint8))  # to look at
+        np.savez_compressed(folder / "automap.npz", hits=self.hits, seen=self.seen)
         (folder / "automap.json").write_text(json.dumps({"origin": self.origin.tolist(), "scale": SCALE}))
 
     @classmethod
     def load(cls, folder: Path, frame: np.ndarray | None = None) -> "AutomapOdometer":
-        img, meta = folder / "automap.png", folder / "automap.json"
-        if not (img.exists() and meta.exists()):
+        data, meta = folder / "automap.npz", folder / "automap.json"
+        if not (data.exists() and meta.exists()):
             return cls(frame)
-        canvas = cv2.imread(str(img), cv2.IMREAD_GRAYSCALE).astype(np.float32) / 255
-        return cls(frame, canvas, json.loads(meta.read_text())["origin"])
+        with np.load(data) as d:
+            hits, seen = d["hits"], d["seen"]
+        return cls(frame, hits, seen, json.loads(meta.read_text())["origin"])
 
 
 # --- stop graph --------------------------------------------------------------------------------
 SAME_STOP = 130  # world px: landings closer than this to a known stop are that stop
-# Where the automap draws HER: not at her screen spot (640, 330) but ~170 px lower (live 2026-10-28:
-# the waypoint room's automap outline is centered at ~(640, 500)). Full-res screen px.
-AM_CHAR = (640, 500)
+# Where the automap draws HER (full-res screen px). The waypoint room's outline is drawn around the WP
+# platform (~(655, 350) at arrival), and over 89 stops the revealed walls lie closest to the stops with
+# (620-660, 360-400). The earlier (640, 500) was another room's outline: it put every frontier target
+# ~1000 px too far south, so most of them were walls or void (live 2026-10-28).
+AM_CHAR = (640, 370)
 
 
 class StopGraph:
@@ -264,7 +303,7 @@ def frontier(odo: AutomapOdometer, g: StopGraph) -> list[tuple[float, float]]:
         return []
     c = FRONTIER_CELL
     H, W = odo.canvas.shape
-    walls = (odo.canvas[: H // c * c, : W // c * c] > 0.05).astype(np.float32)
+    walls = (odo.canvas[: H // c * c, : W // c * c] > 0.3).astype(np.float32)  # seen as a line most times
     dens = walls.reshape(H // c, c, W // c, c).mean(axis=(1, 3))
     stops = np.array([s["pos"] for s in g.stops])
     out = []
@@ -284,6 +323,7 @@ def frontier(odo: AutomapOdometer, g: StopGraph) -> list[tuple[float, float]]:
 WARP_MIN_W = 150
 AREA_REGION = (1060, 20, 220, 70)  # area name, top right (shown while the automap is open)
 SCAN_COVER = (430, 200)  # a scan covers about this much (world px) around where she stood
+SCAN_ABORT = (10, 20)  # HP, MP points lost during a scan (Energy Shield drains MP first) -> stop scanning
 
 
 def ensure_automap(bot) -> np.ndarray:
@@ -313,11 +353,16 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
 
     found = 0
     k = 0
+    hp0, mp0 = bot.hp or 100, bot.mp or 100
     for y in range(80, 560, 90):
         for x in range(110, 1180, 120):
             k += 1
             if k % 6 == 0:
                 bot.check()
+                if (bot.hp or 100) < hp0 - SCAN_ABORT[0] or (bot.mp or 100) < mp0 - SCAN_ABORT[1]:
+                    log.info("scan at stop %d stopped: struck (HP %.0f%% MP %.0f%%)", stop, bot.hp, bot.mp)
+                    bot.input.move(1270, 590)
+                    return found  # standing still is what gets her hurt: move on, scan here another time
             bot.input.move(x, y)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
