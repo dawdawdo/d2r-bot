@@ -1,14 +1,18 @@
-"""Record Stephen's trip from the Durance 2 waypoint to the Level 3 stairs (bot/teach.py).
+"""Record Stephen's trip through the Durance of Hate (bot/teach.py).
 
-  python tools/record_route.py
+  python tools/record_route.py             # Level 2: waypoint -> Level 3 stairs
+  python tools/record_route.py --level 3   # Level 3: stairs arrival -> his Mephisto spot -> the kill
 
-The bot makes a Hell game and takes the waypoint to Durance of Hate Level 2 with the automap on, then
-hands over: Stephen teleports (right-click) to the stairs and clicks them, as he'd normally play.
-Every click is recorded with the view after it. Press F10 once on Level 3 (or to give up): the bot
-saves the route to maps/<route>/durance2_route/ and does save & exit. F12 still stops everything.
+The bot makes a Hell game and takes the waypoint to Durance of Hate Level 2 with the automap on (with
+--level 3 it then takes its learned route down the stairs), then hands over: Stephen plays as he
+normally would. Every click is recorded with the view after it, and while he holds the right button
+a step per cast. Press F10 when done (or to give up): the bot saves the route to
+maps/<route>/durance<level>_route/ (Level 3 also gets its automap canvas in canvas/) and does
+save & exit. F12 still stops everything.
 """
 from __future__ import annotations
 
+import argparse
 import shutil
 import sys
 import threading
@@ -19,21 +23,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.config import ROOT  # noqa: E402
 from bot.controller import Controller  # noqa: E402
-from bot.durance import AutomapOdometer, ensure_automap, to_durance2  # noqa: E402
+from bot.durance import AutomapOdometer, StopGraph, ensure_automap, level_now, to_durance2, to_level3  # noqa: E402
 from bot.io import open_backend, open_clicks  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
 from bot.teach import RouteRecorder  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
+TASKS = {2: "teleport to the Level 3 stairs and click them",
+         3: "go to your Mephisto spot (moat trick) and kill him as you normally would"}
+
 
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--level", type=int, default=2, choices=(2, 3))
+    args = ap.parse_args()
+
     s = start_session()  # backs up saves
     cfg = s.cfg
     maps = ROOT / "maps" / cfg["game"]["route"]
-    folder = maps / "durance2_route"
+    folder = maps / f"durance{args.level}_route"
     if folder.exists():
-        shutil.move(str(folder), str(folder.with_name(f"durance2_route_{time.strftime('%Y%m%d-%H%M%S')}")))
+        shutil.move(str(folder), str(folder.with_name(f"{folder.name}_{time.strftime('%Y%m%d-%H%M%S')}")))
     b = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(b.window, b.capture, b.input, ScreenClassifier.from_config(cfg["vision"]["states"]),
                      s.kill, cfg)
@@ -45,22 +56,39 @@ def main() -> int:
     try:
         to_durance2(bot)
         bot.sleep(2.0)  # the "Entering ..." banner fades
-        odo = AutomapOdometer.load(maps / "durance2_auto", ensure_automap(bot))  # the searched canvas
+        auto = maps / "durance2_auto"
+        odo = AutomapOdometer.load(auto, ensure_automap(bot))  # the searched canvas
+        if args.level == 3:
+            to_level3(bot, odo, StopGraph.load(auto / "graph.json"), None, auto)
+            bot.sleep(1.5)
+            if level_now(bot) != 3:
+                raise SystemExit("not on Level 3")
+            odo = AutomapOdometer(bot.capture.grab())  # a fresh canvas: Level 3 starts here
         bot.guard(False)  # Stephen plays: no potions or chickens from the bot
         x, y, _, _ = b.window.client_rect()
-        rec = RouteRecorder(b.capture, odo, (x, y), folder)
-        clicks.start(rec.on_click)
-        print("\n*** YOUR TURN: teleport to the Level 3 stairs and click them. Keep the automap (Tab) on.\n"
-              "*** Press F10 when you're on Level 3 (or to give up). F12 = emergency stop.\n", flush=True)
+
+        def cursor():
+            p = b.input.cursor_pos()
+            return None if p is None else (p[0] + x, p[1] + y)
+
+        rec = RouteRecorder(b.capture, odo, (x, y), folder, cursor=cursor)
+        clicks.start(rec.on_click, rec.on_release)
+        print(f"\n*** YOUR TURN: {TASKS[args.level]}. Keep the automap (Tab) on.\n"
+              "*** Press F10 when you're done (or to give up). F12 = emergency stop.\n", flush=True)
         while not done.is_set():
             bot.kill.sleep(0.2)
         clicks.stop()
         steps = rec.finish(b.capture.grab())
         rec = None
-        print(f"recorded {len(steps)} clicks ({sum(st['lost'] for st in steps)} without an automap fix) "
-              f"-> {folder}", flush=True)
+        if args.level == 3:
+            odo.save(folder / "canvas")
+        held = sum(bool(st.get("held")) for st in steps)
+        print(f"recorded {len(steps)} steps ({held} while held, {sum(st['lost'] for st in steps)} without "
+              f"an automap fix) -> {folder}", flush=True)
         print("hands off the mouse: save & exit in 2 s", flush=True)
         bot.sleep(2.0)
+        if hasattr(b.input, "expected"):
+            b.input.expected = None  # he moved the mouse: that's not a grab (it tripped F12 on 2026-10-29)
         save_and_exit(bot)
     finally:
         clicks.stop()

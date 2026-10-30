@@ -228,11 +228,15 @@ class PynputClicks(ClickListener):
     def __init__(self) -> None:
         self.listener: mouse.Listener | None = None
 
-    def start(self, callback: Callable[[int, int, str], None]) -> None:
+    def start(self, callback: Callable[[int, int, str], None],
+              on_release: Callable[[int, int, str], None] | None = None) -> None:
         def on_click(x, y, button, pressed) -> None:
-            if pressed and button in (mouse.Button.left, mouse.Button.right):
+            if button in (mouse.Button.left, mouse.Button.right):
+                cb = callback if pressed else on_release
+                if cb is None:
+                    return
                 try:
-                    callback(int(x), int(y), button.name)
+                    cb(int(x), int(y), button.name)
                 except Exception:
                     log.exception("click callback failed")
 

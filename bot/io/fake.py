@@ -88,14 +88,18 @@ class FakeHotkeys(HotkeyListener):
 
 class FakeClicks(ClickListener):
     def __init__(self) -> None:
-        self.callback = None
+        self.callback = self.on_release = None
 
-    def start(self, callback):
-        self.callback = callback
+    def start(self, callback, on_release=None):
+        self.callback, self.on_release = callback, on_release
 
     def stop(self):
-        self.callback = None
+        self.callback = self.on_release = None
 
     def press(self, x: int, y: int, button: str = "right") -> None:
         if self.callback:
             self.callback(x, y, button)
+
+    def release(self, x: int, y: int, button: str = "right") -> None:
+        if self.on_release:
+            self.on_release(x, y, button)

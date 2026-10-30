@@ -76,8 +76,10 @@ class ClickListener(ABC):
     """The user's own mouse clicks (recording a route Stephen plays)."""
 
     @abstractmethod
-    def start(self, callback: Callable[[int, int, str], None]) -> None:
-        """Call `callback(x, y, button)` (screen coords, "left"/"right"; background thread) on each press."""
+    def start(self, callback: Callable[[int, int, str], None],
+              on_release: Callable[[int, int, str], None] | None = None) -> None:
+        """Call `callback(x, y, button)` (screen coords, "left"/"right"; background thread) on each press,
+        and `on_release` the same way on each release."""
 
     @abstractmethod
     def stop(self) -> None: ...

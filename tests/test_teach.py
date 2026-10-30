@@ -73,3 +73,23 @@ def test_stairs_label_from_a_hover_pair():
     x, y, w, h = find_label(before, after)
     assert abs(x - 477) <= 6 and abs(y - 289) <= 6 and 300 <= w <= 360 and h <= 30
     assert find_label(after, after) is None
+
+
+def test_held_button_takes_a_step_per_cast(tmp_path):
+    """Stephen holds the right button: one press, several teleports. Steps keep coming while it's held."""
+    import time
+
+    frames = [cv2.imread(str(FIX / f"automap_m{i}.png")) for i in range(4)]
+    rec = RouteRecorder(FakeCapture(frames[1:3]), AutomapOdometer(frames[0]), (100, 50), tmp_path,
+                        cursor=lambda: (100 + 940, 50 + 330))
+    clicks = FakeClicks()
+    clicks.start(rec.on_click, rec.on_release)
+    clicks.press(100 + 940, 50 + 330)
+    time.sleep(1.3)  # press step at 0.35 s, then one every HOLD_EVERY
+    clicks.release(100 + 940, 50 + 330)
+    time.sleep(0.5)
+    n = len(rec.steps)
+    steps = rec.finish()
+    assert 3 <= n <= 5 and len(steps) == n
+    assert "held" not in steps[0] and all(s.get("held") for s in steps[1:])
+    assert all(s["click"] == [940, 330] for s in steps)
