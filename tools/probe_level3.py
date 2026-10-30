@@ -23,7 +23,9 @@ from bot.durance import AutomapOdometer, StopGraph, ensure_automap, level_now, t
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.nav import hop  # noqa: E402
+from bot import state  # noqa: E402
 from bot.session import start_session  # noqa: E402
+from bot.town import set_players  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
@@ -78,6 +80,7 @@ def main() -> int:
     ap.add_argument("--hops", default="", help='"dx,dy dx,dy w2 ..." screen px per teleport; wN = wait N s')
     ap.add_argument("--watch", type=float, default=0, help="then stand and save a full frame per second")
     ap.add_argument("--scan", action="store_true", help="then hover a grid; save monster name bars")
+    ap.add_argument("--players", type=int, help="/players N on arrival in Durance 2 (LK batches reset theirs)")
     args = ap.parse_args()
     def token(h: str):
         if h.startswith("w"):
@@ -101,6 +104,11 @@ def main() -> int:
     log = []
     try:
         to_durance2(bot, say=print)
+        if args.players:
+            set_players(bot, args.players)
+            st = state.load()
+            st.pop("players_window", None)  # the next LK batch sets its own /players again
+            state.save(st)
         bot.sleep(2.0)
         odo = AutomapOdometer.load(auto2, ensure_automap(bot))
         to_level3(bot, odo, StopGraph.load(auto2 / "graph.json"), None, auto2)
