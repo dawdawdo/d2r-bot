@@ -335,6 +335,10 @@ SCAN_COVER = (430, 200)  # a scan covers about this much (world px) around where
 SCAN_ABORT = (10, 20)  # HP, MP points lost during a scan (Energy Shield drains MP first) -> stop scanning
 
 
+DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and the belt is often empty
+DURANCE_MANA = 60
+
+
 def to_durance2(bot, say=print) -> None:
     """New Hell game -> (heal at Ormus if hurt: life carries over between games) -> WP Durance 2."""
     from .controller import BotError
@@ -347,8 +351,12 @@ def to_durance2(bot, say=print) -> None:
     bot.wait_for("in_game", 10)
     recover_corpse(bot)
     act = spawn_act(bot)
-    if needs_heal(bot):
-        say(f"HP {bot.hp:.0f}% -> heal at Ormus, fresh game")
+    # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
+    hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
+    for attempt in range(2):  # Ormus wanders; the open-loop walk misses him now and then
+        if not hurt():
+            break
+        say(f"HP {bot.hp:.0f}% MP {bot.mp:.0f}% -> heal at Ormus, fresh game")
         if act == 4:
             restart_in_act3(bot)
         heal_at_ormus(bot)
@@ -356,8 +364,8 @@ def to_durance2(bot, say=print) -> None:
         create_game(bot, diff)
         bot.wait_for("in_game", 10)
         act = 3
-        if needs_heal(bot):  # Ormus not found: try again next game, don't go in hurt
-            raise BotError(f"still at HP {bot.hp:.0f}% after Ormus")
+    if hurt():  # don't go in hurt
+        raise BotError(f"still at HP {bot.hp:.0f}% MP {bot.mp:.0f}% after Ormus")
     if act == 4:
         act4_to(bot, "wp_durance_2", area=None)
     else:

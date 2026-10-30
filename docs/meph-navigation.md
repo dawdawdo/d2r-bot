@@ -42,3 +42,34 @@ differs), so `durance_level` compares both templates.
 Replay (`durance.to_level3`, live test `tools/goto_level3.py`): stop-graph path WP -> stop 79 with the
 automap fix, go to the stand spot, line up on the recorded stairs view (`view_offset`), click, confirm
 Level 3. Recorder TODO: log button releases and sample the cursor while a button is held.
+
+## 2026-10-29 night: stairs work live; Level 3 mapped roughly
+**Stairs (done).** The stand spot was where Stephen's *second* hold started (cursor at (984, 257)), not where
+he clicked the stairs. From the stand spot one teleport toward (984, 257) puts her on top of the dais
+against the arch, and hovering (636, 251) shows **"To The Durance of Hate Level 3"**. That label is drawn
+*below* the cursor on a dark box touching dark scenery, so the object-tooltip detector never saw it (that
+is also why the search found no exits at all). `vision.tooltip.find_label` diffs a parked-cursor frame
+against the hover frame instead. Live: 10.3 s WP -> Level 3, every game the town walk worked (8/8).
+The recorder now samples while the right button is held (`teach.HOLD_EVERY`).
+
+**Level 3 (probe tool `tools/probe_level3.py`, frames in `maps/blizzaga_hell/durance3_auto/probe/`).**
+Fresh-canvas automap odometry is useless here (few lines yet); fixed hop sequences from the arrival are
+repeatable instead (same landing every game so far).
+- Arrival -> 6 x teleport (-350, -60): the **dock** at the east edge of the blood moat. The red portal
+  (Hellgate) is visible across the moat to the left (it's there before the kill).
+- Dock -> (-430, +50): onto the **portal side**, next to the portal. Quiet: 20 s standing, HP steady.
+- Portal side -> (-300, -150): onto a round mosaic platform; **Mephisto** (boss bar "Mephisto / Demon")
+  comes from the upper left and *reaches her*: the portal side is his side, not an island.
+- Moat trick works from the dock: aggro him from the platform, teleport back (300, 150) then (430, -50):
+  he stops at the far moat edge, ~(-400, -120) px from her, and stays there.
+- **But she can't hold the dock**: his lightning reaches her there, and Council members (Wyand Voidbringer:
+  Mana Burn, Fire Enchanted; hydras) stand on the dock. Energy Shield goes from full to broken in ~3-5 s
+  every time (5 tries, all chickens, no death). Blizzards at his spot: MP was already 0.
+- Ormus heals now also require MP >= 60% (an ES that broke last game leaves her at MP 0) and HP >= 95%
+  (belt empty: life carries over), with 2 Ormus tries.
+
+**Decisions for Stephen (Level 3):**
+1. Record his own Meph kill once: `python tools/record_route.py --level 3` (bot takes her down the stairs,
+   then hands over; F10 when done). Shows the real moat spot and how he deals with the Council.
+2. `/players` for Meph games: 7 makes Meph (and the Council) much tankier; lower = faster kill, worse drops.
+3. Potions: the belt is empty and the policy is chest rejuvs only. Meph without potions is chicken-only.

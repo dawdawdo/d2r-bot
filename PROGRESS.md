@@ -1,6 +1,6 @@
 # Progress
 
-**Current milestone:** Phase 1 (LK) effectively done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
+**Current milestone:** Mephisto (branch `tasks`): WP -> Level 3 works; the kill needs Stephen (questions below). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
 **Works (live, 2026-10-27 ~05:10):**
 - `python -m bot.run --runs 20 --max-minutes 8 --mode chests` (conda env d2r): launch/recover → Hell game (Hell
@@ -39,14 +39,6 @@ Start / Stop after this run / Stop now, session stats, loot, recent runs. The bo
 they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone access: set `web.host: 0.0.0.0`
 (Windows firewall prompt once). Not yet used live.
 
-**Next step (exact):**
-1. No live runs while Stephen is on the PC.
-2. 100-run LK sign-off (with the Act 4 shortcut) -> tag v1.0. Started 2026-10-27 ~20:20.
-3. Next target (Stephen, 2026-10-27): **Dracul's Grasp via Hell Mephisto runs** (proposal accepted; research
-   in docs/loot.md). Build `bot/tasks/meph.py` on top of branch `tasks`: A3 WP -> Durance 2 -> learned route to
-   Level 3 stairs (fixed map) -> moat trick -> Static Field + Frozen Orb -> loot -> save & exit.
-   Ask: LK + Meph in one game, or Meph alone? Check Blizzaga's total MF on the character screen.
-
 **Mephisto (started 2026-10-27 22:30, v1.0 tagged before):** see docs/meph-navigation.md. Stephen chose
 **option 2 (bot searches alone)** on 2026-10-28. LK + Meph run in one game, each toggled (branch `tasks`).
 - `tools/find_durance.py --games 3 --hops 150` (resumes from `maps/blizzaga_hell/durance2_auto/`). Automap
@@ -54,15 +46,23 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
 - Fixed 2026-10-28 evening: firelight/lit floors polluted the canvas (blob filter); canvas = hits / views since
   first seen (a plain average hid newly revealed walls); `AM_CHAR` (640, 500) -> (640, 370) (frontier targets
   were ~1000 px too far south); scans stop when struck; heal at Ormus before exploring.
-- 2026-10-29: Stephen taught the route (`tools/record_route.py`). **Stairs found: (5804, 631) world, east of
-  the WP**; the search had been 140 px away (stop 79) but its tooltip scan missed them. Replay built
-  (`durance.to_level3`), tested offline only. Blizzaga was left on Level 3 after the recording (kill switch
-  tripped on save & exit): Stephen to save & exit by hand.
+- 2026-10-29 night: **WP -> Level 3 works live** (10.3 s, every game the town walk worked). The stand
+  spot is where Stephen's 2nd teleport hold started; one teleport toward his held cursor, hover (636, 251)
+  for "To The Durance of Hate Level 3" (`find_label`: frame diff), click. Recorder samples while held.
+- **Level 3 mapped roughly** (docs/meph-navigation.md, `tools/probe_level3.py`): 6 hops (-350, -60) = the
+  dock at the moat; Mephisto's side is across (portal side). Moat trick holds him at the far edge, but at
+  /players 7 his lightning + Council Mana Burn break ES in 3-5 s on the dock. 5 tries, all chickens.
 
-**Next step (exact):** when Stephen is off the PC: `python tools/goto_level3.py --games 3` (conda env d2r).
-Then Level 3: moat trick spot, Static Field + Frozen Orb, kill detection, loot, then wire into `bot/tasks/meph.py`.
+**Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
+Town walk: ~1 in 5 games tonight stalled at leg 1/5 near the temple stairs (NPC/merc in the gap) and
+failed at leg 5 (WP 500 px off, not matched). Costs one game; worth a look. A blue portal-like object
+by the temple steps (~(520, 90) when stuck) is NOT the WP (clicked: nothing).
 
-**Open questions for Stephen:** none right now.
+**Open questions for Stephen (Mephisto):**
+1. Play one Meph kill for the recorder: `python tools/record_route.py --level 3` (conda env d2r). The bot
+   takes Blizzaga down to Level 3 and hands over; teleport to your moat spot, kill him your way, F10.
+2. /players for Meph games (7 now: Meph + Council very tanky)?
+3. Potions for Meph: belt is empty, policy is chest rejuvs only. OK to buy some for Meph runs?
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
