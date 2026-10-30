@@ -412,8 +412,8 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
     found = 0
     k = 0
     hp0, mp0 = bot.hp or 100, bot.mp or 100
-    for y in range(80, 560, 90):
-        for x in range(110, 1180, 120):
+    for y in range(70, 560, 60):  # 120 x 90 missed the stairs once (2026-10-29)
+        for x in range(100, 1180, 80):
             k += 1
             if k % 6 == 0:
                 bot.check()
@@ -572,7 +572,12 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
 # His recording (2026-10-29): the stairs view (route view 001) places on the search canvas at
 # (5804, 631) world, resp 0.46 against every guess; he then clicked the stairs at (636, 251).
 # Stop 79 of the search graph is 140 px away, so the graph already knows the way.
-STAIRS = {"stand": (5804.0, 631.0), "click": (636, 251), "view": "views/001.jpg"}
+# He held the button, so one logged click stands for ~10 teleports per hold: the stand spot is where
+# the second hold started. From there, one teleport toward his held cursor (984, 257) puts her on top
+# of the dais, against the arch; (636, 251) then hovers "To The Durance of Hate Level 3" (found live
+# 2026-10-29 by tools/replay_hold.py; the label is drawn below the cursor, on a box that touches dark
+# scenery, hence vision.tooltip.find_label).
+STAIRS = {"stand": (5804.0, 631.0), "hop": (344, -73), "click": (636, 251), "view": "views/001.jpg"}
 
 
 def stairs_click(ref: np.ndarray, cur: np.ndarray, stairs: dict = STAIRS) -> tuple[int, int] | None:
@@ -584,29 +589,100 @@ def stairs_click(ref: np.ndarray, cur: np.ndarray, stairs: dict = STAIRS) -> tup
     return int(round(stairs["click"][0] - d[0])), int(round(stairs["click"][1] - d[1]))
 
 
+def find_stairs(bot, around: tuple[int, int] = (640, 330), radius: int = 620, step: int = 48,
+                folder: Path | None = None):
+    """Hover outward from `around` (nearest first) until a long tooltip (a level exit) shows.
+    Returns (screen point, tooltip crop) or None. The search tooltip scan used a 120 px grid,
+    too coarse for the stairs' hover area."""
+    from .vision.tooltip import find_tooltip
+
+    ax, ay = around
+    pts = [(x, y) for y in range(60, 560, step) for x in range(80, 1200, step)
+           if math.hypot(x - ax, y - ay) <= radius]
+    pts.sort(key=lambda p: math.hypot(p[0] - ax, p[1] - ay))
+    hp0, mp0 = bot.hp or 100, bot.mp or 100
+    try:
+        for k, (x, y) in enumerate(pts):
+            if k % 6 == 0:
+                bot.check()
+                if (bot.hp or 100) < hp0 - SCAN_ABORT[0] or (bot.mp or 100) < mp0 - SCAN_ABORT[1]:
+                    log.info("stairs scan stopped: struck (HP %.0f%% MP %.0f%%)", bot.hp, bot.mp)
+                    return None
+            bot.input.move(x, y)
+            bot.kill.sleep(0.08)
+            f = bot.capture.grab()
+            # anywhere in the play area: an exit's name is drawn over the exit, not above the cursor
+            box = find_tooltip(f, 640, 590, above=560, half_w=640, max_w=420, min_w=WARP_MIN_W)
+            if box is not None:
+                bx, by, bw, bh = box
+                log.info("stairs scan: long tooltip (%d px) at %s hovering (%d, %d) after %d hovers",
+                         bw, (bx, by), x, y, k + 1)
+                if folder is not None:
+                    cv2.imwrite(str(folder / "stairs_hover.jpg"), f, [cv2.IMWRITE_JPEG_QUALITY, 90])
+                return (x, y), f[by : by + bh, bx : bx + bw].copy()
+        log.info("stairs scan: no long tooltip in %d hovers", len(pts))
+        return None
+    finally:
+        bot.input.move(1270, 590)
+
+
+def level_now(bot) -> int | None:
+    """2 or 3 from the area name; opens the automap if it's closed (a new level has too few lines
+    for ensure_automap to tell)."""
+    lvl = durance_level(bot.capture.grab())
+    if lvl is None:
+        bot.press("tab")
+        bot.kill.sleep(0.4)
+        lvl = durance_level(bot.capture.grab())
+    return lvl
+
+
+def hover_label(bot, x: int, y: int, settle: float = 0.15):
+    """Park the cursor, then hover (x, y): the long label that shows up, or None."""
+    from .vision.tooltip import find_label
+
+    bot.input.move(1270, 590)
+    bot.kill.sleep(settle)
+    before = bot.capture.grab()
+    bot.input.move(x, y)
+    bot.kill.sleep(settle)
+    after = bot.capture.grab()
+    return find_label(before, after, min_w=WARP_MIN_W), before, after
+
+
 def to_level3(bot, odo: AutomapOdometer, g: StopGraph, ref: np.ndarray, folder: Path,
               stairs: dict = STAIRS, tries: int = 3) -> None:
-    """From the waypoint: follow the stop graph to the stairs, line up on the recorded view, click.
+    """From the waypoint: follow the stop graph to the stand spot, one teleport onto the dais, hover
+    the arch for its "Level 3" label (a few spots around if it doesn't show), click.
     Raises BotError if Level 3 doesn't show."""
     from .controller import BotError
-    from .nav import world_to_screen
+    from .nav import hop
 
     walker = Walker(bot, odo, g, folder, scan=False)
     goal = g.nearest(stairs["stand"], within=400)
     if goal is not None and not walker.travel(goal):
         log.info("stairs: graph path broke at stop %d; heading straight there", walker.cur)
+    cx, cy = stairs["click"]
+    spots = [(cx, cy)] + [(cx + dx, cy + dy) for dy in (-40, 0, 40) for dx in (-60, 0, 60) if dx or dy]
     for attempt in range(tries):
         walker.go(stairs["stand"], tol=120, max_hops=8)
-        f = bot.capture.grab()
-        pt = stairs_click(ref, f, stairs)
-        if pt is None:  # no view match: aim by the automap fix alone
-            pt = world_to_screen(odo, stairs["stand"][0] + stairs["click"][0] - 640,
-                                 stairs["stand"][1] + stairs["click"][1] - 330)
-        x, y = int(np.clip(pt[0], 60, 1220)), int(np.clip(pt[1], 40, 560))
-        log.info("stairs: click (%d, %d) from %s (try %d)", x, y, odo.pos.round().tolist(), attempt + 1)
-        bot.click(x, y)
+        hop(bot, odo, *stairs["hop"])
+        target = None
+        for x, y in spots:
+            box, _, after = hover_label(bot, x, y)
+            if box is not None:
+                target = (x, y)
+                log.info("stairs: label %s hovering (%d, %d)", box, x, y)
+                break
+        if target is None:
+            log.info("stairs: no label around (%d, %d) from %s (try %d); clicking blind",
+                     cx, cy, odo.pos.round().tolist(), attempt + 1)
+            bot.frame = after
+            bot.save_failure("stairs_no_label")
+            target = (cx, cy)
+        bot.click(*target)
         bot.sleep(2.5)
-        if durance_level(bot.capture.grab()) == 3:
+        if level_now(bot) == 3:
             log.info("on Durance of Hate Level 3")
             return
     bot.save_failure("stairs_missed")

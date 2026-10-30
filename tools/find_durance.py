@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.config import ROOT  # noqa: E402
 from bot.controller import BotError, Controller  # noqa: E402
-from bot.durance import AutomapOdometer, StopGraph, ensure_automap, explore_game, to_durance2  # noqa: E402
+from bot.durance import STAIRS, AutomapOdometer, StopGraph, Walker, ensure_automap, explore_game, to_durance2  # noqa: E402
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
@@ -29,6 +29,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--games", type=int, default=3)
     ap.add_argument("--hops", type=int, default=60)
+    ap.add_argument("--from-stairs", action="store_true",
+                    help="travel to the recorded stairs stand spot first, explore from there")
     ap.add_argument("--fresh", action="store_true", help="forget the stored search (map changed)")
     args = ap.parse_args()
 
@@ -58,6 +60,11 @@ def main() -> int:
                     g.save(folder / "graph.json")
 
                 bot.deadline = bot.clock() + 300
+                if args.from_stairs:
+                    goal = g.nearest(STAIRS["stand"], within=400)
+                    if goal is not None:
+                        Walker(bot, odo, g, folder, scan=False).travel(goal)
+                    print(f"game {n + 1}: at {odo.pos.round().tolist()}, exploring from here", flush=True)
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save)
             except BotError as e:
                 print(f"game {n + 1}: {e}", flush=True)

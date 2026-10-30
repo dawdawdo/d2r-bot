@@ -61,3 +61,15 @@ def test_stairs_view_places_east_on_the_search_canvas():
     odo = AutomapOdometer.load(folder)
     pos, resp = odo.localize(view_mask(cv2.imread(str(ROUTE / "001.jpg"))), (5000, 500))
     assert resp > 0.3 and abs(pos[0] - STAIRS["stand"][0]) < 60 and abs(pos[1] - STAIRS["stand"][1]) < 60
+
+
+def test_stairs_label_from_a_hover_pair():
+    """'To The Durance of Hate Level 3' shows below the cursor on a box touching dark scenery; the
+    frame diff finds it, and ignores chat lines and the top-right info that changed meanwhile."""
+    from bot.vision.tooltip import find_label
+
+    before = cv2.resize(cv2.imread(str(FIX / "stairs_before.jpg")), (1280, 720))
+    after = cv2.imread(str(FIX / "stairs_hover.png"))
+    x, y, w, h = find_label(before, after)
+    assert abs(x - 477) <= 6 and abs(y - 289) <= 6 and 300 <= w <= 360 and h <= 30
+    assert find_label(after, after) is None
