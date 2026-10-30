@@ -54,6 +54,9 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
   /players 7 his lightning + Council Mana Burn break ES in 3-5 s on the dock. 5 tries, all chickens.
 
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
+2026-10-29 23:44-23:54: LK 11/11 ok (~41 s). A 60-min background batch was killed by Claude Code's low-memory
+reaper at 23:54 (after run 2, on the way back to town; D2R left running in town). Not restarted: needs Stephen's OK
+(or start Claude Code with CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1).
 Town walk: ~1 in 5 games tonight stalled at leg 1/5 near the temple stairs (NPC/merc in the gap) and
 failed at leg 5 (WP 500 px off, not matched). Costs one game; worth a look. A blue portal-like object
 by the temple steps (~(520, 90) when stuck) is NOT the WP (clicked: nothing).
