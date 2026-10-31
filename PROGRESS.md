@@ -2,6 +2,11 @@
 
 **Current milestone:** Mephisto (branch `tasks`): WP -> Level 3 works; the kill needs Stephen (questions below). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
+**Charms (2026-10-31 17:10, Stephen):** filter rule "Show charms" (cm1–cm3, any rarity) installed with D2R
+closed and kept by the game; blue (magic) labels are picked; the stowaway hovers each item and sends blue-named
+ones (charms) to Blizzaga's personal tab. Tested live: a small charm Stephen had left in the inventory went to the
+personal tab, a Hel to the Runes tab. 59-run batch 12:39–13:42 (F12 by Stephen). New long batch from 17:13.
+
 **Works (live, 2026-10-27 ~05:10):**
 - `python -m bot.run --runs 20 --max-minutes 8 --mode chests` (conda env d2r): launch/recover → Hell game (Hell
   button checked before clicking) → `/players 7` once per D2R window → buffs → chained town walk (9.1 s) → stash
