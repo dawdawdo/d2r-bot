@@ -68,6 +68,11 @@ by the temple steps (~(520, 90) when stuck) is NOT the WP (clicked: nothing).
 (route.json + canvas committed, views/ local only). The recorder's save & exit tripped the kill switch again
 (it reset the raw input's mouse watch, not the guard's): fixed. Next: replay the route as the bot's Meph task.
 
+**Meph 2026-10-30 late:** Stephen: potions may be bought for Meph; loot by filter; he used merc-tank then
+moat trick (no Council clearing). AutoMapFade flipped to 2 (probably the bot's /players chat typed as
+hotkeys) -> reset to Center via Options. One moat-trick try chickened (return hops didn't cross back).
+Next: teach-and-repeat on his recorded views; make chat() verify the chat box. Details: docs/meph-navigation.md.
+
 **Open questions for Stephen (Mephisto):**
 2. /players for Meph games (7 now: Meph + Council very tanky)?
 3. Potions for Meph: belt is empty, policy is chest rejuvs only. OK to buy some for Meph runs?

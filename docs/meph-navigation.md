@@ -91,3 +91,23 @@ MP ran to empty several times: he waited for mana between volleys. Then (1040, -
    (ES broken -> drink/flee to the previous stop; life < 50% -> chicken).
 4. At the moat stand: Blizzard at his point until "The corruption begins to fade" (or the red portal
    label) shows. Then take the portal (ends in A4, as the act4 exit does). Loot across the water: later.
+
+**Correction from Stephen (2026-10-30 evening):** he did NOT clear the Council. First Blizzards: Mephisto
+came to the arrival area and his merc tanked. He teleported to keep the merc between them; after the merc
+died he finished Mephisto with the moat trick (lower bank, Meph stuck at the far edge up-right of her).
+"The corruption begins to fade" / "tremors" chat lines are Terror Zone notices: unrelated, ignore them.
+Potions may be bought for Meph runs. Loot: whatever passes the filter.
+
+**Live 2026-10-30 23:05-23:08 (/players 7):**
+- AutoMapFade had flipped 1 -> 2 ("Automap Opacity: Custom" 50%): lines nearly invisible, every probe
+  stopped with "automap won't show". Likely the bot's own `/players 7` chat line typed into the game
+  instead of the chat box (players_set.png shows no confirmation). Set back via Options -> Gameplay ->
+  Automap Opacity = Center (Settings.json AutoMapFade 1). TODO: `chat()` must confirm the chat box
+  opened before typing.
+- Dock (6 x (-350, -60)) reached again; the frame matches Stephen's view 84.
+- Moat trick from the probe sequence (-430,50) (-300,-150) w1 (300,150) (430,-50): the return hops did
+  NOT cross back; she ended on Mephisto's side and chickened (life 325 -> 312/635 with Meph + hydras on
+  her). Bot HP read lagged (87% shown while the orb said 51%).
+- Conclusion: fixed hop sequences are not repeatable enough here. Next approach: teach-and-repeat
+  against Stephen's recorded views (view_offset resp 0.5-0.8 between close frames), and a fresh look at
+  the HP read in Durance lighting.
