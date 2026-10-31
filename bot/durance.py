@@ -381,6 +381,7 @@ def ensure_automap(bot) -> np.ndarray:
             return f
         bot.press("tab")
         bot.kill.sleep(0.4)
+    bot.save_failure("automap_wont_show")
     raise BotError("automap won't show")
 
 
