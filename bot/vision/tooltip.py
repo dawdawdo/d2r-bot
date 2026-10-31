@@ -63,3 +63,13 @@ def find_label(before: np.ndarray, after: np.ndarray, min_w: int = 150,
         if dark > 0.3 and 0.03 < bright < 0.5 and (best is None or bw > best[2]):
             best = (int(rx + bx), int(ry + by), int(bw), int(bh))
     return best
+
+
+def name_kind(frame: np.ndarray, x: int, y: int, kinds: dict[str, dict]) -> str | None:
+    """Item tooltip above an inventory cell hovered at (x, y): the color kind of its topmost text line,
+    the item's name (unique rings: gold name above blue stat lines; magic charms: blue name)."""
+    from .labels import find_labels
+
+    x0, y0 = max(0, x - 300), max(0, y - 420)
+    labs = find_labels(frame[y0:y, x0 : x + 300], kinds, min_w=12)
+    return labs[0].kind if labs else None

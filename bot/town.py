@@ -582,15 +582,18 @@ def _log_loot(items: list[str]) -> None:
     log.info("stashed: %s", ", ".join(items))
 
 
-def _save_tooltip(bot: Controller, x: int, y: int) -> None:
-    """Hover an inventory item and keep its tooltip (logs/loot/<time>.png): names unique rings."""
+def _save_tooltip(bot: Controller, x: int, y: int) -> np.ndarray:
+    """Hover an inventory item and keep its tooltip (logs/loot/<time>.png): names unique rings.
+    Returns the frame."""
     import time
 
     bot.input.move(x, y)
     bot.kill.sleep(0.35)
     out = LOOT_CSV.parent / "loot"
     out.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(out / f"{time.strftime('%Y%m%d-%H%M%S')}_{x}_{y}.png"), bot.capture.grab()[:, 400:1280])
+    frame = bot.capture.grab()
+    cv2.imwrite(str(out / f"{time.strftime('%Y%m%d-%H%M%S')}_{x}_{y}.png"), frame[:, 400:1280])
+    return frame
 
 
 def count_keys(bot: Controller) -> int | None:
@@ -647,7 +650,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12.
     `stash=False` (no stash nearby, e.g. the A4 spawn): keys only; None if there's loot for the stash."""
     from . import state
-    from .vision.inventory import cell_center, runes_added
+    from .vision.inventory import cell_center, is_empty, runes_added
+    from .vision.tooltip import name_kind
 
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
@@ -664,19 +668,34 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             bot.input.move(640, 600)
             bot.kill.sleep(0.4)
             runes_before = bot.capture.grab()
-            bot.click(*scfg["shared_tab"])
-            bot.kill.sleep(0.4)
-            for c, r in inv["other"]:
-                _save_tooltip(bot, *cell_center(c, r))
+            colored = {k: v for k, v in bot.cfg["vision"]["labels"].items() if k != "white"}
+            tab = None
+            items = charms = 0
+            for i, (c, r) in enumerate(inv["other"]):
+                if i:  # a grand/large charm fills 2-3 cells: its other cells are empty once it's stashed
+                    bot.input.move(640, 600)
+                    bot.kill.sleep(0.15)
+                    if is_empty(bot.capture.grab(), c, r):
+                        continue
+                charm = name_kind(_save_tooltip(bot, *cell_center(c, r)), *cell_center(c, r),
+                                  colored) == "magic"
+                want = "personal_tab" if charm else "shared_tab"
+                if tab != want:
+                    bot.click(*scfg[want])
+                    bot.kill.sleep(0.4)
+                    tab = want
                 _ctrl_click(bot, *cell_center(c, r))
+                items += 1
+                charms += charm
             left = _scan_inventory(bot)["other"]
-            done["stashed"] = len(inv["other"]) - len(left)
+            done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
             bot.input.move(640, 600)
             bot.kill.sleep(0.4)
             runes = runes_added(runes_before, bot.capture.grab())
-            others = done["stashed"] - len(runes)
-            _log_loot([f"{n} Rune" for n in runes] + ["item to shared tab"] * max(0, others))
+            others = done["stashed"] - len(runes) - charms
+            _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
+                      + ["item to shared tab"] * max(0, others))
             done["runes"] = runes
             if left:
                 bot.save_failure("stowaway_left_items")

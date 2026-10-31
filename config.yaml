@@ -45,7 +45,8 @@ loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except Pul+ runes, unique rings and a few BiS
   # items (docs/loot.md); the bot then picks up visible labels of these colors.
   filter_name: "LK Bot"
-  pick: [rune, unique, set]    # set = green: Tal Rasha's Lidless Eye (the only set item the filter shows)
+  pick: [rune, unique, set, magic]  # set = green: Tal Rasha's Lidless Eye; magic = blue: charms (the only
+                                    # magic items the filter shows, Stephen 2026-10-31)
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
@@ -110,6 +111,7 @@ stash:
   max_potions: 16
   runes_tab: [370, 70]
   shared_tab: [145, 70]         # stowaway: unique rings go to shared page 1; runes auto-route to the Runes tab
+  personal_tab: [70, 70]        # stowaway: charms (blue tooltip name) go to Blizzaga's own page
 
 # Inventory (bot/vision/inventory.py). Stephen's own items stay put: [col, row, w, h] rectangles.
 # Recorded 2026-10-26: charms/tomes/cube fill cols 3-9, the skull and a small charm col 2 rows 2-3.
@@ -150,6 +152,7 @@ vision:
     unique: {lo: [15, 60, 120], hi: [28, 165, 255]}
     rune:   {lo: [12, 200, 180], hi: [24, 255, 255]}
     set:    {lo: [50, 150, 150], hi: [70, 255, 255]}
+    magic:  {lo: [116, 80, 170], hi: [124, 165, 255]}    # blue (255,136,136 BGR) in tooltips 2026-10-31: charms
     white:  {lo: [0, 0, 200], hi: [179, 30, 255]}        # gold, gems, normal items (testing only)
   label_ignore:                   # HUD (bottom bar + orbs), the clock (top right), life/mana text
     - [0, 595, 1280, 125]

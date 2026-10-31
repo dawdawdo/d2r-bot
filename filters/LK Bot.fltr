@@ -179,6 +179,17 @@
             ]
         },
         {
+            "name": "Show charms",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "itemCode": [
+                "cm1",
+                "cm2",
+                "cm3"
+            ]
+        },
+        {
             "name": "Show cube gems for rune upgrades",
             "enabled": false,
             "ruleType": "show",
