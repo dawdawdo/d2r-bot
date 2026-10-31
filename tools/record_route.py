@@ -87,8 +87,9 @@ def main() -> int:
               f"an automap fix) -> {folder}", flush=True)
         print("hands off the mouse: save & exit in 2 s", flush=True)
         bot.sleep(2.0)
-        if hasattr(b.input, "expected"):
-            b.input.expected = None  # he moved the mouse: that's not a grab (it tripped F12 on 2026-10-29)
+        # He moved the mouse: that's not a grab. The guard is bot.input, not b.input (the raw input),
+        # which is why this still tripped on 2026-10-29 and 2026-10-30.
+        bot.input.expected = None
         save_and_exit(bot)
     finally:
         clicks.stop()

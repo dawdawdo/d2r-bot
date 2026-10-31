@@ -63,9 +63,12 @@ Town walk: ~1 in 5 games tonight stalled at leg 1/5 near the temple stairs (NPC/
 failed at leg 5 (WP 500 px off, not matched). Costs one game; worth a look. A blue portal-like object
 by the temple steps (~(520, 90) when stuck) is NOT the WP (clicked: nothing).
 
+**Meph kill recorded (2026-10-30 22:26):** Stephen played Level 3 -> kill -> red portal to A4, 104 s, 247 steps
+(239 right, 8 left; 19 without an automap fix, mostly at the end) in `maps/blizzaga_hell/durance3_route/`
+(route.json + canvas committed, views/ local only). The recorder's save & exit tripped the kill switch again
+(it reset the raw input's mouse watch, not the guard's): fixed. Next: replay the route as the bot's Meph task.
+
 **Open questions for Stephen (Mephisto):**
-1. Play one Meph kill for the recorder: `python tools/record_route.py --level 3` (conda env d2r). The bot
-   takes Blizzaga down to Level 3 and hands over; teleport to your moat spot, kill him your way, F10.
 2. /players for Meph games (7 now: Meph + Council very tanky)?
 3. Potions for Meph: belt is empty, policy is chest rejuvs only. OK to buy some for Meph runs?
 
