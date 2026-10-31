@@ -73,3 +73,21 @@ repeatable instead (same landing every game so far).
    then hands over; F10 when done). Shows the real moat spot and how he deals with the Council.
 2. `/players` for Meph games: 7 makes Meph (and the Council) much tankier; lower = faster kill, worse drops.
 3. Potions: the belt is empty and the policy is chest rejuvs only. Meph without potions is chicken-only.
+
+**Stephen's recorded kill (2026-10-30 22:26, `maps/blizzaga_hell/durance3_route/`, /players 7 likely).**
+Blizzard (`d` on right-click; the recorder logs clicks, not hotkeys) from across the water. 104 s, no deaths.
+What he did differently from the probe: **he cleared the way first.** Long Blizzard stands on packs at
+three spots between the stairs and the moat (9-38 s, 41-52 s, 57-81 s on the timeline; the Council), then
+teleported in (odometry lost for 5 hops), stood at ~(985, -31) on the route canvas and blizzarded Mephisto
+across the water (cursor up-right of her, ~(1020, 65) screen; boss bar "Mephisto / Demon" at step 120).
+MP ran to empty several times: he waited for mana between volleys. Then (1040, -82), more Blizzard,
+"The corruption begins to fade" = dead, red portal right by her, clicked it -> Pandemonium Fortress.
+
+**Plan for the bot's Meph task (from the recording):**
+1. `to_level3` (works). Load the route canvas as the Level 3 odometer (better than a fresh one).
+2. Replay his stops in order (positions where the view moved), `Walker.go` per stop, no scans.
+3. At each of his Blizzard stands: cast Blizzard at his recorded screen points until no monster name
+   shows on a hover sweep, waiting for MP >= 40% between volleys; danger rules as in LK
+   (ES broken -> drink/flee to the previous stop; life < 50% -> chicken).
+4. At the moat stand: Blizzard at his point until "The corruption begins to fade" (or the red portal
+   label) shows. Then take the portal (ends in A4, as the act4 exit does). Loot across the water: later.
