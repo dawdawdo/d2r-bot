@@ -70,6 +70,14 @@ by the temple steps (~(520, 90) when stuck) is NOT the WP (clicked: nothing).
 (route.json + canvas committed, views/ local only). The recorder's save & exit tripped the kill switch again
 (it reset the raw input's mouse watch, not the guard's): fixed. Next: replay the route as the bot's Meph task.
 
+**Settings-proof (2026-10-31 noon, `bot/gamesettings.py`):** Stephen played and changed automap (Mini Map Right,
+AUTO opacity), the filter (his "Looting"), /players 3, and ended in Act 1. Each session the bot now: sets automap
+Full Screen + Center via Options (click, Apply, re-read Settings.json: the arrows wrap and Center only exists
+with Full Screen); selects the "LK Bot" filter via Esc -> Loot Filter (checks lootfilter.json); types /players
+only if Settings "Offline Difficulty Scaling" differs, and only after it sees the chat input line (keys typed
+without it are hotkeys); an Act 1 spawn walks to the A1 WP -> Kurast Docks -> new game. All tested live.
+Note for Stephen: after bot sessions his filter is "LK Bot" and automap Full Screen; switch back by hand.
+
 **Meph 2026-10-30 late:** Stephen: potions may be bought for Meph; loot by filter; he used merc-tank then
 moat trick (no Council clearing). AutoMapFade flipped to 2 (probably the bot's /players chat typed as
 hotkeys) -> reset to Center via Options. One moat-trick try chickened (return hops didn't cross back).

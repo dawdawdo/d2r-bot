@@ -285,27 +285,44 @@ def heal_at_ormus(bot: Controller) -> bool:
     return False
 
 
-def chat(bot: Controller, text: str) -> None:
-    """Type a chat line / command (Enter, text, Enter)."""
+def chat(bot: Controller, text: str) -> bool:
+    """Type a chat line / command (Enter, text, Enter). Types only once the chat input line shows:
+    keys sent without it are hotkeys (2026-10-30 that flipped the automap fade and changed skills)."""
+    from .gamesettings import chat_open
+
     names = {" ": "space", "/": "/"}
-    bot.press("enter")
-    bot.kill.sleep(0.3)
+    for _ in range(2):
+        if bot.observe() != "in_game":  # Enter on the Esc menu would press its highlighted button
+            bot.press("esc")
+            bot.kill.sleep(0.6)
+            continue
+        bot.press("enter")
+        bot.kill.sleep(0.4)
+        if chat_open(bot.capture.grab()):
+            break
+    else:
+        bot.save_failure("chat_not_open")
+        log.warning("chat didn't open; not typing %r", text)
+        return False
     for ch in text:
         bot.press(names.get(ch, ch))
         bot.kill.sleep(0.04)
     bot.press("enter")
     bot.kill.sleep(0.3)
+    return True
 
 
-def set_players(bot: Controller, n: int) -> None:
+def set_players(bot: Controller, n: int) -> bool:
     """/players N: monster difficulty of an N-player game (chest loot unaffected, per Stephen).
-    Holds until D2R exits, so once per bot session is enough."""
-    chat(bot, f"/players {n}")
+    D2R keeps it as a setting ("Offline Difficulty Scaling"), so the caller skips it when that matches."""
+    if not chat(bot, f"/players {n}"):
+        return False
     bot.kill.sleep(0.3)
     import cv2
 
     cv2.imwrite(str(bot.cfg["paths"]["raw_frames"] / "players_set.png"), bot.capture.grab())  # evidence
     log.info("set /players %d", n)
+    return True
 
 
 def buy_keys(bot: Controller, h: dict) -> int | None:
@@ -757,8 +774,33 @@ def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None,
 # Act 3: an Act 4 spawn that needs it takes the waypoint to Kurast Docks and starts a fresh game.
 
 def spawn_act(bot: Controller) -> int:
-    """4 if the Pandemonium Fortress waypoint is in view (it is from the A4 spawn), else 3."""
-    return 4 if find_a4_wp(bot) else 3
+    """4 if the Pandemonium Fortress waypoint is in view (it is from the A4 spawn), 1 if the Rogue
+    Encampment spawn view is (Stephen played and ended in Act 1, 2026-10-31), else 3."""
+    if find_a4_wp(bot):
+        return 4
+    return 1 if bot.find("a1_spawn.png", (120, 0, 560, 300), 0.75) else 3
+
+
+A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into view (fixed map, live 2026-10-31)
+
+
+def leave_act1(bot: Controller) -> None:
+    """A1 spawn -> waypoint to Kurast Docks -> save & exit -> new game (spawns in Act 3)."""
+    from .lifecycle import create_game, save_and_exit
+
+    log.info("spawned in Act 1: waypoint to Act 3")
+    bot.click(*A1_WALK)
+    bot.kill.sleep(2.5)
+    loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
+    if loc is None:
+        bot.save_failure("a1_wp_not_found")
+        raise BotError("Act 1 waypoint not visible")
+    bot.click(loc[0] + 62, loc[1] + 32)
+    bot.wait_for("wp_menu", 5)
+    wp_travel(bot, "wp_tab_act3", "wp_town")
+    save_and_exit(bot)
+    create_game(bot, bot.cfg["game"]["difficulty"])
+    bot.wait_for("in_game", 10)
 
 
 def find_a4_wp(bot: Controller) -> tuple[int, int] | None:

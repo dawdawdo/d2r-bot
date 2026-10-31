@@ -22,7 +22,8 @@ from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import control, state
-from .town import (belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
+from .gamesettings import ensure_loot_filter, ensure_options, players_setting
+from .town import (leave_act1, belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
                    repair_at_hratli, restart_in_act3, revive_merc, set_players, spawn_act, stowaway,
                    town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
@@ -39,12 +40,15 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     create_game(bot, cfg["game"]["difficulty"])
     if mode != "lifecycle":
         bot.wait_for("in_game", 10)
-        if players:
-            set_players(bot, players)
+        if players and set_players(bot, players):
             state.save({**state.load(), "players_window": bot.game_window_id})
+        ensure_loot_filter(bot)  # Stephen may have picked his own filter while playing
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
+        if bot.act == 1:  # Stephen's own game ended in Act 1
+            leave_act1(bot)
+            bot.act = spawn_act(bot)
         log.info("spawn: act %d, HP %.0f%% MP %.0f%%", bot.act, bot.hp or 0, bot.mp or 0)
         if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
             stow = stowaway(bot, stash=False) is None
@@ -169,6 +173,13 @@ def main() -> int:
     # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
     bot.game_window_id = getattr(backend.window, "hwnd", None)
     players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
+    if players_setting(cfg) == cfg["game"].get("players"):
+        players_due = False  # D2R keeps /players as a setting: no typing needed
+    try:
+        ensure_main_menu(bot)
+        ensure_options(bot)  # automap as the bot needs it, whatever Stephen set while playing
+    except BotError as e:
+        log.warning("game options not checked: %s", e)
     corpse = state.load().get("corpse", True)  # persisted: a session that ended clean has none
     stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
