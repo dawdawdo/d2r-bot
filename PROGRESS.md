@@ -54,8 +54,8 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
   /players 7 his lightning + Council Mana Burn break ES in 3-5 s on the dock. 5 tries, all chickens.
 
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
-2026-10-30 23:08-00:51 (Stephen away, foreground 8-min batches): LK ~110 runs, 2 chickens, ~44-55 s.
-Stashed **Pul** and **Gul**.
+2026-10-30 23:08 - 10-31 03:18 (Stephen away, foreground 8-min batches): LK ~308/313 ok, 5 chickens, ~47 s.
+Stashed Pul x2, **Gul x2**, Ist, **Mal**.
 2026-10-30 16:39-17:45 (supervised, foreground 8-min batches): LK 84/85 ok (1 chicken at HP 24%), ~43 s typical.
 Stashed **Sur** and **Gul**. Ended by Stephen's F12 in a fresh game (A4 town); D2R left open.
 2026-10-29 23:44-23:54: LK 11/11 ok (~41 s). A 60-min background batch was killed by Claude Code's low-memory
