@@ -300,11 +300,17 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     """Keys while below a full stack; rejuvs always: into the belt while it has an empty slot, else into the
     inventory and on to the stash (Materials tab), where restocks take them from. Stephen: sustain from chest
     drops, no buying (2026-10-26); the stash supply should grow (2026-10-31: picks ~= drinks, ~16 per 100 runs,
-    so leaving spares on the ground meant no reserve)."""
+    so leaving spares on the ground meant no reserve). A stash stack holds 99."""
     if word == "key":
         left = getattr(bot, "keys_left", None)  # a pickup can be a whole stack: wait until we're low
         return left is None or left < bot.cfg["town"].get("keys_pick_below", bot.cfg["town"]["keys_full"])
-    return word == "rejuv"
+    if word != "rejuv":
+        return False
+    from . import state
+    from .vision.orbs import belt_slots
+
+    # spares only while the stash stack has room (99 max; logs/state.json, set by the stowaway)
+    return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) or not state.load().get("rejuv_stash_full")
 
 
 def loot(bot: Controller, max_picks: int = 10) -> list[str]:

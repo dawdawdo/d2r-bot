@@ -540,6 +540,8 @@ def restock_belt(bot: Controller) -> int:
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("restocked belt with %d potions", moved)
+    if moved > 0:
+        state.save({**state.load(), "rejuv_stash_full": False})  # room in the stack again
     if moved <= 0 and not slots:  # every stash potion slot came up empty
         state.save({**state.load(), "stash_rejuvs_empty": True})
         log.warning("stash is out of rejuvs; skipping restocks until logs/state.json says otherwise")
@@ -567,6 +569,15 @@ def _scan_inventory(bot: Controller) -> dict:
 
 
 LOOT_CSV = ROOT / "logs" / "loot.csv"
+REJUV_SCORE = 0.8  # label_rejuv.png ("Rejuvenation") in stash tooltips: 1.00 on rejuvs, <= 0.45 on runes/charms
+
+
+def _is_rejuv(bot: Controller, frame: np.ndarray, x: int, y: int) -> bool:
+    tpl = bot._templates.get("label_rejuv.png")
+    if tpl is None:
+        tpl = bot._templates["label_rejuv.png"] = cv2.imread(str(ASSETS / "label_rejuv.png"))
+    crop = frame[max(0, y - 420) : y, max(0, x - 300) : x + 300]
+    return float(cv2.matchTemplate(crop, tpl, cv2.TM_CCOEFF_NORMED).max()) >= REJUV_SCORE
 
 
 def _log_loot(items: list[str]) -> None:
@@ -671,14 +682,17 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             colored = {k: v for k, v in bot.cfg["vision"]["labels"].items() if k != "white"}
             tab = None
             items = charms = 0
+            rejuv_cells = set()
             for i, (c, r) in enumerate(inv["other"]):
                 if i:  # a grand/large charm fills 2-3 cells: its other cells are empty once it's stashed
                     bot.input.move(640, 600)
                     bot.kill.sleep(0.15)
                     if is_empty(bot.capture.grab(), c, r):
                         continue
-                charm = name_kind(_save_tooltip(bot, *cell_center(c, r)), *cell_center(c, r),
-                                  colored) == "magic"
+                tip = _save_tooltip(bot, *cell_center(c, r))
+                charm = name_kind(tip, *cell_center(c, r), colored) == "magic"
+                if _is_rejuv(bot, tip, *cell_center(c, r)):
+                    rejuv_cells.add((c, r))
                 want = "personal_tab" if charm else "shared_tab"
                 if tab != want:
                     bot.click(*scfg[want])
@@ -693,15 +707,34 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             bot.input.move(640, 600)
             bot.kill.sleep(0.4)
             runes = runes_added(runes_before, bot.capture.grab())
-            others = done["stashed"] - len(runes) - charms
+            stuck = [cell for cell in left if cell in rejuv_cells]  # their Materials stack is at 99
+            rejuvs = len(rejuv_cells) - len(stuck)
+            others = done["stashed"] - len(runes) - charms - rejuvs
             _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
-                      + ["item to stash (shared tab; rejuvs: Materials)"] * max(0, others))
+                      + ["Rejuvenation Potion to Materials tab"] * rejuvs + ["item to shared tab"] * max(0, others))
             done["runes"] = runes
+            left = [cell for cell in left if cell not in rejuv_cells]
             if left:
                 bot.save_failure("stowaway_left_items")
                 log.warning("stowaway: %d item(s) stayed in the inventory (stash page full?): %s", len(left), left)
             bot.press("esc")
             bot.kill.sleep(0.4)
+            if rejuv_cells:
+                # a stash stack holds 99 (Stephen 2026-10-31): once full, stop picking spares until a restock
+                # takes some out, and drop the ones that didn't fit
+                st = {**state.load(), "rejuv_stash_full": bool(stuck)}
+                if rejuvs:
+                    st.pop("stash_rejuvs_empty", None)  # restocks can take from the stash again
+                state.save(st)
+            if stuck:
+                log.info("stowaway: rejuv stack full (99); dropping %d spare rejuv(s), no spares until a restock",
+                         len(stuck))
+                bot.press(bot.cfg["hotkeys"]["inventory"])
+                bot.kill.sleep(0.35)
+                for cell in stuck:
+                    _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
+                bot.press(bot.cfg["hotkeys"]["inventory"])
+                bot.kill.sleep(0.2)
     keys = inv["key"]
     st = state.load()
     if len(keys) > 1:

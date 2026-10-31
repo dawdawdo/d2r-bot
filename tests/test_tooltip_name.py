@@ -29,3 +29,16 @@ def test_rejuv_tooltip_is_not_a_charm():
     colored = {k: v for k, v in labels.items() if k != "white"}
     frame = cv2.copyMakeBorder(cv2.imread(str(FIX / "tt_full_rejuv_884_405.png")), 0, 0, 400, 0, cv2.BORDER_CONSTANT)
     assert name_kind(frame, 884, 405, colored) != "magic"
+
+
+def test_rejuv_tooltip_found_by_word():
+    """Spare rejuvs are told apart in the stash loop (their Materials stack caps at 99)."""
+    from types import SimpleNamespace
+
+    from bot.town import _is_rejuv
+
+    bot = SimpleNamespace(_templates={})
+    pad = lambda n: cv2.copyMakeBorder(cv2.imread(str(FIX / n)), 0, 0, 400, 0, cv2.BORDER_CONSTANT)  # noqa: E731
+    assert _is_rejuv(bot, pad("tt_full_rejuv_884_405.png"), 884, 405)
+    assert not _is_rejuv(bot, pad("tt_small_charm_922_480.png"), 922, 480)
+    assert not _is_rejuv(bot, pad("tt_hel_rune_960_367.png"), 960, 367)
