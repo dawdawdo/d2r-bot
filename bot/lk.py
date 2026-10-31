@@ -297,22 +297,21 @@ def ensure_labels_on(bot: Controller) -> None:
 
 
 def _want_supply(bot: Controller, word: str | None) -> bool:
-    """Keys while below a full stack; rejuvs while the belt has an empty slot (picked potions
-    go straight to the belt then). Stephen: sustain from chest drops, no buying (2026-10-26)."""
-    from .vision.orbs import belt_slots
-
+    """Keys while below a full stack; rejuvs always: into the belt while it has an empty slot, else into the
+    inventory and on to the stash (Materials tab), where restocks take them from. Stephen: sustain from chest
+    drops, no buying (2026-10-26); the stash supply should grow (2026-10-31: picks ~= drinks, ~16 per 100 runs,
+    so leaving spares on the ground meant no reserve)."""
     if word == "key":
         left = getattr(bot, "keys_left", None)  # a pickup can be a whole stack: wait until we're low
         return left is None or left < bot.cfg["town"].get("keys_pick_below", bot.cfg["town"]["keys_full"])
-    if word == "rejuv":
-        return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"]))
-    return False
+    return word == "rejuv"
 
 
 def loot(bot: Controller, max_picks: int = 10) -> list[str]:
     """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
     (white labels, told apart from gold by their first word). Returns what was picked."""
     from .vision.labels import white_word
+    from .vision.orbs import belt_slots
 
     ensure_labels_on(bot)
     labels_cfg = bot.cfg["vision"]["labels"]
@@ -353,6 +352,8 @@ def loot(bot: Controller, max_picks: int = 10) -> list[str]:
         tried[cell] = tried.get(cell, 0) + 1
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
+        if what == "rejuv" and all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
+            what = "rejuv_spare"  # belt full: it goes to the inventory, so stash it after this run
         if what == "key" and getattr(bot, "keys_left", None) is not None:
             bot.keys_left += 1
         picked.append(what)

@@ -695,7 +695,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             runes = runes_added(runes_before, bot.capture.grab())
             others = done["stashed"] - len(runes) - charms
             _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
-                      + ["item to shared tab"] * max(0, others))
+                      + ["item to stash (shared tab; rejuvs: Materials)"] * max(0, others))
             done["runes"] = runes
             if left:
                 bot.save_failure("stowaway_left_items")
