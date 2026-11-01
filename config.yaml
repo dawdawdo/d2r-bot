@@ -8,6 +8,7 @@ game:
   character: Blizzaga
   route: blizzaga_hell                      # maps/<route>/route.yaml
   players: 7                                # /players N once per session (monsters weaker, chest loot same)
+  meph_players: 1                           # /players before Level 3 (Stephen 2026-11-01); LK stays at players
   act4_exit: true                           # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
 
 paths:

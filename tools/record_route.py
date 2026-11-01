@@ -2,6 +2,7 @@
 
   python tools/record_route.py             # Level 2: waypoint -> Level 3 stairs
   python tools/record_route.py --level 3   # Level 3: stairs arrival -> his Mephisto spot -> the kill
+  python tools/record_route.py --level 3 --players 1   # same, /players 1 typed on arrival
 
 The bot makes a Hell game and takes the waypoint to Durance of Hate Level 2 with the automap on (with
 --level 3 it then takes its learned route down the stairs), then hands over: Stephen plays as he
@@ -28,6 +29,7 @@ from bot.io import open_backend, open_clicks  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
 from bot.teach import RouteRecorder  # noqa: E402
+from bot.town import set_players  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 TASKS = {2: "teleport to the Level 3 stairs and click them",
@@ -37,6 +39,7 @@ TASKS = {2: "teleport to the Level 3 stairs and click them",
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", type=int, default=2, choices=(2, 3))
+    ap.add_argument("--players", type=int, default=None, help="/players N before handing over (Meph: 1)")
     args = ap.parse_args()
 
     s = start_session()  # backs up saves
@@ -63,6 +66,8 @@ def main() -> int:
             bot.sleep(1.5)
             if level_now(bot) != 3:
                 raise SystemExit("not on Level 3")
+            if args.players and not set_players(bot, args.players):
+                print(f"!!! /players {args.players} not confirmed: type it yourself in chat", flush=True)
             odo = AutomapOdometer(bot.capture.grab())  # a fresh canvas: Level 3 starts here
         bot.guard(False)  # Stephen plays: no potions or chickens from the bot
         x, y, _, _ = b.window.client_rect()

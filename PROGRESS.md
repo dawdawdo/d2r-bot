@@ -97,7 +97,8 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
 
 **Open questions for Stephen (Mephisto):**
 2. /players for Meph games (7 now: Meph + Council very tanky)?
-3. Potions for Meph: belt is empty, policy is chest rejuvs only. OK to buy some for Meph runs?
+(3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
+4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
