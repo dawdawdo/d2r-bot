@@ -42,3 +42,18 @@ def test_rejuv_tooltip_found_by_word():
     assert _is_rejuv(bot, pad("tt_full_rejuv_884_405.png"), 884, 405)
     assert not _is_rejuv(bot, pad("tt_small_charm_922_480.png"), 922, 480)
     assert not _is_rejuv(bot, pad("tt_hel_rune_960_367.png"), 960, 367)
+
+
+def test_charm_word_in_tooltips_and_labels():
+    """Blue isn't enough (a magic Amulet showed, "Eligible for Chronicle"): the word "Charm" decides."""
+    from bot.town import _is_charm
+    from bot.vision.labels import Label, is_charm
+
+    pad = lambda n: cv2.copyMakeBorder(cv2.imread(str(FIX / n)), 0, 0, 400, 0, cv2.BORDER_CONSTANT)  # noqa: E731
+    assert _is_charm(pad("tt_small_charm_922_480.png"), 922, 480)
+    assert not _is_charm(pad("tt_hel_rune_960_367.png"), 960, 367)
+    assert not _is_charm(pad("tt_full_rejuv_884_405.png"), 884, 405)
+    # ground label: same font as the tooltip name ("Small Charm" box from the tooltip; the Amulet as picked)
+    assert is_charm(pad("tt_small_charm_922_480.png"), Label("magic", 858, 368, 133, 14))
+    amulet = cv2.imread(str(FIX.parent / "loot" / "magic_amulet_label_423_260_79_13.png"))
+    assert not is_charm(amulet, Label("magic", 423, 260, 79, 13))

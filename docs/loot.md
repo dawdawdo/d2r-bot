@@ -7,7 +7,7 @@
 
 ## What the filter shows (installed 2026-10-27 with D2R closed; previous copy in backups/filter-*)
 
-Chosen with Stephen for Mephisto runs (Hell, /players 7, 0 MF, Silospen dropcalc D2R_ROW_3_0, per Mephisto kill):
+Chosen with Stephen for Mephisto runs (Hell, /players 7, computed with 0 MF; Stephen 2026-10-31: Blizzaga actually has a lot of MF, so real odds are better, Silospen dropcalc D2R_ROW_3_0, per Mephisto kill):
 Dracul's 1:2211, Arachnid Mesh 1:2199, Lidless Eye 1:1455, Andariel's Visage 1:3049, Gheed's 1:7101,
 Mara's 1:7709, Rainbow Facet 1:8115, SoJ / BK 1:15,470. Mephisto can't drop Death's Fathom, Griffon's Eye,
 Crown of Ages or Tal Rasha's armor (Baal / level-85 zones): add their codes if we ever farm there.
@@ -20,7 +20,7 @@ To verify on the next D2R start: the game accepts rules that combine itemCode wi
 | Show BiS uniques (added 2026-10-27, Stephen) | unique `uvg` Dracul's Grasp, `ulc` Arachnid Mesh, `usk` Andariel's Visage, `amu` amulets (Mara's, Highlord's, Atma's), `jew` Rainbow Facet, `cm3` Gheed's Fortune |
 | Show Tal Rasha Lidless Eye | set `oba` |
 | Show rejuvenation potions and keys | rvs, rvl, key (picked only when the belt / key stack needs them). The game drops this rule when it rewrites the file (seen twice); harmless, nothing hides them |
-| Show charms (added 2026-10-31, Stephen) | cm1 cm2 cm3, any rarity. Blue (magic) labels are picked; the stowaway hovers each item and sends blue-named ones (charms) to Blizzaga's personal tab, the rest to shared page 1 |
+| Show charms (added 2026-10-31, Stephen) | cm1 cm2 cm3, any rarity. Blue labels are picked only if they say "Charm" (`word_charm.png`); the stowaway sends items whose tooltip says "Charm" to Blizzaga's personal tab, the rest to shared page 1. 2026-10-31: "Eligible for Chronicle" items get past the hide rules (a magic Amulet, a unique Large Axe), so color alone isn't enough |
 | Hidden | all gear, El–Amn (r01–r13), gold, potions, scrolls, ammo, gems, skulls |
 
 Picked items are stashed by the stowaway at the stash stop; stashed runes are logged by name in

@@ -113,3 +113,26 @@ def white_word(frame: np.ndarray, lab: Label, min_score: float = 0.75) -> str | 
         if cv2.minMaxLoc(cv2.matchTemplate(gray, t, cv2.TM_CCOEFF_NORMED))[1] >= min_score:
             return word
     return None
+
+
+CHARM_SCORE = 0.8  # word_charm.png: 1.00 on "Small Charm"; <= 0.31 on an "Amulet" label, <= 0.65 on rune/rejuv tooltips
+
+
+def has_word(gray: np.ndarray, fname: str, min_score: float = CHARM_SCORE) -> bool:
+    """`fname` (a word cut from a tooltip; ground labels use the same font) appears in this grayscale crop."""
+    from .screen import ASSETS
+
+    t = _words.get(fname)
+    if t is None:
+        t = _words[fname] = cv2.imread(str(ASSETS / fname), cv2.IMREAD_GRAYSCALE)
+    if gray.shape[0] < t.shape[0] or gray.shape[1] < t.shape[1]:
+        return False
+    return cv2.minMaxLoc(cv2.matchTemplate(gray, t, cv2.TM_CCOEFF_NORMED))[1] >= min_score
+
+
+def is_charm(frame: np.ndarray, lab: Label) -> bool:
+    """A blue label that says "... Charm". Other magic items show too ("Eligible for Chronicle" items get past
+    the filter's hide rules: a magic Amulet 2026-10-31), so the color alone isn't enough."""
+    y0, x0 = max(0, lab.y - 4), max(0, lab.x - 4)
+    return has_word(cv2.cvtColor(frame[y0 : lab.y + lab.h + 4, x0 : lab.x + lab.w + 4], cv2.COLOR_BGR2GRAY),
+                    "word_charm.png")

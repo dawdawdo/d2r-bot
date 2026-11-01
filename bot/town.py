@@ -572,6 +572,14 @@ LOOT_CSV = ROOT / "logs" / "loot.csv"
 REJUV_SCORE = 0.8  # label_rejuv.png ("Rejuvenation") in stash tooltips: 1.00 on rejuvs, <= 0.45 on runes/charms
 
 
+def _is_charm(frame: np.ndarray, x: int, y: int) -> bool:
+    """The tooltip says "... Charm" (name or base type line: Gheed's Fortune goes with the charms too)."""
+    from .vision.labels import has_word
+
+    crop = frame[max(0, y - 420) : y, max(0, x - 300) : x + 300]
+    return has_word(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), "word_charm.png")
+
+
 def _is_rejuv(bot: Controller, frame: np.ndarray, x: int, y: int) -> bool:
     tpl = bot._templates.get("label_rejuv.png")
     if tpl is None:
@@ -662,7 +670,6 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     `stash=False` (no stash nearby, e.g. the A4 spawn): keys only; None if there's loot for the stash."""
     from . import state
     from .vision.inventory import cell_center, is_empty, runes_added
-    from .vision.tooltip import name_kind
 
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
@@ -679,7 +686,6 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             bot.input.move(640, 600)
             bot.kill.sleep(0.4)
             runes_before = bot.capture.grab()
-            colored = {k: v for k, v in bot.cfg["vision"]["labels"].items() if k != "white"}
             tab = None
             items = charms = 0
             rejuv_cells = set()
@@ -690,7 +696,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                     if is_empty(bot.capture.grab(), c, r):
                         continue
                 tip = _save_tooltip(bot, *cell_center(c, r))
-                charm = name_kind(tip, *cell_center(c, r), colored) == "magic"
+                charm = _is_charm(tip, *cell_center(c, r))
                 if _is_rejuv(bot, tip, *cell_center(c, r)):
                     rejuv_cells.add((c, r))
                 want = "personal_tab" if charm else "shared_tab"

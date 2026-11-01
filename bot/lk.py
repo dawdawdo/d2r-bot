@@ -316,7 +316,7 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
 def loot(bot: Controller, max_picks: int = 10) -> list[str]:
     """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
     (white labels, told apart from gold by their first word). Returns what was picked."""
-    from .vision.labels import white_word
+    from .vision.labels import is_charm, white_word
     from .vision.orbs import belt_slots
 
     ensure_labels_on(bot)
@@ -341,6 +341,10 @@ def loot(bot: Controller, max_picks: int = 10) -> list[str]:
                 what = white_word(bot.frame, lab)
                 if what not in supplies or not _want_supply(bot, what):
                     continue
+            elif lab.kind == "magic":
+                if not is_charm(bot.frame, lab):
+                    continue
+                what = "charm"
             if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2:
                 continue  # still there after two clicks: can't pick it up (full, or not an item)
             found.append((what, lab))
