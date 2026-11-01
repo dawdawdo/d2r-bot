@@ -345,8 +345,13 @@ def to_durance2(bot, say=print) -> None:
     from .lifecycle import create_game, ensure_main_menu, save_and_exit
     from .town import act4_to, heal_at_ormus, needs_heal, recover_corpse, restart_in_act3, spawn_act, town_to_wp
 
+    from .gamesettings import ensure_options
+
     diff = bot.cfg["game"]["difficulty"]
     ensure_main_menu(bot)
+    # Full Screen automap + Center opacity: the odometer reads automap lines (2026-11-01 the opacity
+    # was Custom 50% after a recording and every probe stopped with "automap won't show")
+    ensure_options(bot)
     create_game(bot, diff)
     bot.wait_for("in_game", 10)
     recover_corpse(bot)
