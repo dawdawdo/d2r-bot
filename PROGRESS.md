@@ -65,6 +65,10 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
   dock at the moat; Mephisto's side is across (portal side). Moat trick holds him at the far edge, but at
   /players 7 his lightning + Council Mana Burn break ES in 3-5 s on the dock. 5 tries, all chickens.
 
+**Meph 2026-11-01 (Stephen: /players 1, 2nd recording):** dock reached, moat crossing by view works, name bar
+reads Mephisto's life. Blocked by Wyand Voidbringer's Mana Burn on the dock (4/4 chickens). Options in
+docs/meph-navigation.md -> Stephen picks.
+
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
 2026-10-30 23:08 - 10-31 09:50 (ended by Stephen's F12; Stephen away, foreground 8-min batches): LK 772/780 ok (7 chickens, 1 cut by my command timeout), ~47 s.
 Stashed Pul x2, **Gul x2**, Ist, **Mal x2**, **Vex**, **Ohm**.
@@ -101,6 +105,8 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
 **Open questions for Stephen (Mephisto):**
 (2. /players for Meph: 1, Stephen 2026-11-01; config `game.meph_players`.)
 (3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
+5. Meph vs Wyand's Mana Burn: (A) buy mana potions at Ormus for Meph runs, (B) stand at Stephen's final
+   safe spot instead of the dock, (C) both. Recommendation: C.
 4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.

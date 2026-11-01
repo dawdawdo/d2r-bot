@@ -34,24 +34,27 @@ NAME_BAR = (440, 0, 400, 60)  # a hovered monster's name and life bar, top centr
 
 
 def scan_names(bot, out: Path, step: int = 70) -> None:
-    """Hover a grid; where the top-centre name bar changes, save it with the point."""
-    x0, y0, w, h = NAME_BAR
-    bot.input.move(1270, 590)
-    bot.kill.sleep(0.2)
-    base = cv2.cvtColor(bot.capture.grab()[y0 : y0 + h, x0 : x0 + w], cv2.COLOR_BGR2GRAY)
-    n = 0
+    """Hover a grid; save the frame (and what name_bar reads) wherever a name bar shows, plus every
+    25th hover as a control."""
+    from bot.vision.namebar import name_bar
+
+    n = k = 0
     for y in range(60, 560, step):
         for x in range(80, 1200, step):
             bot.check()
             bot.input.move(x, y)
-            bot.kill.sleep(0.07)
+            bot.kill.sleep(0.12)
             f = bot.capture.grab()
-            bar = f[y0 : y0 + h, x0 : x0 + w]
-            if (cv2.absdiff(cv2.cvtColor(bar, cv2.COLOR_BGR2GRAY), base) > 40).mean() > 0.03:
-                cv2.imwrite(str(out / f"name_{x}_{y}.png"), bar)
-                n += 1
+            nb = name_bar(f)
+            k += 1
+            if nb is not None or k % 25 == 0:
+                tag = "hit" if nb else "ctl"
+                cv2.imwrite(str(out / f"scan_{tag}_{x}_{y}.jpg"), f)
+                if nb:
+                    n += 1
+                    print(f"name bar at ({x}, {y}): {nb}", flush=True)
     bot.input.move(1270, 590)
-    print(f"name scan: {n} hovers showed a name bar", flush=True)
+    print(f"name scan: {n} of {k} hovers showed a name bar", flush=True)
 
 
 SPELLS = {"b": "blizzard", "o": "frozen_orb", "s": "static_field"}
@@ -79,7 +82,7 @@ def cast(bot, kind: str, x: int, y: int, n: int, out: Path, i: int) -> None:
 WORLD_PER_PX = 1.1  # odometer world px per screen px of a teleport (Level 3 hops, 2026-11-01)
 
 
-def back_to(bot, ref, max_hops: int = 5, tol: float = 70, min_resp: float = 0.2) -> bool:
+def back_to(bot, ref, max_hops: int = 5, tol: float = 90, min_resp: float = 0.15) -> bool:
     """Teleport until this view matches `ref` (the spot remembered with R): view_offset says how far
     she is from it; hop the other way. True once within `tol` world px."""
     from bot.durance import view_offset
@@ -106,11 +109,9 @@ CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around he
 
 
 def names_near(bot, radius: int = 330, n: int = 20) -> list[tuple[int, int]]:
-    """Hover a ring + inner ring around her; the points where a monster name bar shows."""
-    x0, y0, w, h = NAME_BAR
-    bot.input.move(1270, 590)
-    bot.kill.sleep(0.15)
-    base = cv2.cvtColor(bot.capture.grab()[y0 : y0 + h, x0 : x0 + w], cv2.COLOR_BGR2GRAY)
+    """Hover a ring + inner ring around her; the points where a monster's name bar shows."""
+    from bot.vision.namebar import name_bar
+
     hits = []
     for r, k in ((radius, n), (radius // 2, n // 2)):
         for j in range(k):
@@ -120,12 +121,136 @@ def names_near(bot, radius: int = 330, n: int = 20) -> list[tuple[int, int]]:
                 continue
             bot.check()
             bot.input.move(x, y)
-            bot.kill.sleep(0.06)
-            bar = cv2.cvtColor(bot.capture.grab()[y0 : y0 + h, x0 : x0 + w], cv2.COLOR_BGR2GRAY)
-            if (cv2.absdiff(bar, base) > 40).mean() > 0.03:
+            bot.kill.sleep(0.07)
+            if name_bar(bot.capture.grab()) is not None:
                 hits.append((x, y))
     bot.input.move(1270, 590)
     return hits
+
+
+MEPH_GRID = [(x, y) for y in range(70, 430, 60) for x in range(80, 960, 80)]  # wide: where he stands is unknown yet
+# Council hunt: top band first (Wyand Voidbringer, Mana Burn, stands up-right of the dock), then the rest
+HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200, 90)],
+                   key=lambda p: (p[1] > 200, abs(p[0] - 760)))
+
+
+def first_name(bot, pts, dwell: float = 0.06):
+    """Hover pts in order; the first (point, bar) where a name bar shows."""
+    from bot.vision.namebar import name_bar
+
+    for x, y in pts:
+        bot.check()
+        bot.input.move(x, y)
+        bot.kill.sleep(dwell)
+        nb = name_bar(bot.capture.grab())
+        if nb is not None:
+            return (x, y), nb
+    return None
+
+
+def hunt_here(bot, ref, out: Path, i: int, limit: float = 60, min_mp: float = 30) -> bool:
+    """Kill what's near the spot: find a name bar, Blizzard it until its bar is gone, again, until a full
+    scan finds none (True). Mephisto is left alone (the moat trick handles him)."""
+    from bot.durance import view_offset
+    from bot.vision.namebar import name_bar
+
+    sk = bot.cfg["hotkeys"]["skills"]
+    t0, rnd = time.time(), 0
+    try:
+        while time.time() - t0 < limit:
+            off, resp = view_offset(ref, bot.capture.grab())
+            if resp < 0.1 or float(np.hypot(*off)) > 150:
+                print(f"hunt: off the spot ({off.round().tolist()}, resp {resp:.2f}) -> back", flush=True)
+                if not back_to(bot, ref):
+                    raise BotError("pushed off the spot")
+            if (bot.mp or 0) < min_mp:
+                bot.sleep(0.3)
+                continue
+            rnd += 1
+            hit = first_name(bot, HUNT_GRID)
+            if hit is None:
+                print(f"hunt round {rnd}: no names HP {bot.hp} MP {bot.mp}", flush=True)
+                bot.input.move(1270, 590)
+                return True
+            (x, y), nb = hit
+            if nb["mephisto"]:
+                print(f"hunt round {rnd}: Mephisto at ({x}, {y}) life {nb['life']:.2f}: leaving him", flush=True)
+                bot.input.move(1270, 590)
+                return True
+            bot.press(sk["blizzard"])
+            for k in range(3):
+                bot.click(x, y, "right", hover=0)
+                bot.sleep(0.5)
+            bot.press(sk["teleport"])
+            now = name_bar(bot.capture.grab())
+            print(f"hunt round {rnd}: name at ({x}, {y}) life {nb['life']:.2f} -> "
+                  f"{'gone' if now is None else round(now['life'], 2)} HP {bot.hp} MP {bot.mp}", flush=True)
+            if rnd % 2 == 1:
+                cv2.imwrite(str(out / f"{i:02d}_hunt{rnd:02d}.jpg"), cv2.resize(bot.capture.grab(), (640, 360)))
+    finally:
+        bot.press(sk["teleport"])
+    return False
+
+
+def find_meph(bot, last=None) -> tuple[tuple[int, int], float] | None:
+    """Hover his last spot, then a grid over the left half: (point, life) where Mephisto's bar shows."""
+    from bot.vision.namebar import name_bar
+
+    pts = ([last] + [(last[0] + dx, last[1] + dy) for dx, dy in ((-50, 0), (50, 0), (0, -40), (0, 40))]
+           if last else []) + MEPH_GRID
+    for x, y in pts:
+        bot.check()
+        bot.input.move(x, y)
+        bot.kill.sleep(0.1)
+        nb = name_bar(bot.capture.grab())
+        if nb and nb["mephisto"]:
+            return (x, y), nb["life"]
+    return None
+
+
+def kill_meph(bot, ref, out: Path, i: int, limit: float = 120, min_mp: float = 40) -> bool:
+    """Blizzard Mephisto from here until his bar has been low and he can't be found (True)."""
+    from bot.durance import view_offset
+    from bot.vision.namebar import name_bar
+
+    sk = bot.cfg["hotkeys"]["skills"]
+    t0, last, low, misses, rnd = time.time(), None, 1.0, 0, 0
+    try:
+        while time.time() - t0 < limit:
+            # first the spot: "teleport when struck" (her gear) throws her around, mid-wait too
+            off, resp = view_offset(ref, bot.capture.grab())
+            if resp < 0.1 or float(np.hypot(*off)) > 150:  # resp 0.12-0.3 on the dock itself
+                print(f"kill: off the spot ({off.round().tolist()}, resp {resp:.2f}) -> back", flush=True)
+                if not back_to(bot, ref):
+                    raise BotError("pushed off the spot")
+            if (bot.mp or 0) < min_mp:
+                bot.sleep(0.3)
+                continue
+            rnd += 1
+            cv2.imwrite(str(out / f"{i:02d}_round{rnd:02d}.jpg"), cv2.resize(bot.capture.grab(), (640, 360)))
+            found = find_meph(bot, last)
+            if found is None:
+                misses += 1
+                print(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})", flush=True)
+                if low < 0.3 and misses >= 2:
+                    return True
+                bot.sleep(0.8)
+                continue
+            misses, (last, life) = 0, found
+            low = min(low, life)
+            bot.press(sk["blizzard"])
+            for k in range(3):
+                bot.click(*last, "right", hover=0)
+                bot.sleep(0.5)
+                nb = name_bar(bot.capture.grab())
+                if nb and nb["mephisto"]:
+                    low = min(low, nb["life"])
+            bot.press(sk["teleport"])
+            print(f"kill round {rnd}: Mephisto at {last} life {life:.2f} (low {low:.2f}) HP {bot.hp} MP {bot.mp}",
+                  flush=True)
+    finally:
+        bot.press(sk["teleport"])
+    return False
 
 
 def clear_here(bot, out: Path, i: int, limit: float = 45, min_mp: float = 50) -> bool:
@@ -162,11 +287,12 @@ def main() -> int:
     ap.add_argument("--watch", type=float, default=0, help="then stand and save a full frame per second")
     ap.add_argument("--scan", action="store_true", help="then hover a grid; save monster name bars")
     ap.add_argument("--players", type=int, help="/players N on arrival in Durance 2 (LK batches reset theirs)")
+    ap.add_argument("--es-hp", type=float, help="shield-broken chicken below this life %% (config: 75; 0 = off)")
     args = ap.parse_args()
     def token(h: str):
         if h.startswith("w"):
             return float(h[1:])
-        if h in ("R", "D", "C"):  # R: remember this spot; D: teleport back to it by the view
+        if h in ("R", "D", "C", "M", "H"):  # R: remember this spot; D: teleport back to it by the view
             return h
         if h[0] in "bos":  # b/o/s x,y,n: n Blizzards / Frozen Orbs / Static Fields at screen (x, y)
             return (h[0],) + tuple(int(v) for v in h[1:].split(","))
@@ -176,6 +302,8 @@ def main() -> int:
 
     s = start_session()  # backs up saves
     cfg = s.cfg
+    if args.es_hp is not None:
+        cfg["safety"]["es_broken_hp_pct"] = args.es_hp
     maps = ROOT / "maps" / cfg["game"]["route"]
     auto2, auto3 = maps / "durance2_auto", maps / "durance3_auto"
     out = auto3 / "probe" / time.strftime("%H%M%S")
@@ -210,6 +338,13 @@ def main() -> int:
             if h == "R":
                 ref = bot.capture.grab()
                 cv2.imwrite(str(out / f"{i:02d}_ref.png"), ref)
+                continue
+            if h == "H":
+                print(f"hunt: {hunt_here(bot, ref, out, i)}", flush=True)
+                continue
+            if h == "M":
+                print(f"kill: {kill_meph(bot, ref, out, i)}", flush=True)
+                cv2.imwrite(str(out / f"{i:02d}_after_kill.jpg"), cv2.resize(bot.capture.grab(), (640, 360)))
                 continue
             if h == "C":
                 print(f"clear: {clear_here(bot, out, i)}", flush=True)

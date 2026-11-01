@@ -111,3 +111,18 @@ Potions may be bought for Meph runs. Loot: whatever passes the filter.
 - Conclusion: fixed hop sequences are not repeatable enough here. Next approach: teach-and-repeat
   against Stephen's recorded views (view_offset resp 0.5-0.8 between close frames), and a fresh look at
   the HP read in Durance lighting.
+
+**Live 2026-11-01 17:24-17:54 (/players 1, Stephen's choice; ~10 probes, `tools/probe_level3.py`):**
+- /players 1 is a big change: standing on the dock 10 s cost no life (at 7 the shield broke in 3-5 s).
+- **Return across the moat by view works**: `R` remembers the dock frame, `D` teleports back using
+  `view_offset` against it (3-4 hops, ends 7-50 px off; resp 0.12-0.3 on the dock). Fixed return hops did not.
+- **Name bar** (`bot/vision/namebar.py`, template `name_mephisto.png`): box at the top centre, red as far as
+  the hovered monster's life goes. Mephisto vs Bremm / Council Member / Blood Lord told apart; his life
+  tracked 0.96 -> 0.15 over Stephen's first kill. Live hover works (Wyand Voidbringer seen).
+- **Blocker: Wyand Voidbringer** (Council, always Mana Burn + Teleportation; other mods random per game)
+  stands up-right of the dock and reaches her within ~10 s, with fire hydras beside her. Mana Burn empties
+  mana = no shield, no teleport, no Blizzard; then life falls to the 50% chicken. 4 of 4 dock fights lost
+  this way, also with 8 pre-emptive Blizzards at his approach (800, 160) and the shield chicken off (`--es-hp 0`).
+- Her belt was empty all session (no potions to answer the burn). Her "teleport when struck" gear throws
+  her off the dock when hit; the kill loop re-checks the spot before waiting for mana.
+- Not seen yet: whether Blizzards from the dock reach Mephisto (never got that far with mana left).
