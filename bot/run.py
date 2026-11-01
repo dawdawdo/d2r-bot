@@ -30,6 +30,8 @@ from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
 RUNS_CSV = ROOT / "runs.csv"
+MERC_RETRY_RUNS = 10  # after a failed revive, try again this many runs later
+MERC_MAX_FAILS = 3    # ... until this many in a row failed (no gold?)
 FIELDS = ["start", "duration_s", "result", "chests", "picked", "error", "task"]
 
 
@@ -50,15 +52,24 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             leave_act1(bot)
             bot.act = spawn_act(bot)
         log.info("spawn: act %d, HP %.0f%% MP %.0f%%", bot.act, bot.hp or 0, bot.mp or 0)
+        if not bot.merc_revive and getattr(bot, "merc_fails", 0) < MERC_MAX_FAILS:
+            bot.merc_wait = getattr(bot, "merc_wait", 0) - 1
+            bot.merc_revive = bot.merc_wait <= 0
         if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
             stow = stowaway(bot, stash=False) is None
         if bot.act == 4 and (stow or repair or buy_keys or needs_heal(bot) or belt_needs_restock(bot)
-                             or (bot.merc_revive and not merc_alive(bot))):
+                             or (bot.merc_revive and not merc_alive(bot)) or state.load().get("gold_needed")):
             restart_in_act3(bot)  # stash and vendors are all in Act 3
             bot.act = 3
         if mode == "chests" and bot.merc_revive and not merc_alive(bot):
             log.info("merc is dead -> Asheara")
-            bot.merc_revive = revive_merc(bot)  # failed (no gold?) -> don't retry every run
+            if revive_merc(bot):
+                bot.merc_fails = 0
+            else:  # not found / no gold: retry after MERC_RETRY_RUNS (2026-11-01 one miss at 21:55 left her
+                # without a merc all night: chickens 1% -> 11%, 2 deaths); give up after MERC_MAX_FAILS in a row
+                bot.merc_fails = getattr(bot, "merc_fails", 0) + 1
+                bot.merc_revive = False
+                bot.merc_wait = MERC_RETRY_RUNS
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
             bot.wait_for("in_game", 10)

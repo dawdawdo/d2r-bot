@@ -434,8 +434,12 @@ def revive_merc(bot: Controller) -> bool:
             log.info("merc resurrected at Asheara")
             return True
         bot.save_failure("merc_not_resurrected")
-        log.warning("merc still dead after Resurrect (not enough gold?)")
+        log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
+        from . import state
+
+        state.save({**state.load(), "gold_needed": True})
         return False
+    bot.observe()  # the failure frame should show where the search ended, not the game's first frame
     bot.save_failure("asheara_not_found")
     log.warning("Asheara not found; merc not revived")
     return False
@@ -481,6 +485,34 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
     bot.save_failure("stash_not_opened")
     log.warning("stash didn't open; skipping restock")
     return False
+
+
+def withdraw_gold(bot: Controller) -> bool:
+    """After a revive failed for gold (logs/state.json gold_needed): take `stash.withdraw_gold` from the shared
+    stash's gold (Stephen keeps it there, 2026-11-01). True if done."""
+    from . import state
+
+    if not state.load().get("gold_needed") or not open_stash(bot):
+        return False
+    scfg = bot.cfg["stash"]
+    bot.click(*scfg["shared_tab"])
+    bot.kill.sleep(0.4)
+    bot.click(*scfg["gold_button"])
+    bot.kill.sleep(0.8)
+    for _ in range(8):  # the box opens with the most she can carry; clear it
+        bot.press("backspace")
+        bot.kill.sleep(0.05)
+    for ch in str(scfg["withdraw_gold"]):
+        bot.press(ch)
+        bot.kill.sleep(0.05)
+    bot.kill.sleep(0.3)
+    bot.click(*scfg["withdraw_ok"])
+    bot.kill.sleep(0.6)
+    bot.press("esc")
+    bot.kill.sleep(0.4)
+    state.save({**state.load(), "gold_needed": False})
+    log.info("withdrew %d gold from the shared stash", scfg["withdraw_gold"])
+    return True
 
 
 def belt_needs_restock(bot: Controller) -> bool:
@@ -819,6 +851,8 @@ def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None,
     if gave_up is not None:  # roughly where that leg would have ended; fix_route_end corrects the rest
         walk_route(bot, tcfg["route"][gave_up:] if tcfg.get("route_disp") else tcfg["route"])
     restock_belt(bot)
+    if withdraw_gold(bot):
+        bot.merc_wait, bot.merc_fails = 0, 0  # revive on the next run
     if stow:
         stowaway(bot)
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it

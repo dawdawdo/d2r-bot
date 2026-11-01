@@ -7,6 +7,13 @@ closed and kept by the game; blue (magic) labels are picked; the stowaway hovers
 ones (charms) to Blizzaga's personal tab. Tested live: a small charm Stephen had left in the inventory went to the
 personal tab, a Hel to the Runes tab. 59-run batch 12:39–13:42 (F12 by Stephen). New long batch from 17:13.
 
+**Merc + gold (2026-11-01):** overnight 23:08-08:51: 720 runs, 641 ok, 77 chickens, 2 deaths: the merc died at
+21:55 and a failed revive disabled revives for the session (Blizzaga carried ~0 gold, her stash ~18k, revive 50k;
+Stephen keeps gold in the shared stash, ~8.8M). Now: failed revive -> retry every 10 runs (max 3 in a row); "not
+enough gold" -> withdraw 200k from the shared stash at the next stash stop, then revive. Live: withdraw + revive ok.
+Runes 18:46-08:51 (~1020 runs): Sur x2, Ohm, Gul x2, Ist, Mal, Um, Pul. Rejuv spares ran out overnight (picks 272
+vs drinks 258 without the merc). Shared stash has 5 pages (overflow could use them).
+
 **Works (live, 2026-10-27 ~05:10):**
 - `python -m bot.run --runs 20 --max-minutes 8 --mode chests` (conda env d2r): launch/recover → Hell game (Hell
   button checked before clicking) → `/players 7` once per D2R window → buffs → chained town walk (9.1 s) → stash

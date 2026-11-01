@@ -111,6 +111,9 @@ stash:
   max_potions: 16
   runes_tab: [370, 70]
   shared_tab: [145, 70]         # stowaway: unique rings go to shared page 1; runes auto-route to the Runes tab
+  gold_button: [167, 533]       # shared tab: the gold amount under the grid opens "Withdraw" (live 2026-11-01)
+  withdraw_ok: [577, 387]
+  withdraw_gold: 200000         # Blizzaga carries ~0 and her own stash ~18k; a merc revive costs 50k
   personal_tab: [70, 70]        # stowaway: charms (blue tooltip name) go to Blizzaga's own page
 
 # Inventory (bot/vision/inventory.py). Stephen's own items stay put: [col, row, w, h] rectangles.
