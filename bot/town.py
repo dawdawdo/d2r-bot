@@ -708,6 +708,15 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 items += 1
                 charms += charm
             left = _scan_inventory(bot)["other"]
+            spill = [cell for cell in left if cell not in rejuv_cells]
+            if spill:  # that tab is full: try the other one (Stephen clears both between sessions, 2026-10-31)
+                other = "shared_tab" if tab == "personal_tab" else "personal_tab"
+                log.info("stowaway: %d item(s) didn't fit; trying the %s", len(spill), other.replace("_", " "))
+                bot.click(*scfg[other])
+                bot.kill.sleep(0.4)
+                for cell in spill:
+                    _ctrl_click(bot, *cell_center(*cell))
+                left = _scan_inventory(bot)["other"]
             done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
             bot.input.move(640, 600)
