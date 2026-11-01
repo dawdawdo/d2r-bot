@@ -339,11 +339,13 @@ DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and 
 DURANCE_MANA = 60
 
 
-def to_durance2(bot, say=print) -> None:
-    """New Hell game -> (heal at Ormus if hurt: life carries over between games) -> WP Durance 2."""
+def to_durance2(bot, say=print, buy_mana: bool = False) -> None:
+    """New Hell game -> (heal at Ormus if hurt: life carries over between games; with buy_mana also
+    fill the belt with his mana potions, which heals too) -> WP Durance 2."""
     from .controller import BotError
     from .lifecycle import create_game, ensure_main_menu, save_and_exit
-    from .town import act4_to, heal_at_ormus, needs_heal, recover_corpse, restart_in_act3, spawn_act, town_to_wp
+    from .town import (act4_to, belt_full, buy_mana_at_ormus, heal_at_ormus, merc_alive, needs_heal,
+                       recover_corpse, restart_in_act3, revive_merc, spawn_act, town_to_wp)
 
     from .gamesettings import ensure_options
 
@@ -358,13 +360,26 @@ def to_durance2(bot, say=print) -> None:
     act = spawn_act(bot)
     # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
     hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
-    for attempt in range(2):  # Ormus wanders; the open-loop walk misses him now and then
-        if not hurt():
-            break
-        say(f"HP {bot.hp:.0f}% MP {bot.mp:.0f}% -> heal at Ormus, fresh game")
+    if buy_mana and not merc_alive(bot):  # Meph: the merc is a second target for his lightning
+        say("merc dead -> Asheara, fresh game")
         if act == 4:
             restart_in_act3(bot)
-        heal_at_ormus(bot)
+        revive_merc(bot)
+        save_and_exit(bot)
+        create_game(bot, diff)
+        bot.wait_for("in_game", 10)
+        act = 3
+    shop = lambda: buy_mana and not belt_full(bot)  # noqa: E731
+    for attempt in range(2):  # Ormus wanders; the open-loop walk misses him now and then
+        if not hurt() and not shop():
+            break
+        say(f"HP {bot.hp:.0f}% MP {bot.mp:.0f}% belt full {belt_full(bot)} -> Ormus, fresh game")
+        if act == 4:
+            restart_in_act3(bot)
+        if buy_mana:
+            buy_mana_at_ormus(bot)
+        else:
+            heal_at_ormus(bot)
         save_and_exit(bot)
         create_game(bot, diff)
         bot.wait_for("in_game", 10)

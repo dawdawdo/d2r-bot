@@ -79,6 +79,9 @@ town:
   heal_below_pct: 70             # at spawn: below this, detour to Ormus, then start a fresh game
   ormus_after_leg: 4             # Ormus wanders the plaza visible after the first 4 route legs
   ormus_region: [300, 40, 860, 480]
+  ormus:                         # Meph runs: buy mana potions (trade window opens on Misc)
+    trade_offset: [37, 55]       # "Trade" relative to the npc_ormus.png match (dialog line 2; live 2026-11-01)
+    mana_potion: [395, 376]      # Misc tab, right column, bottom: his best mana potion
   repair_every: 60               # backstop: repair at Hratli at least this often (Stephen: armor ran low)
   repair_after_wear: 20           # runs between the first wear seen and the repair
   durability_every: 10           # check every equipped item's durability (tooltips) this often; repair if any is

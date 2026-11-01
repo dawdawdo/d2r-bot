@@ -285,6 +285,57 @@ def heal_at_ormus(bot: Controller) -> bool:
     return False
 
 
+def belt_full(bot: Controller) -> bool:
+    from .vision.orbs import belt_slots
+
+    return all(belt_slots(bot.capture.grab(), bot.cfg["vision"]["belt"]))
+
+
+def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
+    """Meph runs only (Stephen 2026-10-30: potions may be bought for Meph; LK stays chest rejuvs only).
+    Walk to Ormus, Trade (opens on Misc), shift+right-click his best mana potion (bottom of the right
+    column) until the 4 visible belt slots hold a potion. Mana = Energy Shield: answers Wyand's Mana Burn.
+    Leaves her near Ormus: the caller starts a new game. True if the belt reads full."""
+    tcfg = bot.cfg["town"]
+    o = tcfg["ormus"]
+    walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]])
+    for attempt, (x, y) in enumerate(_tooltip_points(bot, tcfg["ormus_region"])):
+        if attempt >= 5:
+            break
+        bot.click(x, y)
+        bot.kill.sleep(2.0)
+        loc = bot.find("npc_ormus.png", region=(0, 0, 1280, 500), threshold=0.8)
+        if loc is None:
+            bot.press("esc")
+            bot.kill.sleep(0.3)
+            continue
+        bot.click(loc[0] + o["trade_offset"][0], loc[1] + o["trade_offset"][1])
+        bot.kill.sleep(1.5)
+        if bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is None:
+            bot.save_failure("ormus_trade_not_opened")
+            bot.press("esc")
+            return False
+        ok = belt_full(bot)
+        for i in range(max_clicks):
+            if ok:
+                break
+            bot.input.key_down("shift")
+            bot.kill.sleep(0.05)
+            bot.click(*o["mana_potion"], "right")
+            bot.kill.sleep(0.05)
+            bot.input.key_up("shift")
+            bot.kill.sleep(0.5)
+            ok = belt_full(bot)
+        bot.press("esc")
+        bot.kill.sleep(0.5)
+        log.info("Ormus: mana potions bought, belt %s", "full" if ok else "NOT full")
+        if not ok:
+            bot.save_failure("belt_not_full_after_buying")
+        return ok
+    bot.save_failure("ormus_not_found")
+    return False
+
+
 def chat(bot: Controller, text: str) -> bool:
     """Type a chat line / command (Enter, text, Enter). Types only once the chat input line shows:
     keys sent without it are hotkeys (2026-10-30 that flipped the automap fade and changed skills)."""

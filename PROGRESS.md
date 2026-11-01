@@ -66,8 +66,9 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
   /players 7 his lightning + Council Mana Burn break ES in 3-5 s on the dock. 5 tries, all chickens.
 
 **Meph 2026-11-01 (Stephen: /players 1, 2nd recording):** dock reached, moat crossing by view works, name bar
-reads Mephisto's life. Blocked by Wyand Voidbringer's Mana Burn on the dock (4/4 chickens). Options in
-docs/meph-navigation.md -> Stephen picks.
+reads Mephisto's life. Wyand blocked the dock (4/4); Stephen picked C. Now: mana potions bought at Ormus, merc revived, his safe
+spot reached by view, Mephisto found and Blizzarded to 29% once, but his lightning reaches the spot and
+waking him works 2 of 5. Details + next steps: docs/meph-navigation.md (2026-11-01 17:58-18:24).
 
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
 2026-10-30 23:08 - 10-31 09:50 (ended by Stephen's F12; Stephen away, foreground 8-min batches): LK 772/780 ok (7 chickens, 1 cut by my command timeout), ~47 s.
@@ -105,8 +106,7 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
 **Open questions for Stephen (Mephisto):**
 (2. /players for Meph: 1, Stephen 2026-11-01; config `game.meph_players`.)
 (3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
-5. Meph vs Wyand's Mana Burn: (A) buy mana potions at Ormus for Meph runs, (B) stand at Stephen's final
-   safe spot instead of the dock, (C) both. Recommendation: C.
+(5. Meph vs Wyand: C chosen 2026-11-01, built.)
 4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.

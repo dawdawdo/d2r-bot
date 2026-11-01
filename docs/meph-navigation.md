@@ -126,3 +126,24 @@ Potions may be bought for Meph runs. Loot: whatever passes the filter.
 - Her belt was empty all session (no potions to answer the burn). Her "teleport when struck" gear throws
   her off the dock when hit; the kill loop re-checks the spot before waiting for mana.
 - Not seen yet: whether Blizzards from the dock reach Mephisto (never got that far with mana left).
+
+**Live 2026-11-01 17:58-18:24 (Stephen chose C: mana potions + his safe spot):**
+- `buy_mana_at_ormus` (bot/town.py): Ormus -> Trade (opens on Misc) -> shift+right-click his best mana potion
+  (395, 376) until the 4 belt slots show potions. Works live. `to_durance2(buy_mana=True)` also revives a dead
+  merc at Asheara first. With mana potions the guard must not drink on low life (`potion_hp_pct` 0): it
+  emptied 16 potions at 67% life once.
+- **Stephen's safe spot** = his view 206 (`L206` in the probe), ~(-800, +230) world px from the dock. Path:
+  dock -> 2 x (-364, +105) -> match view 206 (resp 0.32-0.41, ends < 10 px off). Wyand never reached her
+  there; 2+ minutes at 100% when Mephisto was asleep.
+- **Waking him is unreliable**: dock -> his platform (-430,50) (-300,-150), wait, back (view match; fallback
+  now reverses the hops since R) -> safe spot. He came 2 of 5 times. Blizzards at his platform from the safe
+  spot didn't wake him.
+- **When he comes**: he stands at the moat edge, top centre from the spot ((640-720, 20) on screen); the
+  name-bar search finds him and Blizzard there takes him 100% -> 29% in ~12 s, 100% -> 62% in one round.
+- **But his lightning reaches the spot**: one burst 520 -> 42 life in < 2 s (no chicken in between; the
+  "orb empty" check got her out). Hit and run (3 casts, teleport (120, 260) away, 1.5 s, back by view) still
+  chickened at 43% (merc was dead then). Stephen had his merc alive in the recording.
+
+**Next (bot side):** retry with the merc alive (revive now automatic) and hit-and-run; if his lightning
+still lands, try 2 casts per volley and a longer retreat; make the wake reliable (longer platform stay, or
+cast at him on the platform before leaving).

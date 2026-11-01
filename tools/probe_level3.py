@@ -82,6 +82,9 @@ def cast(bot, kind: str, x: int, y: int, n: int, out: Path, i: int) -> None:
 WORLD_PER_PX = 1.1  # odometer world px per screen px of a teleport (Level 3 hops, 2026-11-01)
 
 
+SINCE_REF: list = []  # screen-px hops made since the spot was remembered (R): reversed when the view is no help
+
+
 def back_to(bot, ref, max_hops: int = 5, tol: float = 90, min_resp: float = 0.15) -> bool:
     """Teleport until this view matches `ref` (the spot remembered with R): view_offset says how far
     she is from it; hop the other way. True once within `tol` world px."""
@@ -95,8 +98,12 @@ def back_to(bot, ref, max_hops: int = 5, tol: float = 90, min_resp: float = 0.15
             return True
         if k == max_hops:
             break
-        if resp < 0.08:  # no idea where she is: hop toward the far side of the moat as recorded
-            dx, dy = 430, -50
+        if resp < 0.08:  # the view is no help: undo the hops made since R (one hop's worth at a time)
+            back = -np.sum(SINCE_REF, axis=0) if SINCE_REF else np.array([430.0, -50.0])
+            n = max(1, int(np.ceil(np.hypot(*back) / 420)))
+            dx, dy = back / n
+            if SINCE_REF:
+                SINCE_REF.append((dx, dy))  # count it, so the rest of the way stays right
         else:
             scale = min(1.0, 450 / max(dist / WORLD_PER_PX, 1))
             dx, dy = -off[0] / WORLD_PER_PX * scale, -off[1] / WORLD_PER_PX * scale
@@ -128,7 +135,8 @@ def names_near(bot, radius: int = 330, n: int = 20) -> list[tuple[int, int]]:
     return hits
 
 
-MEPH_GRID = [(x, y) for y in range(70, 430, 60) for x in range(80, 960, 80)]  # wide: where he stands is unknown yet
+MEPH_GRID = sorted([(x, y) for y in range(20, 430, 55) for x in range(80, 1200, 80)],
+                   key=lambda p: (p[0] - 720) ** 2 + 4 * (p[1] - 50) ** 2)  # his moat-edge spot first (top centre)
 # Council hunt: top band first (Wyand Voidbringer, Mana Burn, stands up-right of the dock), then the rest
 HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200, 90)],
                    key=lambda p: (p[1] > 200, abs(p[0] - 760)))
@@ -208,7 +216,12 @@ def find_meph(bot, last=None) -> tuple[tuple[int, int], float] | None:
     return None
 
 
-def kill_meph(bot, ref, out: Path, i: int, limit: float = 120, min_mp: float = 40) -> bool:
+WAKE = [(720, 30), (560, 40), (880, 40)]
+RETREAT = (120, 260)  # screen px: down-right, away from his moat-edge spot (top centre)
+RETREAT_WAIT = 1.5
+
+
+def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 40) -> bool:
     """Blizzard Mephisto from here until his bar has been low and he can't be found (True)."""
     from bot.durance import view_offset
     from bot.vision.namebar import name_bar
@@ -234,6 +247,20 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 120, min_mp: float = 4
                 print(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})", flush=True)
                 if low < 0.3 and misses >= 2:
                     return True
+                if low >= 1.0 and misses % 2 == 0:  # never seen: wake him on his platform (top centre
+                    # from Stephen's spot, his Blizzards at (708-729, 8-45) in views 202-214)
+                    wx, wy = WAKE[(misses // 2) % len(WAKE)]
+                    print(f"kill: waking him at ({wx}, {wy})", flush=True)
+                    bot.press(sk["blizzard"])
+                    for _ in range(2):
+                        bot.click(wx, wy, "right", hover=0)
+                        bot.sleep(0.5)
+                        nb = name_bar(bot.capture.grab())
+                        if nb and nb["mephisto"]:  # he walked under the cursor: that's his spot
+                            last, low = (wx, wy), min(low, nb["life"])
+                            print(f"kill: Mephisto under the wake point, life {nb['life']:.2f}", flush=True)
+                            break
+                    bot.press(sk["teleport"])
                 bot.sleep(0.8)
                 continue
             misses, (last, life) = 0, found
@@ -248,6 +275,11 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 120, min_mp: float = 4
             bot.press(sk["teleport"])
             print(f"kill round {rnd}: Mephisto at {last} life {life:.2f} (low {low:.2f}) HP {bot.hp} MP {bot.mp}",
                   flush=True)
+            if RETREAT:  # hit and run: his lightning took 520 -> 42 life in < 2 s here (2026-11-01 18:17)
+                bot.click(640 + RETREAT[0], 330 + RETREAT[1], "right", hover=0)
+                bot.sleep(RETREAT_WAIT)  # the Blizzard keeps falling on him meanwhile
+                if not back_to(bot, ref):
+                    raise BotError("couldn't get back after the retreat")
     finally:
         bot.press(sk["teleport"])
     return False
@@ -287,11 +319,14 @@ def main() -> int:
     ap.add_argument("--watch", type=float, default=0, help="then stand and save a full frame per second")
     ap.add_argument("--scan", action="store_true", help="then hover a grid; save monster name bars")
     ap.add_argument("--players", type=int, help="/players N on arrival in Durance 2 (LK batches reset theirs)")
+    ap.add_argument("--buy-mana", action="store_true", help="fill the belt with Ormus's mana potions first")
     ap.add_argument("--es-hp", type=float, help="shield-broken chicken below this life %% (config: 75; 0 = off)")
     args = ap.parse_args()
     def token(h: str):
         if h.startswith("w"):
             return float(h[1:])
+        if h.startswith("L"):  # L206: Stephen's recorded view 206 becomes the spot to return to
+            return h
         if h in ("R", "D", "C", "M", "H"):  # R: remember this spot; D: teleport back to it by the view
             return h
         if h[0] in "bos":  # b/o/s x,y,n: n Blizzards / Frozen Orbs / Static Fields at screen (x, y)
@@ -302,6 +337,8 @@ def main() -> int:
 
     s = start_session()  # backs up saves
     cfg = s.cfg
+    if args.buy_mana:
+        cfg["safety"]["potion_hp_pct"] = 0  # mana potions don't heal life: drink them for mana only
     if args.es_hp is not None:
         cfg["safety"]["es_broken_hp_pct"] = args.es_hp
     maps = ROOT / "maps" / cfg["game"]["route"]
@@ -314,7 +351,7 @@ def main() -> int:
     b.window.focus()
     log = []
     try:
-        to_durance2(bot, say=print)
+        to_durance2(bot, say=print, buy_mana=args.buy_mana)
         if args.players:
             set_players(bot, args.players)
             st = state.load()
@@ -335,7 +372,11 @@ def main() -> int:
             if isinstance(h, float):
                 bot.sleep(h)
                 continue
+            if isinstance(h, str) and h.startswith("L"):
+                ref = cv2.imread(str(maps / "durance3_route" / "views" / f"{int(h[1:]):03d}.jpg"))
+                continue
             if h == "R":
+                SINCE_REF.clear()
                 ref = bot.capture.grab()
                 cv2.imwrite(str(out / f"{i:02d}_ref.png"), ref)
                 continue
@@ -355,11 +396,13 @@ def main() -> int:
                 print(f"back to the spot: {ok} HP {bot.hp} MP {bot.mp}", flush=True)
                 if not ok:
                     raise BotError("couldn't get back to the remembered spot")
+                SINCE_REF.clear()  # hops from here on are relative to this spot
                 continue
             if isinstance(h[0], str):
                 cast(bot, *h, out, i)
                 continue
             dx, dy = h
+            SINCE_REF.append((dx, dy))
             hop(bot, odo3, dx, dy)
             f = bot.capture.grab()
             cv2.imwrite(str(out / f"{i:02d}.jpg"), cv2.resize(f, (640, 360)))
