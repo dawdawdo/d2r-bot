@@ -95,8 +95,11 @@ moat trick (no Council clearing). AutoMapFade flipped to 2 (probably the bot's /
 hotkeys) -> reset to Center via Options. One moat-trick try chickened (return hops didn't cross back).
 Next: teach-and-repeat on his recorded views; make chat() verify the chat box. Details: docs/meph-navigation.md.
 
+**Queued after Meph works (Stephen 2026-11-01):** spawn-act detection + WP to Act 3 for **Act 2 and Act 5**
+(like `leave_act1`). Today only A1/A3/A4 are known; an A2 spawn ran the A3 walk and failed twice (17:13).
+
 **Open questions for Stephen (Mephisto):**
-2. /players for Meph games (7 now: Meph + Council very tanky)?
+(2. /players for Meph: 1, Stephen 2026-11-01; config `game.meph_players`.)
 (3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
 4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
 
