@@ -280,6 +280,9 @@ def _label_text_px(frame: np.ndarray, ignore) -> int:
     return int(((g > 150) & near_dark).sum())
 
 
+LABEL_DECIDE_PX = 60  # label-text pixels that must differ between Alt states to tell which one shows labels
+
+
 def ensure_labels_on(bot: Controller) -> None:
     """Show Items is a toggle (Alt). Decide once per game which state shows labels."""
     if getattr(bot, "_labels_known", False):
@@ -289,10 +292,17 @@ def ensure_labels_on(bot: Controller) -> None:
     bot.press(bot.cfg["hotkeys"]["show_items"])
     bot.sleep(0.3)
     b = _label_text_px(bot.capture.grab(), ignore)
+    log.debug("label text before/after toggle: %d/%d", a, b)
+    if abs(a - b) < LABEL_DECIDE_PX:
+        # nothing on the ground to tell by: undo the toggle and decide at the next loot. (Keeping it flipped
+        # here hid the labels for whole games, Stephen 2026-11-02: "the loot isn't showing on the ground")
+        bot.press(bot.cfg["hotkeys"]["show_items"])
+        bot.sleep(0.3)
+        return
     if b < a:  # we just turned them off; turn back on
         bot.press(bot.cfg["hotkeys"]["show_items"])
         bot.sleep(0.3)
-    log.debug("label text before/after toggle: %d/%d", a, b)
+    log.info("item labels: %s (label text %d -> %d)", "were off, now on" if b > a else "on", a, b)
     bot._labels_known = True
 
 
