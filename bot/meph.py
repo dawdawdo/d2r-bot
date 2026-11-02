@@ -30,6 +30,7 @@ WAKE_HOPS = [(-430, 50), (-300, -150)]  # dock -> his platform; he wakes, then b
 WAKE_WAIT = 3.0
 PRESUME_DEAD_MISSES = 10  # rounds (~4 s each) without his bar after he was last seen below 30 %
 DROP_WAIT = 6.0
+DEATH_THROES_S = 14.0  # s out of reach after his empty bar (hit at +11 s back on the spot, 15:01)
 LOOT_X = (0, 1000)  # screen x (from the dock) of his body worth a trip (2 hops at most, checked)  # s from his last breath to the loot on the floor
 DANGER_MP = 30  # mana % (= her Energy Shield) below which she leaves his reach to recover
 SAFE_HOP = (350, 60)  # dock -> one hop back down the walkway (the way in: walkable, further from the moat)
@@ -43,6 +44,7 @@ FLINCH_HP = 85  # life % that cuts a volley short (bursts of 400+ life in ~2 s)
 SOUTH_HOPS = [(-364, 105)] * 2
 SOUTH_VIEW = Path(__file__).parent / "assets" / "templates" / "meph_south_view.jpg"
 SOUTH_WAKE = [(0, -300)]  # his platform is one hop north of the spot (woke him 3 of 3, 2026-11-01)
+SOUTH_EXTRA_WAKE = (-350, -120)  # one more hop up-left from the dais (tried on every other wake)
 SOUTH_RETREAT = (100, 180)  # between volleys / to recover: down-right, out of his reach
 # where he can't reach her: 2026-11-02 13:46-14:50, stuck at x 360-400 (y 75-170): 6 kills at 97-99 % life;
 # top centre (640-720, 20): 1 kill, 2 chickens (lightning bursts). Elsewhere she waits away for him to move
@@ -64,12 +66,13 @@ class MephFight:
     remembered, undone when the view is no help."""
 
     def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=DOCK_SAFE_X,
-                 wake_hop=None, verbose: bool = False) -> None:
+                 wake_hop=None, verbose: bool = False, extra_wake=None) -> None:
         self.bot, self.out, self.say, self.verbose = bot, out, say, verbose
         # wake_hop: one (dx, dy) or a list of hops to his platform (the dock needs 2)
         if wake_hop is not None and not isinstance(wake_hop[0], (tuple, list)):
             wake_hop = [wake_hop]
         self.retreat, self.safe_x, self.wake_hop = retreat, safe_x, wake_hop
+        self.extra_wake = extra_wake
         self.ref: np.ndarray | None = None
         self.since_ref: list = []
         self.last: tuple[int, int] | None = None  # where to look for Mephisto first
@@ -160,7 +163,12 @@ class MephFight:
         """Hop onto his platform (he wakes when she's near), wait, back to the spot."""
         bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         self.since_ref.clear()
-        for dx, dy in self.wake_hop:
+        hops = list(self.wake_hop)
+        if getattr(self, "wakes", 0) % 2 == 1 and self.extra_wake:
+            # the dais alone left him asleep 7 times in a row (2026-11-02 14:53-14:57; nobody on screen there):
+            # every other try goes one hop further, up-left, where he comes from when he does wake
+            hops.append(self.extra_wake)
+        for dx, dy in hops:
             self.away(dx, dy)
         # standing there woke him 1 time in 4 (2026-11-02 13:5x): a Static Field hits what's around her
         self.snap(f"wake{getattr(self, 'wakes', 0)}")
@@ -178,6 +186,9 @@ class MephFight:
         else:
             self.say(f"wake: no Mephisto from his platform ({'a name' if hit else 'no names'})")
         bot.press(sk["teleport"])
+        if len(hops) > len(self.wake_hop):  # the view can't be matched from up there (2 runs, 2026-11-02 15:03)
+            ex, ey = hops[-1]
+            self.away(-ex, -ey)
         bot.sleep(WAKE_WAIT)
 
     def step_away(self, wait: float) -> None:
@@ -433,9 +444,16 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
     bot = fight.bot
     if t_dead is None:
         t_dead = time.time()
-        if (bot.hp or 100) < FLINCH_HP or fight.in_danger():
-            # hurt at the kill: whatever hit her still does (2026-11-02 14:33: 79 % at his death, dead 3 s later)
-            fight.recover("after the kill")
+        # out of reach for his death throes, every time: lightning flies round the spot for 10+ s after the
+        # empty bar (2026-11-02 14:33 dead 3 s after, 15:01 chicken 12 s after, his soul still rising)
+        fight.say(f"after the kill: HP {bot.hp} MP {bot.mp} -> out of reach for {DEATH_THROES_S:.0f} s")
+        fight.since_ref.clear()
+        fight.away(*(fight.retreat or SAFE_HOP), wait=0.5)
+        while time.time() - t_dead < DEATH_THROES_S or (
+                time.time() - t_dead < DEATH_THROES_S + RECOVER_S and ((bot.mp or 0) < RECOVER_MP or (bot.hp or 0) < RECOVER_HP)):
+            bot.sleep(0.3)
+        if not fight.back_to():
+            raise BotError("couldn't get back after his death throes")
         fight.clear(limit=25)
     if fight.seen is None or not (LOOT_X[0] <= fight.seen[0] <= LOOT_X[1]):
         # far along the moat edge: 2 hops into the unknown met lightning there and she died (2026-11-01 22:11)

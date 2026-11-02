@@ -265,12 +265,52 @@ def _name_points(bot: Controller, region, step: int = 30):
                 yield x, y
 
 
+ORMUS_SPRITE_MIN = 0.65  # his sprite poses score 0.76-0.88 where he stands, ~0.5 elsewhere (31 town frames)
+
+
+def _sprite_hits(frame, names: list[str], region, min_score: float, max_hits: int = 3) -> list[tuple[int, int]]:
+    """Centres of the best matches of NPC sprite poses (bot/assets/templates/npc/), best first, de-duplicated."""
+    import cv2
+
+    from .vision.screen import ASSETS
+
+    rx, ry, rw, rh = region
+    roi = frame[ry : ry + rh, rx : rx + rw]
+    hits = []
+    for n in names:
+        t = cv2.imread(str(ASSETS / "npc" / n))
+        if t is None or t.shape[0] > roi.shape[0] or t.shape[1] > roi.shape[1]:
+            continue
+        r = cv2.matchTemplate(roi, t, cv2.TM_CCOEFF_NORMED)
+        for _ in range(2):
+            _, mx, _, loc = cv2.minMaxLoc(r)
+            if mx < min_score:
+                break
+            hits.append((mx, rx + loc[0] + t.shape[1] // 2, ry + loc[1] + t.shape[0] // 2))
+            cv2.rectangle(r, (loc[0] - 20, loc[1] - 20), (loc[0] + 20, loc[1] + 20), -1.0, -1)
+    out: list[tuple[int, int]] = []
+    for _, x, y in sorted(hits, reverse=True):
+        if all(abs(x - a) + abs(y - b) > 30 for a, b in out):
+            out.append((x, y))
+    return out[:max_hits]
+
+
+def _ormus_points(bot: Controller, region):
+    """Where to click for Ormus: his sprite first (poses from Botty, Stephen 2026-11-02: "detect his sprite
+    rather than scanning for his name"), then the hover scan of `region`."""
+    hits = _sprite_hits(bot.capture.grab(), [f"ormus_{i}.png" for i in range(6)], (0, 0, 1280, 560),
+                        ORMUS_SPRITE_MIN)
+    log.info("Ormus sprite: %s", hits or "not on screen")
+    yield from hits
+    yield from _tooltip_points(bot, region)
+
+
 def heal_at_ormus(bot: Controller) -> bool:
     """Walk toward the plaza, find Ormus by hover, talk to him (heals), close the dialog.
     The character ends up somewhere near Ormus, so the caller should start a new game."""
     tcfg = bot.cfg["town"]
     walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]])
-    for attempt, (x, y) in enumerate(_tooltip_points(bot, tcfg["ormus_region"])):
+    for attempt, (x, y) in enumerate(_ormus_points(bot, tcfg["ormus_region"])):
         if attempt >= 4:
             break
         bot.click(x, y)
@@ -299,7 +339,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
     tcfg = bot.cfg["town"]
     o = tcfg["ormus"]
     walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]])
-    for attempt, (x, y) in enumerate(_tooltip_points(bot, tcfg["ormus_region"])):
+    for attempt, (x, y) in enumerate(_ormus_points(bot, tcfg["ormus_region"])):
         if attempt >= 5:
             break
         bot.click(x, y)
