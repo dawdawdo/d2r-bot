@@ -109,7 +109,7 @@ class Controller:
         if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):
             # A belt rejuv refills mana and the shield is back: drink once; still broken after the
             # cooldown (or nothing to drink) -> chicken. (2026-10-27: most chickens were this, HP ~70%.)
-            key = self.potion_key() if self.clock() - self._last_potion > s.get("potion_cooldown_s", 1.5) else None
+            key = self.potion_key("mp") if self.clock() - self._last_potion > s.get("potion_cooldown_s", 1.5) else None
             if key is not None:
                 self._last_potion = self.clock()
                 log.info("energy shield broken (HP %.0f%% MP %.0f%%) -> potion %s", self.hp, self.mp, key)
@@ -127,7 +127,7 @@ class Controller:
         low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
         if low and self.clock() - self._last_potion > self.cfg["safety"].get("potion_cooldown_s", 1.5):
             self._last_potion = self.clock()
-            key = self.potion_key()
+            key = self.potion_key("hp" if self.hp < s["potion_hp_pct"] else "mp")
             if key is None:
                 log.warning("HP %.0f%%: belt is empty", self.hp)
                 return
@@ -135,13 +135,19 @@ class Controller:
             self._ensure_foreground()
             self.input.press(key)
 
-    def potion_key(self) -> str | None:
-        """Hotkey of the first belt slot that still holds a potion (None if all empty)."""
-        from .vision.orbs import belt_slots
+    def potion_key(self, want: str | None = None) -> str | None:
+        """Hotkey of the first belt slot that still holds a potion (None if all empty). With `want`
+        ('hp' or 'mp'), a slot of that kind (or a rejuv) first: Meph runs carry red and blue potions."""
+        from .vision.orbs import belt_kinds
 
         frame = self.frame if self.frame is not None else self.capture.grab()
-        for key, full in zip(self.cfg["hotkeys"]["potions"], belt_slots(frame, self.cfg["vision"]["belt"])):
-            if full:
+        slots = list(zip(self.cfg["hotkeys"]["potions"], belt_kinds(frame, self.cfg["vision"]["belt"])))
+        if want:
+            for key, kind in slots:
+                if kind in (want, "rejuv"):
+                    return key
+        for key, kind in slots:
+            if kind is not None:
                 return key
         return None
 

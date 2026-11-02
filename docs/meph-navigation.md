@@ -164,3 +164,19 @@ Potions for mana only, below 50% (guard drinks once per 1.5 s).
 **What would help (Stephen's call):** lightning resistance on Blizzaga (gear swap for Meph), or accepting
 deaths (memory: "Blizzaga may die"; chickens are what cost here, not deaths). Bot side: a stand further
 south with Blizzard aimed at the screen's top edge, fewer casts per visit.
+
+**Live 2026-11-01 19:11-19:26 (chicken 25% OK'd by Stephen; Blizzaga has 74% lightning resist):**
+- Waking him: his platform is one hop north of Stephen's spot (the dock -> platform -> dock -> spot hops sum
+  to (0, -310)). Kill loop hops (0, -300), waits 3 s, back by view: woke him 3 of 3. The dock -> platform
+  detour is gone from the sequence (`... -364,105 -364,105 L206 D B M`).
+- Belt: `belt_kinds` (red / blue / purple per slot); Ormus fills 2 red + 2 blue; the guard drinks red for
+  life (< 60% in the probe), blue for mana / a broken shield, rejuvs for either. Live: ['hp','hp','mp','mp'].
+- **Where he stands decides it.** Kill + safe fights: he stayed top centre (x 720-900, y 20-75). Bad fights:
+  he walks left along the edge (x 320-560) and lower (y 130-180), i.e. around toward her side. Two deaths
+  (19:22, 19:26), the second while she only waited (rule: no casting unless x 620-940). So Stephen's spot is
+  not out of his reach; in Stephen's game and the bot's kill he just didn't come round.
+- Tally today with the current loop: 1 kill, 2 deaths, 5 chickens (Meph at 17-74% each time).
+
+**Ideas not tried yet:** follow him: when he goes left, shift her stand by the same screen offset (keep
+him at the same relative spot); the classic dock spot with the Council killed first (Stephen: "You have to
+kill first"); fight before he gets round (more casts per volley early, when he's still top centre).

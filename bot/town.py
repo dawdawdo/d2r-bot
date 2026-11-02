@@ -315,20 +315,33 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
             bot.save_failure("ormus_trade_not_opened")
             bot.press("esc")
             return False
-        ok = belt_full(bot)
-        for i in range(max_clicks):
-            if ok:
-                break
+        from .vision.orbs import belt_kinds
+
+        def kinds():
+            return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+
+        def buy(pt):
             bot.input.key_down("shift")
             bot.kill.sleep(0.05)
-            bot.click(*o["mana_potion"], "right")
+            bot.click(*pt, "right")
             bot.kill.sleep(0.05)
             bot.input.key_up("shift")
             bot.kill.sleep(0.5)
-            ok = belt_full(bot)
+
+        # red first (2 slots: life doesn't come back by itself in a long fight, 2026-11-01 19:19),
+        # then blue until the belt is full
+        for i in range(max_clicks // 2):
+            if sum(k in ("hp", "rejuv") for k in kinds()) >= o.get("healing_slots", 2) or None not in kinds():
+                break
+            buy(o["healing_potion"])
+        for i in range(max_clicks):
+            if None not in kinds():
+                break
+            buy(o["mana_potion"])
+        ok = None not in kinds()
         bot.press("esc")
         bot.kill.sleep(0.5)
-        log.info("Ormus: mana potions bought, belt %s", "full" if ok else "NOT full")
+        log.info("Ormus: potions bought, belt %s %s", kinds(), "full" if ok else "NOT full")
         if not ok:
             bot.save_failure("belt_not_full_after_buying")
         return ok

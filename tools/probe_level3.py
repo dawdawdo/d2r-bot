@@ -221,6 +221,9 @@ def find_meph(bot, last=None) -> tuple[tuple[int, int], float] | None:
 
 
 WAKE = [(720, 30), (560, 40), (880, 40)]
+MEPH_SAFE_X = (620, 940)  # screen x where he can be fought from Stephen's spot
+WAKE_HOP = (0, -300)  # Stephen's spot -> Mephisto's platform (screen px)
+WAKE_WAIT = 3.0
 RETREAT = (100, 180)  # screen px: down-right, away from his moat-edge spot (top centre)
 RETREAT_WAIT = 1.5
 FLINCH_HP = 85  # life %% that cuts a volley short (bursts of 400+ life in ~2 s, 2026-11-01)
@@ -261,24 +264,32 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 4
                         raise BotError("couldn't get back after the retreat")
                     if misses >= 4:
                         last = None  # he walked off: full search next time
-                if low >= 1.0 and misses % 2 == 0:  # never seen: wake him on his platform (top centre
-                    # from Stephen's spot, his Blizzards at (708-729, 8-45) in views 202-214)
-                    wx, wy = WAKE[(misses // 2) % len(WAKE)]
-                    print(f"kill: waking him at ({wx}, {wy})", flush=True)
-                    bot.press(sk["blizzard"])
-                    for _ in range(2):
-                        bot.click(wx, wy, "right", hover=0)
-                        bot.sleep(0.5)
-                        nb = name_bar(bot.capture.grab())
-                        if nb and nb["mephisto"]:  # he walked under the cursor: that's his spot
-                            last, low = (wx, wy), min(low, nb["life"])
-                            print(f"kill: Mephisto under the wake point, life {nb['life']:.2f}", flush=True)
-                            break
-                    bot.press(sk["teleport"])
+                if low >= 1.0 and misses % 2 == 0:  # never seen: wake him. His platform is one hop
+                    # north of Stephen's spot (the hops dock -> platform -> dock -> spot sum to (0, -310))
+                    print("kill: hop to his platform to wake him", flush=True)
+                    SINCE_REF.clear()
+                    SINCE_REF.append(WAKE_HOP)
+                    bot.click(640 + WAKE_HOP[0], 330 + WAKE_HOP[1], "right", hover=0)
+                    bot.sleep(WAKE_WAIT)
+                    if not back_to(bot, ref):
+                        raise BotError("couldn't get back from his platform")
+                    continue
                 bot.sleep(0.8)
                 continue
             misses, (last, life) = 0, found
             low = min(low, life)
+            if not (MEPH_SAFE_X[0] <= last[0] <= MEPH_SAFE_X[1]):
+                # he walked left along the moat edge: closer to her there (heavy damage / a death at
+                # x 360-560 on 2026-11-01; the kill and the safe fights had him at x 720-900)
+                print(f"kill round {rnd}: Mephisto at {last} (life {life:.2f}) is too close: waiting", flush=True)
+                SINCE_REF.clear()
+                SINCE_REF.append(RETREAT)
+                bot.click(640 + RETREAT[0], 330 + RETREAT[1], "right", hover=0)
+                bot.sleep(3.0)
+                if not back_to(bot, ref):
+                    raise BotError("couldn't get back after the retreat")
+                last = None if last[0] < MEPH_SAFE_X[0] - 200 else last
+                continue
             bot.press(sk["blizzard"])
             hit = False
             for k in range(3):
@@ -340,6 +351,7 @@ def main() -> int:
     ap.add_argument("--scan", action="store_true", help="then hover a grid; save monster name bars")
     ap.add_argument("--players", type=int, help="/players N on arrival in Durance 2 (LK batches reset theirs)")
     ap.add_argument("--buy-mana", action="store_true", help="fill the belt with Ormus's mana potions first")
+    ap.add_argument("--chicken", type=float, help="chicken below this life %% (config: 50; Stephen OK'd lower for Meph)")
     ap.add_argument("--es-hp", type=float, help="shield-broken chicken below this life %% (config: 75; 0 = off)")
     args = ap.parse_args()
     def token(h: str):
@@ -358,8 +370,10 @@ def main() -> int:
     s = start_session()  # backs up saves
     cfg = s.cfg
     if args.buy_mana:
-        cfg["safety"]["potion_hp_pct"] = 0  # mana potions don't heal life: drink them for mana only
+        cfg["safety"]["potion_hp_pct"] = 60  # red potions for life (2 slots), blue for mana
         cfg["safety"]["potion_mp_pct"] = 50  # keep the shield up: his lightning empties mana fast
+    if args.chicken is not None:
+        cfg["safety"]["chicken_hp_pct"] = args.chicken
     if args.es_hp is not None:
         cfg["safety"]["es_broken_hp_pct"] = args.es_hp
     maps = ROOT / "maps" / cfg["game"]["route"]
@@ -421,8 +435,8 @@ def main() -> int:
                 ok = back_to(bot, ref)
                 cv2.imwrite(str(out / f"{i:02d}_back.jpg"), cv2.resize(bot.capture.grab(), (640, 360)))
                 print(f"back to the spot: {ok} HP {bot.hp} MP {bot.mp}", flush=True)
-                if not ok:
-                    raise BotError("couldn't get back to the remembered spot")
+                if not ok:  # a later L/D step (or the kill loop's spot check) corrects what's left
+                    print("back: not exact; going on", flush=True)
                 SINCE_REF.clear()  # hops from here on are relative to this spot
                 continue
             if isinstance(h[0], str):

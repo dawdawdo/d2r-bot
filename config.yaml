@@ -82,6 +82,8 @@ town:
   ormus:                         # Meph runs: buy mana potions (trade window opens on Misc)
     trade_offset: [37, 55]       # "Trade" relative to the npc_ormus.png match (dialog line 2; live 2026-11-01)
     mana_potion: [395, 376]      # Misc tab, right column, bottom: his best mana potion
+    healing_potion: [395, 262]   # Misc tab, right column: his best healing potion (last red one)
+    healing_slots: 2             # belt slots of red before the rest is filled with blue
   repair_every: 60               # backstop: repair at Hratli at least this often (Stephen: armor ran low)
   repair_after_wear: 20           # runs between the first wear seen and the repair
   durability_every: 10           # check every equipped item's durability (tooltips) this often; repair if any is
