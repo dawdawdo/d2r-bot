@@ -48,6 +48,10 @@ class Mephisto(Task):
                     restart_in_act3(bot)
                 if not buy_mana_at_ormus(bot):
                     log.warning("Ormus: belt not filled (attempt %d)", attempt + 1)
+                    from .. import state
+
+                    # no gold on her: deaths took it all (2026-11-02 15:20: 4 empty belts, then 2 deaths)
+                    state.save({**state.load(), "gold_needed": True})
                 save_and_exit(bot)  # the town walk starts at the spawn
                 create_game(bot, self.cfg["game"]["difficulty"])
                 bot.wait_for("in_game", 10)

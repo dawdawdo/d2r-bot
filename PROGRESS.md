@@ -3,6 +3,21 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**Mephisto 2026-11-02 afternoon (Stephen watched, then away): south bank (his "bottom side of the moat").**
+`meph.spot: south` (default; `dock` = the old way). Dock -> 2 hops to Stephen's view 206 -> buffs -> wake (hop onto
+his platform, Static Field, search the whole screen for his name, one Blizzard if seen; every other try one hop
+further up-left) -> back by view -> kill loop with hit-and-run volleys -> 14 s out of reach for his death throes ->
+clear -> loot (take_all: every label color, so essences / ancients' statues get picked; no blue gear).
+- **Where he stands decides it:** stuck at x 360-480 (left) = 8 kills at 97-99 % life; top centre (640-840, 20-70) =
+  4 chickens/deaths in 5. Now: fight at x 280-600, wait elsewhere, never fight at 600-960.
+- Waking is the slow part: some games he never shows in 7 wakes (5 min).
+- Tally 13:44-15:26 (south): ~22 task runs, ~9 kills, ~5 chickens, ~4 deaths, rest timeouts/fails.
+- **Stopped: Blizzaga is out of gold.** Deaths + merc revives (~50k each) used the 400k withdrawn today; her last
+  death showed no gold toll. Ormus sold nothing (empty belt -> 2 deaths). A failed buy now asks for a withdrawal too.
+- Loot: one real drop picked (unique); a Russet Armor + Mithril Coil didn't fit: **inventory has 2 free cells**.
+- Other done today: Meph-only sessions type /players 1 once (no 7-then-1); Ormus sprite search (Botty's MIT poses,
+  `bot/assets/templates/npc/`) before the hover scan, frames saved to tune it.
+
 **Mephisto task (2026-11-01 evening, `bot/meph.py`, `bot/tasks/meph.py`, config `meph:`):** Ormus mana potions ->
 WP Durance 2 -> learned path to Level 3 -> /players 1 -> 6 hops to the dock -> buffs -> Council hunt (name bars) ->
 hop onto his platform to wake him -> back to the dock by the view -> Blizzard him across the moat -> dead = his
@@ -132,6 +147,11 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
    when he stands at screen x >= 400, a loot trip. Options: (a) I keep tuning live (more deaths, 28k gold + a merc
    revive each); (b) you watch 3-4 runs and tell me where she should stand (your own fights found a better spot
    by jumping around); (c) park Meph and only farm LK. LK batches run meanwhile.
+8. **Gold for Meph practice.** Each south-bank death costs her gold + a 50k merc revive; today ~400k from the shared
+   stash. How much may Meph tuning spend (e.g. 1M a day), or should the merc stay dead for Meph (he's only Insight)?
+9. **Inventory space:** 2 free cells after stashing. Meph gear (armor 2x3) can't be picked. Can you clear some of
+   Blizzaga's inventory, or should the bot only pick small items at Meph?
+10. Act 2 town walk: you'd like it to go straight to the WP (as A3/A4 do). Next on my list after Meph.
 (6. A2/A5 spawns: done 2026-11-02. Detected by template (a2_spawn / a5_spawn), walk to the town waypoint, back to
    Act 3. Live: A2 ok (85 s run), A5 ok (67 s run). Stephen will watch Meph runs for question 7.)
 
