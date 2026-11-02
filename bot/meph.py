@@ -44,8 +44,12 @@ SOUTH_HOPS = [(-364, 105)] * 2
 SOUTH_VIEW = Path(__file__).parent / "assets" / "templates" / "meph_south_view.jpg"
 SOUTH_WAKE = [(0, -300)]  # his platform is one hop north of the spot (woke him 3 of 3, 2026-11-01)
 SOUTH_RETREAT = (100, 180)  # between volleys / to recover: down-right, out of his reach
-SOUTH_SAFE_X = (620, 940)  # he stands top centre when stuck; further left he is coming round to her side
-STUCK_ROUNDS = 3  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
+# where he can't reach her: 2026-11-02 13:46-14:50, stuck at x 360-400 (y 75-170): 6 kills at 97-99 % life;
+# top centre (640-720, 20): 1 kill, 2 chickens (lightning bursts). Elsewhere she waits away for him to move
+# (he usually walks left along the edge), and fights after STUCK_ROUNDS there anyway
+SOUTH_SAFE_X = (280, 600)
+WAKE_GRID = [(x, y) for y in range(40, 560, 60) for x in range(80, 1240, 90)]  # all of the screen
+STUCK_ROUNDS = 6  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
 # he shows at y 20-130 from either spot (2026-11-01/02 logs); lower rows cost ~15 s per missed search
 MEPH_GRID = sorted([(x, y) for y in range(20, 190, 55) for x in range(80, 1200, 80)],
@@ -164,6 +168,15 @@ class MephFight:
         bot.press(sk["static_field"])
         bot.click(*CENTER, "right", hover=0)
         bot.sleep(0.4)
+        # still asleep 7 times in a row once (2026-11-02 14:35-14:40): look for him from up here, hit him once
+        hit = self.first_name(WAKE_GRID, dwell=0.06)
+        if hit and hit[1]["mephisto"]:
+            self.say(f"wake: Mephisto seen at {hit[0]} from his platform -> one Blizzard")
+            bot.press(sk["blizzard"])
+            bot.click(*hit[0], "right", hover=0)
+            bot.sleep(0.4)
+        else:
+            self.say(f"wake: no Mephisto from his platform ({'a name' if hit else 'no names'})")
         bot.press(sk["teleport"])
         bot.sleep(WAKE_WAIT)
 
