@@ -272,9 +272,10 @@ def main() -> int:
                         log.warning("now running the learned route %s: camps %s", name,
                                     [c["world"] for c in route["bonfires"]])
                 except (Chicken, Died) as e:
-                    row.update(result="chicken" if isinstance(e, Chicken) else "died", error=str(e))
-                    log.warning("run %d: %s", i + 1, e)
-                    corpse = isinstance(e, Died)
+                    died = isinstance(e, Died) or getattr(bot, "died_on_exit", False)
+                    row.update(result="died" if died else "chicken", error=str(e))
+                    log.warning("run %d: %s%s", i + 1, e, " (died before the exit)" if died and isinstance(e, Chicken) else "")
+                    corpse = died
                     stow = True  # it may have picked things before bailing
                 except KillSwitchTripped:
                     raise

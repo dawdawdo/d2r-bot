@@ -1,6 +1,19 @@
 # Progress
 
-**Current milestone:** Mephisto (branch `tasks`): WP -> Level 3 works; the kill needs Stephen (questions below). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
+**Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+(or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**Mephisto task (2026-11-01 evening, `bot/meph.py`, `bot/tasks/meph.py`, config `meph:`):** Ormus mana potions ->
+WP Durance 2 -> learned path to Level 3 -> /players 1 -> 6 hops to the dock -> buffs -> Council hunt (name bars) ->
+hop onto his platform to wake him -> back to the dock by the view -> Blizzard him across the moat -> dead = his
+name over an empty bar -> clear -> one hop to his body -> loot. The run after a Meph game types /players 7 again.
+- Results 21:20-22:35: ~10 kills in ~17 tries (set + unique drops picked). Failures: 3 deaths, ~4 chickens, 2 "pushed
+  off the spot". Causes found and fixed one by one: he hits her from the dock when he stands at screen x >= ~400
+  (now: wait one hop down the walkway), shield < 30% -> hop away and recover, a loot trip 2 hops into the unknown
+  (now: only loot within one safe hop), the dock view's second match flipping the spot check (now: read twice),
+  back_to refusing a right answer (min resp 0.10), a late chicken counted as a chicken not a death (now died).
+- Bremm Sparkfist (Council, lightning enchanted + aura + extra fast) can reach the dock and burn her out: chicken.
+- The merc dies most Meph runs (revive 50k from the shared stash; withdraw-on-empty works).
 
 **Charms (2026-10-31 17:10, Stephen):** filter rule "Show charms" (cm1–cm3, any rarity) installed with D2R
 closed and kept by the game; blue (magic) labels are picked; the stowaway hovers each item and sends blue-named

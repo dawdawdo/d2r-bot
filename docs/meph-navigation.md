@@ -192,3 +192,22 @@ Fixed (untested live): one plain red, shift-blue, shift-red -> 1 red column + 3 
 
 **Next run to try (exact):** same command plus `--retreat none`. Then turn the probe sequence into the Meph
 task in bot.run (one game: LK + Meph toggles).
+
+## 2026-11-01 21:20-22:35: the Meph task (bot/meph.py) live
+
+- First run of the dock sequence with `--retreat none`: **kill**. His name stays in the bar with no red when he
+  dies (soul rising, fire bridge): `name_bar` now returns life 0 for that, and the fight ends on it.
+- Moved into the bot: `bot/meph.py` (MephFight: back_to / on_spot / hunt / kill / clear, to_dock, fight_from_dock,
+  loot_meph), `bot/tasks/meph.py` (Ormus potions, WP, Level 3, /players 1, safety overrides from `meph.safety`).
+- ~10 kills in ~17 runs. What hurt, and what changed:
+  - He reaches the dock when he stands at screen x 400-480 (shield 100 -> 3 % in ~2 s): DOCK_SAFE_X (0, 380);
+    outside it she waits one hop down the walkway (SAFE_HOP 350,60) and comes back by the view.
+  - Shield (mana) < 30 %: out of reach to recover (also breaks off searches and volleys).
+  - The dock view matches a second time ~460 px up: one reading flips; on_spot now needs two agreeing reads.
+  - back_to turned down 72 px / resp 0.13 at min_resp 0.15 and wandered off: min_resp 0.10.
+  - Loot 2 hops to his far-left body met lightning: death. Loot only within one hop (x 200-1000), bail on low shield.
+  - He walks off screen left when low and comes back: "presumed dead" only after 10 misses; an empty bar mid-volley
+    ends the fight at once.
+  - Drops come at the end of the death animation: wait 6 s from his death, look twice.
+  - Bremm Sparkfist (Council: lightning enchanted, aura, extra fast) can run onto the dock: chicken (ok).
+  - A chicken at 10-20 % can still end in "You have died" (the Esc menu won't open): now counted as a death.

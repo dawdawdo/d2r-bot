@@ -80,7 +80,11 @@ def ensure_main_menu(bot: Controller) -> None:
 
 
 def save_and_exit(bot: Controller) -> None:
+    """Esc menu -> Save and Exit -> main menu. Sets bot.died_on_exit when the life orb was empty on the way
+    out (a chicken that came too late: 2026-11-01 22:00 "You have died" behind a chicken; the corpse
+    must be picked up next game)."""
     bot.guard(False)  # we're leaving; don't raise Chicken while trying to exit
+    bot.died_on_exit = False
     for tries in range(2):
         for attempt in range(3):
             bot.press("esc")
@@ -90,6 +94,8 @@ def save_and_exit(bot: Controller) -> None:
             except BotError:
                 if bot.state == "main_menu":
                     return
+                if bot.hp is not None and bot.hp <= 1:
+                    bot.died_on_exit = True
                 log.info("esc menu not up (attempt %d)", attempt + 1)
         else:
             raise BotError("could not open the esc menu")

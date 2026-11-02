@@ -28,7 +28,15 @@ WORLD_PER_PX = 1.1  # odometer world px per screen px of a teleport (Level 3 hop
 DOCK_HOPS = [(-350, -60)] * 6  # Level 3 arrival -> the dock (the walkway runs up-left)
 WAKE_HOPS = [(-430, 50), (-300, -150)]  # dock -> his platform; he wakes, then back by the view
 WAKE_WAIT = 3.0
-DROP_WAIT = 6.0  # s from his last breath to the loot on the floor
+PRESUME_DEAD_MISSES = 10  # rounds (~4 s each) without his bar after he was last seen below 30 %
+DROP_WAIT = 6.0
+LOOT_X = (200, 1000)  # screen x (from the dock) of his body that one hop reaches safely  # s from his last breath to the loot on the floor
+DANGER_MP = 30  # mana % (= her Energy Shield) below which she leaves his reach to recover
+SAFE_HOP = (350, 60)  # dock -> one hop back down the walkway (the way in: walkable, further from the moat)
+# his screen x from the dock where his lightning can't reach her: kills had him at 20-400; at 400-480 her
+# shield went 100 -> 3 % in ~2 s (a chicken and a death, 2026-11-01 22:17 / 22:20)
+DOCK_SAFE_X = (0, 380)
+RECOVER_MP, RECOVER_HP, RECOVER_S = 70, 80, 8.0
 FLINCH_HP = 85  # life % that cuts a volley short (bursts of 400+ life in ~2 s)
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
 MEPH_GRID = sorted([(x, y) for y in range(20, 430, 55) for x in range(80, 1200, 80)],
@@ -42,13 +50,14 @@ class MephFight:
     """One fight from a remembered spot. `since_ref`: screen-px hops made since the spot was
     remembered, undone when the view is no help."""
 
-    def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=(0, 1280),
+    def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=DOCK_SAFE_X,
                  wake_hop=None, verbose: bool = False) -> None:
         self.bot, self.out, self.say, self.verbose = bot, out, say, verbose
         self.retreat, self.safe_x, self.wake_hop = retreat, safe_x, wake_hop
         self.ref: np.ndarray | None = None
         self.since_ref: list = []
-        self.last: tuple[int, int] | None = None  # where Mephisto was last hovered
+        self.last: tuple[int, int] | None = None  # where to look for Mephisto first
+        self.seen: tuple[int, int] | None = None  # where he was last found (his body, for the loot)
 
     # -- frames -------------------------------------------------------------------------------------
     def snap(self, name: str) -> None:
@@ -69,7 +78,9 @@ class MephFight:
         self.since_ref.append((dx, dy))
         self.tp(dx, dy, wait)
 
-    def back_to(self, max_hops: int = 5, tol: float = 90, min_resp: float = 0.15) -> bool:
+    def back_to(self, max_hops: int = 5, tol: float = 90, min_resp: float = 0.10) -> bool:
+        # min_resp 0.10: the dock itself reads 0.12-0.3; at 0.15 a right answer (72 px off, 0.13) was
+        # turned down and the next hop wandered off (2026-11-01 22:14 "pushed off the spot")
         """Teleport until this view matches the remembered spot. True once within `tol` world px."""
         from .durance import view_offset
 
@@ -100,11 +111,34 @@ class MephFight:
         """'Teleport when struck' (her gear) throws her around: back to the spot first."""
         from .durance import view_offset
 
-        off, resp = view_offset(self.ref, self.bot.capture.grab())
-        if resp < 0.1 or float(np.hypot(*off)) > 150:  # resp 0.12-0.3 on the dock itself
+        def off_spot():
+            off, resp = view_offset(self.ref, self.bot.capture.grab())
+            return off, resp, resp < 0.1 or float(np.hypot(*off)) > 150  # resp 0.12-0.3 on the dock itself
+
+        off, resp, bad = off_spot()
+        if bad:  # read again: the dock view has a second match ~460 px up; one reading flips (2026-11-01 22:20)
+            self.bot.sleep(0.15)
+            off2, resp2, bad = off_spot()
+            bad = bad and float(np.hypot(*(off - off2))) < 60
+        if bad:
             self.say(f"{what}: off the spot ({off.round().tolist()}, resp {resp:.2f}) -> back")
             if not self.back_to():
                 raise BotError("pushed off the spot")
+
+    def in_danger(self) -> bool:
+        return (self.bot.mp or 100) < DANGER_MP
+
+    def recover(self, what: str) -> None:
+        """Shield low: one hop back down the walkway, drink / regenerate, back to the spot."""
+        bot = self.bot
+        self.say(f"{what}: MP {bot.mp} HP {bot.hp} -> out of reach to recover")
+        self.since_ref.clear()
+        self.away(*SAFE_HOP, wait=0.5)
+        t0 = time.time()
+        while time.time() - t0 < RECOVER_S and ((bot.mp or 0) < RECOVER_MP or (bot.hp or 0) < RECOVER_HP):
+            bot.sleep(0.3)  # the guard drinks meanwhile
+        if not self.back_to():
+            raise BotError("couldn't get back after recovering")
 
     def step_away(self, wait: float) -> None:
         if not self.retreat:
@@ -118,6 +152,8 @@ class MephFight:
     # -- looking ------------------------------------------------------------------------------------
     def first_name(self, pts, dwell: float = 0.06):
         for x, y in pts:
+            if self.in_danger():  # a 12 s grid sweep while his lightning drains the shield: 2026-11-01 death
+                return None
             self.bot.check()
             self.bot.input.move(x, y)
             self.bot.kill.sleep(dwell)
@@ -163,6 +199,9 @@ class MephFight:
         try:
             while time.time() - t0 < limit:
                 self.on_spot("hunt")
+                if self.in_danger():
+                    self.recover("hunt")
+                    continue
                 if (bot.mp or 0) < min_mp:
                     bot.sleep(0.3)
                     continue
@@ -177,6 +216,8 @@ class MephFight:
                 for _ in range(3):
                     bot.click(x, y, "right", hover=0)
                     bot.sleep(0.5)
+                    if self.in_danger():
+                        break
                 bot.press(sk["teleport"])
                 now = name_bar(bot.capture.grab())
                 self.say(f"hunt round {rnd}: name at ({x}, {y}) life {nb['life']:.2f} -> "
@@ -192,6 +233,9 @@ class MephFight:
         try:
             while time.time() - t0 < limit:
                 self.on_spot("kill")
+                if self.in_danger():
+                    self.recover("kill")
+                    continue
                 if (bot.mp or 0) < min_mp:
                     bot.sleep(0.3)
                     continue
@@ -202,12 +246,11 @@ class MephFight:
                 if found is None:
                     misses += 1
                     self.say(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})")
-                    if low < 0.3 and misses >= 3:  # last seen nearly dead and gone: dead, or he walked off
-                        if self.last is None:  # the full grid found nothing either (2026-11-01 21:40: a
-                            return True  # 0.24 "kill" looted nothing; the empty-bar rule is the sure one)
-                        self.say("kill: low and gone: a full search before calling it")
-                        self.last = None
-                        continue
+                    # low and gone: he walks off screen along the moat edge and back (2026-11-01 21:55: out
+                    # left at 0.17, a 0.24 "kill" looted nothing): keep looking; only a long absence counts
+                    if low < 0.3 and misses >= PRESUME_DEAD_MISSES:
+                        self.say("kill: low and long gone: presumed dead")
+                        return True
                     if misses >= 4:
                         self.last = None  # he walked off: full search next time
                     if self.wake_hop and low >= 1.0 and misses % 2 == 0:
@@ -220,13 +263,17 @@ class MephFight:
                     bot.sleep(0.8)
                     continue
                 misses, (self.last, life) = 0, found
+                self.seen = self.last
                 low = min(low, life)
                 if life <= 0:  # his name over an empty bar: dying
                     self.say(f"kill round {rnd}: Mephisto at {self.last} has no life left: dead")
                     return True
                 if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]):
-                    self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is too close: waiting")
-                    self.step_away(3.0)
+                    self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is in reach: waiting away")
+                    self.since_ref.clear()
+                    self.away(*(self.retreat or SAFE_HOP), wait=3.0)
+                    if not self.back_to():
+                        raise BotError("couldn't get back after waiting away")
                     continue
                 bot.press(sk["blizzard"])
                 hit = False
@@ -236,7 +283,10 @@ class MephFight:
                     nb = name_bar(bot.capture.grab())
                     if nb and nb["mephisto"]:
                         low = min(low, nb["life"])
-                    if (bot.hp or 100) < FLINCH_HP:
+                        if nb["life"] <= 0:  # died mid-volley (2026-11-01 22:23: then 2 min of searching)
+                            self.say(f"kill round {rnd}: Mephisto at {self.last} has no life left: dead")
+                            return True
+                    if (bot.hp or 100) < FLINCH_HP or self.in_danger():
                         hit = True
                         break
                 bot.press(sk["teleport"])
@@ -311,20 +361,24 @@ def loot_meph(fight: MephFight) -> list[str]:
     bot = fight.bot
     t_dead = time.time()
     fight.clear(limit=25)
-    if fight.last is not None:
-        x, y = fight.last
-        dx, dy = x - CENTER[0], y + 40 - CENTER[1]  # the bar shows over his body: land just below the hover
-        n = max(1, int(np.ceil(np.hypot(dx, dy) / 420)))
-        for _ in range(n):
-            fight.tp(dx / n, dy / n, wait=0.5)
+    if fight.seen is None or not (LOOT_X[0] <= fight.seen[0] <= LOOT_X[1]):
+        # far along the moat edge: 2 hops into the unknown met lightning there and she died (2026-11-01 22:11)
+        fight.say(f"loot: he died at {fight.seen}, out of one safe hop: skipping")
+        return []
+    x, y = fight.seen
+    fight.since_ref.clear()
+    fight.away(x - CENTER[0], y + 40 - CENTER[1], wait=0.5)  # the bar shows over his body: land just below
     bot.wait_still(timeout=2)
     fight.snap("dead")
     # the drop comes at the end of his death animation (2026-11-01 21:44: she stood on a dying body, found nothing)
     bot.sleep(max(0.0, DROP_WAIT - (time.time() - t_dead)))
-    picked = loot(bot)
-    if not picked:
+    picked = [] if fight.in_danger() else loot(bot)
+    if not picked and not fight.in_danger():
         bot.sleep(2.0)
-        picked = loot(bot)
+        picked = [] if fight.in_danger() else loot(bot)
+    if fight.in_danger():
+        fight.say(f"loot: MP {bot.mp} HP {bot.hp} at his body -> back to the dock")
+        fight.back_to()
     fight.snap("loot")
     fight.say(f"loot: {picked}")
     return picked
