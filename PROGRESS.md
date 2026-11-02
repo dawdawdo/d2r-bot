@@ -71,6 +71,8 @@ spot reached by view, Mephisto found and Blizzarded to 29% once, but his lightni
 waking him works 2 of 5. Details + next steps: docs/meph-navigation.md (2026-11-01 17:58-18:24).
 **First bot kill 2026-11-01 18:54** (1 of 5 full tries; the rest chickened to his lightning bursts with him at
 17-55%). Still a probe (`tools/probe_level3.py`), not yet a task in bot.run.
+**19:30 best fight: classic dock moat trick** (Council hunted first, potions, merc): Meph 100->22% with her at
+97-100% life; ended on a retreat-hop bug (fixed, untested). Next exact step in docs/meph-navigation.md (end).
 
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
 2026-10-30 23:08 - 10-31 09:50 (ended by Stephen's F12; Stephen away, foreground 8-min batches): LK 772/780 ok (7 chickens, 1 cut by my command timeout), ~47 s.

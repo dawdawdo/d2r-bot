@@ -264,7 +264,7 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 4
                         raise BotError("couldn't get back after the retreat")
                     if misses >= 4:
                         last = None  # he walked off: full search next time
-                if low >= 1.0 and misses % 2 == 0:  # never seen: wake him. His platform is one hop
+                if WAKE_HOP and low >= 1.0 and misses % 2 == 0:  # never seen: wake him. His platform is one hop
                     # north of Stephen's spot (the hops dock -> platform -> dock -> spot sum to (0, -310))
                     print("kill: hop to his platform to wake him", flush=True)
                     SINCE_REF.clear()
@@ -351,6 +351,9 @@ def main() -> int:
     ap.add_argument("--scan", action="store_true", help="then hover a grid; save monster name bars")
     ap.add_argument("--players", type=int, help="/players N on arrival in Durance 2 (LK batches reset theirs)")
     ap.add_argument("--buy-mana", action="store_true", help="fill the belt with Ormus's mana potions first")
+    ap.add_argument("--wake-hop", default="0,-300", help="screen px hop to his platform from the spot (none = off)")
+    ap.add_argument("--retreat", default="100,180", help="screen px hop away between volleys (none = stand)")
+    ap.add_argument("--meph-x", default="620,940", help="screen x band where he may be fought (0,1280 = any)")
     ap.add_argument("--chicken", type=float, help="chicken below this life %% (config: 50; Stephen OK'd lower for Meph)")
     ap.add_argument("--es-hp", type=float, help="shield-broken chicken below this life %% (config: 75; 0 = off)")
     args = ap.parse_args()
@@ -372,6 +375,10 @@ def main() -> int:
     if args.buy_mana:
         cfg["safety"]["potion_hp_pct"] = 60  # red potions for life (2 slots), blue for mana
         cfg["safety"]["potion_mp_pct"] = 50  # keep the shield up: his lightning empties mana fast
+    global MEPH_SAFE_X, WAKE_HOP, RETREAT
+    RETREAT = None if args.retreat == "none" else tuple(int(v) for v in args.retreat.split(","))
+    WAKE_HOP = None if args.wake_hop in ("", "none") else tuple(int(v) for v in args.wake_hop.split(","))
+    MEPH_SAFE_X = tuple(int(v) for v in args.meph_x.split(","))
     if args.chicken is not None:
         cfg["safety"]["chicken_hp_pct"] = args.chicken
     if args.es_hp is not None:

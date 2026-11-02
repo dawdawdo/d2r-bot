@@ -320,24 +320,26 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
         def kinds():
             return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
 
-        def buy(pt):
-            bot.input.key_down("shift")
-            bot.kill.sleep(0.05)
+        def buy(pt, shift: bool = True):
+            if shift:
+                bot.input.key_down("shift")
+                bot.kill.sleep(0.05)
             bot.click(*pt, "right")
             bot.kill.sleep(0.05)
-            bot.input.key_up("shift")
+            if shift:
+                bot.input.key_up("shift")
             bot.kill.sleep(0.5)
 
-        # red first (2 slots: life doesn't come back by itself in a long fight, 2026-11-01 19:19),
-        # then blue until the belt is full
-        for i in range(max_clicks // 2):
-            if sum(k in ("hp", "rejuv") for k in kinds()) >= o.get("healing_slots", 2) or None not in kinds():
-                break
-            buy(o["healing_potion"])
-        for i in range(max_clicks):
+        # Shift+right-click fills every empty belt column with that potion (live 2026-11-01: 4 x red).
+        # So: one red (plain right-click) claims the first empty column, shift-blue fills the rest,
+        # shift-red tops up the red column. Belt = 1 column red (life), 3 blue (mana = the shield).
+        if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
+            buy(o["healing_potion"], shift=False)
+        for i in range(3):
             if None not in kinds():
                 break
             buy(o["mana_potion"])
+        buy(o["healing_potion"])  # top up the red column (no-op if it's full)
         ok = None not in kinds()
         bot.press("esc")
         bot.kill.sleep(0.5)

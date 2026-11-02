@@ -180,3 +180,15 @@ south with Blizzard aimed at the screen's top edge, fewer casts per visit.
 **Ideas not tried yet:** follow him: when he goes left, shift her stand by the same screen offset (keep
 him at the same relative spot); the classic dock spot with the Council killed first (Stephen: "You have to
 kill first"); fight before he gets round (more casts per volley early, when he's still top centre).
+
+**Live 2026-11-01 19:27-19:30: classic dock moat trick with the full kit (best fight so far).**
+`--players 1 --es-hp 0 --chicken 25 --buy-mana --meph-x 0,1280 --wake-hop none --hops "-350,-60 x6 R B H
+-430,50 -300,-150 w3 D M"`: merc revived, buffs recast on the dock, hunt killed the Council member up-right
+((910, 60), 2 rounds), wake on his platform, back to the dock, kill loop. **Mephisto stood at the far edge
+((320, 75-100)) and went 100% -> 22% while her life stayed 97-100%**; only mana drained. It ended on my
+retreat hop (100, 180), which doesn't suit the dock ("couldn't get back").
+Also: shift+right-click fills every empty belt column (bought 4 x red, then she drank red for mana).
+Fixed (untested live): one plain red, shift-blue, shift-red -> 1 red column + 3 blue; `--retreat none`.
+
+**Next run to try (exact):** same command plus `--retreat none`. Then turn the probe sequence into the Meph
+task in bot.run (one game: LK + Meph toggles).
