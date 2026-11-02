@@ -125,6 +125,8 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
 (3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
 (5. Meph vs Wyand: C chosen 2026-11-01, built.)
 4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
+6. A2/A5 spawns: I have no frame of either spawn. Could you leave Blizzaga in Act 2 once (and Act 5 once) when
+   you stop playing? The next bot game then captures the spawn view and I build the detection + WP to Act 3.
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.

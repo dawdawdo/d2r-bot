@@ -147,8 +147,11 @@ class Controller:
                 if kind in (want, "rejuv"):
                     return key
         for key, kind in slots:
-            if kind is not None:
-                return key
+            if kind is None:
+                continue
+            if want == "hp" and kind == "mp" and (self.mp or 0) >= 70:
+                continue  # a mana potion does nothing for life when the shield is full (3 wasted, 2026-11-01)
+            return key
         return None
 
     def check(self) -> None:
