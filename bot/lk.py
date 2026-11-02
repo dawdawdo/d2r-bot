@@ -373,7 +373,7 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         found = []
         ignore = bot.cfg["vision"]["label_ignore"]
         if take_all:  # a hovered monster's name bar + mods line (white/gold) at the top centre
-            ignore = [*ignore, [300, 0, 680, 60]]
+            ignore = [*ignore, [300, 0, 680, 60], [0, 0, 110, 90]]  # + the merc's portrait and name
         for lab in find_labels(bot.frame, kinds, ignore=ignore):
             what = lab.kind
             if take_all:

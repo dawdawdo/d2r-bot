@@ -47,7 +47,8 @@ SOUTH_RETREAT = (100, 180)  # between volleys / to recover: down-right, out of h
 SOUTH_SAFE_X = (620, 940)  # he stands top centre when stuck; further left he is coming round to her side
 STUCK_ROUNDS = 3  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
-MEPH_GRID = sorted([(x, y) for y in range(20, 430, 55) for x in range(80, 1200, 80)],
+# he shows at y 20-130 from either spot (2026-11-01/02 logs); lower rows cost ~15 s per missed search
+MEPH_GRID = sorted([(x, y) for y in range(20, 190, 55) for x in range(80, 1200, 80)],
                    key=lambda p: (p[0] - 720) ** 2 + 4 * (p[1] - 50) ** 2)
 # the Council: top band first (Wyand Voidbringer, Mana Burn, stands up-right of the dock), then the rest
 HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200, 90)],
@@ -153,10 +154,18 @@ class MephFight:
 
     def wake(self) -> None:
         """Hop onto his platform (he wakes when she's near), wait, back to the spot."""
+        bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         self.since_ref.clear()
         for dx, dy in self.wake_hop:
             self.away(dx, dy)
-        self.bot.sleep(WAKE_WAIT)
+        # standing there woke him 1 time in 4 (2026-11-02 13:5x): a Static Field hits what's around her
+        self.snap(f"wake{getattr(self, 'wakes', 0)}")
+        self.wakes = getattr(self, "wakes", 0) + 1
+        bot.press(sk["static_field"])
+        bot.click(*CENTER, "right", hover=0)
+        bot.sleep(0.4)
+        bot.press(sk["teleport"])
+        bot.sleep(WAKE_WAIT)
 
     def step_away(self, wait: float) -> None:
         if not self.retreat:
@@ -276,7 +285,7 @@ class MephFight:
                         self.hunt(limit=20)
                     if misses >= 4:
                         self.last = None  # he walked off: full search next time
-                    if self.wake_hop and low >= 1.0 and misses % 2 == 0:
+                    if self.wake_hop and low >= 1.0:  # every miss: a search round costs ~20 s
                         self.say("kill: hop to his platform to wake him")
                         self.wake()
                         if not self.back_to():
