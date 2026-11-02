@@ -204,8 +204,12 @@ def find_meph(bot, last=None) -> tuple[tuple[int, int], float] | None:
     """Hover his last spot, then a grid over the left half: (point, life) where Mephisto's bar shows."""
     from bot.vision.namebar import name_bar
 
-    pts = ([last] + [(last[0] + dx, last[1] + dy) for dx, dy in ((-50, 0), (50, 0), (0, -40), (0, 40))]
-           if last else []) + MEPH_GRID
+    if last:  # seen before: only near his last point (a full grid = 11 s standing in his lightning)
+        lx, ly = last
+        pts = [(min(1260, max(20, lx + dx)), min(560, max(8, ly + dy)))
+               for dy in (0, 25, -12, 50) for dx in (0, -40, 40, -80, 80)]
+    else:
+        pts = MEPH_GRID
     for x, y in pts:
         bot.check()
         bot.input.move(x, y)
@@ -217,8 +221,9 @@ def find_meph(bot, last=None) -> tuple[tuple[int, int], float] | None:
 
 
 WAKE = [(720, 30), (560, 40), (880, 40)]
-RETREAT = (120, 260)  # screen px: down-right, away from his moat-edge spot (top centre)
+RETREAT = (100, 180)  # screen px: down-right, away from his moat-edge spot (top centre)
 RETREAT_WAIT = 1.5
+FLINCH_HP = 85  # life %% that cuts a volley short (bursts of 400+ life in ~2 s, 2026-11-01)
 
 
 def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 40) -> bool:
@@ -245,8 +250,17 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 4
             if found is None:
                 misses += 1
                 print(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})", flush=True)
-                if low < 0.3 and misses >= 2:
+                if low < 0.3 and misses >= 3:
                     return True
+                if last is not None and RETREAT:  # seen before: look again from a safe distance first
+                    SINCE_REF.clear()
+                    SINCE_REF.append(RETREAT)
+                    bot.click(640 + RETREAT[0], 330 + RETREAT[1], "right", hover=0)
+                    bot.sleep(RETREAT_WAIT)
+                    if not back_to(bot, ref):
+                        raise BotError("couldn't get back after the retreat")
+                    if misses >= 4:
+                        last = None  # he walked off: full search next time
                 if low >= 1.0 and misses % 2 == 0:  # never seen: wake him on his platform (top centre
                     # from Stephen's spot, his Blizzards at (708-729, 8-45) in views 202-214)
                     wx, wy = WAKE[(misses // 2) % len(WAKE)]
@@ -266,18 +280,24 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 4
             misses, (last, life) = 0, found
             low = min(low, life)
             bot.press(sk["blizzard"])
+            hit = False
             for k in range(3):
                 bot.click(*last, "right", hover=0)
                 bot.sleep(0.5)
                 nb = name_bar(bot.capture.grab())
                 if nb and nb["mephisto"]:
                     low = min(low, nb["life"])
+                if (bot.hp or 100) < FLINCH_HP:  # his lightning found her: out now, not after the volley
+                    hit = True
+                    break
             bot.press(sk["teleport"])
             print(f"kill round {rnd}: Mephisto at {last} life {life:.2f} (low {low:.2f}) HP {bot.hp} MP {bot.mp}",
                   flush=True)
             if RETREAT:  # hit and run: his lightning took 520 -> 42 life in < 2 s here (2026-11-01 18:17)
+                SINCE_REF.clear()
+                SINCE_REF.append(RETREAT)  # so a weak view match falls back to undoing the retreat
                 bot.click(640 + RETREAT[0], 330 + RETREAT[1], "right", hover=0)
-                bot.sleep(RETREAT_WAIT)  # the Blizzard keeps falling on him meanwhile
+                bot.sleep(RETREAT_WAIT * (2 if hit else 1))  # the Blizzard keeps falling on him meanwhile
                 if not back_to(bot, ref):
                     raise BotError("couldn't get back after the retreat")
     finally:
@@ -327,7 +347,7 @@ def main() -> int:
             return float(h[1:])
         if h.startswith("L"):  # L206: Stephen's recorded view 206 becomes the spot to return to
             return h
-        if h in ("R", "D", "C", "M", "H"):  # R: remember this spot; D: teleport back to it by the view
+        if h in ("R", "D", "C", "M", "H", "B"):  # R: remember this spot; D: teleport back to it by the view
             return h
         if h[0] in "bos":  # b/o/s x,y,n: n Blizzards / Frozen Orbs / Static Fields at screen (x, y)
             return (h[0],) + tuple(int(v) for v in h[1:].split(","))
@@ -339,6 +359,7 @@ def main() -> int:
     cfg = s.cfg
     if args.buy_mana:
         cfg["safety"]["potion_hp_pct"] = 0  # mana potions don't heal life: drink them for mana only
+        cfg["safety"]["potion_mp_pct"] = 50  # keep the shield up: his lightning empties mana fast
     if args.es_hp is not None:
         cfg["safety"]["es_broken_hp_pct"] = args.es_hp
     maps = ROOT / "maps" / cfg["game"]["route"]
@@ -379,6 +400,12 @@ def main() -> int:
                 SINCE_REF.clear()
                 ref = bot.capture.grab()
                 cv2.imwrite(str(out / f"{i:02d}_ref.png"), ref)
+                continue
+            if h == "B":  # recast Energy Shield + Frozen Armor here (town buffs may have run out)
+                from bot.town import cast_buffs
+
+                cast_buffs(bot)
+                print(f"buffs recast: HP {bot.hp} MP {bot.mp}", flush=True)
                 continue
             if h == "H":
                 print(f"hunt: {hunt_here(bot, ref, out, i)}", flush=True)

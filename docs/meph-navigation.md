@@ -147,3 +147,20 @@ Potions may be bought for Meph runs. Loot: whatever passes the filter.
 **Next (bot side):** retry with the merc alive (revive now automatic) and hit-and-run; if his lightning
 still lands, try 2 casts per volley and a longer retreat; make the wake reliable (longer platform stay, or
 cast at him on the platform before leaving).
+
+**Live 2026-11-01 18:47-19:02: first bot kill.**
+Sequence (`tools/probe_level3.py --players 1 --es-hp 0 --buy-mana --hops "-350,-60 x6 R -430,50 -300,-150 w3 D
+-364,105 -364,105 L206 D B M"`): mana potions + merc revive in town, dock, wake him on his platform, back to
+the dock by view, Stephen's spot (view 206), recast buffs, kill loop = find him by name bar (top centre,
+(480-900, 20-75)), 3-4 Blizzards, retreat (100, 180), 1.5 s, back by view (2 hops, < 20 px), repeat.
+Potions for mana only, below 50% (guard drinks once per 1.5 s).
+- 18:54 **kill** in 4 rounds (death burst seen, he was gone, drop on the ground), life 94-99% throughout.
+- 4 other full tries: he reached 17-55% each time, then a lightning burst (300-500 life in 1-2 s, more than
+  her mana pool so the shield can't take it) -> chicken at 11-47%. Flinch at 85% life (break the volley),
+  local re-search (no 11 s grid while exposed) didn't stop the bursts.
+- Merc dies every try (revived at Asheara each time, 50k).
+- Stephen: merc = Insight (mana regen); teleport brings him along, no need to wait.
+
+**What would help (Stephen's call):** lightning resistance on Blizzaga (gear swap for Meph), or accepting
+deaths (memory: "Blizzaga may die"; chickens are what cost here, not deaths). Bot side: a stand further
+south with Blizzard aimed at the screen's top edge, fewer casts per visit.

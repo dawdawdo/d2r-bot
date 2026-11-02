@@ -69,6 +69,8 @@ they talk via `logs/control.txt` + `logs/status.json` (bot/control.py). Phone ac
 reads Mephisto's life. Wyand blocked the dock (4/4); Stephen picked C. Now: mana potions bought at Ormus, merc revived, his safe
 spot reached by view, Mephisto found and Blizzarded to 29% once, but his lightning reaches the spot and
 waking him works 2 of 5. Details + next steps: docs/meph-navigation.md (2026-11-01 17:58-18:24).
+**First bot kill 2026-11-01 18:54** (1 of 5 full tries; the rest chickened to his lightning bursts with him at
+17-55%). Still a probe (`tools/probe_level3.py`), not yet a task in bot.run.
 
 **Next step (exact):** Stephen's decisions below. Until then: LK batches (proven, refill the belt from chests).
 2026-10-30 23:08 - 10-31 09:50 (ended by Stephen's F12; Stephen away, foreground 8-min batches): LK 772/780 ok (7 chickens, 1 cut by my command timeout), ~47 s.
