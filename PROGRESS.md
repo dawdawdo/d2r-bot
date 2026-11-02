@@ -14,6 +14,9 @@ name over an empty bar -> clear -> one hop to his body -> loot. The run after a 
   back_to refusing a right answer (min resp 0.10), a late chicken counted as a chicken not a death (now died).
 - Bremm Sparkfist (Council, lightning enchanted + aura + extra fast) can reach the dock and burn her out: chicken.
 - The merc dies most Meph runs (revive 50k from the shared stash; withdraw-on-empty works).
+- **Tally 21:29-23:02: 32 task runs: 17 ok (16 kills), 4 chickens, 4 deaths, 8 fails** (2 early bugs; the rest
+  mostly "pushed off the spot": back to the dock by view fails 3x). Stopped here per the 3-strikes rule and
+  switched to LK batches until Stephen answers question 7.
 
 **Charms (2026-10-31 17:10, Stephen):** filter rule "Show charms" (cm1–cm3, any rarity) installed with D2R
 closed and kept by the game; blue (magic) labels are picked; the stowaway hovers each item and sends blue-named
@@ -125,6 +128,10 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
 (3. Potions for Meph: answered 2026-10-30, buying is OK for Meph runs.)
 (5. Meph vs Wyand: C chosen 2026-11-01, built.)
 4. Live test windows for Meph (bot needs the PC; nothing live while Stephen uses it).
+7. **Meph from the dock is ~55 % kills, ~1 death in 8.** Deaths: Council walking onto the dock, his lightning
+   when he stands at screen x >= 400, a loot trip. Options: (a) I keep tuning live (more deaths, 28k gold + a merc
+   revive each); (b) you watch 3-4 runs and tell me where she should stand (your own fights found a better spot
+   by jumping around); (c) park Meph and only farm LK. LK batches run meanwhile.
 6. A2/A5 spawns: I have no frame of either spawn. Could you leave Blizzaga in Act 2 once (and Act 5 once) when
    you stop playing? The next bot game then captures the spawn view and I build the detection + WP to Act 3.
 

@@ -30,7 +30,7 @@ WAKE_HOPS = [(-430, 50), (-300, -150)]  # dock -> his platform; he wakes, then b
 WAKE_WAIT = 3.0
 PRESUME_DEAD_MISSES = 10  # rounds (~4 s each) without his bar after he was last seen below 30 %
 DROP_WAIT = 6.0
-LOOT_X = (200, 1000)  # screen x (from the dock) of his body that one hop reaches safely  # s from his last breath to the loot on the floor
+LOOT_X = (0, 1000)  # screen x (from the dock) of his body worth a trip (2 hops at most, checked)  # s from his last breath to the loot on the floor
 DANGER_MP = 30  # mana % (= her Energy Shield) below which she leaves his reach to recover
 SAFE_HOP = (350, 60)  # dock -> one hop back down the walkway (the way in: walkable, further from the moat)
 # his screen x from the dock where his lightning can't reach her: kills had him at 20-400; at 400-480 her
@@ -251,6 +251,10 @@ class MephFight:
                     if low < 0.3 and misses >= PRESUME_DEAD_MISSES:
                         self.say("kill: low and long gone: presumed dead")
                         return True
+                    if (bot.hp or 100) < 90 or misses % 3 == 0:
+                        # something else is on her: Council walking in along the walkway killed her while
+                        # this loop only looked for him (2026-11-01 22:38)
+                        self.hunt(limit=20)
                     if misses >= 4:
                         self.last = None  # he walked off: full search next time
                     if self.wake_hop and low >= 1.0 and misses % 2 == 0:
@@ -367,8 +371,20 @@ def loot_meph(fight: MephFight) -> list[str]:
         return []
     x, y = fight.seen
     fight.since_ref.clear()
-    fight.away(x - CENTER[0], y + 40 - CENTER[1], wait=0.5)  # the bar shows over his body: land just below
+    dx, dy = x - CENTER[0], y + 40 - CENTER[1]  # the bar shows over his body: land just below
+    n = max(1, int(np.ceil(np.hypot(dx, dy) / 420)))
+    for _ in range(n):  # 2 hops when he died far left; check after each (the 22:11 death was out there)
+        fight.away(dx / n, dy / n, wait=0.6)
+        if fight.in_danger():
+            fight.say(f"loot: MP {bot.mp} on the way -> back to the dock")
+            fight.back_to()
+            return []
     bot.wait_still(timeout=2)
+    near = fight.names_near(radius=280, n=12)
+    if near:
+        fight.say(f"loot: monsters at his body {near[:3]} -> back to the dock")
+        fight.back_to()
+        return []
     fight.snap("dead")
     # the drop comes at the end of his death animation (2026-11-01 21:44: she stood on a dying body, found nothing)
     bot.sleep(max(0.0, DROP_WAIT - (time.time() - t_dead)))
