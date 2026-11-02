@@ -3,6 +3,16 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-02 evening (Stephen at the PC; offline work only):**
+- Gold: Stephen: spend what Meph needs. Inventory: Stephen will clean it up.
+- Loot: no spare rejuvs for the stash any more (`loot.rejuv_spares: false`; belt slots only). Flawless + perfect
+  gems: rule in `filters/LK Bot.fltr` + white labels that aren't key/rejuv/gold are picked as "gem" (gold now
+  recognised by its "Gold" word). **Filter not installed yet: D2R was running.** `python tools/install_filter.py`
+  with D2R closed (backs up the live copy first) — do this before the next bot session.
+- Ormus: Botty's poses don't match Stephen's graphics (best < 0.65 with him on screen in 9 of 9 frames). The bot now
+  saves his sprite (`fixtures/raw/ormus_crops/`) whenever the hover scan finds him -> build our own templates.
+- LK 15:27-17:54: ~150 runs, 3 chickens, Ist rune. F12 by Stephen 17:54.
+
 **Mephisto 2026-11-02 afternoon (Stephen watched, then away): south bank (his "bottom side of the moat").**
 `meph.spot: south` (default; `dock` = the old way). Dock -> 2 hops to Stephen's view 206 -> buffs -> wake (hop onto
 his platform, Static Field, search the whole screen for his name, one Blizzard if seen; every other try one hop
@@ -147,9 +157,9 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
    when he stands at screen x >= 400, a loot trip. Options: (a) I keep tuning live (more deaths, 28k gold + a merc
    revive each); (b) you watch 3-4 runs and tell me where she should stand (your own fights found a better spot
    by jumping around); (c) park Meph and only farm LK. LK batches run meanwhile.
-8. **Gold for Meph practice.** Each south-bank death costs her gold + a 50k merc revive; today ~400k from the shared
+(8. Gold: answered 2026-11-02, spend what's needed.) Old text: **Gold for Meph practice.** Each south-bank death costs her gold + a 50k merc revive; today ~400k from the shared
    stash. How much may Meph tuning spend (e.g. 1M a day), or should the merc stay dead for Meph (he's only Insight)?
-9. **Inventory space:** 2 free cells after stashing. Meph gear (armor 2x3) can't be picked. Can you clear some of
+(9. Inventory: Stephen will clean it up, 2026-11-02.) Old text: **Inventory space:** 2 free cells after stashing. Meph gear (armor 2x3) can't be picked. Can you clear some of
    Blizzaga's inventory, or should the bot only pick small items at Meph?
 10. Act 2 town walk: you'd like it to go straight to the WP (as A3/A4 do). Next on my list after Meph.
 (6. A2/A5 spawns: done 2026-11-02. Detected by template (a2_spawn / a5_spawn), walk to the town waypoint, back to

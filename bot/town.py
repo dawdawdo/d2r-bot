@@ -310,8 +310,25 @@ def _ormus_points(bot: Controller, region):
     log.info("Ormus sprite: %s (best anywhere %s)", hits or "not on screen", best)
     # frames for tuning the threshold (the hover scan says afterwards whether he was there)
     cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"ormus_sprite_{_t.strftime('%m%d-%H%M%S')}.png"), frame)
+    bot.ormus_frame = frame  # _keep_ormus crops him from it once his dialog proves where he was
     yield from hits
     yield from _tooltip_points(bot, region)
+
+
+def _keep_ormus(bot: Controller, x: int, y: int) -> None:
+    """His dialog opened after a click at (x, y): save his sprite from the frame taken before the hover scan,
+    for templates matched to Stephen's graphics (Botty's poses score < 0.65 here, 2026-11-02)."""
+    import time as _t
+
+    import cv2
+
+    f = getattr(bot, "ormus_frame", None)
+    if f is None:
+        return
+    x0, y0 = max(0, x - 50), max(0, y - 90)
+    out = Path(bot.cfg["paths"]["raw_frames"]) / "ormus_crops"
+    out.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(out / f"{_t.strftime('%m%d-%H%M%S')}_{x}_{y}.png"), f[y0 : y + 90, x0 : x + 50])
 
 
 def heal_at_ormus(bot: Controller) -> bool:
@@ -325,6 +342,7 @@ def heal_at_ormus(bot: Controller) -> bool:
         bot.click(x, y)
         bot.kill.sleep(2.0)
         if bot.find("npc_ormus.png", region=(0, 0, 1280, 500), threshold=0.8) is not None:
+            _keep_ormus(bot, x, y)
             bot.press("esc")
             log.info("healed by Ormus")
             return True
@@ -358,6 +376,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
             bot.press("esc")
             bot.kill.sleep(0.3)
             continue
+        _keep_ormus(bot, x, y)
         bot.click(loc[0] + o["trade_offset"][0], loc[1] + o["trade_offset"][1])
         bot.kill.sleep(1.5)
         if bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is None:
