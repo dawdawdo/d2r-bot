@@ -22,6 +22,29 @@ CENTER = (640, 330)  # character's screen position
 TP_SETTLE = 0.2      # seconds per teleport (cast + landing); see nav.TP_SETTLE
 
 
+class TerrorZone(BotError):
+    """Lower Kurast is this hour's Terror Zone: monsters far stronger (2026-11-02 10:00: 4 chickens in 7 runs)."""
+
+
+_TERROR: list = []
+
+
+def _terror_mask(img: np.ndarray) -> np.ndarray:
+    i = img.astype(np.int16)
+    b, g, r = i[..., 0], i[..., 1], i[..., 2]
+    return ((b > 140) & (r > 100) & (g < b - 30)).astype(np.float32)  # the banner's purple letters
+
+
+def terrorized(frame: np.ndarray) -> bool:
+    """The purple "Terrorized" line under "Entering Lower Kurast" (shown for a few seconds on arrival)."""
+    if not _TERROR:
+        _TERROR.append(_terror_mask(cv2.imread(str(ROOT / "bot" / "assets" / "templates" / "terrorized.png"))))
+    reg = _terror_mask(frame[150:260, 440:840])
+    if reg.sum() < 0.3 * _TERROR[0].sum():
+        return False
+    return float(cv2.matchTemplate(reg, _TERROR[0], cv2.TM_CCORR_NORMED).max()) >= 0.7
+
+
 class MapChanged(BotError):
     """Arrival view doesn't match the stored map fingerprint: route is stale."""
 

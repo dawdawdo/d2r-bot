@@ -31,6 +31,10 @@ class LowerKurast(Task):
             town_to_lower_kurast(bot, arrived_check=arrived, stow=stow)
 
     def farm(self, bot: Controller) -> dict:
+        from ..lk import TerrorZone, terrorized
+
+        if self.cfg["game"].get("skip_terror", True) and terrorized(bot.capture.grab()):
+            raise TerrorZone("Lower Kurast is terrorized this hour")
         bot.deadline = bot.clock() + self.cfg["safety"]["run_timeout_s"]  # the farming part only
         return run_route(bot, self.route, end=lambda odo, stats: self._end(bot, odo, stats))
 

@@ -15,7 +15,7 @@ import time
 from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, RunTimeout
 from .learn import learn_map
-from .lk import MapChanged
+from .lk import MapChanged, TerrorZone
 from .tasks import get_tasks
 from .io import open_backend
 from .killswitch import KillSwitchTripped
@@ -255,6 +255,15 @@ def main() -> int:
                     ok += 1
                     streak = map_misses = 0
                     corpse = False
+                except TerrorZone as e:  # wait at the menu for the zone to rotate (top of the hour)
+                    row.update(result="terror", error=str(e))
+                    now = time.time()
+                    until = now - now % 3600 + 3600 + 60
+                    if args.max_minutes:
+                        until = min(until, t_start + 60 * args.max_minutes)
+                    log.warning("%s: waiting %.0f min (save & exit done)", e, max(0, until - now) / 60)
+                    while time.time() < until:
+                        session.kill.sleep(5)
                 except MapChanged as e:
                     row.update(result="map_changed", error=str(e))
                     map_misses += 1
