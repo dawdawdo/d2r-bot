@@ -88,7 +88,13 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:
                 log.info("HP %.0f%% at spawn -> heal at Ormus", bot.hp)
-                heal_at_ormus(bot)
+                if not heal_at_ormus(bot):  # he wanders: once more from a fresh spawn (2026-11-02 10:02: a miss
+                    log.info("Ormus missed; again in a fresh game")  # sent her to LK at 33%: instant chicken)
+                    save_and_exit(bot)
+                    create_game(bot, cfg["game"]["difficulty"])
+                    bot.wait_for("in_game", 10)
+                    if not heal_at_ormus(bot):
+                        raise BotError(f"not healed (HP {bot.hp:.0f}%): Ormus not found twice")
                 if repair:  # Ormus is on the way to Hratli but the route starts at spawn
                     save_and_exit(bot)
                     create_game(bot, cfg["game"]["difficulty"])
