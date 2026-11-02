@@ -50,6 +50,7 @@ SOUTH_RETREAT = (100, 180)  # between volleys / to recover: down-right, out of h
 # top centre (640-720, 20): 1 kill, 2 chickens (lightning bursts). Elsewhere she waits away for him to move
 # (he usually walks left along the edge), and fights after STUCK_ROUNDS there anyway
 SOUTH_SAFE_X = (280, 600)
+SOUTH_NEVER_X = (600, 960)  # top centre: never fight there, stuck or not (chickens 14:01, 14:46, 15:13)
 WAKE_GRID = [(x, y) for y in range(40, 560, 60) for x in range(80, 1240, 90)]  # all of the screen
 STUCK_ROUNDS = 6  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
@@ -66,13 +67,16 @@ class MephFight:
     remembered, undone when the view is no help."""
 
     def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=DOCK_SAFE_X,
-                 wake_hop=None, verbose: bool = False, extra_wake=None) -> None:
+                 wake_hop=None, verbose: bool = False, extra_wake=None,
+                 never_x=None) -> None:
         self.bot, self.out, self.say, self.verbose = bot, out, say, verbose
         # wake_hop: one (dx, dy) or a list of hops to his platform (the dock needs 2)
         if wake_hop is not None and not isinstance(wake_hop[0], (tuple, list)):
             wake_hop = [wake_hop]
         self.retreat, self.safe_x, self.wake_hop = retreat, safe_x, wake_hop
         self.extra_wake = extra_wake
+        self.never_x = never_x
+        self.seen_at = 0.0  # time he was last seen awake (no wake hops onto his platform soon after)
         self.ref: np.ndarray | None = None
         self.since_ref: list = []
         self.last: tuple[int, int] | None = None  # where to look for Mephisto first
@@ -180,6 +184,7 @@ class MephFight:
         hit = self.first_name(WAKE_GRID, dwell=0.06)
         if hit and hit[1]["mephisto"]:
             self.say(f"wake: Mephisto seen at {hit[0]} from his platform -> one Blizzard")
+            self.seen_at = time.time()
             bot.press(sk["blizzard"])
             bot.click(*hit[0], "right", hover=0)
             bot.sleep(0.4)
@@ -311,7 +316,9 @@ class MephFight:
                         self.hunt(limit=20)
                     if misses >= 4:
                         self.last = None  # he walked off: full search next time
-                    if self.wake_hop and low >= 1.0:  # every miss: a search round costs ~20 s
+                    # every miss (a search round ~5 s), but not right after he was seen: hopping onto his platform
+                    # with him awake there killed her (2026-11-02 15:16)
+                    if self.wake_hop and low >= 1.0 and time.time() - self.seen_at > 30:
                         self.say("kill: hop to his platform to wake him")
                         self.wake()
                         if not self.back_to():
@@ -320,6 +327,7 @@ class MephFight:
                     bot.sleep(0.8)
                     continue
                 misses, (self.last, life) = 0, found
+                self.seen_at = time.time()
                 self.seen = self.last
                 low = min(low, life)
                 if life <= 0:  # his name over an empty bar: dying
@@ -330,7 +338,9 @@ class MephFight:
                 prev = self.last
                 # stuck elsewhere on the far edge: he stood at (360, 75) for 3 min at full life, never coming
                 # round (2026-11-02 13:46, south bank): 3 rounds in one place = stuck, fight him there
-                if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (still < STUCK_ROUNDS or not self.retreat):
+                never = self.never_x is not None and self.never_x[0] <= self.last[0] <= self.never_x[1]
+                if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (
+                        never or still < STUCK_ROUNDS or not self.retreat):
                     self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is in reach: waiting away")
                     self.since_ref.clear()
                     self.away(*(self.retreat or SAFE_HOP), wait=3.0)

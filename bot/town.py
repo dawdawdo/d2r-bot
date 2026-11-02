@@ -6,6 +6,7 @@ so we walk a recorded route (config town.route) and then locate the waypoint by 
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -298,9 +299,17 @@ def _sprite_hits(frame, names: list[str], region, min_score: float, max_hits: in
 def _ormus_points(bot: Controller, region):
     """Where to click for Ormus: his sprite first (poses from Botty, Stephen 2026-11-02: "detect his sprite
     rather than scanning for his name"), then the hover scan of `region`."""
-    hits = _sprite_hits(bot.capture.grab(), [f"ormus_{i}.png" for i in range(6)], (0, 0, 1280, 560),
-                        ORMUS_SPRITE_MIN)
-    log.info("Ormus sprite: %s", hits or "not on screen")
+    import time as _t
+
+    import cv2
+
+    frame = bot.capture.grab()
+    names = [f"ormus_{i}.png" for i in range(6)]
+    hits = _sprite_hits(frame, names, (0, 0, 1280, 560), ORMUS_SPRITE_MIN)
+    best = _sprite_hits(frame, names, (0, 0, 1280, 560), 0.0, max_hits=1)
+    log.info("Ormus sprite: %s (best anywhere %s)", hits or "not on screen", best)
+    # frames for tuning the threshold (the hover scan says afterwards whether he was there)
+    cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"ormus_sprite_{_t.strftime('%m%d-%H%M%S')}.png"), frame)
     yield from hits
     yield from _tooltip_points(bot, region)
 
