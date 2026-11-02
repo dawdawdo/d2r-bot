@@ -945,7 +945,11 @@ def spawn_act(bot: Controller) -> int:
     Encampment spawn view is (Stephen played and ended in Act 1, 2026-10-31), else 3."""
     if find_a4_wp(bot):
         return 4
-    return 1 if bot.find("a1_spawn.png", (120, 0, 560, 300), 0.75) else 3
+    if bot.find("a1_spawn.png", (120, 0, 560, 300), 0.75):
+        return 1
+    if bot.find("a2_spawn.png", (0, 0, 1280, 450), 0.75):  # Warriv's caravan, Lut Gholein (spawns vary a bit)
+        return 2
+    return 3
 
 
 A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into view (fixed map, live 2026-10-31)
@@ -968,6 +972,57 @@ def leave_act1(bot: Controller) -> None:
     save_and_exit(bot)
     create_game(bot, bot.cfg["game"]["difficulty"])
     bot.wait_for("in_game", 10)
+
+
+# Lut Gholein spawn -> waypoint: walk clicks found by tools/town_probe.py (2026-11-02): north through the palm
+# square, north-east to the bazaar, north to Atma's tavern / the stash, then west and south-west. The town is
+# fixed; the waypoint (a2_wp.png) shows at ~(175, 410) at the end. Checked after every click: stop when seen.
+A2_WALK = [(640, 60), (640, 60), (640, 60), (1100, 200), (1100, 200), (1100, 150), (1100, 150), (1100, 150),
+           (640, 60), (640, 60), (900, 60), (900, 60), (200, 330), (200, 330), (200, 500), (200, 500),
+           # spawns vary, so the walk drifts: keep looking around the spot (it's west / south-west of the stash)
+           (200, 400), (200, 400), (400, 620), (200, 600), (100, 330), (640, 620)]
+A2_WP_CLICK = (75, 45)  # from the template's top-left to the waypoint's centre
+
+
+def leave_act2(bot: Controller) -> None:
+    """A2 spawn -> walk to the Lut Gholein waypoint -> Kurast Docks -> save & exit -> new game (Act 3)."""
+    from .lifecycle import create_game, save_and_exit
+
+    log.info("spawned in Act 2: walking to the Lut Gholein waypoint")
+    loc = None
+    for x, y in A2_WALK:
+        bot.click(x, y)
+        bot.kill.sleep(2.5)
+        loc = bot.find("a2_wp.png", (0, 0, 1280, 600), 0.7)
+        if loc is not None:
+            break
+    if loc is None:
+        bot.save_failure("a2_wp_not_found")
+        raise BotError("Act 2 waypoint not found along the walk")
+    for attempt in range(3):
+        bot.click(loc[0] + A2_WP_CLICK[0], loc[1] + A2_WP_CLICK[1])
+        try:
+            bot.wait_for("wp_menu", 5)
+            break
+        except BotError:
+            loc = bot.find("a2_wp.png", (0, 0, 1280, 600), 0.6) or loc
+    else:
+        raise BotError("Act 2 waypoint menu didn't open")
+    wp_travel(bot, "wp_tab_act3", "wp_town")
+    save_and_exit(bot)
+    create_game(bot, bot.cfg["game"]["difficulty"])
+    bot.wait_for("in_game", 10)
+
+
+def leave_other_act(bot: Controller, act: int) -> bool:
+    """Spawned in Act 1 or 2 (Stephen's own game ended there): to Act 3. True if it did."""
+    if act == 1:
+        leave_act1(bot)
+    elif act == 2:
+        leave_act2(bot)
+    else:
+        return False
+    return True
 
 
 def find_a4_wp(bot: Controller) -> tuple[int, int] | None:
