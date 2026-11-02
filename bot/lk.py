@@ -346,6 +346,10 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) or not state.load().get("rejuv_stash_full")
 
 
+def _sig(lab) -> tuple:
+    return lab.kind, lab.w // 4, lab.h // 4
+
+
 def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[str]:
     """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
     (white labels, told apart from gold by their first word). Returns what was picked.
@@ -379,15 +383,15 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
             if take_all:
                 if lab.kind == "white":
                     what = white_word(bot.frame, lab) or "white"
-            elif lab.kind == "white":
+            if lab.kind == "white" and not take_all:
                 what = white_word(bot.frame, lab)
                 if what not in supplies or not _want_supply(bot, what):
                     continue
-            elif lab.kind == "magic":
+            if lab.kind == "magic":  # take_all too: blue gear gets past the filter as Chronicle-eligible
                 if not is_charm(bot.frame, lab):
                     continue
                 what = "charm"
-            if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2:
+            if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2 or tried.get(_sig(lab), 0) >= 2:
                 continue  # still there after two clicks: can't pick it up (full, or not an item)
             found.append((what, lab))
         if not found:
@@ -409,6 +413,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
             cv2.imwrite(str(ROOT / "fixtures" / "raw" / name), bot.frame)
         cell = (lab.center[0] // 10, lab.center[1] // 10)
         tried[cell] = tried.get(cell, 0) + 1
+        # by kind + text width too: the label moves as she walks to it (no room: 9 clicks on 2 items, 2026-11-02)
+        tried[_sig(lab)] = tried.get(_sig(lab), 0) + 1
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
         if what == "rejuv" and all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):

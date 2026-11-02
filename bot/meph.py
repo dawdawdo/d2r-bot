@@ -276,7 +276,9 @@ class MephFight:
                     self.say(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})")
                     # low and gone: he walks off screen along the moat edge and back (2026-11-01 21:55: out
                     # left at 0.17, a 0.24 "kill" looted nothing): keep looking; only a long absence counts
-                    if low < 0.3 and misses >= PRESUME_DEAD_MISSES:
+                    # below 20 % one volley (~25 % each) finishes him, often during the retreat hop, unseen
+                    # (2026-11-02 14:20: 17 % then 9 misses until the deadline)
+                    if (low < 0.3 and misses >= PRESUME_DEAD_MISSES) or (low < 0.2 and misses >= 5):
                         self.say("kill: low and long gone: presumed dead")
                         return True
                     if (bot.hp or 100) < 90 or misses % 3 == 0:
@@ -418,6 +420,9 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
     bot = fight.bot
     if t_dead is None:
         t_dead = time.time()
+        if (bot.hp or 100) < FLINCH_HP or fight.in_danger():
+            # hurt at the kill: whatever hit her still does (2026-11-02 14:33: 79 % at his death, dead 3 s later)
+            fight.recover("after the kill")
         fight.clear(limit=25)
     if fight.seen is None or not (LOOT_X[0] <= fight.seen[0] <= LOOT_X[1]):
         # far along the moat edge: 2 hops into the unknown met lightning there and she died (2026-11-01 22:11)
