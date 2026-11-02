@@ -58,12 +58,12 @@ def test_status_lists_tasks(web):
     code, body = call(base, "/api/status", pw)
     d = json.loads(body)
     assert code == 200 and d["bot"]["running"] is False
-    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": False}
+    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": True}  # Durance 2 graph learned
 
 
 def test_start_validates_and_launches_once(web):
     base, pw, started = web
-    assert call(base, "/api/start", pw, {"tasks": ["meph"], "runs": 5})[0] == 400  # not ready yet
+    assert call(base, "/api/start", pw, {"tasks": ["nope"], "runs": 5})[0] == 400  # unknown task
     assert call(base, "/api/start", pw, {"tasks": [], "runs": 5})[0] == 400
     assert call(base, "/api/start", pw, {"tasks": ["lk"], "runs": 5, "minutes": 30})[0] == 200
     assert started[0][1:] == ["-m", "bot.run", "--mode", "chests", "--tasks", "lk", "--runs", "5", "--max-minutes", "30.0"]

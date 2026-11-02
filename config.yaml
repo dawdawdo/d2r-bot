@@ -42,6 +42,15 @@ safety:
                        # even when calm). Needs a real monster detector before it can gate huts.
   run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)
 
+meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
+  buy_mana: true        # fill empty belt columns at Ormus first (his Council's Mana Burn; Stephen: option C)
+  timeout_s: 300        # Durance 2 waypoint -> kill -> loot
+  safety:               # replaces `safety` keys during the fight (Stephen OK'd a lower chicken; 74% light res)
+    chicken_hp_pct: 25
+    es_broken_hp_pct: 0
+    potion_hp_pct: 60
+    potion_mp_pct: 50
+
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except Pul+ runes, unique rings and a few BiS
   # items (docs/loot.md); the bot then picks up visible labels of these colors.
@@ -164,7 +173,7 @@ vision:
     white:  {lo: [0, 0, 200], hi: [179, 30, 255]}        # gold, gems, normal items (testing only)
   label_ignore:                   # HUD (bottom bar + orbs), the clock (top right), life/mana text
     - [0, 595, 1280, 125]
-    - [1140, 10, 140, 40]
+    - [1040, 10, 240, 110]         # clock + zone lines (Durance 3 shows a gold boss-mod line, 2026-11-01)
     - [180, 565, 230, 30]
     - [880, 565, 230, 30]
     - [0, 420, 420, 150]           # chat messages (Terror Zone notices have orange = rune-colored text)

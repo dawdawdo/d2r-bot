@@ -27,12 +27,15 @@ def _text(strip: np.ndarray) -> np.ndarray:
 
 
 def name_bar(frame: np.ndarray) -> dict | None:
-    """{'life': 0..1, 'mephisto': bool} if a name bar shows, else None."""
+    """{'life': 0..1, 'mephisto': bool} if a name bar shows, else None. Mephisto's name over an
+    empty box = life 0: he's dying (the 2026-11-01 21:23 kill: name, no red, soul rising)."""
     x, y, w, h = BAR
     strip = frame[y : y + h, x : x + w]
     red = _red(strip)
     if red.mean() < 0.05:
-        return None  # no box (or a monster at 0 life: the bar is gone with it)
+        if is_mephisto(frame):
+            return {"life": 0.0, "mephisto": True}
+        return None  # no box (or another monster at 0 life)
     cols = np.nonzero(red.mean(axis=0) > 0.3)[0]
     if not len(cols):
         return None

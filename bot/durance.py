@@ -345,7 +345,8 @@ def to_durance2(bot, say=print, buy_mana: bool = False) -> None:
     from .controller import BotError
     from .lifecycle import create_game, ensure_main_menu, save_and_exit
     from .town import (act4_to, belt_full, buy_mana_at_ormus, heal_at_ormus, merc_alive, needs_heal,
-                       recover_corpse, restart_in_act3, revive_merc, spawn_act, town_to_wp)
+                       leave_act1, recover_corpse, restart_in_act3, revive_merc, spawn_act,
+                       town_to_wp)
 
     from .gamesettings import ensure_options
 
@@ -358,6 +359,9 @@ def to_durance2(bot, say=print, buy_mana: bool = False) -> None:
     bot.wait_for("in_game", 10)
     recover_corpse(bot)
     act = spawn_act(bot)
+    if act == 1:  # Stephen played and ended in Act 1 (2026-11-01 run walked the Rogue camp for Ormus)
+        leave_act1(bot)
+        act = 3
     # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
     hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
     if buy_mana and not merc_alive(bot):  # Meph: the merc is a second target for his lightning

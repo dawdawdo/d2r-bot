@@ -81,17 +81,26 @@ def ensure_main_menu(bot: Controller) -> None:
 
 def save_and_exit(bot: Controller) -> None:
     bot.guard(False)  # we're leaving; don't raise Chicken while trying to exit
-    for attempt in range(3):
-        bot.press("esc")
+    for tries in range(2):
+        for attempt in range(3):
+            bot.press("esc")
+            try:
+                bot.wait_for("esc_menu", 3)
+                break
+            except BotError:
+                if bot.state == "main_menu":
+                    return
+                log.info("esc menu not up (attempt %d)", attempt + 1)
+        else:
+            raise BotError("could not open the esc menu")
+        bot.click_ui("save_and_exit")
         try:
-            bot.wait_for("esc_menu", 3)
+            bot.wait_for("main_menu", 8)
             break
         except BotError:
-            if bot.state == "main_menu":
-                return
-            log.info("esc menu not up (attempt %d)", attempt + 1)
-    else:
-        raise BotError("could not open the esc menu")
-    bot.click_ui("save_and_exit")
-    bot.wait_for("main_menu", T_LOAD)
+            if bot.state != "in_game" or tries:
+                bot.wait_for("main_menu", T_LOAD)  # still loading out
+                break
+            # the click did nothing (2026-11-01 21:31, after an Ormus miss: 45 s in town): again
+            log.info("save & exit click didn't take; again")
     log.info("back at main menu")

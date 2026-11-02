@@ -43,6 +43,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     if mode != "lifecycle":
         bot.wait_for("in_game", 10)
         if players and set_players(bot, players):
+            bot.players_now = players
             state.save({**state.load(), "players_window": bot.game_window_id})
         ensure_loot_filter(bot)  # Stephen may have picked his own filter while playing
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
@@ -237,7 +238,8 @@ def main() -> int:
                     bot.keys_used = 0
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
-                                        players=cfg["game"].get("players") if players_due and i == 0 else None, corpse=corpse,
+                                        players=cfg["game"].get("players") if (players_due and i == 0) or getattr(bot, "players_now", None)
+                                        not in (None, cfg["game"].get("players")) else None, corpse=corpse,  # Meph sets its own
                                         stow=stow and chests, check_durability=dur, tasks=tasks)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:

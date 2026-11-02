@@ -11,3 +11,4 @@ runs.csv
 scratch/
 .claude/settings.local.json
 maps/*/fires/
+maps/*/durance3_auto/runs/

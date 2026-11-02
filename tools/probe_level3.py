@@ -278,6 +278,9 @@ def kill_meph(bot, ref, out: Path, i: int, limit: float = 180, min_mp: float = 4
                 continue
             misses, (last, life) = 0, found
             low = min(low, life)
+            if life <= 0:  # his name over an empty bar: dying (2026-11-01 21:23)
+                print(f"kill round {rnd}: Mephisto at {last} has no life left: dead", flush=True)
+                return True
             if not (MEPH_SAFE_X[0] <= last[0] <= MEPH_SAFE_X[1]):
                 # he walked left along the moat edge: closer to her there (heavy damage / a death at
                 # x 360-560 on 2026-11-01; the kill and the safe fights had him at x 720-900)
