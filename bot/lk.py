@@ -337,12 +337,13 @@ def loot(bot: Controller, max_picks: int = 10) -> list[str]:
         kinds.setdefault("white", labels_cfg["white"])
     picked: list[str] = []
     tried: dict[tuple[int, int], int] = {}
+    rescanned = False
     for i in range(max_picks):
         bot.check()
-        if i == 0 and bot.cfg.get("debug_loot_frames"):
+        if (i == 0 or (i == 1 and rescanned)) and bot.cfg.get("debug_loot_frames"):
             import time
 
-            cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"loot_{time.strftime('%H%M%S')}.png"),
+            cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"loot_{time.strftime('%H%M%S')}{'_re' if i else ''}.png"),
                         bot.frame)
         found = []
         for lab in find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"]):
@@ -359,6 +360,13 @@ def loot(bot: Controller, max_picks: int = 10) -> list[str]:
                 continue  # still there after two clicks: can't pick it up (full, or not an item)
             found.append((what, lab))
         if not found:
+            if i == 0 and not rescanned and _label_text_px(bot.frame, bot.cfg["vision"]["label_ignore"]) < 100:
+                # no label at all yet (drops still landing; labels come after): one more look. A chest that
+                # shows gold labels (130-3400 px, 24 chests 2026-11-02) has landed: no wait
+                rescanned = True
+                bot.sleep(0.7)
+                bot.frame = bot.capture.grab()
+                continue
             break
         what, lab = min(found, key=lambda f: abs(f[1].center[0] - CENTER[0]) + abs(f[1].center[1] - CENTER[1]))
         log.info("pick %s label at %s", what, lab.center)
