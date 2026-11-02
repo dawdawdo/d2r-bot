@@ -69,6 +69,13 @@ class Mephisto(Task):
         n = self.cfg["game"].get("meph_players")
         if n and getattr(bot, "players_now", None) != n and set_players(bot, n):
             bot.players_now = n  # the run loop sets LK's back next game
+            # and the next session too: "players already set for this D2R window" was left standing, so every
+            # LK run from 2026-11-01 23:03 to 11-02 06:36 (~540) ran at /players 1 (1 rune vs ~5 per 700 before)
+            from .. import state
+
+            st = state.load()
+            st.pop("players_window", None)
+            state.save(st)
         bot.sleep(1.0)
         auto2 = ROOT / "maps" / self.cfg["game"]["route"] / "durance2_auto"
         odo = AutomapOdometer.load(auto2, ensure_automap(bot))
