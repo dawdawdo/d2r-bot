@@ -132,8 +132,8 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
    when he stands at screen x >= 400, a loot trip. Options: (a) I keep tuning live (more deaths, 28k gold + a merc
    revive each); (b) you watch 3-4 runs and tell me where she should stand (your own fights found a better spot
    by jumping around); (c) park Meph and only farm LK. LK batches run meanwhile.
-6. A2/A5 spawns: I have no frame of either spawn. Could you leave Blizzaga in Act 2 once (and Act 5 once) when
-   you stop playing? The next bot game then captures the spawn view and I build the detection + WP to Act 3.
+(6. A2/A5 spawns: done 2026-11-02. Detected by template (a2_spawn / a5_spawn), walk to the town waypoint, back to
+   Act 3. Live: A2 ok (85 s run), A5 ok (67 s run). Stephen will watch Meph runs for question 7.)
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
 Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.

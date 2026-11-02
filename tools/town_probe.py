@@ -49,7 +49,7 @@ def main() -> int:
                 bot.click(*p)
                 bot.kill.sleep(args.wait)
             f = bot.capture.grab()
-            hsv = cv2.cvtColor(f[40:560, 300:1180], cv2.COLOR_BGR2HSV)
+            hsv = cv2.cvtColor(f[40:560, 0:1280], cv2.COLOR_BGR2HSV)
             blue = int(((hsv[..., 0] > 95) & (hsv[..., 0] < 130) & (hsv[..., 1] > 110) & (hsv[..., 2] > 140)).sum())
             print(f"{i:02d} {p} blue {blue}", flush=True)  # waypoint flames are bright blue
             cv2.imwrite(str(out / f"{i:02d}.png"), f)
