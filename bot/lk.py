@@ -342,8 +342,11 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     from . import state
     from .vision.orbs import belt_slots
 
-    # spares only while the stash stack has room (99 max; logs/state.json, set by the stowaway)
-    return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) or not state.load().get("rejuv_stash_full")
+    if not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
+        return True
+    # spares for the stash: off since Stephen 2026-11-02 ("stashing tons of potions ... no need for that");
+    # when on, only while the stash stack has room (99 max; logs/state.json, set by the stowaway)
+    return bool(bot.cfg["loot"].get("rejuv_spares")) and not state.load().get("rejuv_stash_full")
 
 
 def _sig(lab) -> tuple:
@@ -376,16 +379,31 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                         bot.frame)
         found = []
         ignore = bot.cfg["vision"]["label_ignore"]
-        if take_all:  # a hovered monster's name bar + mods line (white/gold) at the top centre
-            ignore = [*ignore, [300, 0, 680, 60], [0, 0, 110, 90]]  # + the merc's portrait and name
-        for lab in find_labels(bot.frame, kinds, ignore=ignore):
+        if take_all or bot.cfg["loot"].get("pick_white_other"):
+            # white text that isn't an item: a hovered monster's name bar + mods line at the top centre,
+            # the merc's name under his portrait
+            ignore = [*ignore, [300, 0, 680, 60], [0, 0, 110, 90]]
+        labs = find_labels(bot.frame, kinds, ignore=ignore)
+        # "1550 Gold" shows as two labels: the amount, then the word (51 px); neither is an item to pick here
+        golds = [g for g in labs if g.kind == "white" and white_word(bot.frame, g) == "gold"]
+        gold_amounts = {id(a) for a in labs for g in golds
+                        if a is not g and abs(a.y - g.y) <= 3 and 0 <= g.x - (a.x + a.w) <= 12}
+        for lab in labs:
+            if lab in golds or id(lab) in gold_amounts:
+                continue
             what = lab.kind
             if take_all:
                 if lab.kind == "white":
                     what = white_word(bot.frame, lab) or "white"
+                    if what in ("key", "rejuv") and not _want_supply(bot, what):
+                        continue
             if lab.kind == "white" and not take_all:
                 what = white_word(bot.frame, lab)
-                if what not in supplies or not _want_supply(bot, what):
+                if what is None and bot.cfg["loot"].get("pick_white_other"):
+                    # the filter hides gold and all white gear: a white label that's no key / rejuv is a
+                    # flawless or perfect gem (Stephen 2026-11-02: "I need those for cube recipes")
+                    what = "gem"
+                elif what not in supplies or not _want_supply(bot, what):
                     continue
             if lab.kind == "magic":  # take_all too: blue gear gets past the filter as Chronicle-eligible
                 if not is_charm(bot.frame, lab):

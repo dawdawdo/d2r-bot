@@ -190,6 +190,28 @@
             ]
         },
         {
+            "name": "Show flawless and perfect gems",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "itemCode": [
+                "gzv",
+                "gly",
+                "glb",
+                "glg",
+                "glr",
+                "glw",
+                "skl",
+                "gpv",
+                "gpy",
+                "gpb",
+                "gpg",
+                "gpr",
+                "gpw",
+                "skz"
+            ]
+        },
+        {
             "name": "Show cube gems for rune upgrades",
             "enabled": false,
             "ruleType": "show",

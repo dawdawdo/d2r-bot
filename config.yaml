@@ -59,6 +59,8 @@ loot:
   pick: [rune, unique, set, magic]  # set = green: Tal Rasha's Lidless Eye; magic = blue labels that say "Charm"
                                     # (Chronicle-eligible magic items show too; Stephen wants charms, 2026-10-31)
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
+  rejuv_spares: false            # true = also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: no need)
+  pick_white_other: true         # white labels that aren't keys/rejuvs = flawless/perfect gems (filter rule; 2026-11-02)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:

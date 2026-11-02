@@ -88,7 +88,7 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
     return sorted(out, key=lambda l: (l.y, l.x))
 
 
-WORD_TEMPLATES = {"key": "label_key.png", "rejuv": "label_rejuv.png"}  # "Rejuvenation" word: also Full Rejuvs
+WORD_TEMPLATES = {"key": "label_key.png", "rejuv": "label_rejuv.png", "gold": "label_gold.png"}  # "Rejuvenation" word: also Full Rejuvs
 _words: dict[str, np.ndarray] = {}
 
 
