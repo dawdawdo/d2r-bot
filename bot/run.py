@@ -189,8 +189,11 @@ def main() -> int:
     bot.merc_revive = True
     # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
     bot.game_window_id = getattr(backend.window, "hwnd", None)
+    # a Meph-only session plays at Meph's /players from game one (Stephen 2026-11-02: 7 then 1 in one game wastes time)
+    want_players = (cfg["game"].get("meph_players") or cfg["game"].get("players")) if tasks and all(
+        t.name == "meph" for t in tasks) else cfg["game"].get("players")
     players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
-    if players_setting(cfg) == cfg["game"].get("players"):
+    if players_setting(cfg) == want_players:
         players_due = False  # D2R keeps /players as a setting: no typing needed
     try:
         ensure_main_menu(bot)
@@ -243,8 +246,8 @@ def main() -> int:
                     bot.keys_used = 0
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
-                                        players=cfg["game"].get("players") if (players_due and i == 0) or getattr(bot, "players_now", None)
-                                        not in (None, cfg["game"].get("players")) else None, corpse=corpse,  # Meph sets its own
+                                        players=want_players if (players_due and i == 0) or getattr(bot, "players_now", None)
+                                        not in (None, want_players) else None, corpse=corpse,  # Meph sets its own
                                         stow=stow and chests, check_durability=dur, tasks=tasks)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
