@@ -407,7 +407,8 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
             if None not in kinds():
                 break
             buy(o["mana_potion"])
-        buy(o["healing_potion"])  # top up the red column (no-op if it's full)
+        # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
+        # 2026-11-02: healing + mana potions piling up on shared page 1)
         ok = None not in kinds()
         bot.press("esc")
         bot.kill.sleep(0.5)
