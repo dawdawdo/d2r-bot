@@ -60,7 +60,8 @@ class Mephisto(Task):
 
     def farm(self, bot: Controller) -> dict:
         from ..durance import AutomapOdometer, StopGraph, ensure_automap, level_now, to_level3
-        from ..meph import MephFight, fight_from_dock, loot_meph, to_dock
+        from ..meph import (SOUTH_RETREAT, SOUTH_SAFE_X, SOUTH_WAKE, WAKE_HOPS, MephFight, fight_from_dock,
+                            fight_from_south, loot_meph, to_dock)
         from ..town import set_players
 
         if self.route is None:
@@ -92,8 +93,12 @@ class Mephisto(Task):
 
             out = ROOT / "maps" / self.cfg["game"]["route"] / "durance3_auto" / "runs" / time.strftime("%m%d-%H%M%S")
             out.mkdir(parents=True, exist_ok=True)  # dock / dead / loot frames, for review
-            fight = MephFight(bot, out=out)
-            dead = fight_from_dock(fight)
+            if self.mcfg.get("spot", "south") == "south":
+                fight = MephFight(bot, out=out, retreat=SOUTH_RETREAT, safe_x=SOUTH_SAFE_X, wake_hop=SOUTH_WAKE)
+                dead = fight_from_south(fight)
+            else:  # the dock (north-east bank): Council hunt first
+                fight = MephFight(bot, out=out, wake_hop=WAKE_HOPS)
+                dead = fight_from_dock(fight)
             log.info("Mephisto %s (HP %.0f%% MP %.0f%%)", "dead" if dead else "NOT killed", bot.hp or 0, bot.mp or 0)
             picked = loot_meph(fight) if dead else []
         finally:

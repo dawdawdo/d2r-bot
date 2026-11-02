@@ -43,6 +43,7 @@ safety:
   run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)
 
 meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
+  spot: south           # south = the bottom bank (Stephen's spot, no Council hunt); dock = the north-east dock
   buy_mana: true        # fill empty belt columns at Ormus first (his Council's Mana Burn; Stephen: option C)
   timeout_s: 300        # Durance 2 waypoint -> kill -> loot
   safety:               # replaces `safety` keys during the fight (Stephen OK'd a lower chicken; 74% light res)

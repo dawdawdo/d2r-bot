@@ -346,17 +346,19 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) or not state.load().get("rejuv_stash_full")
 
 
-def loot(bot: Controller, max_picks: int = 10) -> list[str]:
+def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[str]:
     """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
-    (white labels, told apart from gold by their first word). Returns what was picked."""
+    (white labels, told apart from gold by their first word). Returns what was picked.
+    take_all (boss drops): every label color, no charm/supply check: the filter already hid the junk,
+    and boss-only items (essences, the Warlock release's ancients' statues) have colors we haven't seen."""
     from .vision.labels import is_charm, white_word
     from .vision.orbs import belt_slots
 
     ensure_labels_on(bot)
     labels_cfg = bot.cfg["vision"]["labels"]
-    kinds = {k: v for k, v in labels_cfg.items() if k in bot.cfg["loot"]["pick"]}
+    kinds = {k: v for k, v in labels_cfg.items() if take_all or k in bot.cfg["loot"]["pick"]}
     supplies = bot.cfg["loot"].get("supplies", [])
-    if supplies:
+    if supplies and not take_all:
         kinds.setdefault("white", labels_cfg["white"])
     picked: list[str] = []
     tried: dict[tuple[int, int], int] = {}
@@ -369,9 +371,15 @@ def loot(bot: Controller, max_picks: int = 10) -> list[str]:
             cv2.imwrite(str(Path(bot.cfg["paths"]["raw_frames"]) / f"loot_{time.strftime('%H%M%S')}{'_re' if i else ''}.png"),
                         bot.frame)
         found = []
-        for lab in find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"]):
+        ignore = bot.cfg["vision"]["label_ignore"]
+        if take_all:  # a hovered monster's name bar + mods line (white/gold) at the top centre
+            ignore = [*ignore, [300, 0, 680, 60]]
+        for lab in find_labels(bot.frame, kinds, ignore=ignore):
             what = lab.kind
-            if lab.kind == "white":
+            if take_all:
+                if lab.kind == "white":
+                    what = white_word(bot.frame, lab) or "white"
+            elif lab.kind == "white":
                 what = white_word(bot.frame, lab)
                 if what not in supplies or not _want_supply(bot, what):
                     continue
