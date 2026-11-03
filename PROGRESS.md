@@ -3,6 +3,19 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-02 night (Stephen away):**
+- Gem filter installed (D2R was at char select; closed it normally; old filter in `backups/filter-20261102-200736`).
+- **Act 2 spawns fixed:** Lut Gholein view map (`maps/towns/a2/`, `bot/vision/viewmap.py`, `bot/townnav.py`). ORB
+  offsets between her view and known views, scored by how many grid cells agree (palm trees/torches repeat all over
+  town and faked a fix 1000 px away). Off the map she follows the old click walk until a view is recognised, then
+  steers to the waypoint and clicks it (template when visible, else where the map puts it). 3/3 in
+  `tools/town_map.py` + 1 live run (13 steps). `python tools/town_map.py --act 2` learns more views when needed.
+- Meph belt: **`meph.buy_mana: false`** — the Materials rejuv stack is full (99) and spares were being dropped, so
+  the belt restocks rejuvs from the stash instead of Ormus mana potions (they fix life and Mana Burn). Set it back
+  to true if Stephen wants option C. Before: 4 runs, 1 kill, 2 chickens, 1 death, belts of mana with no life.
+  After: 3 runs, 2 clean kills at 99-100 % (set + white picked), 1 chicken (hp 4, run 3).
+- The memory reaper killed the batch at 21:58 (after run 3's chicken; she was at the menu). Not restarted.
+
 **2026-11-02 evening (Stephen at the PC; offline work only):**
 - Gold: Stephen: spend what Meph needs. Inventory: Stephen will clean it up.
 - Loot: no spare rejuvs for the stash any more (`loot.rejuv_spares: false`; belt slots only). Flawless + perfect

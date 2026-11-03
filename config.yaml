@@ -44,7 +44,8 @@ safety:
 
 meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
   spot: south           # south = the bottom bank (Stephen's spot, no Council hunt); dock = the north-east dock
-  buy_mana: true        # fill empty belt columns at Ormus first (his Council's Mana Burn; Stephen: option C)
+  buy_mana: false       # true = fill empty belt columns with Ormus mana potions (option C). Off 2026-11-02: the Materials
+                        # rejuv stack is full (99) and spares were being dropped; rejuvs fix life AND mana (Mana Burn)
   timeout_s: 420        # Durance 2 waypoint -> kill -> loot (300 cut a fight at 48%, 2026-11-02)
   safety:               # replaces `safety` keys during the fight (Stephen OK'd a lower chicken; 74% light res)
     chicken_hp_pct: 25
