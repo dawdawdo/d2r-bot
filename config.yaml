@@ -10,6 +10,7 @@ game:
   players: 7                                # /players N once per session (monsters weaker, chest loot same)
   meph_players: 1                           # /players before Level 3 (Stephen 2026-11-01); LK stays at players
   act4_exit: true                           # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
+  skip_terror: false                        # true = wait out a terrorized LK at the menu. Off 2026-11-03 (Stephen: she should handle it)
 
 paths:
   save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
