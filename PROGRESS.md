@@ -24,7 +24,7 @@
 - Tally 22:51-23:24 (full belt): 1 kill (2 uniques + rune), 3 parked -> new game, 1 death (16 rejuvs gone in ~2 min:
   ES turns hits into mana loss), 2 fails (platform return, town after the death). Before it 21:48-21:58: 2 kills/3.
 - Wake result doesn't predict where he parks (checked all of today's logs).
-- **Next for Meph (needs Stephen's eye):** his other plan, merc tanks Meph on his own side while she casts Static
+- **Next for Meph (Stephen 2026-11-03: "definitely try the Merc tank next time I'm back at the machine"):** merc tanks Meph on his own side while she casts Static
   x2 then Blizzard/Frozen Orb. The south bank tops out around 1/3 kills because of the parking.
 - **Fell back to LK runs 23:25** (Stephen: "fall back to LK runs, because we know those work"). By 06:05: ~440 runs,
   ~5 chickens, 1 town-WP fail; runes Um, Sur, Gul (04:25-04:40); many flawless/perfect gem picks.
