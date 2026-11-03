@@ -53,6 +53,7 @@ SOUTH_SAFE_X = (280, 600)
 SOUTH_NEVER_X = (600, 960)  # top centre: never fight there, stuck or not (chickens 14:01, 14:46, 15:13)
 WAKE_GRID = [(x, y) for y in range(40, 560, 60) for x in range(80, 1240, 90)]  # all of the screen
 STUCK_ROUNDS = 6  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
+NEVER_STUCK_ROUNDS = 8  # rounds (~4 s each) parked in never_x before giving up the game
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
 # he shows at y 20-130 from either spot (2026-11-01/02 logs); lower rows cost ~15 s per missed search
 MEPH_GRID = sorted([(x, y) for y in range(20, 190, 55) for x in range(80, 1200, 80)],
@@ -339,6 +340,10 @@ class MephFight:
                 # stuck elsewhere on the far edge: he stood at (360, 75) for 3 min at full life, never coming
                 # round (2026-11-02 13:46, south bank): 3 rounds in one place = stuck, fight him there
                 never = self.never_x is not None and self.never_x[0] <= self.last[0] <= self.never_x[1]
+                if never and still >= NEVER_STUCK_ROUNDS:
+                    # parked at the top centre: he stayed there 3+ min at full life (2026-11-02 23:01) and we
+                    # never fight there. His spot differs per game: a new game is quicker than the timeout
+                    raise BotError(f"Mephisto stuck at {self.last} (top centre, never fought there): new game")
                 if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (
                         never or still < STUCK_ROUNDS or not self.retreat):
                     self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is in reach: waiting away")
