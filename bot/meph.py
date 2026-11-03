@@ -46,6 +46,7 @@ SOUTH_VIEW = Path(__file__).parent / "assets" / "templates" / "meph_south_view.j
 SOUTH_WAKE = [(0, -300)]  # his platform is one hop north of the spot (woke him 3 of 3, 2026-11-01)
 SOUTH_EXTRA_WAKE = (-350, -120)  # one more hop up-left from the dais (tried on every other wake)
 SOUTH_RETREAT = (100, 180)  # between volleys / to recover: down-right, out of his reach
+SOUTH_LURE = (-364, 105)  # one more hop down-left along the bank (the way the 2 hops came): drags him left
 # where he can't reach her: 2026-11-02 13:46-14:50, stuck at x 360-400 (y 75-170): 6 kills at 97-99 % life;
 # top centre (640-720, 20): 1 kill, 2 chickens (lightning bursts). Elsewhere she waits away for him to move
 # (he usually walks left along the edge), and fights after STUCK_ROUNDS there anyway
@@ -69,8 +70,9 @@ class MephFight:
 
     def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=DOCK_SAFE_X,
                  wake_hop=None, verbose: bool = False, extra_wake=None,
-                 never_x=None) -> None:
+                 never_x=None, lure=None) -> None:
         self.bot, self.out, self.say, self.verbose = bot, out, say, verbose
+        self.lure = lure  # (dx, dy) hop to drag him toward safe_x when he parks in never_x
         # wake_hop: one (dx, dy) or a list of hops to his platform (the dock needs 2)
         if wake_hop is not None and not isinstance(wake_hop[0], (tuple, list)):
             wake_hop = [wake_hop]
@@ -287,7 +289,7 @@ class MephFight:
         """Blizzard Mephisto from the spot until he's dead (True)."""
         bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         t0, low, misses, rnd = time.time(), 1.0, 0, 0
-        prev, still = None, 0  # rounds he has stood at the same point outside the band
+        prev, still, lured = None, 0, False  # rounds he has stood at the same point outside the band
         try:
             while time.time() - t0 < limit:
                 self.on_spot("kill")
@@ -340,6 +342,16 @@ class MephFight:
                 # stuck elsewhere on the far edge: he stood at (360, 75) for 3 min at full life, never coming
                 # round (2026-11-02 13:46, south bank): 3 rounds in one place = stuck, fight him there
                 never = self.never_x is not None and self.never_x[0] <= self.last[0] <= self.never_x[1]
+                if never and still >= STUCK_ROUNDS and self.lure and not lured:
+                    # parked on the never side: walk him along the moat edge toward the safe side (he follows
+                    # her along it), then come back and see where he stops
+                    lured, still = True, 0
+                    self.say(f"kill round {rnd}: Mephisto parked at {self.last}: lure {self.lure}")
+                    self.since_ref.clear()
+                    self.away(*self.lure, wait=4.0)
+                    if not self.back_to():
+                        raise BotError("couldn't get back after the lure")
+                    continue
                 if never and still >= NEVER_STUCK_ROUNDS:
                     # parked at the top centre: he stayed there 3+ min at full life (2026-11-02 23:01) and we
                     # never fight there. His spot differs per game: a new game is quicker than the timeout

@@ -14,7 +14,19 @@
   the belt restocks rejuvs from the stash instead of Ormus mana potions (they fix life and Mana Burn). Set it back
   to true if Stephen wants option C. Before: 4 runs, 1 kill, 2 chickens, 1 death, belts of mana with no life.
   After: 3 runs, 2 clean kills at 99-100 % (set + white picked), 1 chicken (hp 4, run 3).
-- The memory reaper killed the batch at 21:58 (after run 3's chicken; she was at the menu). Not restarted.
+- The memory reaper killed the batch at 21:58 (after run 3's chicken; she was at the menu). Batches are now 1 Meph
+  run per command (a run can take 7 min; 3 blew the 10-min tool limit -> background -> reaped).
+- **Belt restock bug fixed (452e313):** shift-click fills hidden rows of part-full columns, so the visible row lied:
+  0-1 potions a restock and a false "stash out of rejuvs" flag. It now watches the stash stack: 16 filled live.
+  Uses Full Rejuvs, then Rejuvs (both stacks on the Materials tab; Stephen: both fine to use and to save).
+- Meph parks at the top centre (x 640-880) in many games and stays there at full life: now one lure hop along the
+  bank (moved him 40 px: no help), then **new game after 8 parked rounds** instead of a 5-min timeout.
+- Tally 22:51-23:24 (full belt): 1 kill (2 uniques + rune), 3 parked -> new game, 1 death (16 rejuvs gone in ~2 min:
+  ES turns hits into mana loss), 2 fails (platform return, town after the death). Before it 21:48-21:58: 2 kills/3.
+- Wake result doesn't predict where he parks (checked all of today's logs).
+- **Next for Meph (needs Stephen's eye):** his other plan, merc tanks Meph on his own side while she casts Static
+  x2 then Blizzard/Frozen Orb. The south bank tops out around 1/3 kills because of the parking.
+- **Fell back to LK runs 23:25** (Stephen: "fall back to LK runs, because we know those work").
 
 **2026-11-02 evening (Stephen at the PC; offline work only):**
 - Gold: Stephen: spend what Meph needs. Inventory: Stephen will clean it up.
