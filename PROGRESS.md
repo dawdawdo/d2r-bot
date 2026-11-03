@@ -3,6 +3,11 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-03 18:30, Stephen back: no bot running until he says so. Next live session: confirm these two fixes first.**
+- **Flail bug (Stephen saw BO fail in LK and Meph):** the swap key is a toggle and I counted presses. One lost press inverts every later swap: she stays on the flail, r/t do nothing. Evidence: max life 401 (flail, no BO) in 7 of 8 chicken frames from 17:58 on, which is probably why LK chickens jumped (17:17-18:26: 27 runs, 17 ok, 8 chickens, 2 fails, 9 Meph kills). Why the press was lost is unknown. Fix: `cast_warcries` reads the inventory tabs after each swap and retries, and only claims a cast if the flail really came up. About 1 s more per cast. **Tested offline only** (simulated toggle + real frames).
+- **2 min searching for a dead Meph (18:24-18:26):** he died unseen at 0.21. Now: gone below 50 % + new non-white loot labels = dead; fallback after 5 misses below 30 %, 4 below 20 % (was 10 and 5). In all logs he only came back after 1-2 misses. Not done: death-animation detection (no frames of it). Most of the 2 min was grid searches and hunts; also no periodic hunt below 30 % now. **Tested offline only;** the label check has not seen a real Meph drop.
+- To check live: `war cries` lines in the log, no `Call to Arms never came up` or `couldn.t confirm` warnings, max life 626 on chicken frames; Meph `loot dropped: dead` lines, and that no "dead" Meph is still alive when she hops over.
+
 **2026-11-03 evening (Stephen away): respec + Call to Arms are in.**
 - Hotkeys now: q Frozen Armor, w Energy Shield, e Static, **a Blizzard, d Glacial Spike** (they moved: the old config would have cast Spike as "Blizzard"), s Teleport, f Ice Blast. New: **r Battle Orders, t Battle Command** (t = Skill 9, bound in Options -> Controls; both bound in the skill picker). **F6 = weapon swap.**
 - War cries can't be cast in town (red on the skill bar), so: on LK arrival; on Durance 2 arrival and at the Meph spot, again every 75 s of the fight. Life 485 -> 626 and it stays full. A run that ends mid-cast is put back on the main set next game (inventory tabs: II = orb + shield).

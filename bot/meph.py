@@ -28,7 +28,10 @@ WORLD_PER_PX = 1.1  # odometer world px per screen px of a teleport (Level 3 hop
 DOCK_HOPS = [(-350, -60)] * 6  # Level 3 arrival -> the dock (the walkway runs up-left)
 WAKE_HOPS = [(-430, 50), (-300, -150)]  # dock -> his platform; he wakes, then back by the view
 WAKE_WAIT = 3.0
-PRESUME_DEAD_MISSES = 10  # rounds (~4 s each) without his bar after he was last seen below 30 %
+PRESUME_DEAD_MISSES = 5  # search rounds without his bar after he was last seen below 30 %. At 10 she searched 2 min
+                         # for a dead Meph (2026-11-03 18:24). In all logs he only came back after 1-2 misses
+PRESUME_DEAD_LOW_MISSES = 4  # the same below 20 %: one volley finishes him, often unseen during the retreat hop
+LOOT_SIGN_LOW = 0.5  # last seen below this + new loot labels on the ground = dead (one volley can take 50 %)
 DROP_WAIT = 6.0
 DEATH_THROES_S = 14.0  # s out of reach after his empty bar (hit at +11 s back on the spot, 15:01)
 LOOT_X = (0, 1000)  # screen x (from the dock) of his body worth a trip (2 hops at most, checked)  # s from his last breath to the loot on the floor
@@ -64,6 +67,19 @@ HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200,
                    key=lambda p: (p[1] > 200, abs(p[0] - 760)))
 
 
+def loot_labels(frame: np.ndarray, cfg: dict) -> list:
+    """Item labels on the ground, except white ones: gold and keys drop from any monster she kills here."""
+    from .vision.labels import find_labels
+
+    kinds = {k: v for k, v in cfg["vision"]["labels"].items() if k != "white"}
+    return find_labels(frame, kinds, ignore=cfg["vision"]["label_ignore"])
+
+
+def new_labels(labels: list, base: list, tol: int = 40) -> list:
+    """Labels that weren't there at the start of the fight (the view moves up to ~20 px between hops)."""
+    return [a for a in labels if not any(abs(a.x - b.x) <= tol and abs(a.y - b.y) <= tol for b in base)]
+
+
 class MephFight:
     """One fight from a remembered spot. `since_ref`: screen-px hops made since the spot was
     remembered, undone when the view is no help."""
@@ -80,6 +96,7 @@ class MephFight:
         self.extra_wake = extra_wake
         self.never_x = never_x
         self.seen_at = 0.0  # time he was last seen awake (no wake hops onto his platform soon after)
+        self.loot_base: list = []  # item labels on the ground when the fight began
         self.ref: np.ndarray | None = None
         self.since_ref: list = []
         self.last: tuple[int, int] | None = None  # where to look for Mephisto first
@@ -237,6 +254,24 @@ class MephFight:
         self.bot.input.move(1270, 590)
         return hits
 
+    def ground_labels(self) -> list:
+        """Item labels on screen with no name under the cursor (his name is label-colored too)."""
+        bot = self.bot
+        bot.input.move(1270, 590)
+        bot.sleep(0.12)
+        return loot_labels(bot.capture.grab(), bot.cfg)
+
+    def loot_dropped(self) -> bool:
+        """New non-white labels since the fight began. Alt may be off until there's something to tell by."""
+        from .lk import ensure_labels_on
+
+        self.bot.input.move(1270, 590)
+        ensure_labels_on(self.bot)
+        fresh = new_labels(self.ground_labels(), self.loot_base)
+        if fresh:
+            self.say(f"loot on the ground: {[(a.kind, a.x, a.y) for a in fresh[:4]]}")
+        return bool(fresh)
+
     def find_meph(self) -> tuple[tuple[int, int], float] | None:
         """(point, life) where Mephisto's bar shows: near his last point if known, else the grid."""
         if self.last:
@@ -292,6 +327,7 @@ class MephFight:
         bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         t0, low, misses, rnd = time.time(), 1.0, 0, 0
         prev, still, lured = None, 0, False  # rounds he has stood at the same point outside the band
+        self.loot_base = self.ground_labels()
         try:
             while time.time() - t0 < limit:
                 self.on_spot("kill")
@@ -308,14 +344,16 @@ class MephFight:
                 if found is None:
                     misses += 1
                     self.say(f"kill round {rnd}: Mephisto not found (low {low:.2f}, misses {misses})")
-                    # low and gone: he walks off screen along the moat edge and back (2026-11-01 21:55: out
-                    # left at 0.17, a 0.24 "kill" looted nothing): keep looking; only a long absence counts
-                    # below 20 % one volley (~25 % each) finishes him, often during the retreat hop, unseen
-                    # (2026-11-02 14:20: 17 % then 9 misses until the deadline)
-                    if (low < 0.3 and misses >= PRESUME_DEAD_MISSES) or (low < 0.2 and misses >= 5):
+                    if low < LOOT_SIGN_LOW and self.loot_dropped():
+                        self.say(f"kill round {rnd}: gone at {low:.2f} and loot dropped: dead")
+                        return True
+                    # low and gone, nothing visible dropped (the filter hides most, or he died off screen): he
+                    # also walks off along the moat edge and back (2026-11-01 21:55: out left at 0.17, a 0.24
+                    # "kill" looted nothing), so a short absence doesn't count
+                    if (low < 0.3 and misses >= PRESUME_DEAD_MISSES) or (low < 0.2 and misses >= PRESUME_DEAD_LOW_MISSES):
                         self.say("kill: low and long gone: presumed dead")
                         return True
-                    if (bot.hp or 100) < 90 or misses % 3 == 0:
+                    if (bot.hp or 100) < 90 or (misses % 3 == 0 and low >= 0.3):
                         # something else is on her: Council walking in along the walkway killed her while
                         # this loop only looked for him (2026-11-01 22:38)
                         self.hunt(limit=20)

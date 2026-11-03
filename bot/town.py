@@ -612,31 +612,74 @@ def cast_buffs(bot: Controller) -> None:
 
 WARCRY_SWAP_S = 0.25  # the set changes this long after the key
 WARCRY_CAST_S = 0.6   # no faster-cast gear on the swap set
+WARCRY_PANEL_S = 0.35  # the inventory panel is up by then
+
+
+def read_weapon_set(bot: Controller) -> int | None:
+    """Active weapon set, read from the inventory panel's tabs (open for a moment). The swap key is a toggle: a
+    lost press inverts every later swap, so she'd stay on the flail with no war cries (2026-11-03: max life 401
+    in 7 of 8 chicken frames from 17:58 on)."""
+    from .vision.inventory import weapon_set
+
+    inv = bot.cfg["hotkeys"]["inventory"]
+    bot.press(inv)
+    try:
+        bot.sleep(WARCRY_PANEL_S)
+        return weapon_set(bot.capture.grab())
+    finally:
+        bot.press(inv)
+        bot.sleep(0.1)
+
+
+def _swap_to(bot: Controller, want: int, tries: int = 3) -> bool:
+    """Press swap and read the set until it's `want`. False if it never is, or the tabs can't be read."""
+    for _ in range(tries):
+        bot.press(bot.cfg["hotkeys"]["swap_weapons"])
+        bot.sleep(WARCRY_SWAP_S)
+        now = read_weapon_set(bot)
+        if now == want:
+            return True
+        if now is None:
+            return False
+    return False
 
 
 def cast_warcries(bot: Controller) -> None:
-    """Swap to Call to Arms, cast `hotkeys.warcries`, swap back, select Teleport. Only outside town (the game
-    refuses war cries there). An exception on the way (chicken, F12) leaves `weapons_dirty` for the next game."""
+    """Swap to Call to Arms and check it's up, cast `hotkeys.warcries`, swap back and check, select Teleport.
+    Only outside town (the game refuses war cries there). Reads the set both ways because the swap key is a
+    toggle: counting presses can't notice a lost one. An exception on the way (chicken, F12), or tabs that can't
+    be read, leave `weapons_dirty` for the next game's check."""
     hk = bot.cfg["hotkeys"]
     if not hk.get("warcries"):
         return
+    main = hk["main_weapon_set"]
     bot.weapons_dirty = True
-    bot.press(hk["swap_weapons"])
-    try:
-        bot.sleep(WARCRY_SWAP_S)
-        for name in hk["warcries"]:
-            bot.press(hk["skills"][name])
-            bot.sleep(0.1)
-            bot.click(*bot.cfg["town"]["corpse_click"], "right", hover=0)
-            bot.sleep(WARCRY_CAST_S)
-    finally:
-        bot.press(hk["swap_weapons"])
-    bot.sleep(WARCRY_SWAP_S)
+    on_flail = _swap_to(bot, 3 - main)
+    if on_flail:
+        try:
+            for name in hk["warcries"]:
+                bot.press(hk["skills"][name])
+                bot.sleep(0.1)
+                bot.click(*bot.cfg["town"]["corpse_click"], "right", hover=0)
+                bot.sleep(WARCRY_CAST_S)
+        except BaseException:
+            bot.press(hk["swap_weapons"])  # a chicken mid-cast: no time to read it, the next game checks
+            raise
+        back = _swap_to(bot, main)
+    else:
+        back = read_weapon_set(bot) == main or _swap_to(bot, main)
     bot.press(hk["skills"]["teleport"])
     bot.sleep(0.1)
+    if not back:
+        bot.save_failure("weapon_set_unknown")
+        log.warning("war cries: couldn't confirm the main weapon set")
+        return
     bot.weapons_dirty = False
-    bot.warcries_at = bot.clock()
-    log.info("war cries cast: HP %s MP %s", bot.hp, bot.mp)
+    if on_flail:
+        bot.warcries_at = bot.clock()
+        log.info("war cries cast: HP %s MP %s", bot.hp, bot.mp)
+    else:
+        log.warning("war cries not cast: Call to Arms never came up")
 
 
 def refresh_warcries(bot: Controller) -> bool:
@@ -671,6 +714,7 @@ def ensure_main_weapons(bot: Controller) -> None:
     if now != hk["main_weapon_set"]:
         bot.save_failure("weapon_set_unknown")
         log.warning("weapon set reads %s, wanted %s", now, hk["main_weapon_set"])
+        return
     bot.weapons_dirty = False
 
 
