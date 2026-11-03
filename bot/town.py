@@ -188,9 +188,22 @@ def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict, quiet: bool = F
 
 
 def open_town_wp(bot: Controller, tcfg: dict) -> None:
+    closed = False
     for attempt in range(3):
         view = bot.capture.grab()
         loc = find_town_wp(bot, view, tcfg)
+        if loc is None and not closed:
+            # a panel left open hides it (2026-11-03: the stash still up after a stowaway that dropped keys).
+            # Esc closes it; if nothing was open that opens the game menu instead: Esc again
+            bot.save_failure(f"town_wp_hidden_{attempt}")
+            closed = True
+            bot.press("esc")
+            bot.kill.sleep(0.5)
+            if bot.observe() == "esc_menu":
+                bot.press("esc")
+                bot.kill.sleep(0.5)
+            view = bot.capture.grab()
+            loc = find_town_wp(bot, view, tcfg)
         if loc is None:
             bot.save_failure(f"town_wp_not_found_{attempt}")
             raise BotError("town waypoint not visible at end of route")
