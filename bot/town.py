@@ -1066,6 +1066,19 @@ def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off) 
     from .lifecycle import create_game, save_and_exit
 
     log.info("spawned in Act %d: walking to its waypoint", act)
+    vroot = ROOT / "maps" / "towns" / f"a{act}"
+    if (vroot / "index.json").exists():
+        # the town's view map (tools/town_map.py): find where we are, steer to the waypoint from any spawn
+        from .townnav import walk_to_target
+        from .vision.viewmap import ViewMap
+
+        def seen():
+            loc = bot.find(template, (0, 0, 1280, 600), 0.75)
+            return (loc[0] + click_off[0], loc[1] + click_off[1]) if loc else None
+
+        walk_to_target(bot, ViewMap.load(vroot), "wp", walk=walk, seen=seen)
+        _wp_to_act3(bot)
+        return
     loc = None
     for x, y in walk:
         bot.click(x, y)
@@ -1085,6 +1098,13 @@ def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off) 
             loc = bot.find(template, (0, 0, 1280, 600), 0.6) or loc
     else:
         raise BotError(f"Act {act} waypoint menu didn't open")
+    _wp_to_act3(bot)
+
+
+def _wp_to_act3(bot: Controller) -> None:
+    """Waypoint panel open in another act's town: Kurast Docks, save & exit, new game (it spawns in Act 3)."""
+    from .lifecycle import create_game, save_and_exit
+
     wp_travel(bot, "wp_tab_act3", "wp_town")
     save_and_exit(bot)
     create_game(bot, bot.cfg["game"]["difficulty"])
