@@ -660,6 +660,17 @@ def belt_needs_restock(bot: Controller) -> bool:
     return not all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])) and not state.load().get("stash_rejuvs_empty")
 
 
+def _stash_cell(frame: np.ndarray, pt) -> np.ndarray:
+    x, y = pt
+    return frame[y - 18:y + 18, x - 18:x + 18].copy()
+
+
+def _has_potion(cell: np.ndarray) -> bool:
+    """A rejuv stack's purple (empty stash cells are dark gray)."""
+    hsv = cv2.cvtColor(cell, cv2.COLOR_BGR2HSV)
+    return float(((hsv[..., 1] > 80) & (hsv[..., 2] > 60)).mean()) > 0.05
+
+
 def restock_belt(bot: Controller) -> int:
     """If any visible belt slot is empty, open the stash (next to the town WP) and shift-click
     Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
@@ -678,32 +689,32 @@ def restock_belt(bot: Controller) -> int:
         return 0
     bot.click(*scfg["materials_tab"])
     bot.kill.sleep(0.5)
+    # Watch the stash stack, not the belt: shift-click fills hidden rows of columns that already hold potions,
+    # so the visible row often doesn't change (2026-11-02: read as "stash slot empty" -> 0-1 potions a restock,
+    # empty belts in Meph fights). A click that changes the stack's picture (its count) moved a potion; one that
+    # doesn't means the belt is full, or that stack is gone (no purple left) -> the next stack (Rejuvs).
     moved = 0
     slots = list(scfg["rejuv_slots"])
-    prev = None
-    for _ in range(scfg.get("max_potions", 16)):
+    for _ in range(scfg.get("max_potions", 16) + len(slots)):
+        if not slots:
+            break
         bot.input.move(1270, 590)
         bot.kill.sleep(0.15)
-        now = belt_slots(bot.capture.grab(), belt)
-        if all(now):
-            break
-        if now == prev:  # last click moved nothing: that stash slot is empty, try the next
+        before = _stash_cell(bot.capture.grab(), slots[0])
+        if not _has_potion(before):
             slots.pop(0)
-            moved -= 1
-            if not slots:
-                break
-        prev = now
+            continue
         bot.input.key_down("shift")
         bot.kill.sleep(0.05)
         bot.click(*slots[0])
         bot.kill.sleep(0.05)
         bot.input.key_up("shift")
-        bot.kill.sleep(0.3)
+        bot.input.move(1270, 590)
+        bot.kill.sleep(0.35)
+        after = _stash_cell(bot.capture.grab(), slots[0])
+        if int((np.abs(after.astype(np.int16) - before.astype(np.int16)).max(axis=2) > 40).sum()) < 8:
+            break  # nothing moved: the belt is full
         moved += 1
-    else:
-        bot.observe()
-        bot.save_failure("belt_not_full_after_restock")
-        log.warning("belt still not full after %d clicks: stash out of Full Rejuvs?", moved)
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("restocked belt with %d potions", moved)
