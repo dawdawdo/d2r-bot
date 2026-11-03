@@ -610,6 +610,70 @@ def cast_buffs(bot: Controller) -> None:
     bot.kill.sleep(0.15)
 
 
+WARCRY_SWAP_S = 0.25  # the set changes this long after the key
+WARCRY_CAST_S = 0.6   # no faster-cast gear on the swap set
+
+
+def cast_warcries(bot: Controller) -> None:
+    """Swap to Call to Arms, cast `hotkeys.warcries`, swap back, select Teleport. Only outside town (the game
+    refuses war cries there). An exception on the way (chicken, F12) leaves `weapons_dirty` for the next game."""
+    hk = bot.cfg["hotkeys"]
+    if not hk.get("warcries"):
+        return
+    bot.weapons_dirty = True
+    bot.press(hk["swap_weapons"])
+    try:
+        bot.sleep(WARCRY_SWAP_S)
+        for name in hk["warcries"]:
+            bot.press(hk["skills"][name])
+            bot.sleep(0.1)
+            bot.click(*bot.cfg["town"]["corpse_click"], "right", hover=0)
+            bot.sleep(WARCRY_CAST_S)
+    finally:
+        bot.press(hk["swap_weapons"])
+    bot.sleep(WARCRY_SWAP_S)
+    bot.press(hk["skills"]["teleport"])
+    bot.sleep(0.1)
+    bot.weapons_dirty = False
+    bot.warcries_at = bot.clock()
+    log.info("war cries cast: HP %s MP %s", bot.hp, bot.mp)
+
+
+def refresh_warcries(bot: Controller) -> bool:
+    """Cast again once `hotkeys.warcry_refresh_s` have passed since the last cast. True if it cast."""
+    age = bot.cfg["hotkeys"].get("warcry_refresh_s")
+    if not age or bot.clock() - getattr(bot, "warcries_at", 0) < age:
+        return False
+    cast_warcries(bot)
+    return True
+
+
+def ensure_main_weapons(bot: Controller) -> None:
+    """At a game's start: back to the main set if a session began swapped (Stephen's own play) or a run ended
+    during the war cries. Checked once a session and after such a run; costs one look at the inventory."""
+    from .vision.inventory import weapon_set
+
+    if not getattr(bot, "weapons_dirty", True):
+        return
+    hk = bot.cfg["hotkeys"]
+    bot.press(hk["inventory"])
+    bot.kill.sleep(0.5)
+    bot.input.move(640, 600)
+    bot.kill.sleep(0.15)
+    now = weapon_set(bot.capture.grab())
+    if now is not None and now != hk["main_weapon_set"]:
+        log.info("weapon set %d is up: swapping back to %d", now, hk["main_weapon_set"])
+        bot.press(hk["swap_weapons"])
+        bot.kill.sleep(0.5)
+        now = weapon_set(bot.capture.grab())
+    bot.press(hk["inventory"])
+    bot.kill.sleep(0.3)
+    if now != hk["main_weapon_set"]:
+        bot.save_failure("weapon_set_unknown")
+        log.warning("weapon set reads %s, wanted %s", now, hk["main_weapon_set"])
+    bot.weapons_dirty = False
+
+
 def open_stash(bot: Controller, attempts: int = 3) -> bool:
     """Click the stash chest (found by template; the route's end point varies by a few dozen px)
     and wait for its panel. An NPC (often Cain) standing on it eats the click and opens a dialog:

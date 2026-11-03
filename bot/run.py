@@ -23,7 +23,7 @@ from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import control, state
 from .gamesettings import ensure_loot_filter, ensure_options, players_setting
-from .town import (leave_act1, leave_other_act, belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
+from .town import (ensure_main_weapons, leave_act1, leave_other_act, belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
                    repair_at_hratli, restart_in_act3, revive_merc, set_players, spawn_act, stowaway,
                    town_to_lower_kurast)
 from .vision.screen import ScreenClassifier
@@ -48,6 +48,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         ensure_loot_filter(bot)  # Stephen may have picked his own filter while playing
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
+        ensure_main_weapons(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
         if leave_other_act(bot, bot.act):  # Stephen's own game ended in Act 1 or 2
             bot.act = spawn_act(bot)
@@ -183,6 +184,8 @@ def main() -> int:
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
+    if not backend.window.set_client_size(*cfg["game"]["resolution"]):  # Stephen resizes it when he plays
+        log.warning("window size is not %s", cfg["game"]["resolution"])
     backend.window.focus()
     bot.keys_left = state.load().get("keys_left")  # estimate; None = unknown -> buy on the first run
     log.info("keys left (estimate): %s", bot.keys_left)

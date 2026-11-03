@@ -287,6 +287,8 @@ class MephFight:
 
     def kill(self, limit: float = 180, min_mp: float = 40) -> bool:
         """Blizzard Mephisto from the spot until he's dead (True)."""
+        from .town import refresh_warcries
+
         bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         t0, low, misses, rnd = time.time(), 1.0, 0, 0
         prev, still, lured = None, 0, False  # rounds he has stood at the same point outside the band
@@ -364,6 +366,7 @@ class MephFight:
                     if not self.back_to():
                         raise BotError("couldn't get back after waiting away")
                     continue
+                refresh_warcries(bot)
                 bot.press(sk["blizzard"])
                 hit = False
                 for _ in range(3):
@@ -427,11 +430,12 @@ def to_dock(bot, odo=None) -> None:
 
 def fight_from_dock(fight: MephFight) -> bool:
     """At the dock: remember it, buffs, Council hunt, wake him, back, kill. True = Mephisto dead."""
-    from .town import cast_buffs
+    from .town import cast_buffs, cast_warcries
 
     bot = fight.bot
     fight.remember()
     cast_buffs(bot)
+    cast_warcries(bot)
     fight.say(f"dock: buffs HP {bot.hp} MP {bot.mp}")
     fight.hunt()
     for dx, dy in WAKE_HOPS:
@@ -446,7 +450,7 @@ def fight_from_dock(fight: MephFight) -> bool:
 def fight_from_south(fight: MephFight) -> bool:
     """Dock -> the south bank (no Council hunt: they stay up by the dock) -> wake him -> kill from across
     the moat with hit-and-run volleys. True = Mephisto dead."""
-    from .town import cast_buffs
+    from .town import cast_buffs, cast_warcries
 
     bot = fight.bot
     for dx, dy in SOUTH_HOPS:
@@ -456,6 +460,7 @@ def fight_from_south(fight: MephFight) -> bool:
     if not fight.back_to():
         raise BotError("south bank: view not matched")
     cast_buffs(bot)
+    cast_warcries(bot)
     fight.say(f"south bank: buffs HP {bot.hp} MP {bot.mp}")
     fight.wake()
     if not fight.back_to():

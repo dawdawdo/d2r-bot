@@ -187,12 +187,12 @@ def movers(bot: Controller, gap: float = 0.18, min_area: int = 250, odo: Odomete
 
 
 def fight(bot: Controller, max_casts: int = 4, odo: Odometer | None = None) -> int:
-    """Cast Frozen Orb at moving monsters until nothing moves (or max_casts). Restores Teleport.
+    """Cast the attack skill at moving monsters until nothing moves (or max_casts). Restores Teleport.
     Pass `odo` to keep odometry running through teleport-on-hit jumps."""
     sk = bot.cfg["hotkeys"]["skills"]
     casts = 0
     quiet = 0
-    bot.press(sk["frozen_orb"])
+    bot.press(sk[bot.cfg["hotkeys"]["attack"]])
     try:
         while casts < max_casts and quiet < 2:
             m = movers(bot, odo=odo)
@@ -207,7 +207,7 @@ def fight(bot: Controller, max_casts: int = 4, odo: Odometer | None = None) -> i
     finally:
         bot.press(sk["teleport"])
     if casts:
-        log.info("fight: %d frozen orbs", casts)
+        log.info("fight: %d casts", casts)
     return casts
 
 

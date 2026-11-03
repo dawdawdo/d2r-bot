@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from ..controller import Controller
 from ..lk import fingerprint_ok, leave_to_act4, leave_via_wp, load_route, run_route
-from ..town import act4_to, town_to_lower_kurast
+from ..town import act4_to, cast_warcries, town_to_lower_kurast
 from . import Task
 
 
@@ -36,6 +36,7 @@ class LowerKurast(Task):
         if self.cfg["game"].get("skip_terror", True) and terrorized(bot.capture.grab()):
             raise TerrorZone("Lower Kurast is terrorized this hour")
         bot.deadline = bot.clock() + self.cfg["safety"]["run_timeout_s"]  # the farming part only
+        cast_warcries(bot)
         return run_route(bot, self.route, end=lambda odo, stats: self._end(bot, odo, stats))
 
     def _end(self, bot: Controller, odo, stats: dict) -> None:

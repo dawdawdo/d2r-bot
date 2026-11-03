@@ -11,7 +11,7 @@ import logging
 
 from ..config import ROOT
 from ..controller import BotError, Controller
-from ..town import act4_to, town_to_wp
+from ..town import act4_to, cast_warcries, town_to_wp
 from . import Task
 
 log = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ class Mephisto(Task):
         if self.route is None:
             raise BotError("no Durance 2 route yet (tools/find_durance.py)")
         bot.deadline = bot.clock() + self.mcfg.get("timeout_s", 300)
+        cast_warcries(bot)  # for the walk through Durance 2; again at the fight spot
         n = self.cfg["game"].get("meph_players")
         if n and getattr(bot, "players_now", None) != n and set_players(bot, n):
             bot.players_now = n  # the run loop sets LK's back next game

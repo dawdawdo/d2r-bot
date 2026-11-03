@@ -534,9 +534,9 @@ FRESH_ANCHOR = 1000  # px travelled since a bonfire fix (stand points are up to 
 
 
 def clear_spot(bot: Controller, x: int, y: int, casts: int = 3) -> None:
-    """Frozen Orbs at a screen point (a pack standing on a chest hides its tooltip), then Teleport back."""
+    """The attack skill at a screen point (a pack standing on a chest hides its tooltip), then Teleport back."""
     sk = bot.cfg["hotkeys"]["skills"]
-    bot.press(sk["frozen_orb"])
+    bot.press(sk[bot.cfg["hotkeys"]["attack"]])
     try:
         for _ in range(casts):
             bot.click(x, y, "right", hover=0)
@@ -602,7 +602,7 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
                 cx, cy = world_to_screen(odo, *chest_world(t, i, learned))
                 found = open_chest(bot, cx, cy, odo=odo, radius=105)
         if not found and fresh and not odo.lost:  # we know where it is: monsters standing on it?
-            log.info("%s: chest hidden at (%d, %d); frozen orbs, then look again", t["name"], cx, cy)
+            log.info("%s: chest hidden at (%d, %d); attacking, then look again", t["name"], cx, cy)
             clear_spot(bot, cx, cy)
             odo.update(bot.capture.grab())
             cx, cy = world_to_screen(odo, *chest_world(t, i, learned))

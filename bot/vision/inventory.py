@@ -38,6 +38,19 @@ def is_key(frame: np.ndarray, c: int, r: int, template: np.ndarray) -> bool:
     return float(cv2.matchTemplate(_cell(frame, c, r), template, cv2.TM_CCOEFF_NORMED).max()) >= KEY_SCORE
 
 
+# The "I" / "II" weapon tabs above the left hand (inventory open): the active one is bright (~93 vs ~46, 2026-11-03).
+WEAPON_TABS = {1: (872, 72, 36, 14), 2: (912, 72, 36, 14)}
+
+
+def weapon_set(frame: np.ndarray) -> int | None:
+    """Active weapon set (1 or 2) with the inventory open; None if the tabs don't read clearly."""
+    g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    m = {n: float(g[y : y + h, x : x + w].mean()) for n, (x, y, w, h) in WEAPON_TABS.items()}
+    if abs(m[1] - m[2]) < 20:
+        return None
+    return 1 if m[1] > m[2] else 2
+
+
 def protected_cells(rects) -> set[tuple[int, int]]:
     """Config `inventory.protected`: [c, r, w, h] rectangles of Stephen's own items (charms, tomes, cube)."""
     return {(c + i, r + j) for c, r, w, h in rects for i in range(w) for j in range(h)}

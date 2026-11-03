@@ -42,6 +42,20 @@ class Win32Window(Window):
     def is_foreground(self) -> bool:
         return _user32.GetForegroundWindow() == self.hwnd
 
+    def set_client_size(self, w: int, h: int) -> bool:
+        """Resize the window so its client area is w x h; D2R follows and remembers it as its own window size."""
+        _, _, cw, ch = self.client_rect()
+        if (cw, ch) == (w, h):
+            return True
+        rc = wt.RECT()
+        _user32.GetWindowRect(self.hwnd, ctypes.byref(rc))
+        frame_w, frame_h = rc.right - rc.left - cw, rc.bottom - rc.top - ch
+        log.info("window client %dx%d -> %dx%d", cw, ch, w, h)
+        _user32.ShowWindow(self.hwnd, 9)  # SW_RESTORE
+        _user32.SetWindowPos(self.hwnd, None, 0, 0, w + frame_w, h + frame_h, 0x0002 | 0x0004)  # NOMOVE | NOZORDER
+        _, _, cw, ch = self.client_rect()
+        return (cw, ch) == (w, h)
+
     def focus(self) -> None:
         """Windows refuses SetForegroundWindow from a background process unless its input is
         attached to the current foreground thread (a toast or a desktop menu had focus 2026-10-26)."""
