@@ -26,8 +26,8 @@
 - Wake result doesn't predict where he parks (checked all of today's logs).
 - **Next for Meph (needs Stephen's eye):** his other plan, merc tanks Meph on his own side while she casts Static
   x2 then Blizzard/Frozen Orb. The south bank tops out around 1/3 kills because of the parking.
-- **Fell back to LK runs 23:25** (Stephen: "fall back to LK runs, because we know those work"). By 02:45: ~205 runs,
-  3 chickens, 1 town-WP fail; many flawless/perfect gem picks (white labels).
+- **Fell back to LK runs 23:25** (Stephen: "fall back to LK runs, because we know those work"). By 06:05: ~440 runs,
+  ~5 chickens, 1 town-WP fail; runes Um, Sur, Gul (04:25-04:40); many flawless/perfect gem picks.
 
 **2026-11-02 evening (Stephen at the PC; offline work only):**
 - Gold: Stephen: spend what Meph needs. Inventory: Stephen will clean it up.
