@@ -3,6 +3,15 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-03 evening (Stephen away): respec + Call to Arms are in.**
+- Hotkeys now: q Frozen Armor, w Energy Shield, e Static, **a Blizzard, d Glacial Spike** (they moved: the old config would have cast Spike as "Blizzard"), s Teleport, f Ice Blast. New: **r Battle Orders, t Battle Command** (t = Skill 9, bound in Options -> Controls; both bound in the skill picker). **F6 = weapon swap.**
+- War cries can't be cast in town (red on the skill bar), so: on LK arrival; on Durance 2 arrival and at the Meph spot, again every 75 s of the fight. Life 485 -> 626 and it stays full. A run that ends mid-cast is put back on the main set next game (inventory tabs: II = orb + shield).
+- Charms: the bot has no selling code at all; the only risk was the stowaway moving them to the stash. `inventory.protected` now matches the new layout (key at col 3 row 0, skull + 2 small charms below it, cols 4-9 yours) and a test pins it to a frame of your inventory. All still in place after the runs below. Rearranging them means updating that config line.
+- LK/clear-a-chest attack is Glacial Spike (`hotkeys.attack`). D2R was at 1605x911: the bot now resizes it to 1280x720 at session start.
+- **Meph with BO, 16:50-17:16: 9 starts, 6 kills** (fights ~15 s, HP mostly 93-99 %), 1 parked at top centre -> new game, 1 "couldn't get back from his platform", 1 cut by my own command timeout. No deaths or chickens. Was ~1/3 kills. Merc-tank test is still yours to watch whenever you like, but it looks less urgent.
+- Shared stash page 1 is nearly full (Meph gear, plus ~30 potions on the right), so loot spills to your personal tab, which still has room. Worth a tidy when you're back; a full stash only means loot stays in the inventory.
+- Running detached now: `--tasks lk,meph` for up to 4 h. Moving the mouse or F12 stops it.
+
 **2026-11-02 night (Stephen away):**
 - Gem filter installed (D2R was at char select; closed it normally; old filter in `backups/filter-20261102-200736`).
 - **Act 2 spawns fixed:** Lut Gholein view map (`maps/towns/a2/`, `bot/vision/viewmap.py`, `bot/townnav.py`). ORB
@@ -195,7 +204,7 @@ Next: teach-and-repeat on his recorded views; make chat() verify the chat box. D
    Act 3. Live: A2 ok (85 s run), A5 ok (67 s run). Stephen will watch Meph runs for question 7.)
 
 **Facts:** Singularity Win11 1920×1080. D2R launches directly. Window client 1280×720.
-Skills: q Frozen Armor, w Energy Shield, e Static, a Frozen Orb, s Teleport (right-click), d Blizzard, f Ice Blast.
+Skills: see 2026-11-03 above (config `hotkeys`).
 Show Items = Alt toggle. Inventory key B. Automap full screen. Asheara: NW of Ormus along the boardwalk.
 Hratli: E across the plaza, SE bridge, NE bridge. Keys also at Lysander (A2). Stash next to the A3 WP.
 The game keeps .fltr files in memory; install filters only while D2R is closed. Terror Zone chat notices are
