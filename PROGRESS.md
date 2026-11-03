@@ -28,6 +28,9 @@
   x2 then Blizzard/Frozen Orb. The south bank tops out around 1/3 kills because of the parking.
 - **Fell back to LK runs 23:25** (Stephen: "fall back to LK runs, because we know those work"). By 06:05: ~440 runs,
   ~5 chickens, 1 town-WP fail; runes Um, Sur, Gul (04:25-04:40); many flawless/perfect gem picks.
+- 2026-11-03 morning: Call to Arms made (Stephen will respec for the flail's Dex; then add BC/BO to LK + Meph).
+  D2R was left at 1920x1080 after his play: closed + relaunched -> 1280x720. A stash left open hid the town WP:
+  open_town_wp now presses Esc once first. LK 08:19-09:05 ~45 runs, 1 chicken; F12 by Stephen at 09:05.
 
 **2026-11-02 evening (Stephen at the PC; offline work only):**
 - Gold: Stephen: spend what Meph needs. Inventory: Stephen will clean it up.
