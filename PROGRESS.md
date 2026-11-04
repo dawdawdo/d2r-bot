@@ -3,6 +3,14 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-03 23:18: Meph-only (Stephen's call: "continue to make improvements", LK when out of ideas or gold).** Running detached: `scratch/meph_then_lk.ps1`: Meph up to 6 h (stops on 6 fails in a row or a full stash), then LK up to 10 h. F12, the mouse or a web stop end it all, no LK afterwards. Logs: `scratch/meph_2317*.log`-ish, `scratch/lk_*.log`.
+- Why: Nov 2-3 logs: Meph 44 kills = 6 runes, 19 uniques, 17 sets; LK 1540 passes = 6 runes, 992 gems, no uniques or sets (the filter's the same).
+- `meph.fight_parked: true`: she fights him in the top centre after 3 rounds there. Before: 8 parked fights, 0 kills. 22:32-23:03: 12 games, 12 kills, 3 of them parked fights, no fails or chickens. The old rule came from the build without BO. Gives up after 12 rounds with under 5 % damage (`skipped`).
+- **Lost loot found:** `find_labels` rejected a label touching another label or sprite (blob too tall). Logs/frames: at least a War Spear (21:01) and a Battle Axe (21:04) left on the ground, and a **unique ring at 21:24** (frame `durance3_auto/runs/1103-212258/loot.jpg`). Fix recovers stacked labels (4 real frames in `tests/test_labels_real.py`; 749 frames: only those 4 change). **The ring case itself isn't proven:** that frame is only saved small and my simulated sprites didn't recover. A kill with no pickup now saves a full frame: `meph_loot_empty`.
+- Monsters still at his body after the hunt: she grabs what shows, then leaves (23:10 left a drop). Not confirmed live yet.
+- Stash: shared page 1 and most of personal are full. Stowaway now spills to shared pages 5, 4, 3, 2 (these are Stephen's sorted pages, so loot will mix in) and the run stops when all are full. **Not exercised live yet.** `tools/look_stash.py` screenshots the tabs without moving anything.
+- Gold 8.4M shared: not a limit. Open: the Act 3 town stall (`town waypoint not visible`), merc death cost, 35 s after-kill wait.
+
 **2026-11-03 21:16, Stephen away, said to proceed: both fixes below checked live.** Detached `--tasks lk,meph`, `--max-minutes 60`, started 20:55: stops itself by about 21:55 (log `scratch/live_2055.err`).
 - War cries: 19 casts in that session + 8 before it, no weapon warnings. The one chicken frame shows max life 618 (BO up; the 626 expected is close but not explained).
 - Loot check: 1 live hit, right: gone at 0.15, 2 set labels, "dead", both sets picked (21:07). Fallback: 1 at 0.15 after 4 misses, nothing to pick up, so that kill is unconfirmed (21:15). No false "dead" seen yet; sample is tiny.
