@@ -137,6 +137,8 @@ stash:
   max_potions: 16
   runes_tab: [370, 70]
   shared_tab: [145, 70]         # stowaway: unique rings go to shared page 1; runes auto-route to the Runes tab
+  shared_next_page: [283, 486]  # the arrows beside "Page 1 / 5"
+  shared_prev_page: [164, 486]
   gold_button: [167, 533]       # shared tab: the gold amount under the grid opens "Withdraw" (live 2026-11-01)
   withdraw_ok: [577, 387]
   withdraw_gold: 200000         # Blizzaga carries ~0 and her own stash ~18k; a merc revive costs 50k

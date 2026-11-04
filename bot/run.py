@@ -323,6 +323,9 @@ def main() -> int:
                 tally["chests"] = tally.get("chests", 0) + int(row.get("chests") or 0)
                 control.write_status(state="running", run=i + 1, runs=args.runs, task=row["task"], tally=tally,
                                      started=t_start, last=row)
+                if getattr(bot, "stash_full", False):
+                    log.error("stash full, loot can't be stored: stopping (Stephen clears it; LK needs little room)")
+                    break
                 if streak >= args.max_fail_streak:
                     log.error("%d failures in a row; stopping", streak)
                     break

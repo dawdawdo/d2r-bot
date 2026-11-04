@@ -961,6 +961,37 @@ def durability_ok(bot: Controller) -> bool:
     return not worn
 
 
+def _spill_to_shared_pages(bot: Controller, spill: list, left: list) -> list:
+    """Shared page 1 and the personal tab are full: try pages 5, 4, 3, 2 (Stephen sorts those, so last; at ~40 items
+    an hour a full stash would otherwise strand Mephisto's drops), then back to page 1. Returns what's still left."""
+    scfg = bot.cfg["stash"]
+    bot.click(*scfg["shared_tab"])
+    bot.kill.sleep(0.4)
+    for _ in range(4):
+        bot.click(*scfg["shared_next_page"])
+        bot.kill.sleep(0.15)
+    for page in range(5, 1, -1):
+        log.info("stowaway: %d item(s) to try on shared page %d", len(spill), page)
+        for cell in spill:
+            _ctrl_click(bot, *cell_center_of(cell))
+        left = _scan_inventory(bot)["other"]
+        spill = [cell for cell in spill if cell in left]
+        if not spill:
+            break
+        bot.click(*scfg["shared_prev_page"])
+        bot.kill.sleep(0.3)
+    for _ in range(4):
+        bot.click(*scfg["shared_prev_page"])
+        bot.kill.sleep(0.15)
+    return left
+
+
+def cell_center_of(cell: tuple[int, int]) -> tuple[int, int]:
+    from .vision.inventory import cell_center
+
+    return cell_center(*cell)
+
+
 def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     """At the stash stop: Ctrl+click loot (runes, unique rings: anything outside Stephen's protected
     cells that isn't a key) into the stash, then drop key stacks beyond one (pickups add whole stacks;
@@ -1016,6 +1047,10 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 for cell in spill:
                     _ctrl_click(bot, *cell_center(*cell))
                 left = _scan_inventory(bot)["other"]
+                spill = [cell for cell in left if cell not in rejuv_cells]
+                if spill:
+                    left = _spill_to_shared_pages(bot, spill, left)
+                    bot.stash_full = any(cell not in rejuv_cells for cell in left)
             done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
             bot.input.move(640, 600)
