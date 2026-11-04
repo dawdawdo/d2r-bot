@@ -3,6 +3,12 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-04 01:45: Stephen: Meph until the stash fills, then LK.** Running detached since 01:38: `scratch/meph_then_lk.ps1`, log `scratch/meph_0138.log`, no time budget. Ends Meph on a full stash or 6 failures in a row; LK then runs with `--stash-full-ok` (log `scratch/lk_0138.log`): a full stash no longer stops it, it picks only runes (no gems, uniques, sets). LK path with a full stash has only a unit test, not run live. F12, mouse or a web stop end everything, with no LK.
+- Session 23:17-01:38: 57 games, 50 ok. Spill to shared page 5 works live (12+ times, nothing stranded).
+- **Correction:** the "rune" pick count = all orange labels. All 9 since 22:30 were essences or Madawc's Ire, no real runes. "Meph 6 runes" below is unverified. `loot.csv` "item to shared tab" overcounts (a failed Ctrl+click is hovered and counted again per cell).
+- **Filter puzzle:** about 51 of 65 sets/uniques since 22:30 have no "Eligible for Chronicle" line, yet "Hide all gear" didn't hide them. Installed filter = intended rules. Cause unknown.
+- **Next, targeted loot (Stephen agreed it's possible; he will send more targets later):** a wanted-list file by base type + rarity; in town read the stowaway tooltip; keep wanted or Eligible, drop the rest; log-only trial first. Stephen believes the Chronicle fills on identification and is fine with duplicates: the chance of one mattering gets vanishingly small, so the Eligible line is good enough. Unidentified rings/amulets can't be told apart: keep them all.
+
 **2026-11-03 23:18: Meph-only (Stephen's call: "continue to make improvements", LK when out of ideas or gold).** Running detached: `scratch/meph_then_lk.ps1`: Meph up to 6 h (stops on 6 fails in a row or a full stash), then LK up to 10 h. F12, the mouse or a web stop end it all, no LK afterwards. Logs: `scratch/meph_2317*.log`-ish, `scratch/lk_*.log`.
 - Why: Nov 2-3 logs: Meph 44 kills = 6 runes, 19 uniques, 17 sets; LK 1540 passes = 6 runes, 992 gems, no uniques or sets (the filter's the same).
 - `meph.fight_parked: true`: she fights him in the top centre after 3 rounds there. Before: 8 parked fights, 0 kills. 22:32-23:03: 12 games, 12 kills, 3 of them parked fights, no fails or chickens. The old rule came from the build without BO. Gives up after 12 rounds with under 5 % damage (`skipped`).
