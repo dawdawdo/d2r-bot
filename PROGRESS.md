@@ -3,6 +3,11 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-04 18:50: Chronicle filter + all gems (Stephen's `Chronicle_Filter_Handoff.md`).** `tools/chronicle_filter.py` regenerates `filters/LK Bot.fltr` from the Chronicle: uniques and sets show only on bases that can still be new (164 + 31 codes, same as the handoff's snapshot). Existing pickups stay; every gem and skull grade added. Rerun after sessions, with D2R closed: `python tools/chronicle_filter.py --install`.
+- **Filter puzzle, probable answer:** rarity + `itemCode` in one rule means OR, so the old BiS and Lidless rules showed all uniques and sets. New rules use `equipmentItemCode` (differs from the handoff, which said `itemCode`). Reasoned from the filter files, **not yet confirmed live**.
+- Tests use a synthetic Chronicle: copying the real stash file into the repo was blocked, and the repo is pushed. The real file was checked read-only and matched (103/203/5).
+- To check live: unwanted uniques and sets stop showing; the game keeps all 158 + 30 codes when it rewrites the file; gem stacks don't fill and spill into the shared pages.
+
 **2026-11-04 01:45: Stephen: Meph until the stash fills, then LK.** Running detached since 01:38: `scratch/meph_then_lk.ps1`, log `scratch/meph_0138.log`, no time budget. Ends Meph on a full stash or 6 failures in a row; LK then runs with `--stash-full-ok` (log `scratch/lk_0138.log`): a full stash no longer stops it, it picks only runes (no gems, uniques, sets). LK path with a full stash has only a unit test, not run live. F12, mouse or a web stop end everything, with no LK.
 - Session 23:17-01:38: 57 games, 50 ok. Spill to shared page 5 works live (12+ times, nothing stranded).
 - **Correction:** the "rune" pick count = all orange labels. All 9 since 22:30 were essences or Madawc's Ire, no real runes. "Meph 6 runes" below is unverified. `loot.csv` "item to shared tab" overcounts (a failed Ctrl+click is hovered and counted again per cell).

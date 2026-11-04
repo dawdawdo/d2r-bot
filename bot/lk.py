@@ -401,11 +401,11 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                 what = white_word(bot.frame, lab)
                 if what is None and bot.cfg["loot"].get("pick_white_other"):
                     # the filter hides gold and all white gear: a white label that's no key / rejuv is a
-                    # flawless or perfect gem (Stephen 2026-11-02: "I need those for cube recipes")
+                    # gem or skull, any grade (Stephen 2026-11-04: all gems, for rune cube recipes)
                     what = "gem"
                 elif what not in supplies or not _want_supply(bot, what):
                     continue
-            if lab.kind == "magic":  # take_all too: blue gear gets past the filter as Chronicle-eligible
+            if lab.kind == "magic":  # take_all too: blue jewels show (the jewel rule has no rarity)
                 if not is_charm(bot.frame, lab):
                     continue
                 what = "charm"

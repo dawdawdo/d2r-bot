@@ -62,14 +62,15 @@ meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from 
     potion_mp_pct: 50
 
 loot:
-  # The in-game filter (filters/LK Bot.fltr) hides everything except Pul+ runes, unique rings and a few BiS
-  # items (docs/loot.md); the bot then picks up visible labels of these colors.
+  # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
+  # visible labels of these colors. Which uniques and sets show is decided only there, per base code:
+  # tools/chronicle_filter.py regenerates it from the Chronicle. No item list to keep in step here.
   filter_name: "LK Bot"
-  pick: [rune, unique, set, magic]  # set = green: Tal Rasha's Lidless Eye; magic = blue labels that say "Charm"
-                                    # (Chronicle-eligible magic items show too; Stephen wants charms, 2026-10-31)
+  chronicle_tables: 'D:/Google_Drive/Projects/D2R_Bot_20260314/Codebase/armory_tools/scanbundle.tgz'
+  pick: [rune, unique, set, magic]  # magic = blue labels that say "Charm"
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
   rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
-  pick_white_other: true         # white labels that aren't keys/rejuvs = flawless/perfect gems (filter rule; 2026-11-02)
+  pick_white_other: true         # white labels that aren't keys/rejuvs = gems and skulls (filter rules; all grades since 2026-11-04)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
