@@ -100,7 +100,8 @@ class Mephisto(Task):
             out.mkdir(parents=True, exist_ok=True)  # dock / dead / loot frames, for review
             if self.mcfg.get("spot", "south") == "south":
                 fight = MephFight(bot, out=out, retreat=SOUTH_RETREAT, safe_x=SOUTH_SAFE_X, wake_hop=SOUTH_WAKE,
-                                  extra_wake=SOUTH_EXTRA_WAKE, never_x=SOUTH_NEVER_X, lure=SOUTH_LURE)
+                                  extra_wake=SOUTH_EXTRA_WAKE, never_x=SOUTH_NEVER_X, lure=SOUTH_LURE,
+                                  fight_parked=self.mcfg.get("fight_parked", False))
                 dead = fight_from_south(fight)
             else:  # the dock (north-east bank): Council hunt first
                 fight = MephFight(bot, out=out, wake_hop=WAKE_HOPS)

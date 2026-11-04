@@ -30,6 +30,8 @@ WHITE_TEXT = {"lo": [0, 0, 190], "hi": [179, 40, 255]}
 MAX_COLOR_H = 16  # rune labels in 22 live picks: 13-14 px tall
 COLOR_BG_DARK, COLOR_BG_MEAN = 0.78, 25
 MAX_RUN = 14      # longest horizontal run of text pixels: runes <= 12 ("M"), coin piles 16-17
+SPRITE_MAX_H = 60  # a label merged with its item sprite (rings, amulets, runes: small)
+ON_BOX = 0.4      # share of near-black pixels in a 7x7 around label text; lit ground has none
 
 
 def _max_run(m: np.ndarray) -> int:
@@ -40,6 +42,46 @@ def _max_run(m: np.ndarray) -> int:
         if starts.size:
             best = max(best, int((ends - starts).max()))
     return best
+
+
+def _passes(frame: np.ndarray, gray: np.ndarray, mask: np.ndarray, kind: str, x: int, y: int, w: int, h: int,
+            max_bg: float, min_pad_dark: float, min_bg_dark: float) -> bool:
+    text = mask[y : y + h, x : x + w] > 0
+    if not 0.08 <= text.mean() <= 0.22:  # label text fills 12-14% of its 13 px tall box (live);
+        return False                     # coins between two labels: 27%, 8 px tall
+    if kind != "white":  # white text in the box: the gap between two gold labels where the
+        # coins underneath show through (2026-10-27 read as a unique next to "1818 Gold")
+        white = hsv_mask(frame[y : y + h, x : x + w], WHITE_TEXT) > 0
+        if white.sum() > 0.15 * text.sum():  # real rune labels: 0 white px
+            return False
+        # coin piles are solid blobs: real label text is 13-14 px tall with strokes of <= 12 px
+        if h > MAX_COLOR_H or _max_run(text) > MAX_RUN:
+            return False
+        bgc = gray[y : y + h, x : x + w][~text]  # the backdrop box: 34 live rune picks >= 81% dark,
+        if bgc.size and ((bgc < 25).mean() < COLOR_BG_DARK or bgc.mean() > COLOR_BG_MEAN):  # mean <= 20;
+            return False  # coins/monsters between gold labels: <= 73% dark, mean >= 28
+    bg = gray[y : y + h, x : x + w][~text]
+    if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):
+        return False  # label text sits on a near-black box; gold piles sit on lit ground
+    # The backdrop box extends a few px above and below the text. Gold piles and other
+    # yellowish ground sprites pass the color test but have lit ground there.
+    pad = np.concatenate([gray[max(0, y - 3) : max(0, y - 1), x : x + w].ravel(),
+                          gray[y + h + 1 : y + h + 3, x : x + w].ravel()])
+    return not (pad.size and (pad < 25).mean() < min_pad_dark)
+
+
+def _labels_beside_sprite(gray: np.ndarray, mask: np.ndarray, x: int, y: int, w: int, h: int, min_w: int, min_h: int,
+                          accept) -> list[tuple[int, int, int, int]]:
+    """Labels whose item sprite is the same color and touches them (2026-11-03 21:24: a unique ring's cream sprite
+    merged with its "Ring" label, so she left it on the ground). Keep only the color pixels on a mostly black
+    surrounding: the text sits on its backdrop box, the sprite on lit ground. Then look for labels again."""
+    near_black = cv2.boxFilter((gray[y : y + h, x : x + w] < 25).astype(np.float32), -1, (7, 7))
+    clean = np.zeros_like(mask)
+    clean[y : y + h, x : x + w] = np.where(near_black >= ON_BOX, mask[y : y + h, x : x + w], 0)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 3))
+    n, _, stats, _ = cv2.connectedComponentsWithStats(cv2.dilate(clean, kernel), connectivity=8)
+    boxes = [tuple(int(v) for v in stats[i][:4]) for i in range(1, n)]
+    return [b for b in boxes if b[2] >= min_w and min_h <= b[3] <= MAX_COLOR_H and accept(clean, *b)]
 
 
 def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_h: int = 11,
@@ -57,34 +99,18 @@ def find_labels(frame: np.ndarray, kinds: dict[str, dict], min_w: int = 20, min_
             mask[iy : iy + ih, ix : ix + iw] = 0
         merged = cv2.dilate(mask, kernel)
         n, _, stats, _ = cv2.connectedComponentsWithStats(merged, connectivity=8)
+
+        def ok(m: np.ndarray, ax: int, ay: int, aw: int, ah: int) -> bool:
+            return _passes(frame, gray, m, kind, ax, ay, aw, ah, max_bg, min_pad_dark, min_bg_dark)
+
         for i in range(1, n):
-            x, y, w, h, area = stats[i]
-            if w < min_w or h < min_h or h > max_h:
+            x, y, w, h, area = (int(v) for v in stats[i])
+            if w < min_w or h < min_h:
                 continue
-            text = mask[y : y + h, x : x + w] > 0
-            if not 0.08 <= text.mean() <= 0.22:  # label text fills 12-14% of its 13 px tall box (live);
-                continue                         # coins between two labels: 27%, 8 px tall
-            if kind != "white":  # white text in the box: the gap between two gold labels where the
-                # coins underneath show through (2026-10-27 read as a unique next to "1818 Gold")
-                white = hsv_mask(frame[y : y + h, x : x + w], WHITE_TEXT) > 0
-                if white.sum() > 0.15 * text.sum():  # real rune labels: 0 white px
-                    continue
-                # coin piles are solid blobs: real label text is 13-14 px tall with strokes of <= 12 px
-                if h > MAX_COLOR_H or _max_run(text) > MAX_RUN:
-                    continue
-                bgc = gray[y : y + h, x : x + w][~text]  # the backdrop box: 34 live rune picks >= 81% dark,
-                if bgc.size and ((bgc < 25).mean() < COLOR_BG_DARK or bgc.mean() > COLOR_BG_MEAN):  # mean <= 20;
-                    continue  # coins/monsters between gold labels: <= 73% dark, mean >= 28
-            bg = gray[y : y + h, x : x + w][~text]
-            if bg.size and (bg.mean() > max_bg or (bg < 25).mean() < min_bg_dark):
-                continue  # label text sits on a near-black box; gold piles sit on lit ground
-            # The backdrop box extends a few px above and below the text. Gold piles and other
-            # yellowish ground sprites pass the color test but have lit ground there.
-            pad = np.concatenate([gray[max(0, y - 3) : max(0, y - 1), x : x + w].ravel(),
-                                  gray[y + h + 1 : y + h + 3, x : x + w].ravel()])
-            if pad.size and (pad < 25).mean() < min_pad_dark:
-                continue
-            out.append(Label(kind, int(x), int(y), int(w), int(h)))
+            if h <= max_h and ok(mask, x, y, w, h):
+                out.append(Label(kind, x, y, w, h))
+            elif kind != "white" and h <= SPRITE_MAX_H:
+                out += [Label(kind, *b) for b in _labels_beside_sprite(gray, mask, x, y, w, h, min_w, min_h, ok)]
     return sorted(out, key=lambda l: (l.y, l.x))
 
 

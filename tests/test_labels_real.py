@@ -106,3 +106,16 @@ def test_monster_between_gold_labels_is_not_unique():
     img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / "false_unique_monster_head.png"))
     kinds = {k: CFG["vision"]["labels"][k] for k in ("unique", "rune", "set")}
     assert not find_labels(img, kinds, ignore=CFG["vision"]["label_ignore"])
+
+
+@pytest.mark.parametrize("name,box", [
+    ("pick_rune_1103-165520_561_428_32_13.png", (516, 369, 96, 13)),  # Crossbow beside gold
+    ("pick_rune_1103-210107_608_390_73_13.png", (531, 414, 48, 13)),  # War Spear under an essence label
+    ("pick_rune_1103-210411_575_399_98_13.png", (677, 427, 41, 13)),  # Battle Axe: left on the ground, 21:04
+    ("pick_set_1103-211150_581_374_66_14.png", (595, 398, 64, 14)),   # War Sword under a set label
+])
+def test_unique_label_stacked_against_another_is_still_found(name, box):
+    """Touching labels merged into a blob too tall to be text, so Mephisto's uniques stayed on the ground."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / name))
+    labels = find_labels(img, {"unique": CFG["vision"]["labels"]["unique"]}, ignore=CFG["vision"]["label_ignore"])
+    assert box in [(a.x, a.y, a.w, a.h) for a in labels]

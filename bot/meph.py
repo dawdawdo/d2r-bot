@@ -58,6 +58,11 @@ SOUTH_NEVER_X = (600, 960)  # top centre: never fight there, stuck or not (chick
 WAKE_GRID = [(x, y) for y in range(40, 560, 60) for x in range(80, 1240, 90)]  # all of the screen
 STUCK_ROUNDS = 6  # rounds at one point (outside safe_x) after which he counts as stuck at the moat edge
 NEVER_STUCK_ROUNDS = 8  # rounds (~4 s each) parked in never_x before giving up the game
+# meph.fight_parked: since the respec he reached never_x in 8 of 41 fights and she killed him in none of them, the lure
+# never rescued one. Those rules date from the old build (485 life, no BO), so fight him there and see
+PARKED_FIGHT_ROUNDS = 3  # rounds seen in never_x before she fights him there
+PARKED_GIVE_UP_ROUNDS = 12  # rounds fighting him there with no real damage: out of reach, new game
+PARKED_MIN_DAMAGE = 0.05
 CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around her
 # he shows at y 20-130 from either spot (2026-11-01/02 logs); lower rows cost ~15 s per missed search
 MEPH_GRID = sorted([(x, y) for y in range(20, 190, 55) for x in range(80, 1200, 80)],
@@ -86,7 +91,7 @@ class MephFight:
 
     def __init__(self, bot, out: Path | None = None, say=log.info, retreat=None, safe_x=DOCK_SAFE_X,
                  wake_hop=None, verbose: bool = False, extra_wake=None,
-                 never_x=None, lure=None) -> None:
+                 never_x=None, lure=None, fight_parked=False) -> None:
         self.bot, self.out, self.say, self.verbose = bot, out, say, verbose
         self.lure = lure  # (dx, dy) hop to drag him toward safe_x when he parks in never_x
         # wake_hop: one (dx, dy) or a list of hops to his platform (the dock needs 2)
@@ -95,6 +100,7 @@ class MephFight:
         self.retreat, self.safe_x, self.wake_hop = retreat, safe_x, wake_hop
         self.extra_wake = extra_wake
         self.never_x = never_x
+        self.fight_parked = fight_parked
         self.seen_at = 0.0  # time he was last seen awake (no wake hops onto his platform soon after)
         self.loot_base: list = []  # item labels on the ground when the fight began
         self.ref: np.ndarray | None = None
@@ -327,6 +333,7 @@ class MephFight:
         bot, sk = self.bot, self.bot.cfg["hotkeys"]["skills"]
         t0, low, misses, rnd = time.time(), 1.0, 0, 0
         prev, still, lured = None, 0, False  # rounds he has stood at the same point outside the band
+        never_rounds, parked_rounds, parked_life = 0, 0, 1.0
         self.loot_base = self.ground_labels()
         try:
             while time.time() - t0 < limit:
@@ -382,6 +389,16 @@ class MephFight:
                 # stuck elsewhere on the far edge: he stood at (360, 75) for 3 min at full life, never coming
                 # round (2026-11-02 13:46, south bank): 3 rounds in one place = stuck, fight him there
                 never = self.never_x is not None and self.never_x[0] <= self.last[0] <= self.never_x[1]
+                never_rounds += int(never)
+                fight_here = False
+                if never and self.fight_parked and never_rounds >= PARKED_FIGHT_ROUNDS:
+                    if not parked_rounds:
+                        parked_life = life
+                        self.say(f"kill round {rnd}: Mephisto parked at {self.last} (life {life:.2f}): fighting him there")
+                    parked_rounds += 1
+                    if parked_rounds >= PARKED_GIVE_UP_ROUNDS and parked_life - life < PARKED_MIN_DAMAGE:
+                        raise GameSkipped(f"Mephisto at {self.last}: {parked_rounds} rounds, no damage: new game")
+                    never, fight_here = False, True  # the normal fight below, retreats and all
                 if never and still >= STUCK_ROUNDS and self.lure and not lured:
                     # parked on the never side: walk him along the moat edge toward the safe side (he follows
                     # her along it), then come back and see where he stops
@@ -396,7 +413,7 @@ class MephFight:
                     # parked at the top centre: he stayed there 3+ min at full life (2026-11-02 23:01) and we
                     # never fight there. His spot differs per game: a new game is quicker than the timeout
                     raise GameSkipped(f"Mephisto stuck at {self.last} (top centre, never fought there): new game")
-                if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (
+                if not fight_here and not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (
                         never or still < STUCK_ROUNDS or not self.retreat):
                     self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is in reach: waiting away")
                     self.since_ref.clear()
@@ -561,5 +578,7 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
         fight.say(f"loot: MP {bot.mp} HP {bot.hp} at his body -> back to the dock")
         fight.back_to()
     fight.snap("loot")
+    if not picked:  # full size: why a kill looted nothing can't be told from the small snaps (2026-11-03: a ring left)
+        bot.save_failure("meph_loot_empty")
     fight.say(f"loot: {picked}")
     return picked
