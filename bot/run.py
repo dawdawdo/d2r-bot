@@ -148,6 +148,16 @@ def _upgrade_header() -> None:
         RUNS_CSV.write_text("".join(lines))
 
 
+def runes_only(cfg: dict) -> bool:
+    """Full stash: what's picked now can't be stored and would crowd runes out of the inventory (only ~13 free
+    cells). Runes still go to their own tab. True if this changed anything."""
+    loot = cfg["loot"]
+    if loot["pick"] == ["rune"] and not loot.get("pick_white_other"):
+        return False
+    loot["pick"], loot["pick_white_other"] = ["rune"], False
+    return True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1)
@@ -165,6 +175,8 @@ def main() -> int:
     ap.add_argument("--max-minutes", type=float, help="don't start a run after this long (ends at the menu)")
     ap.add_argument("--relearn-games", type=int, default=15, help="exploration games when relearning")
     ap.add_argument("--no-act4", action="store_true", help="end every run in LK (new games start in Act 3)")
+    ap.add_argument("--stash-full-ok", action="store_true",
+                    help="a full stash doesn't end the session: pick up only runes from then on (they have their own tab)")
     args = ap.parse_args()
 
     session = start_session()
@@ -324,8 +336,11 @@ def main() -> int:
                 control.write_status(state="running", run=i + 1, runs=args.runs, task=row["task"], tally=tally,
                                      started=t_start, last=row)
                 if getattr(bot, "stash_full", False):
-                    log.error("stash full, loot can't be stored: stopping (Stephen clears it; LK needs little room)")
-                    break
+                    if not args.stash_full_ok:
+                        log.error("stash full, loot can't be stored: stopping (Stephen clears it)")
+                        break
+                    if runes_only(cfg):
+                        log.warning("stash full: picking up only runes from now on")
                 if streak >= args.max_fail_streak:
                     log.error("%d failures in a row; stopping", streak)
                     break

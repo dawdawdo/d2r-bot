@@ -1048,7 +1048,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                     _ctrl_click(bot, *cell_center(*cell))
                 left = _scan_inventory(bot)["other"]
                 spill = [cell for cell in left if cell not in rejuv_cells]
-                if spill:
+                if spill and not getattr(bot, "stash_full", False):  # once full it stays full: no tour every game
                     left = _spill_to_shared_pages(bot, spill, left)
                     bot.stash_full = any(cell not in rejuv_cells for cell in left)
             done["stashed"] = max(0, items - len(left))
@@ -1064,7 +1064,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             done["runes"] = runes
             left = [cell for cell in left if cell not in rejuv_cells]
             if left:
-                bot.save_failure("stowaway_left_items")
+                if not getattr(bot, "stash_full", False):
+                    bot.save_failure("stowaway_left_items")
                 log.warning("stowaway: %d item(s) stayed in the inventory (stash page full?): %s", len(left), left)
             bot.press("esc")
             bot.kill.sleep(0.4)
