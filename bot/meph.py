@@ -564,9 +564,12 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
         fight.hunt(limit=30)
         return loot_meph(fight, retry=True, t_dead=t_dead)
     if near:
-        fight.say(f"loot: monsters at his body {near[:3]} -> back to the spot")
+        # still company after the hunt: grab what shows and go (2026-11-03 23:10 left the drop for a few leftovers;
+        # Stephen: Blizzaga may die, and these kills are what we're here for)
+        picked = [] if fight.in_danger() else loot(bot, take_all=True, max_picks=4)
+        fight.say(f"loot: monsters at his body {near[:3]}: grabbed {picked} -> back to the spot")
         fight.back_to()
-        return []
+        return picked
     fight.snap("dead")
     # the drop comes at the end of his death animation (2026-11-01 21:44: she stood on a dying body, found nothing)
     bot.sleep(max(0.0, DROP_WAIT - (time.time() - t_dead)))
