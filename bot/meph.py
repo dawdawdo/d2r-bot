@@ -18,7 +18,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from .controller import BotError
+from .controller import BotError, GameSkipped
 from .vision.namebar import name_bar
 
 log = logging.getLogger(__name__)
@@ -395,7 +395,7 @@ class MephFight:
                 if never and still >= NEVER_STUCK_ROUNDS:
                     # parked at the top centre: he stayed there 3+ min at full life (2026-11-02 23:01) and we
                     # never fight there. His spot differs per game: a new game is quicker than the timeout
-                    raise BotError(f"Mephisto stuck at {self.last} (top centre, never fought there): new game")
+                    raise GameSkipped(f"Mephisto stuck at {self.last} (top centre, never fought there): new game")
                 if not (self.safe_x[0] <= self.last[0] <= self.safe_x[1]) and (
                         never or still < STUCK_ROUNDS or not self.retreat):
                     self.say(f"kill round {rnd}: Mephisto at {self.last} (life {life:.2f}) is in reach: waiting away")

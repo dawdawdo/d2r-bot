@@ -23,6 +23,10 @@ class BotError(RuntimeError):
     """A step failed (timeout, unexpected screen). The run should be aborted/recovered."""
 
 
+class GameSkipped(BotError):
+    """This game can't be finished but nothing went wrong (Meph parked out of reach): just start the next one."""
+
+
 class Chicken(BotError):
     """HP fell below the chicken threshold: leave the game now."""
 

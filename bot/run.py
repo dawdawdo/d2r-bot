@@ -13,7 +13,7 @@ import logging
 import time
 
 from .config import ROOT
-from .controller import BotError, Chicken, Controller, Died, RunTimeout
+from .controller import BotError, Chicken, Controller, Died, GameSkipped, RunTimeout
 from .learn import learn_map
 from .lk import MapChanged, TerrorZone
 from .tasks import get_tasks
@@ -302,6 +302,11 @@ def main() -> int:
                 except control.StopNow:  # save & exit already happened in one_run's finally
                     row.update(result="stopped", error="stop requested from the web page")
                     stop = True
+                except GameSkipped as e:  # not a failure: must not count toward stopping the session
+                    row.update(result="skipped", error=str(e))
+                    log.info("run %d skipped: %s", i + 1, e)
+                    stow = True  # the LK part may have picked things
+                    streak = 0
                 except Exception as e:  # noqa: BLE001 - one bad run must not end an unattended soak
                     if not isinstance(e, BotError):
                         log.exception("run %d: unexpected error", i + 1)
