@@ -3,6 +3,13 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-03 21:16, Stephen away, said to proceed: both fixes below checked live.** Detached `--tasks lk,meph`, `--max-minutes 60`, started 20:55: stops itself by about 21:55 (log `scratch/live_2055.err`).
+- War cries: 19 casts in that session + 8 before it, no weapon warnings. The one chicken frame shows max life 618 (BO up; the 626 expected is close but not explained).
+- Loot check: 1 live hit, right: gone at 0.15, 2 set labels, "dead", both sets picked (21:07). Fallback: 1 at 0.15 after 4 misses, nothing to pick up, so that kill is unconfirmed (21:15). No false "dead" seen yet; sample is tiny.
+- New: parked Meph = result `skipped`, not `fail` (20:54: 2 parked games + 1 town stall hit the 3-failure limit after 9 min). Parked at 0.39 life in one game: she still gives him up.
+- One Act 3 town walk stall at 20:50 (`town waypoint not visible`), next run fine, not investigated.
+- At 21:15: 7 runs, 6 ok, 1 skipped, 2 Meph kills logged by the new checks. Totals after that not yet read.
+
 **2026-11-03 18:30, Stephen back: no bot running until he says so. Next live session: confirm these two fixes first.**
 - **Flail bug (Stephen saw BO fail in LK and Meph):** the swap key is a toggle and I counted presses. One lost press inverts every later swap: she stays on the flail, r/t do nothing. Evidence: max life 401 (flail, no BO) in 7 of 8 chicken frames from 17:58 on, which is probably why LK chickens jumped (17:17-18:26: 27 runs, 17 ok, 8 chickens, 2 fails, 9 Meph kills). Why the press was lost is unknown. Fix: `cast_warcries` reads the inventory tabs after each swap and retries, and only claims a cast if the flail really came up. About 1 s more per cast. **Tested offline only** (simulated toggle + real frames).
 - **2 min searching for a dead Meph (18:24-18:26):** he died unseen at 0.21. Now: gone below 50 % + new non-white loot labels = dead; fallback after 5 misses below 30 %, 4 below 20 % (was 10 and 5). In all logs he only came back after 1-2 misses. Not done: death-animation detection (no frames of it). Most of the 2 min was grid searches and hunts; also no periodic hunt below 30 % now. **Tested offline only;** the label check has not seen a real Meph drop.
