@@ -83,6 +83,8 @@ def test_filter_rules():
     for r in new["rules"]:
         assert not ("itemCode" in r and "equipmentRarity" in r), r["name"]
         assert "+" not in r["name"]  # the game drops such a rule
+    for name in cf.GENERATED - {"Show Chronicle missing set jewelry"}:
+        assert len(name) <= 32, name  # the game dropped both 34-char rules on rewrite and kept a 32-char one
 
 
 def test_existing_pickups_kept():

@@ -46,10 +46,10 @@ GEMS = [f"g{grade}{color}" for grade in "cfs" for color in "vybgrw"] + ["skc", "
 RULE_UNIQUES = "Show Chronicle missing uniques"
 RULE_SETS = "Show Chronicle missing sets"
 RULE_AMULETS = "Show unique amulets"
-RULE_SET_CATEGORIES = "Show Chronicle missing set jewelry"
+RULE_SET_CATEGORIES = "Show missing set jewelry"  # names over ~32 chars get dropped by the game
 RULE_JEWELS = "Show jewels"
 RULE_GEMS = "Show all other gems"
-GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_GEMS}
+GENERATED = {"Show Chronicle missing set jewelry", RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_GEMS}
 
 
 @dataclass

@@ -56,6 +56,13 @@ class SimGame(Input):
         pass
 
 
+@pytest.fixture(autouse=True)
+def no_character_guard(monkeypatch):
+    # covered in test_character_guard.py; the fake game has no character list
+    monkeypatch.setattr("bot.lifecycle.select_character", lambda bot: None)
+    monkeypatch.setattr("bot.lifecycle.check_character", lambda bot: None)
+
+
 @pytest.fixture
 def cfg(tmp_path):
     c = load_config()

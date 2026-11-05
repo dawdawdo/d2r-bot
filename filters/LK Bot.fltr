@@ -165,7 +165,7 @@
             ]
         },
         {
-            "name": "Show Chronicle missing set jewelry",
+            "name": "Show missing set jewelry",
             "enabled": true,
             "ruleType": "show",
             "filterEtherealSocketed": false,

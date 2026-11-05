@@ -6,13 +6,19 @@ in_game, esc_menu. Click points come from config `ui`.
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
+
+import cv2
 
 from .controller import BotError, Controller
+from .vision.screen import ASSETS
 
 log = logging.getLogger(__name__)
 
 T_MENU = 20.0
 T_LOAD = 45.0
+CHAR_LIST = (1030, 40, 220, 500)  # (x, y, w, h) of the character list on the main menu, client coords
 
 
 def to_main_menu(bot: Controller) -> None:
@@ -38,18 +44,62 @@ def check_difficulty_button(bot: Controller, difficulty: str) -> None:
         raise BotError(f"{difficulty} button not where expected; not clicking (a wrong difficulty resets the map)")
 
 
+def find_character(frame, name: str, threshold: float = 0.8) -> tuple[int, int] | None:
+    """Centre of `name`'s row in the main menu's character list (client coords), or None."""
+    x, y, w, h = CHAR_LIST
+    tpl = cv2.imread(str(ASSETS / f"char_{name}.png"))
+    if tpl is None:
+        return None
+    _, score, _, at = cv2.minMaxLoc(cv2.matchTemplate(frame[y : y + h, x : x + w], tpl, cv2.TM_CCOEFF_NORMED))
+    return (x + at[0] + tpl.shape[1] // 2, y + at[1] + tpl.shape[0] // 2) if score >= threshold else None
+
+
+def select_character(bot: Controller) -> None:
+    """Main menu: click the configured character. D2R opens on whoever was played last, and Stephen plays others
+    (2026-11-04: Play put the bot on ThroatCutter). Not found = stop the session, never Play on a guess."""
+    name = bot.cfg["game"]["character"]
+    row = find_character(bot.capture.grab(), name)
+    if row is None:
+        bot.save_failure("character_not_found")
+        bot.kill.trip(f"character {name} not found on the main menu")
+        bot.kill.check()
+    bot.click(*row)
+    bot.kill.sleep(1.5)  # the 3D model swaps
+    log.info("selected %s", name)
+
+
+def newest_save(save_dir: Path) -> str | None:
+    saves = list(Path(save_dir).glob("*.d2s"))
+    return max(saves, key=lambda p: p.stat().st_mtime).stem if saves else None
+
+
+def check_character(bot: Controller) -> None:
+    """In game: D2R rewrites the character's .d2s on entering, so the newest one names who we're playing.
+    Read only. The wrong character = leave at once and stop the whole session (the launcher stops too)."""
+    want, have = bot.cfg["game"]["character"], newest_save(os.path.expandvars(bot.cfg["paths"]["save_dir"]))
+    if have == want:
+        return
+    bot.save_failure("wrong_character")
+    log.error("playing %s, not %s: leaving and stopping", have, want)
+    save_and_exit(bot)
+    bot.kill.trip(f"wrong character {have}, expected {want}")
+    bot.kill.check()
+
+
 def create_game(bot: Controller, difficulty: str = "hell") -> None:
     state = bot.wait_for({"title", "main_menu", "in_game"}, T_MENU)
     if state == "in_game":
         raise BotError("already in a game; expected main menu")
     if state == "title":
         to_main_menu(bot)
+    select_character(bot)
     bot.click_ui("play")
     bot.wait_for("difficulty", 10)
     check_difficulty_button(bot, difficulty)
     bot.click_ui(f"difficulty_{difficulty}")
     bot.wait_for("in_game", T_LOAD)
     log.info("in game (%s)", difficulty)
+    check_character(bot)
 
 
 def ensure_main_menu(bot: Controller) -> None:

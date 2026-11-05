@@ -3,6 +3,11 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-04 19:20: the bot played the wrong character for ~80 s (18:46:10-18:47:30).** D2R opens on whoever was last played, and the bot pressed Play without choosing: it was on ThroatCutter (Stephen played it at 18:04). It stayed in Lut Gholein, and its walk clicks landed on an open Loot Filter window. Stopped by hand, left with Save and Exit. `ThroatCutter.d2s` differs from the backup only in 4 header bytes (offsets 13-14, 32-33; apparently checksum + last played), nothing else. Backup: `backups/20261104-184610`.
+- **Left for Stephen:** `lootfilter.json` now maps ThroatCutter to LK Bot (no entry before), so that character hides most loot until he switches its filter back. The bot also leaves `/players` at its own value, as usual.
+- Fix: `select_character` clicks the configured name on the menu; `check_character` confirms in game that its .d2s is the newest and otherwise leaves and stops the whole session. Offline tests; first live check is this session.
+- The game dropped the rule "Show Chronicle missing set jewelry" on rewrite. Renamed: both rules it has dropped have 34-character names, a 32-character one survives (likely a name limit, not proven). That also explains the old rejuv/key rule vanishing.
+
 **2026-11-04 18:50: Chronicle filter + all gems (Stephen's `Chronicle_Filter_Handoff.md`).** `tools/chronicle_filter.py` regenerates `filters/LK Bot.fltr` from the Chronicle: uniques and sets show only on bases that can still be new (164 + 31 codes, same as the handoff's snapshot). Existing pickups stay; every gem and skull grade added. Rerun after sessions, with D2R closed: `python tools/chronicle_filter.py --install`.
 - **Filter puzzle, probable answer:** rarity + `itemCode` in one rule means OR, so the old BiS and Lidless rules showed all uniques and sets. New rules use `equipmentItemCode` (differs from the handoff, which said `itemCode`). Reasoned from the filter files, **not yet confirmed live**.
 - Tests use a synthetic Chronicle: copying the real stash file into the repo was blocked, and the repo is pushed. The real file was checked read-only and matched (103/203/5).
