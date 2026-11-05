@@ -30,11 +30,13 @@ HOLD_EVERY = 0.35  # s between steps while the right button is held (about one c
 
 class RouteRecorder:
     def __init__(self, capture, odo, client_origin: tuple[int, int], folder: Path,
-                 clock=time.monotonic, sleep=time.sleep, cursor=None) -> None:
+                 clock=time.monotonic, sleep=time.sleep, cursor=None, fresh_odo=None) -> None:
         self.capture, self.odo, self.folder = capture, odo, folder
         self.ox, self.oy = client_origin
         self.clock, self.sleep = clock, sleep
         self.cursor = cursor  # () -> screen (x, y) | None: samples while the right button is held
+        self.fresh_odo = fresh_odo  # frame -> odometer: new_leg starts a fresh automap canvas
+        self.leg = 0
         self.held = False
         self.last = 0.0  # clock of the last step's frame
         self.steps: list[dict] = []
@@ -52,6 +54,10 @@ class RouteRecorder:
             if button == "right":
                 self.held = True
 
+    def new_leg(self) -> None:
+        """Stephen arrived in a new area: its automap is another canvas. In order with the clicks."""
+        self.q.put("leg")
+
     def on_release(self, x: int, y: int, button: str) -> None:
         if button == "right":
             self.held = False
@@ -68,9 +74,19 @@ class RouteRecorder:
             if item is None:
                 return
             try:
-                self._step(*item)
+                if item == "leg":
+                    self._new_leg()
+                else:
+                    self._step(*item)
             except Exception:
                 log.exception("recording a step failed")
+
+    def _new_leg(self) -> None:
+        if self.fresh_odo:
+            self.odo.save(self.folder / f"canvas{self.leg}")
+            self.odo = self.fresh_odo(self.capture.grab())
+        self.leg += 1
+        log.info("leg %d starts after step %d", self.leg, len(self.steps) - 1)
 
     def _held_sample(self):
         """A step at the cursor's spot if the right button is still held and a cast has passed."""
@@ -101,6 +117,8 @@ class RouteRecorder:
                 "resp": round(float(self.odo.resp), 3), "lost": bool(self.odo.lost), "view": name}
         if held:
             step["held"] = True
+        if self.leg:
+            step["leg"] = self.leg
         self.steps.append(step)
         log.info("step %d: %s click (%d, %d) -> pos %s (resp %.2f%s)", i, button, cx, cy, step["pos"],
                  step["resp"], ", LOST" if step["lost"] else "")

@@ -16,12 +16,12 @@ from .config import ROOT
 from .controller import BotError, Chicken, Controller, Died, GameSkipped, RunTimeout
 from .learn import learn_map
 from .lk import MapChanged, TerrorZone
-from .tasks import get_tasks
+from .tasks import catalog, get_tasks
 from .io import open_backend
 from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
-from . import control, state
+from . import control, state, supplies
 from .gamesettings import ensure_loot_filter, ensure_options, players_setting
 from .town import (ensure_main_weapons, leave_act1, leave_other_act, belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
                    repair_at_hratli, restart_in_act3, revive_merc, set_players, spawn_act, stowaway,
@@ -192,7 +192,10 @@ def main() -> int:
     log.info("route: %s", cfg["game"]["route"])
     tasks = get_tasks(args.tasks.split(","), cfg) if args.mode == "chests" else []
     log.info("tasks: %s", ", ".join(t.name for t in tasks) or "-")
-    task_name = "+".join(t.name for t in tasks) or args.mode
+    lk_ready = any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
+    has_boss = any(t.name != "lk" for t in tasks)
+    refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
+    supplies.new_session()
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
@@ -204,12 +207,11 @@ def main() -> int:
     bot.merc_revive = True
     # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
     bot.game_window_id = getattr(backend.window, "hwnd", None)
-    # a Meph-only session plays at Meph's /players from game one (Stephen 2026-11-02: 7 then 1 in one game wastes time)
-    want_players = (cfg["game"].get("meph_players") or cfg["game"].get("players")) if tasks and all(
-        t.name == "meph" for t in tasks) else cfg["game"].get("players")
+    want_players = supplies.players_for(tasks, cfg)
     players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
     if players_setting(cfg) == want_players:
         players_due = False  # D2R keeps /players as a setting: no typing needed
+        bot.players_now = want_players  # known, so a later switch of tasks retypes it
     try:
         ensure_main_menu(bot)
         ensure_options(bot)  # automap as the bot needs it, whatever Stephen set while playing
@@ -236,6 +238,9 @@ def main() -> int:
                 if stop or control.read():
                     log.info("stop requested (web page); not starting run %d", i + 1)
                     break
+                active = supplies.tasks_for_run(tasks, refill_tasks, cfg)  # a dry rejuv stash: LK instead
+                want_players = supplies.players_for(active, cfg)
+                task_name = "+".join(t.name for t in active) or args.mode
                 control.write_status(state="running", run=i + 1, runs=args.runs, task=task_name,
                                      tally=tally, started=t_start)
                 t0 = time.time()
@@ -263,7 +268,7 @@ def main() -> int:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
                                         players=want_players if (players_due and i == 0) or getattr(bot, "players_now", None)
                                         not in (None, want_players) else None, corpse=corpse,  # Meph sets its own
-                                        stow=stow and chests, check_durability=dur, tasks=tasks)
+                                        stow=stow and chests, check_durability=dur, tasks=active)
                     finally:  # keys are spent even if the run then chickens
                         if bot.keys_left is not None:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
@@ -300,6 +305,7 @@ def main() -> int:
                         cfg["game"]["route"] = name
                         state.save({**state.load(), "route": name})
                         tasks = get_tasks([t.name for t in tasks], cfg)  # reload with the learned route
+                        refill_tasks = get_tasks(["lk"], cfg) if refill_tasks else []
                         map_misses = 0
                         log.warning("now running the learned route %s: camps %s", name,
                                     [c["world"] for c in route["bonfires"]])

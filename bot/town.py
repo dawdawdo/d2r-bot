@@ -11,6 +11,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from . import supplies
 from .config import ROOT
 from .controller import BotError, Controller
 from .vision.screen import ASSETS
@@ -804,8 +805,8 @@ def restock_belt(bot: Controller) -> int:
     bot.observe()
     if all(belt_slots(bot.frame, belt)):
         return 0
-    if state.load().get("stash_rejuvs_empty"):  # 4 s a run for nothing; delete the flag from
-        return 0                                 # logs/state.json after putting rejuvs in the stash
+    if state.load().get("stash_rejuvs_empty"):  # 4 s a run for nothing (bot/supplies.py)
+        return 0
     if not open_stash(bot):
         return 0
     bot.click(*scfg["materials_tab"])
@@ -836,14 +837,14 @@ def restock_belt(bot: Controller) -> int:
         if int((np.abs(after.astype(np.int16) - before.astype(np.int16)).max(axis=2) > 40).sum()) < 8:
             break  # nothing moved: the belt is full
         moved += 1
+    dry = supplies.restocked(moved, slots_gone=not slots)
+    if dry:  # the Materials tab as she saw it: why zero potions moved
+        bot.observe()
+        bot.save_failure("restock_dry")
+        log.warning("stash is out of rejuvs; no more restocks until some are stashed or the next session")
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("restocked belt with %d potions", moved)
-    if moved > 0:
-        state.save({**state.load(), "rejuv_stash_full": False})  # room in the stack again
-    if moved <= 0 and not slots:  # every stash potion slot came up empty
-        state.save({**state.load(), "stash_rejuvs_empty": True})
-        log.warning("stash is out of rejuvs; skipping restocks until logs/state.json says otherwise")
     return moved
 
 
@@ -1073,9 +1074,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 # a stash stack holds 99 (Stephen 2026-10-31): once full, stop picking spares until a restock
                 # takes some out, and drop the ones that didn't fit
                 st = {**state.load(), "rejuv_stash_full": bool(stuck)}
-                if rejuvs:
-                    st.pop("stash_rejuvs_empty", None)  # restocks can take from the stash again
-                state.save(st)
+                state.save(supplies.after_stowing(st, rejuvs, bool(stuck)))
             if stuck:
                 log.info("stowaway: rejuv stack full (99); dropping %d spare rejuv(s), no spares until a restock",
                          len(stuck))

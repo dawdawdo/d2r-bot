@@ -3,6 +3,10 @@
   python tools/record_route.py             # Level 2: waypoint -> Level 3 stairs
   python tools/record_route.py --level 3   # Level 3: stairs arrival -> his Mephisto spot -> the kill
   python tools/record_route.py --level 3 --players 1   # same, /players 1 typed on arrival
+  python tools/record_route.py --duriel --players 1    # town -> Canyon -> true tomb -> Duriel (or record_duriel.bat)
+
+--duriel records from the spawn, so his waypoint clicks are in it too. F9 on arriving in each new area (Canyon,
+tomb, Duriel's chamber): each area gets its own automap canvas.
 
 The bot makes a Hell game and takes the waypoint to Durance of Hate Level 2 with the automap on (with
 --level 3 it then takes its learned route down the stairs), then hands over: Stephen plays as he
@@ -26,26 +30,43 @@ from bot.config import ROOT  # noqa: E402
 from bot.controller import Controller  # noqa: E402
 from bot.durance import AutomapOdometer, StopGraph, ensure_automap, level_now, to_durance2, to_level3  # noqa: E402
 from bot.io import open_backend, open_clicks  # noqa: E402
-from bot.lifecycle import save_and_exit  # noqa: E402
+from bot.gamesettings import ensure_loot_filter, ensure_options  # noqa: E402
+from bot.lifecycle import create_game, ensure_main_menu, save_and_exit  # noqa: E402
 from bot.session import start_session  # noqa: E402
 from bot.teach import RouteRecorder  # noqa: E402
-from bot.town import set_players  # noqa: E402
+from bot.town import recover_corpse, set_players  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 TASKS = {2: "teleport to the Level 3 stairs and click them",
-         3: "go to your Mephisto spot (moat trick) and kill him as you normally would"}
+         3: "go to your Mephisto spot (moat trick) and kill him as you normally would",
+         "duriel": "take the waypoint to the Canyon of the Magi, go through the true tomb and kill Duriel as you "
+                   "normally would. Press F9 each time you arrive in a new area"}
+
+
+def start_duriel(bot, players) -> AutomapOdometer:
+    """A fresh Hell game, handed over at the spawn."""
+    ensure_main_menu(bot)
+    ensure_options(bot)  # the automap the odometer reads
+    create_game(bot, bot.cfg["game"]["difficulty"])
+    bot.wait_for("in_game", 10)
+    if players and not set_players(bot, players):
+        print(f"!!! /players {players} not confirmed: type it yourself in chat", flush=True)
+    ensure_loot_filter(bot)
+    recover_corpse(bot)
+    return AutomapOdometer(ensure_automap(bot))
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--level", type=int, default=2, choices=(2, 3))
+    ap.add_argument("--duriel", action="store_true")
     ap.add_argument("--players", type=int, default=None, help="/players N before handing over (Meph: 1)")
     args = ap.parse_args()
 
     s = start_session()  # backs up saves
     cfg = s.cfg
     maps = ROOT / "maps" / cfg["game"]["route"]
-    folder = maps / f"durance{args.level}_route"
+    folder = maps / ("duriel_route" if args.duriel else f"durance{args.level}_route")
     if folder.exists():
         shutil.move(str(folder), str(folder.with_name(f"{folder.name}_{time.strftime('%Y%m%d-%H%M%S')}")))
     b = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
@@ -54,14 +75,19 @@ def main() -> int:
     b.window.focus()
     done = threading.Event()
     b.hotkeys.start("f10", done.set)
+    leg = threading.Event()
+    b.hotkeys.start("f9", leg.set)
     clicks = open_clicks()
     rec = None
     try:
-        to_durance2(bot)
-        bot.sleep(2.0)  # the "Entering ..." banner fades
-        auto = maps / "durance2_auto"
-        odo = AutomapOdometer.load(auto, ensure_automap(bot))  # the searched canvas
-        if args.level == 3:
+        if args.duriel:
+            odo = start_duriel(bot, args.players)
+        else:
+            to_durance2(bot)
+            bot.sleep(2.0)  # the "Entering ..." banner fades
+            auto = maps / "durance2_auto"
+            odo = AutomapOdometer.load(auto, ensure_automap(bot))  # the searched canvas
+        if args.level == 3 and not args.duriel:
             to_level3(bot, odo, StopGraph.load(auto / "graph.json"), None, auto)
             bot.sleep(1.5)
             if level_now(bot) != 3:
@@ -76,16 +102,23 @@ def main() -> int:
             p = b.input.cursor_pos()
             return None if p is None else (p[0] + x, p[1] + y)
 
-        rec = RouteRecorder(b.capture, odo, (x, y), folder, cursor=cursor)
+        rec = RouteRecorder(b.capture, odo, (x, y), folder, cursor=cursor,
+                            fresh_odo=AutomapOdometer if args.duriel else None)
         clicks.start(rec.on_click, rec.on_release)
-        print(f"\n*** YOUR TURN: {TASKS[args.level]}. Keep the automap (Tab) on.\n"
+        print(f"\n*** YOUR TURN: {TASKS["duriel" if args.duriel else args.level]}. Keep the automap (Tab) on.\n"
               "*** Press F10 when you're done (or to give up). F12 = emergency stop.\n", flush=True)
         while not done.is_set():
+            if args.duriel and leg.is_set():
+                leg.clear()
+                rec.new_leg()
+                print("new area marked", flush=True)
             bot.kill.sleep(0.2)
         clicks.stop()
         steps = rec.finish(b.capture.grab())
-        rec = None
-        if args.level == 3:
+        finished, rec = rec, None
+        if args.duriel:
+            finished.odo.save(folder / f"canvas{finished.leg}")
+        elif args.level == 3:
             odo.save(folder / "canvas")
         held = sum(bool(st.get("held")) for st in steps)
         print(f"recorded {len(steps)} steps ({held} while held, {sum(st['lost'] for st in steps)} without "

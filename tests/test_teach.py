@@ -29,6 +29,26 @@ def test_clicks_become_steps(tmp_path):
     assert len(saved) == 3 and (tmp_path / saved[0]["view"]).exists() and (tmp_path / "views/final.jpg").exists()
 
 
+def test_new_leg_starts_a_fresh_canvas_in_order_with_the_clicks(tmp_path):
+    frames = [cv2.imread(str(FIX / f"automap_m{i}.png")) for i in range(4)]
+    made = []
+
+    def fresh(frame):
+        made.append(AutomapOdometer(frame))
+        return made[-1]
+
+    # grabs: step 0, the leg's fresh canvas, step 1
+    rec = RouteRecorder(FakeCapture([frames[1], frames[1], frames[2]]), AutomapOdometer(frames[0]), (0, 0), tmp_path,
+                        sleep=lambda s: None, fresh_odo=fresh)
+    rec.on_click(940, 330, "right")
+    rec.new_leg()
+    rec.on_click(940, 330, "right")
+    steps = rec.finish()
+    assert len(made) == 1 and rec.odo is made[0] and rec.leg == 1
+    assert "leg" not in steps[0] and steps[1]["leg"] == 1
+    assert (tmp_path / "canvas0").exists()
+
+
 ROUTE = FIX / "route"
 
 
