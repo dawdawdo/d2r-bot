@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-05 18:18: Meph running, Stephen away (his call; Duriel recording later).** Detached `scratch/meph_then_lk.ps1`, log `logs/bot-20261105-181800.log`. Filter regenerated first: 149 unique + 27 set codes after his play. First live test of the rejuv refill if the stash runs dry.
+
 **2026-11-05: GLaDOS prepared, nothing run there.** Handoff in `docs/glados.md`. Stephen wants it for bot runs while he uses Singularity, taking turns, never both. Syncthing syncs saves within minutes; he also has a scheduled backup on Singularity (last N saves per character). New: `config.local.yaml` (per machine, not in git), notes snapshot in `docs/notes/`, `logs/loot.csv` no longer tracked (local history kept).
 
 **2026-11-05 morning (Stephen on the PC, offline work only; D2R closed):**
