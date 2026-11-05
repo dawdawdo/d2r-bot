@@ -2,7 +2,7 @@ backups/
 fixtures/raw/
 fixtures/failures/
 logs/*
-!logs/loot.csv
+config.local.yaml
 *.d2s
 __pycache__/
 *.pyc

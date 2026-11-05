@@ -3,10 +3,12 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-05: GLaDOS prepared, nothing run there.** Handoff in `docs/glados.md`. Stephen wants it for bot runs while he uses Singularity, taking turns, never both. Syncthing syncs saves within minutes; he also has a scheduled backup on Singularity (last N saves per character). New: `config.local.yaml` (per machine, not in git), notes snapshot in `docs/notes/`, `logs/loot.csv` no longer tracked (local history kept).
+
 **2026-11-05 morning (Stephen on the PC, offline work only; D2R closed):**
 - Filter regenerated and installed: Chronicle 217/106, down to 151 unique + 28 set codes. Up to date, his rules kept.
 - **Rejuv refill built, offline tests only (`bot/supplies.py`):** 2 zero restocks in a row (or both stacks empty) = dry; a boss session then runs LK until `town.refill_rejuvs` (40) are stashed, /players following, then bosses resume. Flags clear at session start, so rejuvs he adds by hand count. A dry stash saves a frame, `restock_dry`, showing the Materials tab: **read the first one** to learn why the old check saw a potion. Logs show the same stock-out on Nov 4 (`013833`: 49 zeros, `040055`: 28), with restocks working again after LK.
-- **Duriel recorder ready, not run:** `record_duriel.bat` -> `tools/record_route.py --duriel --players 1`. Records from the spawn (so the Act II waypoint clicks are captured), F9 per new area = new canvas, F10 ends, folder `maps/<route>/duriel_route/`. Waiting for Stephen's time. Open: can Blizzaga still enter Duriel's chamber in Hell?
+- **Duriel recorder ready, not run:** `record_duriel.bat` -> `tools/record_route.py --duriel --players 1`. Records from the spawn (so the Act II waypoint clicks are captured), F9 per new area = new canvas, F10 ends, folder `maps/<route>/duriel_route/`. Waiting for Stephen's time. Blizzaga can enter the chamber in Hell (Stephen, 2026-11-05).
 - **Refactor view:** task plugins exist already (`bot/tasks`). No big rewrite. Split as Duriel forces it: boss fight/loot pieces out of `bot/meph.py`, generic routes out of `durance.py`, later `town.py` (1357 lines) by job. Stephen hasn't decided.
 
 **2026-11-05 08:03: overnight Meph ended (Stephen's mouse): 251 runs, 171 ok, 42 chickens, 4 died, 34 fails. LK never ran.**

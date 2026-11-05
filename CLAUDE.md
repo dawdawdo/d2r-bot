@@ -64,6 +64,9 @@ Code goes in `bot/`, tests in `tests/`, fixtures in `fixtures/`. Starting from s
 - Token budget: check `/usage` at session start. Stop and write a summary when weekly
   usage hits **85%** (Stephen may change this number).
 
+## Machines
+Singularity (Windows) and GLaDOS (Linux Mint, Proton) take turns running the bot, never both. Working on GLaDOS: read `docs/glados.md` first.
+
 ## PROGRESS.md format
 Current milestone · what works · what's broken · next step · open questions for Stephen.
 Keep it short: it's the "where did I leave off" page.

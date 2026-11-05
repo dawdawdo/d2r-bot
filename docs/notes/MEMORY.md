@@ -1,0 +1,22 @@
+- [Machines and target](machines-and-target.md) — Singularity=Windows dev box; GLaDOS=Linux Mint, wanted for bot runs while Stephen uses Singularity (never both at once); not started
+- [Syncthing + backups](syncthing-and-backups.md) — saves sync between machines within minutes; Singularity also keeps the last N saves per character on a schedule
+- [Loot and map goals](loot-and-map-goals.md) — Dol+ runes, unique rings; map relearn/hunting later; remote start; self-launch D2R
+- [Portable app goal + inventory policy](project-goal-portable-app.md) — Win+Linux Python app; keys=12; runes -> shared Materials stash
+- [Never idle outside town](never-idle-outside-town.md) — scripts in LK must end with save & exit; idle Blizzaga died once
+- [Stephen's autonomy prefs](stephen-autonomy-prefs.md) — max autonomy; keep moving, only truly blocking questions; Blizzaga may die; 74% light res
+- [Soak memory reaper](soak-memory-reaper.md) — background soaks get killed on low memory; run foreground, 3 runs/command
+- [Potion supply policy](potion-supply-policy.md) — LK: chest rejuvs only; Meph runs may buy potions
+- [Keep going after questions](keep-going-after-questions.md) — answer mid-work questions, then continue; don't end the turn
+- [Inventory stowaway + key stacks](inventory-stowaway.md) — key pickups add N keys; stash runes/unique rings; map search later
+- [Phase 1 done bar](phase1-done-bar.md) — 100 untouched runs (chickens OK) then v1.0; task plugins on branch tasks
+- [Stephen's teleport style](stephen-teleport-style.md) — holds right-click to teleport; recorders must sample while held
+- [Characters, MF, Barb](characters-mf-barb.md) — Blizzaga has lots of MF; Barb (81) is Stephen's own project; Meph stays on Blizzaga
+- [Stuck fallback = LK runs](stuck-fallback-lk.md) — unanswered blocking question: save it in PROGRESS.md, run LK indefinitely
+- [Merc follows teleport](merc-follows-teleport.md) — merc = Insight (mana regen); teleport brings him, never wait
+- [Gold spend OK](gold-spend-ok.md) — spend whatever gold Meph needs (revives, potions, deaths)
+- [Call to Arms done](call-to-arms-plan.md) — respec: Blizzard+Glacial Spike; F6 swap, r=BO, t=BC, cast outside town; Meph ~65-75% kills
+- [Meph only until back](meph-only-until-back.md) — 2026-11-04: Meph until the stash fills, then LK until Stephen returns
+- [Targeted loot plan](targeted-loot-plan.md) — keep hunted uniques + Chronicle-eligible; more targets coming from Stephen; drop trial first
+- [Next goals](next-goals-duriel-map-discovery.md) — Duriel from 2026-11-05; later LK map search + fresh-map route discovery (Nightmare-accident insurance)
+- [Gems stack](gems-stack-no-spill.md) — gems sit in stash stacks like runes; they don't spill onto sorted pages
+- [Statues from Meph](statues-from-meph.md) — non-terrorized Meph drops ancients' statues; Stephen wants them; keep through filter changes
