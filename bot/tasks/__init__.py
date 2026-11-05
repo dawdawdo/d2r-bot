@@ -46,10 +46,9 @@ class Task:
 # What the web page lists, in run order. `ready` is filled in by catalog().
 CATALOG = [
     {"name": "lk", "title": "Lower Kurast super chests",
-     "about": "6 super chests at the two bonfire camps. Runes Pul+, keys, rejuvs. ~45 s a run."},
-    {"name": "meph", "title": "Mephisto (Dracul's Grasp)",
-     "about": "Durance of Hate 3, moat trick. Dracul's 1:2211 per kill at 0 MF. Needs the Durance 2 route "
-              "(python tools/find_durance.py) before it can run."},
+     "about": "6 super chests at the two bonfire camps. Runes, gems, keys, rejuvs. About a minute a run."},
+    {"name": "meph", "title": "Mephisto",
+     "about": "Durance of Hate 3, south bank. Chronicle items, statues, essences. About 2 min a run."},
 ]
 ORDER = [t["name"] for t in CATALOG]
 

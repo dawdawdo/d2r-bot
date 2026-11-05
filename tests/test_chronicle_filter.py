@@ -1,16 +1,13 @@
 """Chronicle filter generator, on a synthetic Chronicle and the 3.0 game tables."""
 import json
 import struct
-import sys
 from pathlib import Path
 
 import pytest
 
+from bot import chronicle as cf
+
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "tools"))
-
-import chronicle_filter as cf  # noqa: E402
-
 FIX = ROOT / "fixtures" / "chronicle"
 # Base codes from Chronicle_Filter_Handoff.md (Nov 4), as realistic input for the rules
 SNAP_UNIQUE = set("""6hx 6l7 6lw 6rx 6ws 7b7 7bk 7bl 7br 7cr 7cs 7fl 7ga 7gd 7gi 7gl 7gm 7gw 7ha 7kr 7ls 7lw 7m7 7p7 7pa 7s7 7sb
@@ -40,7 +37,7 @@ def data():
 
 
 def old_filter() -> dict:
-    return json.loads((ROOT / "filters" / "LK Bot.fltr").read_text(encoding="utf-8-sig"))
+    return json.loads((FIX / "base_filter.fltr").read_text(encoding="utf-8-sig"))
 
 
 def test_counts(data):
@@ -83,7 +80,7 @@ def test_filter_rules():
     for r in new["rules"]:
         assert not ("itemCode" in r and "equipmentRarity" in r), r["name"]
         assert "+" not in r["name"]  # the game drops such a rule
-    for name in cf.GENERATED - {"Show Chronicle missing set jewelry"}:
+    for name in cf.GENERATED - cf.OLD_NAMES:
         assert len(name) <= 32, name  # the game dropped both 34-char rules on rewrite and kept a 32-char one
 
 
@@ -120,3 +117,25 @@ def test_regenerating_replaces_rather_than_stacks():
 def test_empty_list_when_nothing_is_missing():
     names = [r["name"] for r in cf.build_filter(old_filter(), set(), set())["rules"]]
     assert cf.RULE_UNIQUES not in names and cf.RULE_SETS not in names
+
+
+def test_stephens_edits_survive_regenerating():
+    edited = cf.build_filter(old_filter(), SNAP_UNIQUE, SNAP_SET)
+    edited["rules"].append({"name": "Show all Gems", "enabled": True, "ruleType": "show",
+                            "filterEtherealSocketed": False, "itemCategory": ["gems"]})
+    next(r for r in edited["rules"] if r["name"] == "Hide gems")["itemCategory"] = ["gems"]
+    next(r for r in edited["rules"] if r["name"] == "Show BiS uniques")["equipmentItemCode"] = ["uvg"]
+    edited["rules"] = [r for r in edited["rules"] if r["name"] != "Show cube gems for rune upgrades"]
+
+    new = cf.build_filter(edited, {"hax"}, set())
+    rules = {r["name"]: r for r in new["rules"]}
+    assert new["rules"][-1]["name"] == "Show all Gems"  # order kept: it's still the last word on gems
+    assert rules["Hide gems"]["itemCategory"] == ["gems"]
+    assert rules["Show BiS uniques"]["equipmentItemCode"] == ["uvg"]
+    assert "Show cube gems for rune upgrades" not in rules
+
+
+def test_up_to_date_notices_a_newly_found_item():
+    flt = cf.build_filter(old_filter(), {"hax", "wnd"}, {"cap"})
+    assert cf.up_to_date(flt, {"hax", "wnd"}, {"cap"})
+    assert not cf.up_to_date(flt, {"hax"}, {"cap"})  # the last Wand unique was found

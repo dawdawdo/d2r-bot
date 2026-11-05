@@ -3,6 +3,10 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-04 evening: web page extended.** Double-click `bot_page.bat` (password in `logs/web_password.txt`). New: Chronicle card (counts, missing list, whether the installed filter is current, Update filter button, refused while D2R or the bot runs); "Then LK" checkbox, same rule as `scratch/meph_then_lk.ps1`; a warning before Start if D2R is already open. Closing the page's window cancels a pending LK fallback.
+- `chronicle_filter.py` now starts from the LIVE filter, so Stephen's editor changes stay (it used to overwrite them). His edits so far: `gems` category on Hide gems, new last rule "Show all Gems", cube gems rule removed. Now in the repo copy too.
+- Checked with a real server while D2R was open: page, password, status, Chronicle numbers (204 uniques: it noticed a new entry), filter refusal. **Not run live yet:** Start from the page, a successful Update filter, the LK switch (unit test only). The bot page was "not yet used live" before this too.
+
 **2026-11-04 19:56: stopped for Stephen (he needs the PC). No bot running, D2R closed.** 19:18-19:55: 16 runs, 15 ok, 1 "pushed off the spot"; 15 kills, 3 with a pickup (unique Poleaxe, an unidentified white label, Charged Essence of Hatred). The essence is still in Blizzaga's inventory: the next town stop stows it. Filter regenerated and installed; Chronicle unchanged at 203/103.
 - Blizzaga's filter profile is LK Bot (bot-set, as usual); Stephen's own is "Looting". The bot sets it back each session.
 - **Next session:** check for statues, off-list drops, gem stacks spilling. Launch: `scratch/meph_then_lk.ps1`.

@@ -7,13 +7,13 @@
             "ruleType": "hide",
             "filterEtherealSocketed": false,
             "equipmentRarity": [
-                "lowQuality",
-                "normal",
-                "hiQuality",
-                "magic",
                 "rare",
+                "lowQuality",
+                "unique",
                 "set",
-                "unique"
+                "magic",
+                "hiQuality",
+                "normal"
             ]
         },
         {
@@ -26,40 +26,40 @@
                 "scrlt"
             ],
             "itemCode": [
-                "hp1",
                 "hp2",
-                "hp3",
-                "hp4",
+                "r08",
                 "hp5",
+                "r16",
+                "r05",
+                "r19",
                 "mp1",
-                "mp2",
-                "mp3",
-                "mp4",
+                "r06",
                 "mp5",
-                "yps",
+                "r07",
                 "vps",
+                "r02",
+                "r13",
+                "r18",
+                "r11",
+                "r01",
+                "hp4",
+                "r03",
+                "r09",
+                "r20",
+                "r04",
+                "mp2",
+                "r15",
+                "hp3",
+                "mp4",
+                "r17",
+                "hp1",
+                "r12",
+                "r14",
+                "r10",
+                "mp3",
                 "wms",
                 "gld",
-                "r01",
-                "r02",
-                "r03",
-                "r04",
-                "r05",
-                "r06",
-                "r07",
-                "r08",
-                "r09",
-                "r10",
-                "r11",
-                "r12",
-                "r13",
-                "r14",
-                "r15",
-                "r16",
-                "r17",
-                "r18",
-                "r19",
-                "r20"
+                "yps"
             ]
         },
         {
@@ -67,42 +67,45 @@
             "enabled": true,
             "ruleType": "hide",
             "filterEtherealSocketed": false,
+            "itemCategory": [
+                "gems"
+            ],
             "itemCode": [
-                "gcv",
-                "gfv",
-                "gsv",
-                "gzv",
-                "gpv",
-                "gcy",
-                "gfy",
-                "gsy",
-                "gly",
-                "gpy",
-                "gcb",
-                "gfb",
-                "gsb",
+                "gpw",
+                "gsw",
                 "glb",
-                "gpb",
+                "gfv",
+                "gfw",
+                "gfr",
+                "skf",
+                "glg",
+                "gfy",
+                "gpg",
+                "skl",
+                "gzv",
+                "gfb",
+                "gpy",
+                "gly",
+                "gpr",
+                "gsv",
                 "gcg",
                 "gfg",
-                "gsg",
-                "glg",
-                "gpg",
-                "gcr",
-                "gfr",
-                "gsr",
-                "glr",
-                "gpr",
-                "gcw",
-                "gfw",
-                "gsw",
+                "gpb",
+                "gsb",
                 "glw",
-                "gpw",
-                "skc",
-                "skf",
+                "gcb",
+                "gcv",
+                "skz",
+                "gsg",
+                "gcy",
+                "gsy",
+                "gsr",
                 "sku",
-                "skl",
-                "skz"
+                "gcw",
+                "skc",
+                "gcr",
+                "gpv",
+                "glr"
             ]
         },
         {
@@ -126,9 +129,9 @@
                 "unique"
             ],
             "equipmentItemCode": [
-                "ulc",
+                "uvg",
                 "usk",
-                "uvg"
+                "ulc"
             ]
         },
         {
@@ -289,7 +292,6 @@
                 "pa9",
                 "pac",
                 "pae",
-                "pax",
                 "qui",
                 "sbw",
                 "scp",
@@ -421,30 +423,19 @@
             "ruleType": "show",
             "filterEtherealSocketed": false,
             "itemCode": [
-                "r21",
-                "r22",
+                "r28",
+                "r25",
+                "r29",
                 "r23",
                 "r24",
-                "r25",
-                "r26",
-                "r27",
-                "r28",
-                "r29",
                 "r30",
+                "r27",
+                "r33",
+                "r21",
+                "r26",
                 "r31",
                 "r32",
-                "r33"
-            ]
-        },
-        {
-            "name": "Show rejuvenation potions and keys",
-            "enabled": true,
-            "ruleType": "show",
-            "filterEtherealSocketed": false,
-            "itemCode": [
-                "rvs",
-                "rvl",
-                "key"
+                "r22"
             ]
         },
         {
@@ -454,8 +445,8 @@
             "filterEtherealSocketed": false,
             "itemCode": [
                 "cm1",
-                "cm2",
-                "cm3"
+                "cm3",
+                "cm2"
             ]
         },
         {
@@ -464,47 +455,29 @@
             "ruleType": "show",
             "filterEtherealSocketed": false,
             "itemCode": [
+                "gpw",
                 "gzv",
+                "skl",
+                "gpb",
+                "gpr",
                 "gly",
                 "glb",
-                "glg",
-                "glr",
-                "glw",
-                "skl",
-                "gpv",
                 "gpy",
-                "gpb",
+                "glw",
+                "glg",
                 "gpg",
-                "gpr",
-                "gpw",
-                "skz"
+                "gpv",
+                "skz",
+                "glr"
             ]
         },
         {
-            "name": "Show cube gems for rune upgrades",
-            "enabled": false,
+            "name": "Show all Gems",
+            "enabled": true,
             "ruleType": "show",
             "filterEtherealSocketed": false,
-            "itemCode": [
-                "gcg",
-                "gcw",
-                "gfy",
-                "gfv",
-                "gfb",
-                "gfr",
-                "gfg",
-                "gfw",
-                "gsy",
-                "gsv",
-                "gsb",
-                "gsr",
-                "gsg",
-                "gsw",
-                "gly",
-                "gzv",
-                "glb",
-                "glr",
-                "glg"
+            "itemCategory": [
+                "gems"
             ]
         }
     ]

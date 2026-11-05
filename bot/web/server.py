@@ -21,8 +21,9 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from .. import control
+from .. import chronicle, control
 from ..config import ROOT, load_config
+from ..io import window_info
 from ..tasks import catalog
 
 log = logging.getLogger("bot.web")
@@ -32,6 +33,8 @@ BOT_OUT = ROOT / "logs" / "web_bot.out"
 RUNS_CSV = ROOT / "runs.csv"
 LOOT_CSV = ROOT / "logs" / "loot.csv"
 STALE_S = 300  # a "running" status older than this (and no process of ours) means the bot died
+FILTER_TOOL = ROOT / "tools" / "chronicle_filter.py"
+STOPPED = (b"stopped by kill switch", b"stop requested")  # the session was ended on purpose: no LK afterwards
 
 
 def password() -> str:
@@ -70,15 +73,41 @@ class BotProcess:
 
     def __init__(self) -> None:
         self.proc: subprocess.Popen | None = None
+        self.chain: threading.Thread | None = None  # "then LK" watcher: between its two processes neither runs
         self.lock = threading.Lock()
 
     def running(self) -> bool:
         if self.proc is not None and self.proc.poll() is None:
             return True
+        if self.chain is not None and self.chain.is_alive():
+            return True
         st = control.read_status()  # started by an earlier server, or from a terminal
         return st.get("state") == "running" and time.time() - float(st.get("updated", 0)) < STALE_S
 
-    def start(self, tasks: list[str], runs: int, minutes: float | None) -> None:
+    def _spawn(self, cmd: list[str]) -> subprocess.Popen:
+        BOT_OUT.parent.mkdir(exist_ok=True)
+        proc = subprocess.Popen(cmd, cwd=ROOT, stdout=open(BOT_OUT, "ab"), stderr=subprocess.STDOUT)
+        log.info("started bot: %s (pid %d)", " ".join(cmd[1:]), proc.pid)
+        return proc
+
+    def _then_lk(self, first: subprocess.Popen, offset: int) -> None:
+        """When the first stage ends by itself (full stash, too many failures), run LK. F12, the mouse or a stop
+        from this page end everything. Same rule as scratch/meph_then_lk.ps1."""
+        first.wait()
+        try:
+            with open(BOT_OUT, "rb") as f:
+                f.seek(offset)
+                out = f.read()
+        except OSError:
+            out = b""
+        if any(s in out for s in STOPPED):
+            log.info("session stopped on purpose: no LK")
+            return
+        log.info("first stage over: LK with a full stash allowed")
+        self.proc = self._spawn([sys.executable, "-m", "bot.run", "--mode", "chests", "--tasks", "lk",
+                                 "--runs", "9000", "--stash-full-ok"])
+
+    def start(self, tasks: list[str], runs: int, minutes: float | None, then_lk: bool = False) -> None:
         ready = {t["name"] for t in catalog(load_config()) if t["ready"]}
         if not tasks or any(t not in ready for t in tasks):
             raise ValueError(f"pick tasks from: {', '.join(sorted(ready))}")
@@ -91,14 +120,44 @@ class BotProcess:
             cmd = [sys.executable, "-m", "bot.run", "--mode", "chests", "--tasks", ",".join(tasks), "--runs", str(runs)]
             if minutes:
                 cmd += ["--max-minutes", str(minutes)]
-            BOT_OUT.parent.mkdir(exist_ok=True)
-            out = open(BOT_OUT, "ab")
+            if then_lk:
+                cmd += ["--max-fail-streak", "6"]
+            offset = BOT_OUT.stat().st_size if BOT_OUT.exists() else 0
             control.write_status(state="starting", tasks=tasks, runs=runs)
-            self.proc = subprocess.Popen(cmd, cwd=ROOT, stdout=out, stderr=subprocess.STDOUT)
-            log.info("started bot: %s (pid %d)", " ".join(cmd[1:]), self.proc.pid)
+            self.proc = self._spawn(cmd)
+            if then_lk:
+                self.chain = threading.Thread(target=self._then_lk, args=(self.proc, offset), daemon=True)
+                self.chain.start()
 
 
 BOT = BotProcess()
+
+
+def game_open(cfg: dict) -> bool:
+    return window_info(cfg["game"]["window_title"]) is not None
+
+
+def chronicle_report() -> dict:
+    try:
+        rep = chronicle.report(load_config())
+    except (OSError, ValueError, StopIteration, KeyError) as e:
+        return {"error": str(e)}
+    for k in ("unique_codes", "set_codes"):
+        del rep[k]
+    return rep
+
+
+def update_filter() -> str:
+    """Refuses while the game or the bot runs: the game would overwrite the file when it closes."""
+    if BOT.running():
+        raise RuntimeError("stop the bot first")
+    if game_open(load_config()):
+        raise RuntimeError("close D2R first: it would overwrite the filter when it exits")
+    r = subprocess.run([sys.executable, str(FILTER_TOOL), "--install"], cwd=ROOT, capture_output=True, text=True)
+    if r.returncode:
+        lines = (r.stdout + r.stderr).strip().splitlines()
+        raise RuntimeError(lines[-1] if lines else "the filter tool failed")
+    return "Filter updated and installed."
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -145,7 +204,10 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/status":
             st = control.read_status()
             self._json(200, {"bot": {**st, "running": BOT.running(), "stop": control.read()},
+                             "game_open": game_open(load_config()),
                              "tasks": catalog(load_config()), "runs": recent_runs(), "loot": recent_loot()})
+        elif self.path == "/api/chronicle":
+            self._json(200, chronicle_report())
         else:
             self._send(404, b"{}")
 
@@ -157,11 +219,14 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(n) or b"{}")
             if self.path == "/api/start":
                 minutes = body.get("minutes")
-                BOT.start(list(body.get("tasks", [])), int(body.get("runs", 20)), float(minutes) if minutes else None)
+                BOT.start(list(body.get("tasks", [])), int(body.get("runs", 20)), float(minutes) if minutes else None,
+                          bool(body.get("then_lk")))
             elif self.path == "/api/stop":
                 if not BOT.running():
                     raise RuntimeError("the bot isn't running")
                 control.request(body.get("mode", "after_run"))
+            elif self.path == "/api/filter":
+                return self._json(200, {"ok": True, "message": update_filter()})
             else:
                 return self._send(404, b"{}")
         except (ValueError, RuntimeError) as e:

@@ -51,6 +51,11 @@
   .loot li { padding: 4px 0; border-top: 1px solid var(--line); list-style: none; display: flex; justify-content: space-between; gap: 10px; }
   .loot { margin: 0; padding: 0; } .loot li:first-child { border-top: 0; }
   .muted { color: var(--muted); } #msg { min-height: 1.2em; color: var(--bad); font-size: 13px; margin-top: 8px; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 13px; flex-basis: 100%; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+  #filterMsg { min-height: 1.2em; font-size: 13px; margin-top: 8px; }
+  .miss { columns: 2; font-size: 13px; margin-top: 8px; } .miss h3 { font-size: 13px; margin: 8px 0 2px; column-span: all; }
+  .miss div { break-inside: avoid; } @media (max-width: 680px) { .miss { columns: 1; } }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 680px) { .grid2 { grid-template-columns: 1fr; } }
 </style>
@@ -68,12 +73,26 @@
     <div class="row">
       <label class="f">Runs <input id="runs" type="number" min="1" max="10000" value="100"></label>
       <label class="f">Stop after (min) <input id="minutes" type="number" min="1" placeholder="no limit"></label>
+      <label class="check"><input id="thenLk" type="checkbox"> Then LK when this ends by itself (full stash, repeated failures)</label>
       <button id="start" class="go">Start</button>
       <button id="stopRun">Stop after this run</button>
       <button id="stopNow" class="danger">Stop now</button>
     </div>
     <div class="muted" style="font-size:12px;margin-top:8px">Checked tasks take turns, one game each. "Stop now" saves &amp; exits right away; F12 on the PC is the emergency stop.</div>
     <div id="msg"></div>
+  </section>
+
+  <section class="card">
+    <h2>Chronicle filter</h2>
+    <div class="stats" id="chron"></div>
+    <div id="chronState" class="muted" style="font-size:13px;margin-top:10px"></div>
+    <div class="row">
+      <button id="updFilter">Update filter</button>
+      <button id="refChron">Recheck Chronicle</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:8px">Needs D2R closed. Your edits in the game's filter editor stay, except on the generated rules (jewels, unique amulets, Chronicle missing, all other gems).</div>
+    <div id="filterMsg"></div>
+    <details style="margin-top:8px"><summary>Still missing</summary><div id="miss" class="miss"></div></details>
   </section>
 
   <section class="card">
@@ -94,7 +113,7 @@
 </main>
 <script>
 const $ = (id) => document.getElementById(id);
-let catalog = null, lastStatus = null;
+let catalog = null, lastStatus = null, gameOpen = false;
 
 function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
@@ -125,6 +144,9 @@ function render(d) {
   $("pill").className = "pill " + (stopping ? "stopping" : running ? "running" : "idle");
   $("pill").textContent = stopping ? (b.stop === "now" ? "Stopping now…" : "Stopping after this run")
     : running ? (b.state === "starting" ? "Starting…" : `${esc(title(b.task))} · run ${b.run || "–"}/${b.runs || "–"}`) : "Idle";
+  gameOpen = !!d.game_open;
+  $("updFilter").disabled = running || gameOpen;
+  $("updFilter").title = running ? "Stop the bot first" : gameOpen ? "Close D2R first" : "";
   $("start").disabled = running; $("stopRun").disabled = !running || !!b.stop; $("stopNow").disabled = !running;
 
   const t = b.tally || {}, total = Object.entries(t).filter(([k]) => k !== "chests").reduce((a, [, x]) => a + x, 0);
@@ -141,6 +163,20 @@ function render(d) {
     <tr><td>${esc(r.start.slice(11, 19))}</td><td>${esc(r.task || "lk")}</td>
     <td class="r-${esc(r.result)}">${esc(r.result)}</td><td>${esc(r.duration_s)}</td><td>${esc(r.chests)}</td>
     <td>${esc(r.picked)}${r.error ? `<div class="muted" style="white-space:normal">${esc(r.error.slice(0, 60))}</div>` : ""}</td></tr>`).join("");
+}
+
+async function loadChronicle() {
+  let c;
+  try { c = await (await fetch("/api/chronicle", {cache: "no-store"})).json(); } catch { return; }
+  if (c.error) { $("chronState").textContent = "Can't read the Chronicle: " + c.error; return; }
+  $("chron").innerHTML = [
+    ["Uniques found", `${c.uniques.found} / ${c.uniques.total}`], ["Sets found", `${c.sets.found} / ${c.sets.total}`],
+    ["Bases shown", c.uniques.codes + c.sets.codes], ["Runewords", c.runewords],
+  ].map(([k, v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join("");
+  $("chronState").textContent = c.up_to_date ? "The installed filter matches your Chronicle."
+    : "New Chronicle entries since the filter was built: update it to stop picking those up.";
+  const list = (rows) => rows.map(r => `<div>${esc(r.name)}</div>`).join("");
+  $("miss").innerHTML = `<h3>Sets (${c.missing_sets.length})</h3>${list(c.missing_sets)}<h3>Uniques (${c.missing_uniques.length})</h3>${list(c.missing_uniques)}`;
 }
 
 async function poll() {
@@ -160,11 +196,23 @@ async function post(path, body) {
 $("start").onclick = () => {
   const tasks = [...$("tasks").querySelectorAll("input:checked")].map(x => x.value);
   if (!tasks.length) { $("msg").textContent = "Pick at least one task."; return; }
-  save("runs", $("runs").value); save("minutes", $("minutes").value);
-  post("/api/start", {tasks, runs: +$("runs").value || 1, minutes: +$("minutes").value || null});
+  if (gameOpen && !confirm("D2R is already open. If you're playing, the bot will take over and leave your game. Start anyway?")) return;
+  save("runs", $("runs").value); save("minutes", $("minutes").value); save("thenLk", $("thenLk").checked);
+  post("/api/start", {tasks, runs: +$("runs").value || 1, minutes: +$("minutes").value || null, then_lk: $("thenLk").checked});
 };
 $("stopRun").onclick = () => post("/api/stop", {mode: "after_run"});
 $("stopNow").onclick = () => { if (confirm("Save & exit now?")) post("/api/stop", {mode: "now"}); };
+$("updFilter").onclick = async () => {
+  $("updFilter").disabled = true; $("filterMsg").textContent = "Updating…"; $("filterMsg").style.color = "";
+  const r = await fetch("/api/filter", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
+  const d = await r.json().catch(() => ({}));
+  $("filterMsg").textContent = d.message || d.error || "request failed";
+  $("filterMsg").style.color = r.ok ? "var(--ok)" : "var(--bad)";
+  loadChronicle(); poll();
+};
+$("refChron").onclick = loadChronicle;
+$("thenLk").checked = saved("thenLk", false);
+loadChronicle();
 $("runs").value = saved("runs", 100); $("minutes").value = saved("minutes", "");
 poll(); setInterval(poll, 2000);
 </script>

@@ -27,6 +27,7 @@ def web(tmp_path, monkeypatch):
 
     monkeypatch.setattr(server.subprocess, "Popen", lambda cmd, **kw: started.append(cmd) or FakeProc())
     monkeypatch.setattr(server, "BOT", server.BotProcess())
+    monkeypatch.setattr(server, "game_open", lambda cfg: False)
     srv = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{srv.server_address[1]}", server.password(), started
@@ -78,3 +79,57 @@ def test_stop_writes_the_request(web):
     assert call(base, "/api/stop", pw, {"mode": "after_run"})[0] == 200
     assert control.read() == "after_run"
     assert call(base, "/api/stop", pw, {"mode": "sometime"})[0] == 400
+
+
+def test_filter_update_refused_while_the_game_is_open(web, monkeypatch):
+    base, pw, started = web
+    monkeypatch.setattr(server, "game_open", lambda cfg: True)
+    code, body = call(base, "/api/filter", pw, {})
+    assert code == 400 and b"close D2R" in body and not started
+
+
+def test_filter_update_refused_while_the_bot_runs(web):
+    base, pw, _ = web
+    call(base, "/api/start", pw, {"tasks": ["lk"], "runs": 1})
+    code, body = call(base, "/api/filter", pw, {})
+    assert code == 400 and b"stop the bot" in body
+
+
+def test_filter_update_runs_the_tool(web, monkeypatch):
+    base, pw, _ = web
+    calls = []
+
+    class Done:
+        returncode, stdout, stderr = 0, "installed", ""
+
+    monkeypatch.setattr(server.subprocess, "run", lambda cmd, **kw: calls.append(cmd) or Done())
+    code, _ = call(base, "/api/filter", pw, {})
+    assert code == 200 and calls[0][-1] == "--install"
+
+
+class Ended:
+    pid = 1
+
+    def poll(self):
+        return 0
+
+    def wait(self):
+        return 0
+
+
+@pytest.mark.parametrize("log, expect_lk", [(b"run 60/4000 ok\nstash full\n", True),
+                                            (b"stopped by kill switch: F12 pressed\n", False),
+                                            (b"stop requested (web page)\n", False)])
+def test_then_lk_follows_how_the_first_stage_ended(tmp_path, monkeypatch, log, expect_lk):
+    out = tmp_path / "bot.out"
+    monkeypatch.setattr(server, "BOT_OUT", out)
+    out.write_bytes(b"stopped by kill switch: an old session\n")  # must not count
+    offset = out.stat().st_size
+    with open(out, "ab") as f:
+        f.write(log)
+    bot, spawned = server.BotProcess(), []
+    monkeypatch.setattr(bot, "_spawn", lambda cmd: spawned.append(cmd))
+    bot._then_lk(Ended(), offset)
+    assert bool(spawned) == expect_lk
+    if expect_lk:
+        assert spawned[0][spawned[0].index("--tasks") + 1] == "lk" and "--stash-full-ok" in spawned[0]
