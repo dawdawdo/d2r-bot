@@ -3,6 +3,10 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-04 19:56: stopped for Stephen (he needs the PC). No bot running, D2R closed.** 19:18-19:55: 16 runs, 15 ok, 1 "pushed off the spot"; 15 kills, 3 with a pickup (unique Poleaxe, an unidentified white label, Charged Essence of Hatred). The essence is still in Blizzaga's inventory: the next town stop stows it. Filter regenerated and installed; Chronicle unchanged at 203/103.
+- Blizzaga's filter profile is LK Bot (bot-set, as usual); Stephen's own is "Looting". The bot sets it back each session.
+- **Next session:** check for statues, off-list drops, gem stacks spilling. Launch: `scratch/meph_then_lk.ps1`.
+
 **2026-11-04 19:20: the bot played the wrong character for ~80 s (18:46:10-18:47:30).** D2R opens on whoever was last played, and the bot pressed Play without choosing: it was on ThroatCutter (Stephen played it at 18:04). It stayed in Lut Gholein, and its walk clicks landed on an open Loot Filter window. Stopped by hand, left with Save and Exit. `ThroatCutter.d2s` differs from the backup only in 4 header bytes (offsets 13-14, 32-33; apparently checksum + last played), nothing else. Backup: `backups/20261104-184610`.
 - **Left for Stephen:** `lootfilter.json` now maps ThroatCutter to LK Bot (no entry before), so that character hides most loot until he switches its filter back. The bot also leaves `/players` at its own value, as usual.
 - Fix: `select_character` clicks the configured name on the menu; `check_character` confirms in game that its .d2s is the newest and otherwise leaves and stops the whole session. Offline tests; first live check is this session.
