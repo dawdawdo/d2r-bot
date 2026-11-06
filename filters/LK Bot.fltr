@@ -247,7 +247,6 @@
                 "7s7",
                 "7sb",
                 "7sc",
-                "7sr",
                 "7ts",
                 "7wa",
                 "7wc",
@@ -275,7 +274,6 @@
                 "9p9",
                 "9qs",
                 "9sc",
-                "9sr",
                 "9tw",
                 "9vo",
                 "9wc",
@@ -390,7 +388,6 @@
                 "ult",
                 "uth",
                 "vbt",
-                "xmg",
                 "xml",
                 "ztb"
             ]
@@ -442,13 +439,13 @@
             "ruleType": "show",
             "filterEtherealSocketed": false,
             "equipmentRarity": [
-                "normal",
-                "hiQuality"
+                "normal"
             ],
             "equipmentItemCode": [
                 "7br",
                 "7wc",
                 "9wc",
+                "ci3",
                 "uit",
                 "utp"
             ]
@@ -459,15 +456,39 @@
             "ruleType": "show",
             "filterEtherealSocketed": true,
             "equipmentRarity": [
-                "normal",
-                "hiQuality"
+                "normal"
             ],
             "equipmentItemCode": [
                 "7br",
                 "7wc",
                 "9wc",
+                "ci3",
                 "uit",
                 "utp"
+            ]
+        },
+        {
+            "name": "Show superior runeword bases",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "equipmentRarity": [
+                "hiQuality"
+            ],
+            "equipmentItemCode": [
+                "ci3"
+            ]
+        },
+        {
+            "name": "Show socketed superior bases",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": true,
+            "equipmentRarity": [
+                "hiQuality"
+            ],
+            "equipmentItemCode": [
+                "ci3"
             ]
         }
     ]
