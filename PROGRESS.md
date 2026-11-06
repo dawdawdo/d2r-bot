@@ -3,7 +3,10 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**PENDING, just before Stephen's next away session, not sooner (he's playing, 2026-11-06):** LK Bot filter to flawless + perfect gems only, all runes, and runeword bases (Mancatcher, Archon Plate, Monarch, Grim Scythe, Giant Thresher; he'll use this filter on his cow runs too). Install only with D2R closed. Change `tools/chronicle_filter.py` too, or regenerating brings all gems back. Not done yet.
+**2026-11-06 11:56: filter changed, Meph running, Stephen away.** Detached `scratch/meph_then_lk.ps1`. Unified filter, for him and the bot: flawless + perfect gems only, all runes (r01-r33), runeword bases (`RUNEWORD_BASES` in `bot/chronicle.py`: Mancatcher 7br, Archon Plate utp, Monarch uit, Grim Scythe 9wc, Giant Thresher 7wc; temporary, normal + superior). Chronicle now 142 + 26 codes after his identifying. Backups `filter-20261106-115601`, `filter-repo-20261106-115600`. First live run of the full-stack fix too.
+- **`filterEtherealSocketed`:** his Looting rule for these bases sets it, ours never did; meaning untested, so there's one rule each way. Check whether both survive the game's rewrite.
+- **Known gap:** the bot's `white` label color needs V >= 200, so gray labels (socketed or ethereal items) are probably not picked. Not confirmed: no sample frame. Needs a real frame before adding a `gray` kind. Those bases still show for Stephen on his own runs.
+- Stephen's Looting also has a rule for base Diadems (ci3), not carried over. Ask if he wants it.
 
 **2026-11-06 06:44: overnight still running.** 493 runs: 461 ok, 30 fails, 1 chicken, 0 deaths, 176 Meph kills. Refill cycle worked twice live, both ways (dry 20:09 and 02:17, Meph back 22:32 and 04:51): about 3.8 h of Meph, then about 2.5 h of LK. Drops needing identification are in the stash; no stack-full or stash-full events. No statue tooltips seen among Meph's stashed items: check.
 

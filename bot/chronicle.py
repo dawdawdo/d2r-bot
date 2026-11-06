@@ -34,16 +34,29 @@ CATEGORY_OF = {"rin": "rings", "amu": "amule"}
 # Not gear: jewels and charms have their own any-rarity item rules; the bot only picks the colors it wants.
 ITEM_RULE_CODES = {"jew", "cm1", "cm2", "cm3"}
 
-GEMS = [f"g{grade}{color}" for grade in "cfs" for color in "vybgrw"] + ["skc", "skf", "sku"]
+RUNES = [f"r{i:02d}" for i in range(1, 34)]  # all of them, El to Zod: Stephen needs low ones for cube recipes
+# Stephen's runeword bases (2026-11-06). Temporary: delete a line when he has enough, then regenerate.
+RUNEWORD_BASES = {
+    "7br": "Mancatcher",
+    "utp": "Archon Plate",
+    "uit": "Monarch",
+    "9wc": "Grim Scythe",
+    "7wc": "Giant Thresher",
+}
 
 RULE_UNIQUES = "Show Chronicle missing uniques"
 RULE_SETS = "Show Chronicle missing sets"
 RULE_AMULETS = "Show unique amulets"
 RULE_SET_CATEGORIES = "Show missing set jewelry"  # names over ~32 chars get dropped by the game
 RULE_JEWELS = "Show jewels"
-RULE_GEMS = "Show all other gems"
-OLD_NAMES = {"Show Chronicle missing set jewelry"}
-GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_GEMS} | OLD_NAMES
+RULE_RUNES = "Show all runes"
+RULE_BASES = "Show runeword bases"
+RULE_SOCKETED_BASES = "Show socketed runeword bases"
+# Removed on regenerating. Gems are back to flawless + perfect only (Stephen 2026-11-06): his own rule
+# "Show flawless and perfect gems" stays, these two showed the lower grades.
+OLD_NAMES = {"Show Chronicle missing set jewelry", "Show all other gems", "Show all Gems", "Show Pul and higher runes"}
+GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_RUNES, RULE_BASES,
+             RULE_SOCKETED_BASES} | OLD_NAMES
 
 
 @dataclass
@@ -127,19 +140,24 @@ def build_filter(old: dict, unique_codes: set[str], set_codes: set[str]) -> dict
     if cats := sorted(CATEGORY_OF[c] for c in set_codes & set(CATEGORY_OF)):
         new.append(_show(RULE_SET_CATEGORIES, equipmentRarity=["set"], equipmentCategory=cats))
     new += _code_rule(RULE_UNIQUES, "unique", unique_codes) + _code_rule(RULE_SETS, "set", set_codes)
-    new.append(_show(RULE_GEMS, itemCode=GEMS))
-    at = next((i for i, r in enumerate(rules) if r["name"] == "Show Pul and higher runes"), len(rules))
-    return {**old, "rules": rules[:at] + new + rules[at:]}
+    new.append(_show(RULE_RUNES, itemCode=RUNES))
+    if RUNEWORD_BASES:
+        # Stephen's own rule sets filterEtherealSocketed and all others here don't; what it does isn't tested, so one
+        # of each: the bases show whichever way it works.
+        bases = dict(equipmentRarity=["normal", "hiQuality"], equipmentItemCode=sorted(RUNEWORD_BASES))
+        new += [_show(RULE_BASES, **bases), {**_show(RULE_SOCKETED_BASES, **bases), "filterEtherealSocketed": True}]
+    return {**old, "rules": rules + new}
 
 
 def _rule_codes(flt: dict, name: str) -> set[str]:
-    return {c for r in flt["rules"] if r["name"] == name for c in r.get("equipmentItemCode", [])}
+    return {c for r in flt["rules"] if r["name"] == name for c in r.get("equipmentItemCode", []) + r.get("itemCode", [])}
 
 
 def up_to_date(flt: dict, unique_codes: set[str], set_codes: set[str]) -> bool:
     """Does this filter already show exactly what the Chronicle still needs?"""
     want = build_filter(flt, unique_codes, set_codes)
-    return all(_rule_codes(flt, n) == _rule_codes(want, n) for n in (RULE_UNIQUES, RULE_SETS))
+    return all(_rule_codes(flt, n) == _rule_codes(want, n)
+               for n in (RULE_UNIQUES, RULE_SETS, RULE_RUNES, RULE_BASES, RULE_SOCKETED_BASES))
 
 
 def save_dir(cfg: dict) -> Path:

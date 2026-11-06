@@ -70,7 +70,7 @@ loot:
   pick: [rune, unique, set, magic]  # magic = blue labels that say "Charm"
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
   rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
-  pick_white_other: true         # white labels that aren't keys/rejuvs = gems and skulls (filter rules; all grades since 2026-11-04)
+  pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:

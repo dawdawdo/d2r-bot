@@ -88,7 +88,7 @@ def test_existing_pickups_kept():
     old = old_filter()
     new = cf.build_filter(old, SNAP_UNIQUE, SNAP_SET)
     rules = {r["name"]: r for r in new["rules"]}
-    for name in ("Hide all gear", "Hide misc", "Hide gems", "Show unique rings", "Show Pul and higher runes",
+    for name in ("Hide all gear", "Hide misc", "Hide gems", "Show unique rings",
                  "Show rejuvenation potions and keys", "Show charms", "Show flawless and perfect gems"):
         assert rules[name] == next(r for r in old["rules"] if r["name"] == name)
     assert set(rules["Show BiS uniques"]["equipmentItemCode"]) == {"uvg", "ulc", "usk"}
@@ -98,11 +98,45 @@ def test_existing_pickups_kept():
     assert [r["name"] for r in new["rules"]][:3] == ["Hide all gear", "Hide misc", "Hide gems"]  # later rules win
 
 
-def test_every_gem_shown():
+def _shown(flt):
+    return {c for r in flt["rules"] if r["ruleType"] == "show" and r["enabled"] for c in r.get("itemCode", [])}
+
+
+def test_only_flawless_and_perfect_gems_shown():
+    old = old_filter()
+    old["rules"] += [{"name": "Show all Gems", "enabled": True, "ruleType": "show", "filterEtherealSocketed": False,
+                      "itemCategory": ["gems"]},
+                     {"name": "Show all other gems", "enabled": True, "ruleType": "show",
+                      "filterEtherealSocketed": False, "itemCode": ["gcv"]}]
+    new = cf.build_filter(old, SNAP_UNIQUE, SNAP_SET)
+    assert not [r for r in new["rules"] if r["ruleType"] == "show" and "gems" in r.get("itemCategory", [])]
+    hidden = set(next(r for r in new["rules"] if r["name"] == "Hide gems")["itemCode"])
+    high = {"gzv", "gly", "glb", "glg", "glr", "glw", "skl", "gpv", "gpy", "gpb", "gpg", "gpr", "gpw", "skz"}
+    assert len(hidden) == 35 and high <= _shown(new)
+    assert not (hidden - high) & _shown(new)  # chipped, flawed, normal
+
+
+def test_all_runes_shown():
     new = cf.build_filter(old_filter(), SNAP_UNIQUE, SNAP_SET)
-    shown = {c for r in new["rules"] if r["ruleType"] == "show" and r["enabled"] for c in r.get("itemCode", [])}
-    hidden = next(r for r in new["rules"] if r["name"] == "Hide gems")["itemCode"]
-    assert set(hidden) <= shown and len(hidden) == 35
+    assert {f"r{i:02d}" for i in range(1, 34)} <= _shown(new)
+    assert "Show Pul and higher runes" not in [r["name"] for r in new["rules"]]
+
+
+def test_runeword_bases_shown_after_hide_all_gear():
+    new = cf.build_filter(old_filter(), SNAP_UNIQUE, SNAP_SET)
+    names = [r["name"] for r in new["rules"]]
+    rules = {r["name"]: r for r in new["rules"]}
+    for name in (cf.RULE_BASES, cf.RULE_SOCKETED_BASES):
+        assert set(rules[name]["equipmentItemCode"]) == {"7br", "utp", "uit", "9wc", "7wc"}
+        assert set(rules[name]["equipmentRarity"]) == {"normal", "hiQuality"}
+        assert names.index(name) > names.index("Hide all gear")  # later rules win
+    assert rules[cf.RULE_SOCKETED_BASES]["filterEtherealSocketed"] is True
+
+
+def test_up_to_date_notices_missing_new_rules():
+    flt = cf.build_filter(old_filter(), {"hax"}, {"cap"})
+    assert cf.up_to_date(flt, {"hax"}, {"cap"})
+    assert not cf.up_to_date(old_filter(), {"hax"}, {"cap"})
 
 
 def test_regenerating_replaces_rather_than_stacks():
@@ -121,15 +155,16 @@ def test_empty_list_when_nothing_is_missing():
 
 def test_stephens_edits_survive_regenerating():
     edited = cf.build_filter(old_filter(), SNAP_UNIQUE, SNAP_SET)
-    edited["rules"].append({"name": "Show all Gems", "enabled": True, "ruleType": "show",
-                            "filterEtherealSocketed": False, "itemCategory": ["gems"]})
+    edited["rules"].append({"name": "Show Base Diadems", "enabled": True, "ruleType": "show",
+                            "filterEtherealSocketed": False, "equipmentRarity": ["normal"],
+                            "equipmentItemCode": ["ci3"]})
     next(r for r in edited["rules"] if r["name"] == "Hide gems")["itemCategory"] = ["gems"]
     next(r for r in edited["rules"] if r["name"] == "Show BiS uniques")["equipmentItemCode"] = ["uvg"]
     edited["rules"] = [r for r in edited["rules"] if r["name"] != "Show cube gems for rune upgrades"]
 
     new = cf.build_filter(edited, {"hax"}, set())
     rules = {r["name"]: r for r in new["rules"]}
-    assert new["rules"][-1]["name"] == "Show all Gems"  # order kept: it's still the last word on gems
+    assert rules["Show Base Diadems"]["equipmentItemCode"] == ["ci3"]  # a rule he added stays
     assert rules["Hide gems"]["itemCategory"] == ["gems"]
     assert rules["Show BiS uniques"]["equipmentItemCode"] == ["uvg"]
     assert "Show cube gems for rune upgrades" not in rules

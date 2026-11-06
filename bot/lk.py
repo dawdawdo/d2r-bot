@@ -400,8 +400,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
             if lab.kind == "white" and not take_all:
                 what = white_word(bot.frame, lab)
                 if what is None and bot.cfg["loot"].get("pick_white_other"):
-                    # the filter hides gold and all white gear: a white label that's no key / rejuv is a
-                    # gem or skull, any grade (Stephen 2026-11-04: all gems, for rune cube recipes)
+                    # the filter hides gold and most white gear: a white label that's no key / rejuv is a
+                    # flawless or perfect gem or skull, or one of Stephen's runeword bases
                     what = "gem"
                 elif what not in supplies or not _want_supply(bot, what):
                     continue
