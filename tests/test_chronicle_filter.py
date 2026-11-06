@@ -127,7 +127,7 @@ def test_runeword_bases_shown_after_hide_all_gear():
     names = [r["name"] for r in new["rules"]]
     rules = {r["name"]: r for r in new["rules"]}
     for name in (cf.RULE_BASES, cf.RULE_SOCKETED_BASES):
-        assert set(rules[name]["equipmentItemCode"]) == {"7br", "utp", "uit", "9wc", "7wc"}
+        assert set(rules[name]["equipmentItemCode"]) == {"7br", "utp", "uit", "9wc", "7wc", "ci3"}
         assert set(rules[name]["equipmentRarity"]) == {"normal", "hiQuality"}
         assert names.index(name) > names.index("Hide all gear")  # later rules win
     assert rules[cf.RULE_SOCKETED_BASES]["filterEtherealSocketed"] is True

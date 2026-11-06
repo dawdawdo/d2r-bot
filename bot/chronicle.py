@@ -42,6 +42,7 @@ RUNEWORD_BASES = {
     "uit": "Monarch",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
+    "ci3": "Diadem",
 }
 
 RULE_UNIQUES = "Show Chronicle missing uniques"
