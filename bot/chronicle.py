@@ -44,6 +44,8 @@ RUNEWORD_BASES = {
     "7wc": "Giant Thresher",
     "ci3": "Diadem",
 }
+# Normal quality shows for all of them. No superior weapons: the cube's socket recipe doesn't take them (Stephen).
+SUPERIOR_BASES = {"utp", "uit", "ci3"}
 
 RULE_UNIQUES = "Show Chronicle missing uniques"
 RULE_SETS = "Show Chronicle missing sets"
@@ -53,11 +55,13 @@ RULE_JEWELS = "Show jewels"
 RULE_RUNES = "Show all runes"
 RULE_BASES = "Show runeword bases"
 RULE_SOCKETED_BASES = "Show socketed runeword bases"
+RULE_SUPERIOR_BASES = "Show superior runeword bases"
+RULE_SOCKETED_SUPERIOR_BASES = "Show socketed superior bases"
 # Removed on regenerating. Gems are back to flawless + perfect only (Stephen 2026-11-06): his own rule
 # "Show flawless and perfect gems" stays, these two showed the lower grades.
 OLD_NAMES = {"Show Chronicle missing set jewelry", "Show all other gems", "Show all Gems", "Show Pul and higher runes"}
 GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_RUNES, RULE_BASES,
-             RULE_SOCKETED_BASES} | OLD_NAMES
+             RULE_SOCKETED_BASES, RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES} | OLD_NAMES
 
 
 @dataclass
@@ -145,8 +149,12 @@ def build_filter(old: dict, unique_codes: set[str], set_codes: set[str]) -> dict
     if RUNEWORD_BASES:
         # Stephen's own rule sets filterEtherealSocketed and all others here don't; what it does isn't tested, so one
         # of each: the bases show whichever way it works.
-        bases = dict(equipmentRarity=["normal", "hiQuality"], equipmentItemCode=sorted(RUNEWORD_BASES))
-        new += [_show(RULE_BASES, **bases), {**_show(RULE_SOCKETED_BASES, **bases), "filterEtherealSocketed": True}]
+        for plain, socketed, rarity, codes in (
+                (RULE_BASES, RULE_SOCKETED_BASES, "normal", set(RUNEWORD_BASES)),
+                (RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, "hiQuality", SUPERIOR_BASES & set(RUNEWORD_BASES))):
+            if codes:
+                bases = dict(equipmentRarity=[rarity], equipmentItemCode=sorted(codes))
+                new += [_show(plain, **bases), {**_show(socketed, **bases), "filterEtherealSocketed": True}]
     return {**old, "rules": rules + new}
 
 
@@ -158,7 +166,8 @@ def up_to_date(flt: dict, unique_codes: set[str], set_codes: set[str]) -> bool:
     """Does this filter already show exactly what the Chronicle still needs?"""
     want = build_filter(flt, unique_codes, set_codes)
     return all(_rule_codes(flt, n) == _rule_codes(want, n)
-               for n in (RULE_UNIQUES, RULE_SETS, RULE_RUNES, RULE_BASES, RULE_SOCKETED_BASES))
+               for n in (RULE_UNIQUES, RULE_SETS, RULE_RUNES, RULE_BASES, RULE_SOCKETED_BASES,
+                         RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES))
 
 
 def save_dir(cfg: dict) -> Path:
