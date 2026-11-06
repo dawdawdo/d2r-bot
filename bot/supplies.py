@@ -41,6 +41,12 @@ def restocked(moved: int, slots_gone: bool) -> bool:
     return dry
 
 
+def needs_a_page(left: list, rejuvs: set, stacks: set) -> list:
+    """What's still in the inventory and needs a free stash cell. Rejuvs and other stacked items go to their stacks:
+    one that stayed means that stack is full, not the stash, so it must not count towards a full stash."""
+    return [cell for cell in left if cell not in rejuvs and cell not in stacks]
+
+
 def after_stowing(st: dict, rejuvs: int, stack_full: bool) -> dict:
     """The state after the stowaway put `rejuvs` in the Materials stack."""
     st = dict(st)

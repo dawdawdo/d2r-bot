@@ -880,6 +880,23 @@ def _is_charm(frame: np.ndarray, x: int, y: int) -> bool:
     return has_word(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), "word_charm.png")
 
 
+def _is_stack_item(frame: np.ndarray, x: int, y: int) -> bool:
+    """The tooltip says "Ctrl + Left Click to Move to Stack Tab": gems, skulls, runes, essences. A full stack leaves
+    it in the inventory, which says nothing about room on the stash pages. 2091 saved tooltips: 1.00 or <= 0.62."""
+    from .vision.labels import has_word
+
+    crop = frame[max(0, y - 420) : y, max(0, x - 300) : x + 300]
+    return has_word(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), "word_stack_tab.png")
+
+
+def _is_orange(bot: Controller, frame: np.ndarray, x: int, y: int) -> bool:
+    """Orange name: a rune or an essence."""
+    from .vision.tooltip import name_kind
+
+    colored = {k: v for k, v in bot.cfg["vision"]["labels"].items() if k != "white"}
+    return name_kind(frame, x, y, colored) == "rune"
+
+
 def _is_rejuv(bot: Controller, frame: np.ndarray, x: int, y: int) -> bool:
     tpl = bot._templates.get("label_rejuv.png")
     if tpl is None:
@@ -1020,6 +1037,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             tab = None
             items = charms = 0
             rejuv_cells = set()
+            stack_cells, keep_cells = set(), set()
             for i, (c, r) in enumerate(inv["other"]):
                 if i:  # a grand/large charm fills 2-3 cells: its other cells are empty once it's stashed
                     bot.input.move(640, 600)
@@ -1030,6 +1048,10 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 charm = _is_charm(tip, *cell_center(c, r))
                 if _is_rejuv(bot, tip, *cell_center(c, r)):
                     rejuv_cells.add((c, r))
+                elif _is_stack_item(tip, *cell_center(c, r)):
+                    stack_cells.add((c, r))
+                    if _is_orange(bot, tip, *cell_center(c, r)):
+                        keep_cells.add((c, r))
                 want = "personal_tab" if charm else "shared_tab"
                 if tab != want:
                     bot.click(*scfg[want])
@@ -1039,7 +1061,12 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 items += 1
                 charms += charm
             left = _scan_inventory(bot)["other"]
-            spill = [cell for cell in left if cell not in rejuv_cells]
+            retry = [cell for cell in left if cell in stack_cells]
+            if retry:  # one more try, so that a missed click isn't taken for a full stack
+                for cell in retry:
+                    _ctrl_click(bot, *cell_center(*cell))
+                left = _scan_inventory(bot)["other"]
+            spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
             if spill:  # that tab is full: try the other one (Stephen clears both between sessions, 2026-10-31)
                 other = "shared_tab" if tab == "personal_tab" else "personal_tab"
                 log.info("stowaway: %d item(s) didn't fit; trying the %s", len(spill), other.replace("_", " "))
@@ -1048,10 +1075,10 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 for cell in spill:
                     _ctrl_click(bot, *cell_center(*cell))
                 left = _scan_inventory(bot)["other"]
-                spill = [cell for cell in left if cell not in rejuv_cells]
+                spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
                 if spill and not getattr(bot, "stash_full", False):  # once full it stays full: no tour every game
                     left = _spill_to_shared_pages(bot, spill, left)
-                    bot.stash_full = any(cell not in rejuv_cells for cell in left)
+                    bot.stash_full = bool(supplies.needs_a_page(left, rejuv_cells, stack_cells))
             done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
             bot.input.move(640, 600)
@@ -1060,10 +1087,12 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             stuck = [cell for cell in left if cell in rejuv_cells]  # their Materials stack is at 99
             rejuvs = len(rejuv_cells) - len(stuck)
             others = done["stashed"] - len(runes) - charms - rejuvs
+            full_stacks = [cell for cell in left if cell in stack_cells and cell not in keep_cells]
             _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
-                      + ["Rejuvenation Potion to Materials tab"] * rejuvs + ["item to shared tab"] * max(0, others))
+                      + ["Rejuvenation Potion to Materials tab"] * rejuvs + ["item to shared tab"] * max(0, others)
+                      + ["dropped: its stash stack is full"] * len(full_stacks))
             done["runes"] = runes
-            left = [cell for cell in left if cell not in rejuv_cells]
+            left = [cell for cell in left if cell not in rejuv_cells and cell not in full_stacks]
             if left:
                 if not getattr(bot, "stash_full", False):
                     bot.save_failure("stowaway_left_items")
@@ -1081,6 +1110,17 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 bot.press(bot.cfg["hotkeys"]["inventory"])
                 bot.kill.sleep(0.35)
                 for cell in stuck:
+                    _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
+                bot.press(bot.cfg["hotkeys"]["inventory"])
+                bot.kill.sleep(0.2)
+            if full_stacks:
+                if not getattr(bot, "full_stack_seen", False):  # one frame a session: shows what the game did
+                    bot.full_stack_seen = True
+                    bot.save_failure("stack_full_dropping")
+                log.warning("stowaway: stack full, dropping %d item(s); tooltips in logs/loot", len(full_stacks))
+                bot.press(bot.cfg["hotkeys"]["inventory"])
+                bot.kill.sleep(0.35)
+                for cell in full_stacks:
                     _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
                 bot.press(bot.cfg["hotkeys"]["inventory"])
                 bot.kill.sleep(0.2)

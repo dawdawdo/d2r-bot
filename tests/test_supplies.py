@@ -88,3 +88,11 @@ def test_players_follow_the_tasks():
     assert supplies.players_for([T("meph")], CFG) == 1
     assert supplies.players_for([T("lk")], CFG) == 7
     assert supplies.players_for([T("lk"), T("meph")], CFG) == 7
+
+
+def test_a_full_stack_does_not_mean_a_full_stash():
+    from bot import supplies
+
+    gem, rejuv, amulet = (0, 0), (1, 0), (2, 0)
+    assert supplies.needs_a_page([gem, rejuv], {rejuv}, {gem}) == []
+    assert supplies.needs_a_page([gem, amulet], {rejuv}, {gem}) == [amulet]

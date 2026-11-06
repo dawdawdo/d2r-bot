@@ -31,6 +31,34 @@ def test_rejuv_tooltip_is_not_a_charm():
     assert name_kind(frame, 884, 405, colored) != "magic"
 
 
+def _pad(name):
+    return cv2.copyMakeBorder(cv2.imread(str(FIX / name)), 0, 0, 400, 0, cv2.BORDER_CONSTANT)
+
+
+def test_stack_items_found_by_tooltip():
+    from bot.town import _is_stack_item
+
+    assert _is_stack_item(_pad("tt_hel_rune_960_367.png"), 960, 367)
+    assert _is_stack_item(_pad("tt_emerald_960_367.png"), 960, 367)
+    assert _is_stack_item(_pad("tt_skull_884_480.png"), 884, 480)
+    assert _is_stack_item(_pad("tt_essence_960_480.png"), 960, 480)
+    assert not _is_stack_item(_pad("tt_small_charm_922_480.png"), 922, 480)
+    assert not _is_stack_item(_pad("tt_amulet_960_480.png"), 960, 480)
+    assert not _is_stack_item(_pad("tt_spiked_club_884_367.png"), 884, 367)
+
+
+def test_runes_and_essences_are_never_dropped_but_gems_can_be():
+    from types import SimpleNamespace
+
+    from bot.town import _is_orange
+
+    bot = SimpleNamespace(cfg=load_config())
+    assert _is_orange(bot, _pad("tt_hel_rune_960_367.png"), 960, 367)
+    assert _is_orange(bot, _pad("tt_essence_960_480.png"), 960, 480)
+    assert not _is_orange(bot, _pad("tt_emerald_960_367.png"), 960, 367)
+    assert not _is_orange(bot, _pad("tt_skull_884_480.png"), 884, 480)
+
+
 def test_rejuv_tooltip_found_by_word():
     """Spare rejuvs are told apart in the stash loop (their Materials stack caps at 99)."""
     from types import SimpleNamespace
