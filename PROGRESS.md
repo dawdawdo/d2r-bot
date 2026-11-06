@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**PENDING, just before Stephen's next away session, not sooner (he's playing, 2026-11-06):** LK Bot filter to flawless + perfect gems only, and all runes. Install only with D2R closed. Change `tools/chronicle_filter.py` too, or regenerating brings all gems back. Not done yet.
+
 **2026-11-06 06:44: overnight still running.** 493 runs: 461 ok, 30 fails, 1 chicken, 0 deaths, 176 Meph kills. Refill cycle worked twice live, both ways (dry 20:09 and 02:17, Meph back 22:32 and 04:51): about 3.8 h of Meph, then about 2.5 h of LK. Drops needing identification are in the stash; no stack-full or stash-full events. No statue tooltips seen among Meph's stashed items: check.
 
 **2026-11-05 22:30: full gem stacks handled, offline tests only; the running session still has the old code.** Before: a gem stuck on a full stack toured the stash pages, then set `stash_full`, which ends Meph and leaves LK picking runes only. Now: items whose tooltip says "Move to Stack Tab" never count towards a full stash; one retry, then gems and skulls are dropped (loot.csv: "dropped: its stash stack is full", first one per session saves frame `stack_full_dropping`). Orange names (runes, essences) are never dropped: they stay in the inventory with a warning. **Not known:** whether the game leaves an item in the inventory at a full stack or puts it on a stash page; only rejuvs have been seen stuck (Nov 3). The bot still picks up gems whose stack is full, then drops them. Gem stack levels not checked.
