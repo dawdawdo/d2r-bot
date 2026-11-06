@@ -44,8 +44,9 @@ RUNEWORD_BASES = {
     "7wc": "Giant Thresher",
     "ci3": "Diadem",
 }
-# Normal quality shows for all of them. No superior weapons: the cube's socket recipe doesn't take them (Stephen).
-SUPERIOR_BASES = {"utp", "uit", "ci3"}
+# Normal quality shows for all of them. Stephen wants these for socketing, and the cube's recipe doesn't take
+# superiors. Diadems are the exception: they're for Charsi's imbue, which does.
+SUPERIOR_BASES = {"ci3"}
 
 RULE_UNIQUES = "Show Chronicle missing uniques"
 RULE_SETS = "Show Chronicle missing sets"

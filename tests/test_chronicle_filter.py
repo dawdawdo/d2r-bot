@@ -131,7 +131,7 @@ def test_runeword_bases_shown_after_hide_all_gear():
         assert rules[name]["equipmentRarity"] == ["normal"]
         assert names.index(name) > names.index("Hide all gear")  # later rules win
     for name in (cf.RULE_SUPERIOR_BASES, cf.RULE_SOCKETED_SUPERIOR_BASES):
-        assert set(rules[name]["equipmentItemCode"]) == {"utp", "uit", "ci3"}  # no superior weapons
+        assert set(rules[name]["equipmentItemCode"]) == {"ci3"}  # superiors only for imbuing
         assert rules[name]["equipmentRarity"] == ["hiQuality"]
         assert names.index(name) > names.index("Hide all gear")
     assert rules[cf.RULE_SOCKETED_BASES]["filterEtherealSocketed"] is True
