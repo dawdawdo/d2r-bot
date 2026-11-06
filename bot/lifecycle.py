@@ -108,6 +108,9 @@ def ensure_main_menu(bot: Controller) -> None:
     known = {"title", "main_menu", "in_game", "esc_menu", "difficulty"}
     deadline = bot.clock() + 90
     while True:  # right after launch: intro videos/splash screens -> press space to skip
+        # D2R restores its saved window size late in startup, undoing the resize at launch (Stephen had
+        # resized it while playing, 2026-11-06), and at another size nothing matches
+        bot.window.set_client_size(*bot.cfg["game"]["resolution"])
         state = bot.observe()
         if state in known:
             break
