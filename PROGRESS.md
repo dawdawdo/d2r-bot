@@ -3,7 +3,7 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**PENDING, just before Stephen's next away session, not sooner (he's playing, 2026-11-06):** LK Bot filter to flawless + perfect gems only, and all runes. Install only with D2R closed. Change `tools/chronicle_filter.py` too, or regenerating brings all gems back. Not done yet.
+**PENDING, just before Stephen's next away session, not sooner (he's playing, 2026-11-06):** LK Bot filter to flawless + perfect gems only, all runes, and runeword bases (Mancatcher, Archon Plate, Monarch, Grim Scythe, Giant Thresher; he'll use this filter on his cow runs too). Install only with D2R closed. Change `tools/chronicle_filter.py` too, or regenerating brings all gems back. Not done yet.
 
 **2026-11-06 06:44: overnight still running.** 493 runs: 461 ok, 30 fails, 1 chicken, 0 deaths, 176 Meph kills. Refill cycle worked twice live, both ways (dry 20:09 and 02:17, Meph back 22:32 and 04:51): about 3.8 h of Meph, then about 2.5 h of LK. Drops needing identification are in the stash; no stack-full or stash-full events. No statue tooltips seen among Meph's stashed items: check.
 
