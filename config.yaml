@@ -167,6 +167,17 @@ stash:
   withdraw_ok: [577, 387]
   withdraw_gold: 200000         # Blizzaga carries ~0 and her own stash ~18k; a merc revive costs 50k
   personal_tab: [70, 70]        # stowaway: charms (blue tooltip name) go to Blizzaga's own page
+  gems_tab: [190, 70]
+
+# Cubing at the stash (bot/cubing.py, bot/cube.py; Stephen 2026-11-07): keep 5 of each lower gem and rune,
+# runes up through Fal; gems that rune recipes take are saved for them
+cube:
+  enabled: true
+  every_hours: 6                # on the way through town, once this long after the last time
+  keep: 5
+  top_rune: Fal
+  top_grade: Flawless           # Perfect: also 3 flawless -> 1 perfect (ask Stephen first)
+  max_transmutes: 200
 
 # Inventory (bot/vision/inventory.py). Stephen's own items stay put: [col, row, w, h] rectangles.
 # Recorded 2026-11-03 (after the respec): charms/tomes/cube fill cols 4-9, the skull and 2 small charms col 3 rows 1-3.

@@ -1197,6 +1197,8 @@ def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None,
         bot.merc_wait, bot.merc_fails = 0, 0  # revive on the next run
     if stow:
         stowaway(bot)
+    from .cubing import cube_if_due
+    cube_if_due(bot)
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
     open_town_wp(bot, tcfg)
     town_view = bot.capture.grab()
