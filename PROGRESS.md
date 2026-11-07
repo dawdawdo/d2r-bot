@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-07 09:10: Meph again, Stephen away all day.** Night on `safe`: 145 kills of 161 Meph runs (90%), 2 chickens, 0 deaths; refills 2.1 h then 1.4 h. Stopped at 08:16 on a false "stash full": a lit grid line in empty cell (3, 0) read as an item (`is_empty` now skips a 2 px rim; fixture `empty_cell_lit_edge_3_0.png`). Stephen changed gear: Arachnid Mesh for Goldwrap, Chance Guards for Magefist. Flawless Sapphire and Ruby stacks are full (dropped, as designed). Top Meph failure: couldn't get back from his platform (9 of 16).
+
 **2026-11-06 22:40: `risk: safe` in config.yaml, Stephen's call.** One word flips `safe` / `fast` (`risk_levels`). Safe: area clear before looting, normal drinks after the kill, Meph chicken at 40% (my pick; was 25%), LK refill runs drink. Fast: the opposite, as tried today. Both keep the wider search, the single look at the drop, the drink on every chicken. **Check:** Meph kill rate and chickens at 40%; it was about 87% at 25%.
 
 **2026-11-06 22:20: no deaths wanted.** Stephen wants to keep her experience. LK refill runs drink again (`town.refill_no_potions: false`), after a confirmed death in 90 no-drink runs (respawn frame `fixtures/failures/20261106-204930_*`). Every HP chicken now drinks on the way out. Max life is 201.

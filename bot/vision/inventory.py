@@ -29,8 +29,10 @@ def _cell(frame: np.ndarray, c: int, r: int) -> np.ndarray:
 
 
 def is_empty(frame: np.ndarray, c: int, r: int) -> bool:
-    """Empty cells are flat dark gray (mean ~10, 98th percentile <= 44); items are much brighter."""
-    g = cv2.cvtColor(_cell(frame, c, r), cv2.COLOR_BGR2GRAY)
+    """Empty cells are flat dark gray (mean ~10, 98th percentile <= 44); items are much brighter. The 2 px rim is left
+    out: a lit grid line next to Stephen's items filled cell (3, 0)'s left column, an "item" no stash page took, and
+    the stash counted as full (2026-11-07 08:14)."""
+    g = cv2.cvtColor(_cell(frame, c, r), cv2.COLOR_BGR2GRAY)[2:-2, 2:-2]
     return float(g.mean()) < 20 and float(np.percentile(g, 98)) < 60
 
 
