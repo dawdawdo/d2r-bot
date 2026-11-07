@@ -109,6 +109,12 @@ class Controller:
             raise Died("HP orb empty")
         if self.hp < s["chicken_hp_pct"]:
             self.save_failure(f"chicken_hp{int(self.hp)}")
+            # the Esc menu takes seconds, and at 48% of 201 life that was too slow (death, 2026-11-06 20:49)
+            key = self.potion_key("hp")
+            if key is not None:
+                log.info("chicken at HP %.0f%%: potion %s on the way out", self.hp, key)
+                self._ensure_foreground()
+                self.input.press(key)
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
         # Energy Shield gone (mana empty) while already hurt: life falls very fast from here.
         if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):

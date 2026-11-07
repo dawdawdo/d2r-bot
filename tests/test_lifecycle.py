@@ -157,7 +157,7 @@ def test_guardian_es_broken_empty_belt(cfg):
         bot.observe()
 
 
-@pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (60, None, 1), (40, "Chicken", 0), (0, "Died", 0)])
+@pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (60, None, 1), (40, "Chicken", 1), (0, "Died", 0)])
 def test_guardian(cfg, pct, exc, potions):
     from bot import controller as C
 
@@ -190,6 +190,7 @@ def test_guardian_no_potions_chickens_instead_of_drinking(cfg):
     bot.guard(True)
     with pytest.raises(C.Chicken):
         bot.observe()
+    assert [e for e in game.log if e in ("key:1", "key:2", "key:3", "key:4")]  # the drink on the way out still happens
 
 
 def test_create_game_refuses_when_in_game(cfg):
