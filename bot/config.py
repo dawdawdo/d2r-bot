@@ -27,6 +27,8 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
     local = path.with_name(f"{path.stem}.local{path.suffix}")
     if local.exists():
         _merge(cfg, yaml.safe_load(local.read_text(encoding="utf-8")) or {})
+    if "risk" in cfg:  # one switch for what trades her safety for speed (config.yaml risk_levels)
+        _merge(cfg, cfg["risk_levels"][cfg["risk"]])
     paths = cfg.setdefault("paths", {})
     for key, value in paths.items():
         p = Path(os.path.expandvars(os.path.expanduser(str(value))))

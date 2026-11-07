@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-06 22:40: `risk: safe` in config.yaml, Stephen's call.** One word flips `safe` / `fast` (`risk_levels`). Safe: area clear before looting, normal drinks after the kill, Meph chicken at 40% (my pick; was 25%), LK refill runs drink. Fast: the opposite, as tried today. Both keep the wider search, the single look at the drop, the drink on every chicken. **Check:** Meph kill rate and chickens at 40%; it was about 87% at 25%.
+
 **2026-11-06 22:20: no deaths wanted.** Stephen wants to keep her experience. LK refill runs drink again (`town.refill_no_potions: false`), after a confirmed death in 90 no-drink runs (respawn frame `fixtures/failures/20261106-204930_*`). Every HP chicken now drinks on the way out. Max life is 201.
 
 **2026-11-06 20:30: quicker Meph kills (Stephen OK'd).** `find_meph` searches 16 more points when he isn't right at his last spot; no area clear before looting (`meph.clear_before_loot`, about 12 s); no second look at an empty drop (2 s). **Check:** kill rate (was about 87%), deaths and drinks while looting, runs with `monsters at his body`. Baseline: fight median 24 s, dead to loot done 36 s. Next if these hold: shorter wait hopped away (1.5 s, maybe 20% of the fight; Blizzard may have a cooldown), and the retry after monsters at his body (51 of 62 still had monsters).

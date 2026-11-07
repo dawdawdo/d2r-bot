@@ -49,21 +49,39 @@ safety:
                        # even when calm). Needs a real monster detector before it can gate huts.
   run_timeout_s: 180      # Lower Kurast part of a run (clean runs take ~80-110 s there)
 
+# Flip this one word: safe keeps her experience (Stephen 2026-11-06), fast gets more runs an hour. Takes effect at the
+# next bot start. The levels below are merged over the rest of this file.
+risk: safe
+risk_levels:
+  safe:
+    meph:
+      clear_before_loot: true    # Blizzard around the spot before going for the drop (about 12 s a kill)
+      safety:
+        chicken_hp_pct: 40
+    town:
+      refill_no_potions: false   # LK refill runs drink as usual
+  fast:
+    meph:
+      clear_before_loot: false
+      safety:
+        chicken_hp_pct: 25       # was the setting until 2026-11-06
+      after_kill:                # once he's dead: 82 of 175 drinks came while looting, only 2 of them below 40% life
+        potion_hp_pct: 40
+        potion_mp_pct: 25
+    town:
+      refill_no_potions: true    # LK refill runs flee or chicken instead of drinking. About 20 rejuvs an hour, not 16,
+                                 # but she died once in 90 of those runs (2026-11-06 20:49, 48% life, dead within 3 s)
+
 meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
   spot: south           # south = the bottom bank (Stephen's spot, no Council hunt); dock = the north-east dock
   buy_mana: false       # true = fill empty belt columns with Ormus mana potions (option C). Off 2026-11-02: the Materials
                         # rejuv stack is full (99) and spares were being dropped; rejuvs fix life AND mana (Mana Burn)
-  clear_before_loot: false  # true = Blizzard around the spot before going for the drop (about 12 s a kill)
   fight_parked: true    # fight him in the top centre instead of giving up the game (2026-11-03 test: bot/meph.py)
   timeout_s: 420        # Durance 2 waypoint -> kill -> loot (300 cut a fight at 48%, 2026-11-02)
-  safety:               # replaces `safety` keys during the fight (Stephen OK'd a lower chicken; 74% light res)
-    chicken_hp_pct: 25
+  safety:               # replaces `safety` keys during the fight (chicken_hp_pct: see risk_levels; 74% light res)
     es_broken_hp_pct: 0
     potion_hp_pct: 60
     potion_mp_pct: 50
-  after_kill:           # replaces those once he's dead: 82 of 175 drinks came while looting, only 2 of them below 40% life
-    potion_hp_pct: 40
-    potion_mp_pct: 25
 
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
@@ -94,8 +112,6 @@ ui:
 # M3: walking route from the new-game spawn (by Meshif) to the waypoint, recorded 2026-10-25.
 town:
   refill_rejuvs: 40     # stash dry in a boss session: LK until this many are stashed, then bosses again (0 = off)
-  refill_no_potions: false  # true = those LK runs flee or chicken instead of drinking. Off: she died in 90 such runs
-                            # (2026-11-06 20:49, 48% life, dead within 3 s of the chicken), Stephen doesn't want deaths
   route: [[1180, 330], [773, 170], [900, 160], [1050, 170], [810, 250], [1180, 420], [1150, 200]]
   # View displacement of each leg by odometry (median of clean runs 2026-10-26): walk_chain walks these
   # without stopping. Remove to go back to leg-by-leg walking.
