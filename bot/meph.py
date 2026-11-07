@@ -67,6 +67,8 @@ CLEAR_SPOTS = [(780, 250), (520, 260), (720, 400)]  # Blizzard targets around he
 # he shows at y 20-130 from either spot (2026-11-01/02 logs); lower rows cost ~15 s per missed search
 MEPH_GRID = sorted([(x, y) for y in range(20, 190, 55) for x in range(80, 1200, 80)],
                    key=lambda p: (p[0] - 720) ** 2 + 4 * (p[1] - 50) ** 2)
+WIDER_POINTS = 16  # of MEPH_GRID, nearest his last point: searched when he's not right there (~2 s). 110 of 246 kills
+                  # had misses or waits and took 42 s, not 19 (2026-11-06); the full grid only came after 4 misses
 # the Council: top band first (Wyand Voidbringer, Mana Burn, stands up-right of the dock), then the rest
 HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200, 90)],
                    key=lambda p: (p[1] > 200, abs(p[0] - 760)))
@@ -279,16 +281,19 @@ class MephFight:
         return bool(fresh)
 
     def find_meph(self) -> tuple[tuple[int, int], float] | None:
-        """(point, life) where Mephisto's bar shows: near his last point if known, else the grid."""
+        """(point, life) where Mephisto's bar shows: near his last point if known, then wider, else the grid."""
         if self.last:
             lx, ly = self.last
-            pts = [(min(1260, max(20, lx + dx)), min(560, max(8, ly + dy)))
-                   for dy in (0, 25, -12, 50) for dx in (0, -40, 40, -80, 80)]
+            near = [(min(1260, max(20, lx + dx)), min(560, max(8, ly + dy)))
+                    for dy in (0, 25, -12, 50) for dx in (0, -40, 40, -80, 80)]
+            wider = sorted(MEPH_GRID, key=lambda p: (p[0] - lx) ** 2 + 4 * (p[1] - ly) ** 2)[:WIDER_POINTS]
+            searches = [near, wider]
         else:
-            pts = MEPH_GRID
-        hit = self.first_name(pts, dwell=0.1)
-        if hit and hit[1]["mephisto"]:
-            return hit[0], hit[1]["life"]
+            searches = [MEPH_GRID]
+        for pts in searches:
+            hit = self.first_name(pts, dwell=0.1)
+            if hit and hit[1]["mephisto"]:
+                return hit[0], hit[1]["life"]
         return None
 
     # -- fighting -----------------------------------------------------------------------------------
@@ -541,7 +546,8 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
             bot.sleep(0.3)
         if not fight.back_to():
             raise BotError("couldn't get back after his death throes")
-        fight.clear(limit=25)
+        if bot.cfg["meph"].get("clear_before_loot", False):  # the check at his body below still finds company
+            fight.clear(limit=25)
     if fight.seen is None or not (LOOT_X[0] <= fight.seen[0] <= LOOT_X[1]):
         # far along the moat edge: 2 hops into the unknown met lightning there and she died (2026-11-01 22:11)
         fight.say(f"loot: he died at {fight.seen}, out of one safe hop: skipping")
@@ -574,9 +580,6 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
     # the drop comes at the end of his death animation (2026-11-01 21:44: she stood on a dying body, found nothing)
     bot.sleep(max(0.0, DROP_WAIT - (time.time() - t_dead)))
     picked = [] if fight.in_danger() else loot(bot, take_all=True)
-    if not picked and not fight.in_danger():
-        bot.sleep(2.0)
-        picked = [] if fight.in_danger() else loot(bot, take_all=True)
     if fight.in_danger():
         fight.say(f"loot: MP {bot.mp} HP {bot.hp} at his body -> back to the dock")
         fight.back_to()
