@@ -60,6 +60,9 @@ meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from 
     es_broken_hp_pct: 0
     potion_hp_pct: 60
     potion_mp_pct: 50
+  after_kill:           # replaces those once he's dead: 82 of 175 drinks came while looting, only 2 of them below 40% life
+    potion_hp_pct: 40
+    potion_mp_pct: 25
 
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
@@ -90,6 +93,7 @@ ui:
 # M3: walking route from the new-game spawn (by Meshif) to the waypoint, recorded 2026-10-25.
 town:
   refill_rejuvs: 40     # stash dry in a boss session: LK until this many are stashed, then bosses again (0 = off)
+  refill_no_potions: true  # those LK runs chicken or flee instead of drinking (bot/supplies.py saving_rejuvs)
   route: [[1180, 330], [773, 170], [900, 160], [1050, 170], [810, 250], [1180, 420], [1150, 200]]
   # View displacement of each leg by odometry (median of clean runs 2026-10-26): walk_chain walks these
   # without stopping. Remove to go back to leg-by-leg walking.

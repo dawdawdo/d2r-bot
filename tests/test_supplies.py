@@ -96,3 +96,12 @@ def test_a_full_stack_does_not_mean_a_full_stash():
     gem, rejuv, amulet = (0, 0), (1, 0), (2, 0)
     assert supplies.needs_a_page([gem, rejuv], {rejuv}, {gem}) == []
     assert supplies.needs_a_page([gem, amulet], {rejuv}, {gem}) == [amulet]
+
+
+def test_only_refill_runs_save_rejuvs():
+    meph, lk = ["meph"], ["lk"]
+    cfg = {"town": {}}
+    assert supplies.saving_rejuvs(lk, lk, cfg)
+    assert not supplies.saving_rejuvs(meph, lk, cfg)  # a boss run drinks
+    assert not supplies.saving_rejuvs(lk, [], cfg)  # an LK-only session has no refill
+    assert not supplies.saving_rejuvs(lk, lk, {"town": {"refill_no_potions": False}})

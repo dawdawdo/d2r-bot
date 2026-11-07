@@ -107,6 +107,8 @@ class Mephisto(Task):
                 fight = MephFight(bot, out=out, wake_hop=WAKE_HOPS)
                 dead = fight_from_dock(fight)
             log.info("Mephisto %s (HP %.0f%% MP %.0f%%)", "dead" if dead else "NOT killed", bot.hp or 0, bot.mp or 0)
+            if dead:
+                safety.update(self.mcfg.get("after_kill", {}))
             picked = loot_meph(fight) if dead else []
         finally:
             safety.clear()

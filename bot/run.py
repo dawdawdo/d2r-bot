@@ -239,6 +239,7 @@ def main() -> int:
                     log.info("stop requested (web page); not starting run %d", i + 1)
                     break
                 active = supplies.tasks_for_run(tasks, refill_tasks, cfg)  # a dry rejuv stash: LK instead
+                bot.no_potions = supplies.saving_rejuvs(active, refill_tasks, cfg)
                 want_players = supplies.players_for(active, cfg)
                 task_name = "+".join(t.name for t in active) or args.mode
                 control.write_status(state="running", run=i + 1, runs=args.runs, task=task_name,

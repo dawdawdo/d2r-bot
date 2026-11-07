@@ -14,7 +14,9 @@ fingerprint:
 bonfires:
   - name: east
     world: [1629, 776]
-    order: [nw, nw_deep, ne]   # nw before nw_deep: nw_deep drops gold labels over the nw chest (2026-10-27)
+    # nw before nw_deep: nw_deep drops gold labels over the nw chest (2026-10-27). ne first, as in the west camp: the
+    # fire fix then comes on the way to ne and nw. With nw first, it came between nw and nw_deep, a trip back to the fire.
+    order: [ne, nw, nw_deep]
   - name: west
     world: [-2208, -389]
     order: [ne, nw, nw_deep]

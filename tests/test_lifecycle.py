@@ -175,6 +175,23 @@ def test_guardian(cfg, pct, exc, potions):
     bot.observe()  # never raises when not guarding
 
 
+def test_guardian_no_potions_chickens_instead_of_drinking(cfg):
+    from bot import controller as C
+
+    game = SimGame(cfg["ui"], state="in_game")
+    bot = Controller(FakeWindow(), FakeCapture([hp_frame(cfg, 60)]), game, game, KillSwitch(), cfg)
+    bot.no_potions = True
+    bot.guard(True)
+    bot.observe()  # 60%: would drink
+    assert not [e for e in game.log if e in ("key:1", "key:2", "key:3", "key:4")]
+
+    bot = Controller(FakeWindow(), FakeCapture([hp_frame(cfg, 40)]), game, game, KillSwitch(), cfg)
+    bot.no_potions = True
+    bot.guard(True)
+    with pytest.raises(C.Chicken):
+        bot.observe()
+
+
 def test_create_game_refuses_when_in_game(cfg):
     bot = make_bot(cfg, SimGame(cfg["ui"], state="in_game"))
     with pytest.raises(BotError):

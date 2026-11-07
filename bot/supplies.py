@@ -82,6 +82,12 @@ def tasks_for_run(tasks: list, refill_tasks: list, cfg: dict) -> list:
     return refill_tasks if refill_tasks and refilling(cfg) else tasks
 
 
+def saving_rejuvs(active: list, refill_tasks: list, cfg: dict) -> bool:
+    """A refill run doesn't drink. A rejuv takes about 3.75 min of LK to replace and a chicken costs under a minute;
+    LK drank about half of what it picked up (42 of 78, 2026-11-05/06)."""
+    return bool(refill_tasks) and active is refill_tasks and cfg["town"].get("refill_no_potions", True)
+
+
 def players_for(tasks: list, cfg: dict) -> int | None:
     """A Meph-only game plays at Meph's /players from the start (Stephen 2026-11-02: 7 then 1 wastes time)."""
     game = cfg["game"]

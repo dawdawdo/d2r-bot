@@ -63,6 +63,7 @@ class Controller:
         self.hp: float | None = None
         self.mp: float | None = None
         self._last_potion = -99.0
+        self.no_potions = False   # rejuv refill: leave (flee or chicken) rather than drink
         self.flee_ok = False      # run_route: Danger (skip the camp) instead of Chicken while life is fine
         self._flee_quiet = -99.0  # after a flee: don't raise Danger again while teleporting away
         self.scan_jumped = False  # lk.open_chest: the last hover scan ended on a view jump
@@ -113,7 +114,8 @@ class Controller:
         if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):
             # A belt rejuv refills mana and the shield is back: drink once; still broken after the
             # cooldown (or nothing to drink) -> chicken. (2026-10-27: most chickens were this, HP ~70%.)
-            key = self.potion_key("mp") if self.clock() - self._last_potion > s.get("potion_cooldown_s", 1.5) else None
+            can_drink = not self.no_potions and self.clock() - self._last_potion > s.get("potion_cooldown_s", 1.5)
+            key = self.potion_key("mp") if can_drink else None
             if key is not None:
                 self._last_potion = self.clock()
                 log.info("energy shield broken (HP %.0f%% MP %.0f%%) -> potion %s", self.hp, self.mp, key)
@@ -128,7 +130,7 @@ class Controller:
                 raise Danger(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
-        low = self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0)
+        low = not self.no_potions and (self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0))
         if low and self.clock() - self._last_potion > self.cfg["safety"].get("potion_cooldown_s", 1.5):
             self._last_potion = self.clock()
             key = self.potion_key("hp" if self.hp < s["potion_hp_pct"] else "mp")

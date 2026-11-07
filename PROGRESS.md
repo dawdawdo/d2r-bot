@@ -3,6 +3,10 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-06 evening: using fewer rejuvs (Stephen OK'd).** Meph drinks after the kill only below 40% life, 25% mana (`meph.after_kill`; 82 of 175 drinks were after the kill, 2 of those below 40%). LK refill runs never drink, they flee or chicken (`town.refill_no_potions`; LK drank 42 of 78 picked). Not done, if rejuvs still limit: lower Meph's 60% fight trigger; Ormus healing potions for low life. **Check after some runs:** chickens on refill runs, deaths while looting, hours of Meph vs LK (was 3.75 h / 2.5 h).
+East camp order is now ne, nw, nw_deep, matching the west, so no trip back to the fire between the hut's two chests. Untested live at commit time. Why: the fix was due once 1500 px of travel had built up, which fell between nw and nw_deep (19 of 19 runs in the east, 1 of 18 in the west).
+Stephen also asked why LK only sometimes returns to the waypoint for Act 4: by design (`town_due`), loot to stash means the next game needs Act 3, so it exits on the spot.
+
 **2026-11-06 11:56: filter changed, Meph running, Stephen away.** Detached `scratch/meph_then_lk.ps1`. Unified filter, for him and the bot: flawless + perfect gems only, all runes (r01-r33), runeword bases (`RUNEWORD_BASES` in `bot/chronicle.py`: Mancatcher 7br, Archon Plate utp, Monarch uit, Grim Scythe 9wc, Giant Thresher 7wc; temporary, normal + superior). Chronicle now 142 + 26 codes after his identifying. Backups `filter-20261106-115601`, `filter-repo-20261106-115600`. First live run of the full-stack fix too.
 - **`filterEtherealSocketed`:** his Looting rule for these bases sets it, ours never did; meaning untested, so there's one rule each way. Check whether both survive the game's rewrite.
 - **Known gap:** the bot's `white` label color needs V >= 200, so gray labels (socketed or ethereal items) are probably not picked. Not confirmed: no sample frame. Needs a real frame before adding a `gray` kind. Those bases still show for Stephen on his own runs.
