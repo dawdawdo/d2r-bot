@@ -44,6 +44,18 @@ def is_key(frame: np.ndarray, c: int, r: int, template: np.ndarray) -> bool:
 WEAPON_TABS = {1: (872, 72, 36, 14), 2: (912, 72, 36, 14)}
 
 
+_INV_OPEN: list = []
+
+
+def inventory_open(frame: np.ndarray) -> bool:
+    """The inventory panel's "Inventory" header shows (1.00 GLaDOS, 0.98 Windows fixtures; closed <= 0.14)."""
+    if not _INV_OPEN:
+        from .screen import ASSETS
+
+        _INV_OPEN.append(cv2.imread(str(ASSETS / "inventory_open.png")))
+    return float(cv2.matchTemplate(frame[10:70, 940:1160], _INV_OPEN[0], cv2.TM_CCOEFF_NORMED).max()) >= 0.7
+
+
 def weapon_set(frame: np.ndarray) -> int | None:
     """Active weapon set (1 or 2) with the inventory open; None if the tabs don't read clearly."""
     g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

@@ -655,14 +655,25 @@ def read_weapon_set(bot: Controller) -> int | None:
     in 7 of 8 chicken frames from 17:58 on)."""
     from .vision.inventory import weapon_set
 
-    inv = bot.cfg["hotkeys"]["inventory"]
-    bot.press(inv)
     try:
-        bot.sleep(WARCRY_PANEL_S)
+        if not inventory_panel(bot, True):
+            return None
         return weapon_set(bot.capture.grab())
     finally:
-        bot.press(inv)
-        bot.sleep(0.1)
+        inventory_panel(bot, False)
+
+
+def inventory_panel(bot: Controller, want_open: bool) -> bool:
+    """Open or close the inventory and check it took. The key is a toggle: a lost press (Proton, 2026-11-08) left
+    the panel open over the Durance walk ("automap fix lost"). True if the panel is now as wanted."""
+    from .vision.inventory import inventory_open
+
+    for _ in range(3):
+        if inventory_open(bot.capture.grab()) == want_open:
+            return True
+        bot.press(bot.cfg["hotkeys"]["inventory"])
+        bot.sleep(WARCRY_PANEL_S if want_open else 0.15)
+    return inventory_open(bot.capture.grab()) == want_open
 
 
 def _swap_to(bot: Controller, want: int, tries: int = 3) -> bool:
@@ -733,8 +744,7 @@ def ensure_main_weapons(bot: Controller) -> None:
     if not getattr(bot, "weapons_dirty", True):
         return
     hk = bot.cfg["hotkeys"]
-    bot.press(hk["inventory"])
-    bot.kill.sleep(0.5)
+    inventory_panel(bot, True)
     bot.input.move(640, 600)
     bot.kill.sleep(0.15)
     now = weapon_set(bot.capture.grab())
@@ -743,8 +753,7 @@ def ensure_main_weapons(bot: Controller) -> None:
         bot.press(hk["swap_weapons"])
         bot.kill.sleep(0.5)
         now = weapon_set(bot.capture.grab())
-    bot.press(hk["inventory"])
-    bot.kill.sleep(0.3)
+    inventory_panel(bot, False)
     if now != hk["main_weapon_set"]:
         bot.save_failure("weapon_set_unknown")
         log.warning("weapon set reads %s, wanted %s", now, hk["main_weapon_set"])
