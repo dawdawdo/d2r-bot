@@ -58,8 +58,8 @@ RULE_BASES = "Show runeword bases"
 RULE_SOCKETED_BASES = "Show socketed runeword bases"
 RULE_SUPERIOR_BASES = "Show superior runeword bases"
 RULE_SOCKETED_SUPERIOR_BASES = "Show socketed superior bases"
-# Removed on regenerating. Gems are back to flawless + perfect only (Stephen 2026-11-06): his own rule
-# "Show flawless and perfect gems" stays, these two showed the lower grades.
+# Removed on regenerating. Gems: "Show flawless and perfect gems" (his) plus "Show lower gems" (2026-11-07,
+# for cube recipes) are kept as they are; these old names showed the lower grades.
 OLD_NAMES = {"Show Chronicle missing set jewelry", "Show all other gems", "Show all Gems", "Show Pul and higher runes"}
 GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_RUNES, RULE_BASES,
              RULE_SOCKETED_BASES, RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES} | OLD_NAMES

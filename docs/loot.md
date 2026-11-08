@@ -4,7 +4,7 @@
 Unique and set items show only if their base can still be new for the Chronicle (handoff: `Chronicle_Filter_Handoff.md`).
 The list is read from the Chronicle section of the shared stash + the game tables; a shared base shows all its uniques.
 Always kept regardless: unique rings and amulets, Dracul's/Arachnid/Andariel's, Lidless Eye, all charms, all jewels, all runes,
-keys, rejuvs, flawless and perfect gems and skulls, and Stephen's runeword bases (2026-11-06; `RUNEWORD_BASES` in `bot/chronicle.py`: delete a line when he has enough, then regenerate). One filter for him and the bot. Everything below this section is history.
+keys, rejuvs, all gems and skulls (lower grades back 2026-11-07 for cube recipes), and Stephen's runeword bases (2026-11-06; `RUNEWORD_BASES` in `bot/chronicle.py`: delete a line when he has enough, then regenerate). One filter for him and the bot. Everything below this section is history.
 
 **Rule semantics (worked out 2026-11-04, confirm live):** `equipment*` fields AND together; `item*` fields are a separate
 alternative. So `equipmentRarity: unique` + `itemCode: [...]` means "every unique, or these codes at any rarity". The old

@@ -176,7 +176,7 @@ cube:
   every_hours: 6                # on the way through town, once this long after the last time
   keep: 5
   top_rune: Fal
-  top_grade: Flawless           # Perfect: also 3 flawless -> 1 perfect (ask Stephen first)
+  top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200
 
 # Inventory (bot/vision/inventory.py). Stephen's own items stay put: [col, row, w, h] rectangles.

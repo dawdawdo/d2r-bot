@@ -180,6 +180,35 @@
             ]
         },
         {
+            "name": "Show lower gems",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "itemCode": [
+                "gcv",
+                "gcw",
+                "gcg",
+                "gcr",
+                "gcb",
+                "gcy",
+                "gfv",
+                "gfw",
+                "gfg",
+                "gfr",
+                "gfb",
+                "gfy",
+                "gsv",
+                "gsw",
+                "gsg",
+                "gsr",
+                "gsb",
+                "gsy",
+                "skc",
+                "skf",
+                "sku"
+            ]
+        },
+        {
             "name": "Show jewels",
             "enabled": true,
             "ruleType": "show",
