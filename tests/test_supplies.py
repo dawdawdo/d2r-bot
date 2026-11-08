@@ -78,10 +78,11 @@ def test_refill_can_be_switched_off():
     assert supplies.tasks_for_run(meph, lk, {"town": {"refill_rejuvs": 0}}) is meph
 
 
-def test_session_start_clears_it_so_hand_added_rejuvs_count():
+def test_session_start_rechecks_the_stash_but_a_refill_goes_on():
     state.save({"stash_rejuvs_empty": True, "refill_left": 12, "restock_zero": 1, "keys_left": 9})
     supplies.new_session()
-    assert state.load() == {"keys_left": 9}
+    assert state.load() == {"keys_left": 9, "refill_left": 12}
+    assert supplies.refilling({"town": {"refill_rejuvs": 40}})
 
 
 def test_players_follow_the_tasks():

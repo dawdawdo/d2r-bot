@@ -18,8 +18,11 @@ ZERO_RESTOCKS = 2  # in a row, with a belt slot empty; one could be a misread be
 
 
 def new_session() -> None:
+    """A new session looks at the stash again (Stephen may have added rejuvs), but a refill under way goes on to its
+    end: "do LK runs until she stocks up again, then go back to Mephisto" (Stephen 2026-11-08; restarted sessions
+    had gone back to Meph with 10 of 40 stashed). To end one early: delete refill_left from logs/state.json."""
     st = state.load()
-    state.save({k: v for k, v in st.items() if k not in ("stash_rejuvs_empty", "refill_left", "restock_zero")})
+    state.save({k: v for k, v in st.items() if k not in ("stash_rejuvs_empty", "restock_zero")})
 
 
 def restocked(moved: int, slots_gone: bool) -> bool:
@@ -69,7 +72,7 @@ def refilling(cfg: dict) -> bool:
     """Should this run farm rejuvs instead? Starts the count the first time it sees a dry stash."""
     want = cfg["town"].get("refill_rejuvs", 0)
     st = state.load()
-    if not want or not st.get("stash_rejuvs_empty"):
+    if not want or not (st.get("stash_rejuvs_empty") or "refill_left" in st):
         return False
     if "refill_left" not in st:
         state.save({**st, "refill_left": want})
