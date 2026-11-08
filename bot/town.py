@@ -408,6 +408,15 @@ def belt_full(bot: Controller) -> bool:
     return all(belt_slots(bot.capture.grab(), bot.cfg["vision"]["belt"]))
 
 
+def belt_ready(bot: Controller) -> bool:
+    """Full, and something for life in it. Ormus fills 1 red + 3 blue columns: once the red one is drunk the belt
+    still reads full, and Meph ran with nothing for life until a chicken (2026-11-08 17:29, "belt is empty")."""
+    from .vision.orbs import belt_kinds
+
+    kinds = belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+    return None not in kinds and any(k in ("hp", "rejuv") for k in kinds)
+
+
 def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
     """Meph runs only (Stephen 2026-10-30: potions may be bought for Meph; LK stays chest rejuvs only).
     Walk to Ormus, Trade (opens on Misc), shift+right-click his best mana potion (bottom of the right

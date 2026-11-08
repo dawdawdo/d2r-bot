@@ -46,11 +46,11 @@ class Mephisto(Task):
 
     def enter(self, bot: Controller, stow: bool = False, chained: bool = False) -> None:
         from ..lifecycle import create_game, save_and_exit
-        from ..town import belt_full, buy_mana_at_ormus, restart_in_act3
+        from ..town import belt_ready, buy_mana_at_ormus, restart_in_act3
 
         if not chained:
             for attempt in range(2):  # Ormus wanders; the open-loop walk misses him now and then
-                if not buying_mana(self.cfg) or belt_full(bot):
+                if not buying_mana(self.cfg) or belt_ready(bot):
                     break
                 if getattr(bot, "act", 3) == 4:
                     restart_in_act3(bot)
