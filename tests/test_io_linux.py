@@ -119,7 +119,7 @@ def test_gamma_lut_brightens_dark_and_keeps_ends():
     assert 60 <= lut[42] <= 75  # measured: Linux 42 ~ Windows 65 (fit runs a little bright mid-tone)
 
 
-def test_lag_waits_after_moves_and_hovered_clicks_only(monkeypatch):
+def test_lag_waits_after_moves_and_before_every_click(monkeypatch):
     import bot.io.linux as L
 
     slept = []
@@ -130,7 +130,7 @@ def test_lag_waits_after_moves_and_hovered_clicks_only(monkeypatch):
     ref.append(inp)
     slept.clear(); inp.move(10, 10)
     assert 0.05 in slept
-    slept.clear(); inp.click(10, 10, "right", hover=0)  # teleport: no lag
-    assert 0.05 not in slept and 0.13 not in slept
+    slept.clear(); inp.click(10, 10, "right", hover=0)  # teleport: the game must see the move first too
+    assert 0.05 in slept
     slept.clear(); inp.click(10, 10, hover=0.08)
     assert 0.13 in slept

@@ -13,7 +13,7 @@ game:
   # A capture-side 0.70 was tried first (2026-11-08): it can't lift shadows without lifting tooltip boxes,
   # and LK chest tooltips merged into the dark scenery.
   capture_gamma: {win32: 1.0, linux: 1.0}
-  # Extra wait after each mouse move / before a hovered click: Proton shows a hover ~115 ms after the move,
+  # Extra wait after each mouse move / before every click: Proton shows a hover ~115 ms after the move,
   # the code's waits (0.07-0.09 s) were tuned on Windows. Without it LK chests got Glacial Spike, not a click.
   input_lag: {win32: 0.0, linux: 0.05}
   difficulty: hell

@@ -265,7 +265,9 @@ class UinputInput(Input):
                  uinput_factory=UInput, pointer_query=None, settle: float = 0.5, lag: float = 0.0) -> None:
         """`lag`: extra seconds D2R under Proton needs to notice the cursor moved (measured 2026-11-08: a
         hover tooltip shows ~115 ms after the move, later than the Windows-tuned waits of 0.07-0.09 s).
-        Added after every move and before every hovered click; teleport clicks (hover 0) skip it."""
+        Added after every move and before every click, teleports included: with no wait between the move and
+        the press, D2R sometimes still had the old cursor position and teleported on the spot (Durance hops
+        "stuck", LK "odometry lost", 2026-11-08)."""
         self.window = window
         self.lag = lag
         if screen_size is None:
@@ -314,7 +316,7 @@ class UinputInput(Input):
     def click(self, x, y, button="left", hover: float = 0.08):
         # D2R only interacts with an object if the cursor hovered it for a frame or two first.
         self._move(x, y)
-        time.sleep(hover + (self.lag if hover > 0 else 0.0))
+        time.sleep(hover + self.lag)
         code = _BUTTONS[button]
         self.ptr.write(e.EV_KEY, code, 1)
         self.ptr.syn()
