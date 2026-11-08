@@ -12,3 +12,4 @@ scratch/
 .claude/settings.local.json
 maps/*/fires/
 maps/*/durance3_auto/runs/
+maps/*/durance2_auto/thumbs/1[7-9][0-9].jpg  # Walker extras past the recorded graph (stop 177+)
