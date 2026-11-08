@@ -110,10 +110,17 @@ def cube_stash(bot: Controller) -> int:
     """With the stash open: plan from the tab counts and transmute. Returns transmutes done."""
     ccfg = bot.cfg.get("cube", {})
     c = Cuber(bot)
+    # the cube grid shows under the Gems, Materials and Runes tabs only: on Personal or Shared those cells are the
+    # page's own items (2026-11-08 GLaDOS: the stash opened on Personal, "won't go back", no cubing all day)
+    c.open_tab("runes")
     if not c.empty_cube():
         log.warning("cube: something in the cube won't go back to the stash; not cubing")
         bot.save_failure("cube_not_empty")
+        tries = getattr(bot, "cube_blocked_n", 0) + 1
+        bot.cube_blocked_n = tries
+        bot.cube_blocked = tries < 3  # 3 town visits in a row: something really is stuck; back to the 6 h timer
         return 0
+    bot.cube_blocked, bot.cube_blocked_n = False, 0
     before = c.counts()
     steps = cube.plan(before, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
                       top_grade=ccfg.get("top_grade", cube.TOP_GRADE))
@@ -158,6 +165,8 @@ def cube_if_due(bot: Controller) -> int:
     finally:
         bot.press("esc")
         bot.kill.sleep(0.5)
+    if getattr(bot, "cube_blocked", False):
+        return done  # not cubed: try again at the next town visit, not in 6 h
     st = state.load()
     st["cubed_at"] = time.time()
     state.save(st)
