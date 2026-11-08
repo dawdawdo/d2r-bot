@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from pathlib import Path
 
 import cv2
@@ -116,7 +117,7 @@ def ensure_main_menu(bot: Controller) -> None:
     while True:  # right after launch: intro videos/splash screens -> press space to skip
         # D2R restores its saved window size late in startup, undoing the resize at launch (Stephen had
         # resized it while playing, 2026-11-06), and at another size nothing matches
-        bot.window.set_client_size(*bot.cfg["game"]["resolution"])
+        windowed(bot.window, bot.input, bot.cfg["game"]["resolution"])
         state = bot.observe()
         if state in known:
             break
@@ -169,3 +170,19 @@ def save_and_exit(bot: Controller) -> None:
             # the click did nothing (2026-11-01 21:31, after an Ormus miss: 45 s in town): again
             log.info("save & exit click didn't take; again")
     log.info("back at main menu")
+
+
+def windowed(window, inp, size) -> bool:
+    """Game window at `size`: out of fullscreen first (Stephen played GLaDOS fullscreen 2026-11-08: a 1920x1080
+    fullscreen window ignores resizes and nothing matched for 90 s). True if it is now that size."""
+    if getattr(window, "is_fullscreen", lambda: False)():
+        log.info("game is fullscreen: Alt+Enter")
+        window.focus()
+        time.sleep(0.3)
+        inp.key_down("alt")
+        inp.key_down("enter")
+        time.sleep(0.05)
+        inp.key_up("enter")
+        inp.key_up("alt")
+        time.sleep(2.0)
+    return window.set_client_size(*size)

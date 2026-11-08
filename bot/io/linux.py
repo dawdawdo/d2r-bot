@@ -119,6 +119,10 @@ class X11Window(Window):
                 return True
         return False
 
+    def is_fullscreen(self) -> bool:
+        state = self.win.get_full_property(_atom("_NET_WM_STATE"), X.AnyPropertyType)
+        return bool(state) and _atom("_NET_WM_STATE_FULLSCREEN") in set(state.value)
+
     def unmaximize(self) -> None:
         """The WM maximizes a window that starts out screen-sized; D2R then renders stretched."""
         state = self.win.get_full_property(_atom("_NET_WM_STATE"), X.AnyPropertyType)

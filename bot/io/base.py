@@ -25,6 +25,11 @@ class Window(ABC):
     @abstractmethod
     def focus(self) -> None: ...
 
+    def is_fullscreen(self) -> bool:
+        """True if the game runs fullscreen (Alt+Enter toggles it; resizing can't undo it). Backends that can't
+        tell say False."""
+        return False
+
     def set_client_size(self, w: int, h: int) -> bool:
         """Make the client area w x h (Stephen resizes the window when he plays). True if it is now that size."""
         rect = self.client_rect()

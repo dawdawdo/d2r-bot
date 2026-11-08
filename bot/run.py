@@ -199,7 +199,9 @@ def main() -> int:
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
-    if not backend.window.set_client_size(*cfg["game"]["resolution"]):  # Stephen resizes it when he plays
+    from .lifecycle import windowed
+
+    if not windowed(backend.window, backend.input, cfg["game"]["resolution"]):  # Stephen resizes it when he plays
         log.warning("window size is not %s", cfg["game"]["resolution"])
     backend.window.focus()
     bot.keys_left = state.load().get("keys_left")  # estimate; None = unknown -> buy on the first run
