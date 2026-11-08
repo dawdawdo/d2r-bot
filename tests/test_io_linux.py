@@ -115,4 +115,22 @@ def test_gamma_lut_brightens_dark_and_keeps_ends():
     assert gamma_lut(1.0) is None
     lut = gamma_lut(0.70)
     assert lut[0] == 0 and lut[255] == 255
+    assert lut[:5].tolist() == [0, 1, 2, 3, 4]  # near-black stays black (tooltip boxes)
     assert 60 <= lut[42] <= 75  # measured: Linux 42 ~ Windows 65 (fit runs a little bright mid-tone)
+
+
+def test_lag_waits_after_moves_and_hovered_clicks_only(monkeypatch):
+    import bot.io.linux as L
+
+    slept = []
+    monkeypatch.setattr(L.time, "sleep", lambda s: slept.append(round(s, 3)))
+    ref = []
+    inp = UinputInput(FakeWindow(1280, 720), screen_size=(1920, 1080), uinput_factory=FakeUInput,
+                      pointer_query=Pointer(ref), settle=0, lag=0.05)
+    ref.append(inp)
+    slept.clear(); inp.move(10, 10)
+    assert 0.05 in slept
+    slept.clear(); inp.click(10, 10, "right", hover=0)  # teleport: no lag
+    assert 0.05 not in slept and 0.13 not in slept
+    slept.clear(); inp.click(10, 10, hover=0.08)
+    assert 0.13 in slept

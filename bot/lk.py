@@ -6,6 +6,7 @@ waypoint view; a mismatch means the map seed changed and the route is stale (Map
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 import cv2
@@ -241,6 +242,23 @@ def _is_chest(frame: np.ndarray, box) -> bool:
     return False
 
 
+_DEBUG_TT = bool(os.environ.get("D2R_DEBUG_TOOLTIPS"))
+
+
+def _debug_tooltip(frame: np.ndarray, px: int, py: int, box, i: int) -> None:
+    """D2R_DEBUG_TOOLTIPS=1: save the frame at a chest's expected point and every rejected tooltip crop."""
+    import time
+
+    d = ROOT / "fixtures" / "failures" / "tooltips"
+    d.mkdir(parents=True, exist_ok=True)
+    tag = f"{time.strftime('%H%M%S')}_{px}_{py}"
+    if box is None:
+        cv2.imwrite(str(d / f"{tag}_point{i}.png"), frame[max(0, py - 120):py + 60, max(0, px - 200):px + 200])
+    else:
+        bx, by, bw, bh = box
+        cv2.imwrite(str(d / f"{tag}_rejected_{bw}x{bh}.png"), frame[by:by + bh, bx:bx + bw])
+
+
 LOCKED_MIN_W = 100  # tooltip box px, measured live: "Chest" 59-65, "Locked Chest" 134-140
 
 
@@ -275,6 +293,8 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         bot.kill.sleep(0.09)
         f = bot.capture.grab()
         box = find_tooltip(f, px, py)
+        if _DEBUG_TT and (i == 0 or (box is not None and not _is_chest(f, box))):
+            _debug_tooltip(f, px, py, box, i)
         if box is not None and not _is_chest(f, box):
             continue
         if box is not None:

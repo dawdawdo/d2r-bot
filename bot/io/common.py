@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
+import cv2
 import mss
 import numpy as np
 from pynput import keyboard, mouse
@@ -18,16 +19,25 @@ _MSS = getattr(mss, "MSS", None) or mss.mss  # mss >= 10.2 renamed the factory
 def grab_clamped(sct, left: int, top: int, width: int, height: int) -> np.ndarray:
     """Grab a screen rectangle as BGR. Any part outside the desktop comes back black:
     X11 refuses (BadMatch) a grab that crosses the screen edge, Windows just pads."""
-    out = np.zeros((height, width, 3), np.uint8)
     desk = sct.monitors[0]
+    out = np.zeros((height, width, 3), np.uint8)
     x0, y0 = max(left, desk["left"]), max(top, desk["top"])
     x1 = min(left + width, desk["left"] + desk["width"])
     y1 = min(top + height, desk["top"] + desk["height"])
     if x1 <= x0 or y1 <= y0:
         return out
-    shot = np.asarray(sct.grab({"left": x0, "top": y0, "width": x1 - x0, "height": y1 - y0}))[:, :, :3]
+    shot = _bgr(sct.grab({"left": x0, "top": y0, "width": x1 - x0, "height": y1 - y0}))
+    if shot.shape[:2] == out.shape[:2]:
+        return shot
     out[y0 - top:y1 - top, x0 - left:x1 - left] = shot
     return out
+
+
+def _bgr(shot) -> np.ndarray:
+    """mss ScreenShot -> BGR array. np.asarray(shot) goes through a slow per-pixel path (18 ms for 1280x720
+    on GLaDOS); viewing the raw BGRA bytes and dropping alpha with OpenCV takes ~2 ms."""
+    w, h = shot.size
+    return cv2.cvtColor(np.frombuffer(shot.bgra, np.uint8).reshape(h, w, 4), cv2.COLOR_BGRA2BGR)
 
 
 class DesktopCapture(Capture):
@@ -41,17 +51,27 @@ class DesktopCapture(Capture):
         if region is not None:
             x, y, w, h = region
             return grab_clamped(self.sct, mon["left"] + x, mon["top"] + y, w, h)
-        return np.ascontiguousarray(np.asarray(self.sct.grab(mon))[:, :, :3])
+        return _bgr(self.sct.grab(mon))
 
     def close(self) -> None:
         self.sct.close()
 
 
-def gamma_lut(gamma: float) -> np.ndarray | None:
-    """256-entry LUT for out = 255 * (in/255) ** gamma, or None for gamma 1 (no-op)."""
+def gamma_lut(gamma: float, toe: tuple[int, int] = (4, 16)) -> np.ndarray | None:
+    """256-entry LUT for out = 255 * (in/255) ** gamma, or None for gamma 1 (no-op).
+
+    `toe` keeps near-black black: inputs up to toe[0] pass unchanged, then a straight line joins the
+    curve at toe[1]. A pure power curve lifts 1 -> 5, 2 -> 9, 3 -> 11, and the tooltip finder looks for
+    boxes darker than 8 (Windows draws them at 0-3): LK chest tooltips got clipped (2026-11-08)."""
     if abs(gamma - 1.0) < 1e-6:
         return None
-    return np.clip(np.round(255.0 * (np.arange(256) / 255.0) ** gamma), 0, 255).astype(np.uint8)
+    v = np.arange(256, dtype=np.float64)
+    out = 255.0 * (v / 255.0) ** gamma
+    lo, hi = toe
+    if hi > lo:
+        out[: lo + 1] = v[: lo + 1]
+        out[lo:hi + 1] = np.interp(v[lo:hi + 1], [lo, hi], [lo, out[hi]])
+    return np.clip(np.round(out), 0, 255).astype(np.uint8)
 
 
 class MssCapture(Capture):
@@ -69,7 +89,7 @@ class MssCapture(Capture):
             region = (0, 0, ww, wh)
         x, y, w, h = region
         frame = grab_clamped(self.sct, wx + x, wy + y, w, h)
-        return frame if self.lut is None else self.lut[frame]
+        return frame if self.lut is None else cv2.LUT(frame, self.lut)  # numpy lut[frame] took 13 ms
 
     def close(self) -> None:
         self.sct.close()

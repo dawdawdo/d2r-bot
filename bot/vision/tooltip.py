@@ -17,8 +17,18 @@ def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: in
         return None
     roi = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     # Tooltip boxes are pure black (~0-3); scenery shadows rarely are, so a low threshold keeps
-    # the box from merging with dark surroundings.
-    dark = (roi < 8).astype(np.uint8)
+    # the box from merging with dark surroundings. Where a shadow touches the box anyway (GLaDOS:
+    # darker scenery than Singularity), passes at < 3 and < 2 cut it loose: the box itself is ~0.
+    for thr in (8, 3, 2):
+        box = _tooltip_box(roi, thr, min_w, max_w)
+        if box is not None:
+            bx, by, bw, bh = box
+            return int(x0 + bx), int(y0 + by), int(bw), int(bh)
+    return None
+
+
+def _tooltip_box(roi: np.ndarray, thr: int, min_w: int, max_w: int):
+    dark = (roi < thr).astype(np.uint8)
     dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, np.ones((3, 5), np.uint8))  # bridge the letters
     n, _, st, _ = cv2.connectedComponentsWithStats(dark)
     for i in range(1, n):
@@ -26,10 +36,13 @@ def find_tooltip(frame: np.ndarray, x: int, y: int, above: int = 140, half_w: in
         if not (min_w <= bw <= max_w and 14 <= bh <= 60):
             continue
         box = roi[by : by + bh, bx : bx + bw]
-        fill = area / (bw * bh)
-        bright = (box > 130).mean()
+        text = box > 130
+        # the letters are part of the box: count them in its fill (Large Font letters are thick enough
+        # to drop a "Chest" box to 0.58 dark-only fill on GLaDOS)
+        fill = float(((box < thr) | text).mean())
+        bright = float(text.mean())
         if fill > 0.6 and 0.03 < bright < 0.5:
-            return int(x0 + bx), int(y0 + by), int(bw), int(bh)
+            return bx, by, bw, bh
     return None
 
 

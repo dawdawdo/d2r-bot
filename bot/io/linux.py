@@ -262,8 +262,12 @@ class UinputInput(Input):
     """Two virtual devices: a keyboard and an absolute pointer spanning the X screen."""
 
     def __init__(self, window: Window, screen_size: tuple[int, int] | None = None,
-                 uinput_factory=UInput, pointer_query=None, settle: float = 0.5) -> None:
+                 uinput_factory=UInput, pointer_query=None, settle: float = 0.5, lag: float = 0.0) -> None:
+        """`lag`: extra seconds D2R under Proton needs to notice the cursor moved (measured 2026-11-08: a
+        hover tooltip shows ~115 ms after the move, later than the Windows-tuned waits of 0.07-0.09 s).
+        Added after every move and before every hovered click; teleport clicks (hover 0) skip it."""
         self.window = window
+        self.lag = lag
         if screen_size is None:
             geo = _root().get_geometry()
             screen_size = (geo.width, geo.height)
@@ -294,6 +298,11 @@ class UinputInput(Input):
         self.ptr.syn()
 
     def move(self, x, y):
+        self._move(x, y)
+        if self.lag:
+            time.sleep(self.lag)
+
+    def _move(self, x, y):
         ax, ay = self._abs(x, y)
         self._warp(ax, ay)
         time.sleep(0.01)
@@ -304,8 +313,8 @@ class UinputInput(Input):
 
     def click(self, x, y, button="left", hover: float = 0.08):
         # D2R only interacts with an object if the cursor hovered it for a frame or two first.
-        self.move(x, y)
-        time.sleep(hover)
+        self._move(x, y)
+        time.sleep(hover + (self.lag if hover > 0 else 0.0))
         code = _BUTTONS[button]
         self.ptr.write(e.EV_KEY, code, 1)
         self.ptr.syn()

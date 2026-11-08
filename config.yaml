@@ -8,9 +8,14 @@ game:
     # in the same Proton prefix (bot/io/linux.py launch_game). OSI = D2R's Battle.net product code.
     linux: {steam_appid: 3949906016, proton: "Proton - Experimental", product: OSI}
   resolution: [1280, 720]                   # client area, windowed; verify in M1
-  # Captured frames are gamma-corrected to match the Windows fixtures: under Proton D2R's Gamma
-  # setting (155) has no effect, so Linux frames are darker. Fitted on static menu UI 2026-11-08.
-  capture_gamma: {win32: 1.0, linux: 0.70}
+  # Gamma applied to captured frames (1.0 = none). GLaDOS needs none once D2R's own Brightness is at max
+  # (Settings "GammaHD" 3200; Settings.json isn't synced): raw frames then match the Windows fixtures.
+  # A capture-side 0.70 was tried first (2026-11-08): it can't lift shadows without lifting tooltip boxes,
+  # and LK chest tooltips merged into the dark scenery.
+  capture_gamma: {win32: 1.0, linux: 1.0}
+  # Extra wait after each mouse move / before a hovered click: Proton shows a hover ~115 ms after the move,
+  # the code's waits (0.07-0.09 s) were tuned on Windows. Without it LK chests got Glacial Spike, not a click.
+  input_lag: {win32: 0.0, linux: 0.05}
   difficulty: hell
   character: Blizzaga
   route: blizzaga_hell                      # maps/<route>/route.yaml

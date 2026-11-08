@@ -15,10 +15,14 @@ class Backend:
     hotkeys: HotkeyListener
 
 
-def _capture_gamma() -> float:
-    from ..config import load_config  # config.yaml game.capture_gamma, per platform
+def _game_cfg() -> dict:
+    from ..config import load_config  # config.yaml game.capture_gamma / game.input_lag, per platform
 
-    return float(load_config()["game"].get("capture_gamma") or 1.0)
+    return load_config()["game"]
+
+
+def _capture_gamma() -> float:
+    return float(_game_cfg().get("capture_gamma") or 1.0)
 
 
 def open_backend(window_title: str, launch_exe=None, capture_gamma: float | None = None) -> Backend:
@@ -34,7 +38,8 @@ def open_backend(window_title: str, launch_exe=None, capture_gamma: float | None
         from .linux import MssCapture, PynputHotkeys, UinputInput, X11Window, launch_game
 
         win = launch_game(launch_exe, window_title) if launch_exe else X11Window(window_title)
-        return Backend(win, MssCapture(win, gamma), UinputInput(win), PynputHotkeys())
+        lag = float(_game_cfg().get("input_lag") or 0.0)
+        return Backend(win, MssCapture(win, gamma), UinputInput(win, lag=lag), PynputHotkeys())
     raise NotImplementedError(f"no I/O backend for {sys.platform} yet")
 
 
