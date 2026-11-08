@@ -576,7 +576,7 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
     bot.wait_still(timeout=2)
     hp0 = bot.hp or 100
     near = fight.names_near(radius=280, n=12, stop_hp=min(75, hp0 - 20))
-    if fight.hurt:  # Council fire took 96 -> 5 % during this sweep (2026-11-08 15:48): out first, ask later
+    if getattr(fight, "hurt", False):  # Council fire took 96 -> 5 % during this sweep (2026-11-08 15:48): out first, ask later
         fight.say(f"loot: HP {hp0} -> {bot.hp} at his body -> back to the spot")
         fight.back_to()
         if retry or (bot.hp or 0) < 60:
