@@ -1241,8 +1241,20 @@ def wait_arrival(bot: Controller, town_view: np.ndarray, timeout: float = 30) ->
     while True:
         s = bot.observe()
         loaded = loaded or s == "loading"
-        if s == "in_game" and (loaded or arrived(town_view, bot.frame)):
+        if s == "in_game" and loaded:
             return
+        if s == "in_game" and arrived(town_view, bot.frame):
+            # town_view has the WP menu up, so the menu closing alone reads as "changed": a loading screen can
+            # still be on its way (2026-11-08 18:08: the area check ran on it, "arrived somewhere else")
+            settle = bot.clock() + 1.5
+            while bot.clock() < min(settle, deadline):
+                if bot.observe() == "loading":
+                    loaded = True
+                    break
+                bot.kill.sleep(0.05)
+            if not loaded:
+                return
+            continue
         if bot.clock() >= deadline:
             bot.save_failure(f"no_arrival_{s}")
             raise BotError(f"waypoint travel: no arrival after {timeout}s; last state {s!r}")
