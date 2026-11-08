@@ -21,6 +21,14 @@ def route_file(cfg: dict):
     return ROOT / "maps" / cfg["game"]["route"] / "durance2_auto" / "graph.json"
 
 
+def buying_mana(cfg: dict) -> bool:
+    """Ormus mana potions before the fight: always (`buy_mana`), or while the stash is out of rejuvs."""
+    from .. import state
+
+    m = cfg.get("meph", {})
+    return bool(m.get("buy_mana") or (m.get("buy_mana_when_dry") and state.load().get("stash_rejuvs_empty")))
+
+
 class Mephisto(Task):
     name = "meph"
     act = 3
@@ -42,7 +50,7 @@ class Mephisto(Task):
 
         if not chained:
             for attempt in range(2):  # Ormus wanders; the open-loop walk misses him now and then
-                if not self.mcfg.get("buy_mana") or belt_full(bot):
+                if not buying_mana(self.cfg) or belt_full(bot):
                     break
                 if getattr(bot, "act", 3) == 4:
                     restart_in_act3(bot)

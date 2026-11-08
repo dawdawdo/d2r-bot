@@ -372,6 +372,16 @@ def _keep_ormus(bot: Controller, x: int, y: int) -> None:
     cv2.imwrite(str(out / f"{_t.strftime('%m%d-%H%M%S')}_{x}_{y}.png"), f[y0 : y + 90, x0 : x + 50])
 
 
+def close_dialog(bot: Controller, wait: float = 0.3) -> None:
+    """Esc for an NPC dialog that may or may not be up. If nothing was, that Esc opened the game menu, and every
+    later click lands on it (2026-11-08: Asheara and Ormus searches clicked the menu until they gave up)."""
+    bot.press("esc")
+    bot.kill.sleep(wait)
+    if bot.observe() == "esc_menu":
+        bot.press("esc")
+        bot.kill.sleep(0.3)
+
+
 def heal_at_ormus(bot: Controller) -> bool:
     """Walk toward the plaza, find Ormus by hover, talk to him (heals), close the dialog.
     The character ends up somewhere near Ormus, so the caller should start a new game."""
@@ -387,8 +397,7 @@ def heal_at_ormus(bot: Controller) -> bool:
             bot.press("esc")
             log.info("healed by Ormus")
             return True
-        bot.press("esc")  # someone else's dialog (or nothing); keep looking
-        bot.kill.sleep(0.3)
+        close_dialog(bot)  # someone else's dialog (or nothing); keep looking
     bot.save_failure("ormus_not_found")
     return False
 
@@ -414,8 +423,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
         bot.kill.sleep(2.0)
         loc = bot.find("npc_ormus.png", region=(0, 0, 1280, 500), threshold=0.8)
         if loc is None:
-            bot.press("esc")
-            bot.kill.sleep(0.3)
+            close_dialog(bot)
             continue
         _keep_ormus(bot, x, y)
         bot.click(loc[0] + o["trade_offset"][0], loc[1] + o["trade_offset"][1])
@@ -549,11 +557,7 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
         bot.kill.sleep(2.0)
         loc = bot.find("npc_hratli.png", region=(0, 0, 1280, 500), threshold=0.8)
         if loc is None:
-            bot.press("esc")  # someone else's dialog (or nothing); keep looking
-            bot.kill.sleep(0.3)
-            if bot.observe() == "esc_menu":  # it was nothing: that Esc opened the game menu (2026-11-08)
-                bot.press("esc")
-                bot.kill.sleep(0.3)
+            close_dialog(bot)  # someone else's dialog (or nothing); keep looking
             continue
         bot.click(loc[0] + h["trade_offset"][0], loc[1] + h["trade_offset"][1])
         for _ in range(10):
@@ -602,11 +606,7 @@ def revive_merc(bot: Controller) -> bool:
         bot.kill.sleep(2.0)
         loc = bot.find("npc_asheara.png", region=(0, 0, 1280, 500), threshold=0.85)
         if loc is None:
-            bot.press("esc")  # someone else's dialog (or nothing); keep looking
-            bot.kill.sleep(0.3)
-            if bot.observe() == "esc_menu":  # it was nothing: that Esc opened the game menu (2026-11-08)
-                bot.press("esc")
-                bot.kill.sleep(0.3)
+            close_dialog(bot)  # someone else's dialog (or nothing); keep looking
             continue
         bot.click(loc[0] + a["resurrect_offset"][0], loc[1] + a["resurrect_offset"][1])
         bot.kill.sleep(1.5)
@@ -791,8 +791,7 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
             if bot.find("stash_open.png", region=(165, 16, 110, 42), threshold=0.8) is not None:
                 return True
         log.info("stash didn't open (attempt %d)", attempt + 1)
-        bot.press("esc")  # close an NPC dialog if we clicked one
-        bot.kill.sleep(1.0)
+        close_dialog(bot, wait=1.0)  # an NPC dialog if we clicked one
     bot.save_failure("stash_not_opened")
     log.warning("stash didn't open; skipping restock")
     return False

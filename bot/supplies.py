@@ -79,6 +79,8 @@ def refilling(cfg: dict) -> bool:
 
 def tasks_for_run(tasks: list, refill_tasks: list, cfg: dict) -> list:
     """`refill_tasks` is empty when the session has no boss to protect, or LK isn't ready."""
+    if tasks and all(t.name == "meph" for t in tasks) and cfg.get("meph", {}).get("buy_mana_when_dry"):
+        return tasks  # Meph buys at Ormus instead (bot/tasks/meph.py buying_mana)
     return refill_tasks if refill_tasks and refilling(cfg) else tasks
 
 
