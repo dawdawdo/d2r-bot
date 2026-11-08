@@ -23,12 +23,21 @@ def open_backend(window_title: str, launch_exe: str | None = None) -> Backend:
 
         win = launch_game(launch_exe, window_title) if launch_exe else Win32Window(window_title)
         return Backend(win, MssCapture(win), DirectInput(win), PynputHotkeys())
+    if sys.platform == "linux":
+        from .linux import MssCapture, PynputHotkeys, UinputInput, X11Window, launch_game
+
+        win = launch_game(launch_exe, window_title) if launch_exe else X11Window(window_title)
+        return Backend(win, MssCapture(win), UinputInput(win), PynputHotkeys())
     raise NotImplementedError(f"no I/O backend for {sys.platform} yet")
 
 
 def open_desktop_capture() -> Capture:
     if sys.platform == "win32":
         from .windows import DesktopCapture
+
+        return DesktopCapture()
+    if sys.platform == "linux":
+        from .common import DesktopCapture
 
         return DesktopCapture()
     raise NotImplementedError(sys.platform)
@@ -40,13 +49,17 @@ def window_info(title: str) -> dict | None:
         from .windows import window_info as wi
 
         return wi(title)
+    if sys.platform == "linux":
+        from .linux import window_info as wi
+
+        return wi(title)
     raise NotImplementedError(sys.platform)
 
 
 def open_hotkeys() -> HotkeyListener:
     """Hotkey listener alone (doesn't need the game window)."""
-    if sys.platform == "win32":
-        from .windows import PynputHotkeys
+    if sys.platform in ("win32", "linux"):
+        from .common import PynputHotkeys
 
         return PynputHotkeys()
     raise NotImplementedError(f"no hotkey backend for {sys.platform} yet")

@@ -7,3 +7,5 @@ pydirectinput==1.0.4; sys_platform == "win32"   # Windows-only; skipped on GLaDO
 pynput==1.8.2
 pytest==9.1.1
 pyyaml==6.0.3
+evdev==2.0.0; sys_platform == "linux"          # Linux input backend (uinput)
+python-xlib==0.33; sys_platform == "linux"     # Linux window lookup (X11)

@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG = ROOT / "config.yaml"
 
 
+_PLATFORMS = {"win32", "linux", "darwin"}
 _WIN_VAR = re.compile(r"%([^%]+)%")
 
 
@@ -30,4 +31,8 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
             value = value[sys.platform]
         p = Path(_expand(str(value)))
         paths[key] = p if p.is_absolute() else ROOT / p
+    game = cfg.get("game") or {}
+    for key, value in game.items():
+        if isinstance(value, dict) and set(value) <= _PLATFORMS:
+            game[key] = value.get(sys.platform)
     return cfg
