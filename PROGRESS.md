@@ -16,8 +16,8 @@ material):
 - Inventory toggles checked by the panel header (`inventory_open`): a lost one left it open over Durance 2.
 - Meph loot: leaves his body as soon as life drops in the name sweep (HP 96 -> 5 there once).
 - Fullscreen D2R (Stephen played): Alt+Enter before resizing (`Window.is_fullscreen`, X11 only; Windows says False).
-- Cube plan respects 99-stacks (Stephen moved the stuck sapphire; cube everything). Meph buys Ormus mana while the
-  stash has no rejuvs (`meph.buy_mana_when_dry`) instead of ~2 h of LK refill.
+- Cube plan respects 99-stacks (Stephen moved the stuck sapphire; cube everything). `meph.buy_mana_when_dry` (Ormus
+  mana instead of LK refill) built but OFF: Stephen wants LK refill runs, then Meph (2026-11-08).
 - Frame-queue cap: not done. The Proton cost left is ~0.08 s a teleport, ~2% of a run: held as a future option.
 **Open:** GLaDOS stash is out of rejuvs (refill count 40); untested on Windows: everything above (compile/offline only).
 
