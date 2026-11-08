@@ -22,7 +22,7 @@ from .killswitch import KillSwitchTripped
 from .lifecycle import create_game, ensure_main_menu, save_and_exit
 from .session import start_session
 from . import control, state, supplies
-from .gamesettings import ensure_loot_filter, ensure_options, players_setting
+from .gamesettings import ensure_loot_filter, ensure_options, large_font_ok, players_setting
 from .town import (ensure_main_weapons, leave_act1, leave_other_act, belt_needs_restock, count_keys, durability_ok, heal_at_ormus, merc_alive, needs_heal, recover_corpse,
                    repair_at_hratli, restart_in_act3, revive_merc, set_players, spawn_act, stowaway,
                    town_to_lower_kurast)
@@ -206,12 +206,15 @@ def main() -> int:
     log.info("keys left (estimate): %s", bot.keys_left)
     bot.merc_revive = True
     # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
-    bot.game_window_id = getattr(backend.window, "hwnd", None)
+    bot.game_window_id = getattr(backend.window, "hwnd", None) or getattr(backend.window, "wid", None)  # Win32 / X11
     want_players = supplies.players_for(tasks, cfg)
     players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
     if players_setting(cfg) == want_players:
         players_due = False  # D2R keeps /players as a setting: no typing needed
         bot.players_now = want_players  # known, so a later switch of tasks retypes it
+    if large_font_ok(cfg) is False:  # every panel coordinate assumes it; clicking on would hit the wrong spots
+        session.kill.trip("Large Font Mode is off (Options > Gameplay > Accessibility): panels won't line up")
+        session.kill.check()
     try:
         ensure_main_menu(bot)
         ensure_options(bot)  # automap as the bot needs it, whatever Stephen set while playing

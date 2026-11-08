@@ -80,6 +80,14 @@ def chat_open(frame: np.ndarray) -> bool:
     return float(cv2.matchTemplate(frame[y : y + h, x : x + w], _CHAT[0], cv2.TM_CCOEFF_NORMED).max()) >= 0.8
 
 
+def large_font_ok(cfg: dict) -> bool | None:
+    """Large Font Mode (Settings "Low Vision Mode" 1) on? None if Settings.json can't be read.
+    It sets the size and place of every panel (inventory, stash, waypoint): all the bot's panel coordinates
+    and templates were taken with it on. Off (GLaDOS 2026-11-08), panels are ~15% smaller and shifted."""
+    v = read_settings(cfg).get("Low Vision Mode")
+    return None if v is None else int(v) == 1
+
+
 def ensure_options(bot) -> bool:
     """At the main menu: automap Full Screen + Center opacity. True if they're right (now or already)."""
     cfg = bot.cfg

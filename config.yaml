@@ -107,6 +107,7 @@ loot:
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
   play: [640, 640]
+  offline_tab: [1184, 34]      # character list tab; D2R opens on Online when started through Battle.net (GLaDOS)
   difficulty_normal: [636, 300]
   difficulty_nightmare: [636, 346]
   difficulty_hell: [636, 390]

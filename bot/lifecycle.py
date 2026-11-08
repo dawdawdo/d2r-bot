@@ -59,6 +59,12 @@ def select_character(bot: Controller) -> None:
     (2026-11-04: Play put the bot on ThroatCutter). Not found = stop the session, never Play on a guess."""
     name = bot.cfg["game"]["character"]
     row = find_character(bot.capture.grab(), name)
+    if row is None and "offline_tab" in bot.cfg.get("ui", {}):
+        # started through Battle.net (GLaDOS), D2R opens on the Online tab: the offline characters are one tab over
+        log.info("%s not in the list: trying the Offline tab", name)
+        bot.click_ui("offline_tab")
+        bot.kill.sleep(1.0)
+        row = find_character(bot.capture.grab(), name)
     if row is None:
         bot.save_failure("character_not_found")
         bot.kill.trip(f"character {name} not found on the main menu")
