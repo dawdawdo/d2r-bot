@@ -1155,13 +1155,21 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             bot.input.move(640, 600)
             bot.kill.sleep(0.4)
             runes = runes_added(runes_before, bot.capture.grab())
+            unread = 0
+            if len(runes) > done["stashed"]:  # the "before" frame wasn't the Runes tab: all 33 slots "changed"
+                log.warning("stowaway: %d rune slots changed for %d stashed item(s); names not read", len(runes),
+                            done["stashed"])  # (2026-11-08 18:11: loot.csv got El..Zod for 4 items)
+                runes, unread = [], -1
             stuck = [cell for cell in left if cell in rejuv_cells]  # their Materials stack is at 99
             rejuvs = len(rejuv_cells) - len(stuck)
             others = done["stashed"] - len(runes) - charms - rejuvs
+            if unread:
+                others, unread = 0, max(0, done["stashed"] - charms - rejuvs)
             full_stacks = [cell for cell in left if cell in stack_cells and cell not in keep_cells]
             _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
                       + ["Rejuvenation Potion to Materials tab"] * rejuvs + ["item to shared tab"] * max(0, others)
-                      + ["dropped: its stash stack is full"] * len(full_stacks))
+                      + ["dropped: its stash stack is full"] * len(full_stacks)
+                      + ["item stashed (rune or other, name not read)"] * unread)
             done["runes"] = runes
             left = [cell for cell in left if cell not in rejuv_cells and cell not in full_stacks]
             if left:
