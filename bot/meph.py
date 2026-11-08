@@ -249,10 +249,17 @@ class MephFight:
                 return (x, y), nb
         return None
 
-    def names_near(self, radius: int = 330, n: int = 20) -> list[tuple[int, int]]:
+    def names_near(self, radius: int = 330, n: int = 20, stop_hp: float | None = None) -> list[tuple[int, int]]:
+        """Points around her where a monster name shows. `stop_hp`: give up the sweep (it takes ~2 s) once life
+        falls below this; the caller sees self.hurt."""
         hits = []
+        self.hurt = False
         for r, k in ((radius, n), (radius // 2, n // 2)):
             for j in range(k):
+                if stop_hp is not None and (self.bot.hp or 100) < stop_hp:
+                    self.hurt = True
+                    self.bot.input.move(1270, 590)
+                    return hits
                 a = 2 * np.pi * j / k
                 x, y = int(640 + r * np.cos(a)), int(330 + 0.6 * r * np.sin(a))
                 if not (60 < y < 560):
@@ -550,7 +557,8 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
         if not fight.back_to():
             raise BotError("couldn't get back after his death throes")
         if bot.cfg["meph"].get("clear_before_loot", False):  # the check at his body below still finds company
-            fight.clear(limit=25)
+            if not fight.clear(limit=25):
+                fight.clear(limit=20)  # names still round the spot: they're at his body too (2026-11-08 HP 96 -> 5 there)
     if fight.seen is None or not (LOOT_X[0] <= fight.seen[0] <= LOOT_X[1]):
         # far along the moat edge: 2 hops into the unknown met lightning there and she died (2026-11-01 22:11)
         fight.say(f"loot: he died at {fight.seen}, out of one safe hop: skipping")
@@ -566,7 +574,15 @@ def loot_meph(fight: MephFight, retry: bool = False, t_dead: float | None = None
             fight.back_to()
             return []
     bot.wait_still(timeout=2)
-    near = fight.names_near(radius=280, n=12)
+    hp0 = bot.hp or 100
+    near = fight.names_near(radius=280, n=12, stop_hp=min(75, hp0 - 20))
+    if fight.hurt:  # Council fire took 96 -> 5 % during this sweep (2026-11-08 15:48): out first, ask later
+        fight.say(f"loot: HP {hp0} -> {bot.hp} at his body -> back to the spot")
+        fight.back_to()
+        if retry or (bot.hp or 0) < 60:
+            return []
+        fight.hunt(limit=30)
+        return loot_meph(fight, retry=True, t_dead=t_dead)
     if near and not retry:  # his Council / leftovers (2026-11-02 13:51): kill them from the spot, try again
         fight.say(f"loot: monsters at his body {near[:3]} -> back to the spot, hunt, try again")
         fight.back_to()
