@@ -10,7 +10,10 @@ game:
   players: 7                                # /players N once per session (monsters weaker, chest loot same)
 
 paths:
-  save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
+  save_dir:   # per platform (sys.platform)
+    win32: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
+    # GLaDOS: D2R runs under Proton as a non-Steam game (compatdata id 3949906016)
+    linux: "~/.steam/debian-installation/steamapps/compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected"
   backups: backups
   logs: logs
   raw_frames: fixtures/raw

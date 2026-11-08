@@ -1,5 +1,20 @@
 # Progress
 
+**GLaDOS port (2026-11-08), Linux Mint 22.3, X11. Offline only so far.**
+- Miniconda is at `/data/AutoDev/miniconda3`. `/data` is root-owned and sudo needs a password, so it couldn't go in `/data/miniconda3`.
+  The env `d2r` (Python 3.12.16) has every requirement except pydirectinput (Windows-only, now marked `sys_platform == "win32"`).
+  Run with `/data/AutoDev/miniconda3/envs/d2r/bin/python -m pytest` (conda isn't on PATH; Stephen can `conda init` if wanted).
+- Tests: **112 passed, 8 skipped**. The skips are `test_labels_real.py`, which needs `fixtures/raw/` (gitignored, not on GLaDOS).
+  Fixed one failure: Linux didn't expand `%USERPROFILE%`. `paths.save_dir` is now set per platform (`win32`/`linux`),
+  and `%VAR%` expands on any OS (`bot/config.py`).
+- D2R on GLaDOS: a non-Steam game under Proton, installed at `/data/steam/games/Diablo II Resurrected`. Saves are in
+  `~/.steam/debian-installation/steamapps/compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected`
+  (Blizzaga.d2s modified 2026-11-08 07:58, so Syncthing is live: never run on both machines at once).
+- `pynput` works on X11 (xorg backend). `mss` imports fine. Not built yet: Linux input backend (`bot/io/linux.py`, evdev/uinput or xdotool).
+  Not checked yet: the window size and position under Proton, and whether captured frames match the Windows fixtures.
+- Next on GLaDOS: decide the input backend (uinput needs `/dev/uinput` access, which is a system setting: ask Stephen), then do a live capture
+  check against the fixtures.
+
 **Current milestone:** Phase 1 (LK) effectively done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
 **Works (live, 2026-10-27 ~05:10):**

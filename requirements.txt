@@ -1,8 +1,9 @@
-# Installed into the existing conda env `d2r` (Python 3.12) with pip.
+# Installed into the conda env `d2r` (Python 3.12) with pip.
+# GLaDOS (Linux): /data/AutoDev/miniconda3/envs/d2r
 mss==10.2.0
 opencv-python==5.0.0.93
 numpy==2.5.4
-pydirectinput==1.0.4
+pydirectinput==1.0.4; sys_platform == "win32"   # Windows-only; skipped on GLaDOS (Linux)
 pynput==1.8.2
 pytest==9.1.1
 pyyaml==6.0.3
