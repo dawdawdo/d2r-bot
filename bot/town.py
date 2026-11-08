@@ -551,6 +551,9 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
         if loc is None:
             bot.press("esc")  # someone else's dialog (or nothing); keep looking
             bot.kill.sleep(0.3)
+            if bot.observe() == "esc_menu":  # it was nothing: that Esc opened the game menu (2026-11-08)
+                bot.press("esc")
+                bot.kill.sleep(0.3)
             continue
         bot.click(loc[0] + h["trade_offset"][0], loc[1] + h["trade_offset"][1])
         for _ in range(10):
@@ -601,6 +604,9 @@ def revive_merc(bot: Controller) -> bool:
         if loc is None:
             bot.press("esc")  # someone else's dialog (or nothing); keep looking
             bot.kill.sleep(0.3)
+            if bot.observe() == "esc_menu":  # it was nothing: that Esc opened the game menu (2026-11-08)
+                bot.press("esc")
+                bot.kill.sleep(0.3)
             continue
         bot.click(loc[0] + a["resurrect_offset"][0], loc[1] + a["resurrect_offset"][1])
         bot.kill.sleep(1.5)
@@ -746,19 +752,19 @@ def ensure_main_weapons(bot: Controller) -> None:
     bot.weapons_dirty = False
 
 
-STASH_BESIDE = (649, 303)  # template top-left when she stands at the chest (after a first stash visit)
+STASH_NEAR = (440, 130, 400, 330)  # (x, y, w, h) around her: the chest beside her after a first stash visit
 
 
 def _stash_beside_her(bot: Controller) -> tuple[int, int] | None:
-    """The chest right beside her, half hidden by her (template 0.68-0.79 there, 2026-11-08). Without this the
-    configured spot (meant for the route end) walked her onto the bridge or behind the chest: 3 failed runs."""
+    """The chest right beside her, either side, maybe half hidden by her (GLaDOS renders it a bit unlike the
+    template: 0.68-0.79, 0.71 in plain view, 2026-11-08). Without this the configured spot (meant for the
+    route end) walked her onto the bridge or behind the chest: 4 failed runs."""
     from .vision.screen import match_score
 
     t = bot._templates.get("town_stash_beside")
     if t is None:
         t = bot._templates["town_stash_beside"] = cv2.imread(str(ASSETS / "town_stash.png"))
-    x, y = STASH_BESIDE
-    score, loc = match_score(bot.capture.grab(), t, (x - 50, y - 50, 150, 148))
+    score, loc = match_score(bot.capture.grab(), t, STASH_NEAR)
     if score >= 0.6:
         log.info("stash beside her (template %.2f)", score)
         return loc
