@@ -22,7 +22,7 @@ MAX_HOP = 420     # live 2026-10-26: 450 px hops tracked fine, 520 px lost track
 TP_SETTLE = 0.16  # 2026-10-27 trial (was 0.2); live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/10 (tools/tp_rate.py)
 
 
-PLAY = (20, 20, 1260, 570)  # (x0, y0, x1, y1) a teleport click must land in: below y ~590 is the HUD
+PLAY = (20, 20, 1260, 630)  # (x0, y0, x1, y1) a teleport click must land in: the skill bar starts ~650 (y 635 hops land, 698 hit the HUD)
 
 
 def in_play(dx: float, dy: float) -> tuple[float, float]:

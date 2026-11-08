@@ -746,6 +746,25 @@ def ensure_main_weapons(bot: Controller) -> None:
     bot.weapons_dirty = False
 
 
+STASH_BESIDE = (649, 303)  # template top-left when she stands at the chest (after a first stash visit)
+
+
+def _stash_beside_her(bot: Controller) -> tuple[int, int] | None:
+    """The chest right beside her, half hidden by her (template 0.68-0.79 there, 2026-11-08). Without this the
+    configured spot (meant for the route end) walked her onto the bridge or behind the chest: 3 failed runs."""
+    from .vision.screen import match_score
+
+    t = bot._templates.get("town_stash_beside")
+    if t is None:
+        t = bot._templates["town_stash_beside"] = cv2.imread(str(ASSETS / "town_stash.png"))
+    x, y = STASH_BESIDE
+    score, loc = match_score(bot.capture.grab(), t, (x - 50, y - 50, 150, 148))
+    if score >= 0.6:
+        log.info("stash beside her (template %.2f)", score)
+        return loc
+    return None
+
+
 def open_stash(bot: Controller, attempts: int = 3) -> bool:
     """Click the stash chest (found by template; the route's end point varies by a few dozen px)
     and wait for its panel. An NPC (often Cain) standing on it eats the click and opens a dialog:
@@ -753,6 +772,8 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
     scfg = bot.cfg["stash"]
     for attempt in range(attempts):
         loc = bot.find("town_stash.png", region=(0, 0, 1280, 560), threshold=0.75)
+        if loc is None:
+            loc = _stash_beside_her(bot)
         if loc is not None:
             x, y = loc[0] + 25, loc[1] + 28  # template is 50x48; click the chest's lower middle
         else:

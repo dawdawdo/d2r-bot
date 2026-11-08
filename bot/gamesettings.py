@@ -74,8 +74,10 @@ _CHAT: list = []
 
 
 def chat_open(frame: np.ndarray) -> bool:
+    # the input line's icon only: GLaDOS draws the "[Game]" text smaller (whole template 0.55 there, icon 0.95;
+    # closed chat <= 0.58 on both machines)
     if not _CHAT:
-        _CHAT.append(cv2.imread(str(TEMPLATES / "chat_input.png")))
+        _CHAT.append(cv2.imread(str(TEMPLATES / "chat_input.png"))[:, :32])
     x, y, w, h = CHAT_REGION
     return float(cv2.matchTemplate(frame[y : y + h, x : x + w], _CHAT[0], cv2.TM_CCOEFF_NORMED).max()) >= 0.8
 
