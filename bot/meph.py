@@ -117,6 +117,9 @@ class MephFight:
 
     # -- moving -------------------------------------------------------------------------------------
     def tp(self, dx: float, dy: float, wait: float = 0.45) -> None:
+        from .nav import in_play
+
+        dx, dy = in_play(dx, dy)
         self.bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
         self.bot.sleep(wait)
 

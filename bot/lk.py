@@ -199,9 +199,10 @@ def check_fingerprint(bot: Controller, route: dict) -> None:
 
 
 def teleport(bot: Controller, dx: int, dy: int) -> None:
-    from .nav import frame_lag
+    from .nav import frame_lag, in_play
 
-    bot.click(CENTER[0] + dx, CENTER[1] + dy, "right")
+    dx, dy = in_play(dx, dy)
+    bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right")
     bot.sleep(TP_SETTLE + frame_lag(bot))
 
 

@@ -28,12 +28,13 @@ RUNE_GEM = {  # rune -> the gem its upgrade also takes
 # the stash can't get more)
 FOR_RUNES = set(RUNE_GEM.values())
 KEEP = 5
+STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
 TOP_RUNE = "Fal"  # the highest rune cubing makes
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
 
 def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
-         top_grade: str = TOP_GRADE) -> list[tuple[dict[str, int], str]]:
+         top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX) -> list[tuple[dict[str, int], str]]:
     """Transmutes in order, each ({input: n}, output). `counts` names runes and gems as in RUNES / gem();
     missing names count 0. Runes first, bottom up, so what one step makes feeds the next; gems after, with
     whatever the runes left, except gems saved for runes (FOR_RUNES); repeated until nothing changes."""
@@ -56,11 +57,11 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
         for i in range(last):
             rune, nxt = RUNES[i], RUNES[i + 1]
             g = RUNE_GEM.get(rune)
-            while n(rune) - 3 >= keep and (g is None or n(g) - 1 >= keep):
+            while n(rune) - 3 >= keep and (g is None or n(g) - 1 >= keep) and n(nxt) < stack_max:
                 do({rune: 3, g: 1} if g else {rune: 3}, nxt)
         for ladder in GEM_LADDERS:
             for low, high in zip(ladder[:grades], ladder[1:grades]):
-                while low not in FOR_RUNES and n(low) - 3 >= keep:
+                while low not in FOR_RUNES and n(low) - 3 >= keep and n(high) < stack_max:
                     do({low: 3}, high)
         if len(steps) == before:
             return steps

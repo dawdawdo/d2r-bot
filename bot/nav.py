@@ -22,6 +22,22 @@ MAX_HOP = 420     # live 2026-10-26: 450 px hops tracked fine, 520 px lost track
 TP_SETTLE = 0.16  # 2026-10-27 trial (was 0.2); live 2026-10-26: 0.15 s still 10/10 teleports, 0.1 s only 6/10 (tools/tp_rate.py)
 
 
+PLAY = (20, 20, 1260, 570)  # (x0, y0, x1, y1) a teleport click must land in: below y ~590 is the HUD
+
+
+def in_play(dx: float, dy: float) -> tuple[float, float]:
+    """Shorten hop (dx, dy) from CENTER, same direction, so its click lands in the play area. A right-click
+    on the HUD casts nothing: back_to repeated a 368 px-down hop 6 times without moving (2026-11-08)."""
+    x0, y0, x1, y1 = PLAY
+    s = 1.0
+    for d, c, lo, hi in ((dx, CENTER[0], x0, x1), (dy, CENTER[1], y0, y1)):
+        if d > 0 and c + d > hi:
+            s = min(s, (hi - c) / d)
+        elif d < 0 and c + d < lo:
+            s = min(s, (lo - c) / d)
+    return dx * s, dy * s
+
+
 def _small(frame: np.ndarray) -> np.ndarray:
     g = cv2.cvtColor(frame[:VIEW_H], cv2.COLOR_BGR2GRAY)
     s = cv2.resize(g, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA).astype(np.float32)
@@ -127,6 +143,7 @@ def frame_lag(bot) -> float:
 def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, float]:
     before, was_lost = getattr(bot, "frame", None), odo.lost
     bot.hops = getattr(bot, "hops", 0) + 1
+    dx, dy = in_play(dx, dy)
     bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
     bot.sleep(TP_SETTLE + frame_lag(bot))
     bot.frame = bot.capture.grab()

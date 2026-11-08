@@ -57,6 +57,18 @@ def test_gems_climb_to_perfect_and_skulls_too():
 
 
 def test_default_stops_at_flawless():
-    counts = {"Flawless Ruby": 99, "Ruby": 8}
+    counts = {"Flawless Ruby": 90, "Ruby": 8}
     have = final(counts, cube.plan(counts))
-    assert have["Perfect Ruby"] == 0 and have["Flawless Ruby"] == 100
+    assert have["Perfect Ruby"] == 0 and have["Flawless Ruby"] == 91
+
+def test_full_stack_not_overfilled():
+    from bot.cube import gem, plan
+
+    steps = plan({gem("", "Sapphire"): 30, gem("Flawless", "Sapphire"): 99}, top_grade="Perfect")
+    have = {gem("", "Sapphire"): 30, gem("Flawless", "Sapphire"): 99}
+    for inputs, out in steps:
+        for k, v in inputs.items():
+            have[k] -= v
+        have[out] = have.get(out, 0) + 1
+        assert have[out] <= 99
+    assert have[gem("Perfect", "Sapphire")] > 0  # the full stack drained into Perfects

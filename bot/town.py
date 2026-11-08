@@ -220,7 +220,34 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
             return
         except BotError:
             log.info("waypoint menu didn't open (attempt %d)", attempt + 1)
+            unstick_toward(bot, view, (loc[0] + ox, loc[1] + oy))
     raise BotError("could not open the town waypoint")
+
+
+def unstick_toward(bot: Controller, before: np.ndarray, target: tuple[int, int]) -> None:
+    """A click on the WP that didn't move her: she's wedged where the game finds no path to it (2026-11-08,
+    twice: after the stash fallback click, between the chest and the barricade; the WP lit up, 3 clicks, the
+    view never changed). Walk to open ground halfway there first, then the next attempt clicks it again."""
+    from .nav import CENTER
+
+    now = bot.capture.grab()
+    moved = float(np.abs(now[:560].astype(np.int16) - before[:560].astype(np.int16)).mean())
+    if moved > 8:  # she walked (an NPC in the way, or the menu was just slow): nothing to unstick
+        return
+    for frac, side in ((0.5, 40), (0.35, -60)):  # a little off the straight line, round the obstacle
+        x = int(CENTER[0] + frac * (target[0] - CENTER[0]))
+        y = int(min(540, max(60, CENTER[1] + frac * (target[1] - CENTER[1]) + side)))
+        log.info("didn't move (view diff %.1f): walking to (%d, %d) first", moved, x, y)
+        bot.press("esc")  # any panel or dialog the click opened; then Esc again if that was the game menu
+        bot.kill.sleep(0.4)
+        if bot.observe() == "esc_menu":
+            bot.press("esc")
+            bot.kill.sleep(0.4)
+        bot.click(x, y)
+        bot.wait_still(timeout=3, settle=0.6, poll=0.1, min_wait=0.3)
+        after = bot.capture.grab()
+        if float(np.abs(after[:560].astype(np.int16) - now[:560].astype(np.int16)).mean()) > 8:
+            return
 
 
 def check_area(bot: Controller, template: str) -> bool:
