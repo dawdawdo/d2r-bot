@@ -3,6 +3,24 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-08 16:35: GLaDOS Meph 10/10 kills (~151 s a run, no potions drunk, merc never died).** Fixed today
+(Stephen away, asked: keep running Meph, make it better, fix the town WP, cube everything, frame-queue cap only if
+material):
+- Top Meph failure "couldn't get back from his platform" (also Windows): back_to's ~368 px-down hop clicked the HUD
+  (y 698), 6 times. `nav.in_play()` shortens any hop to land in (20..1260, 20..630); used by meph/nav/lk hops.
+- Town WP misses: the stash fallback click walked her behind the chest / onto the bridge. The chest beside her is
+  matched at 0.6 (`_stash_beside_her`; GLaDOS chest reads 0.71 vs the Windows template); a WP click that doesn't
+  move her walks halfway first (`unstick_toward`).
+- `/players` never typed on GLaDOS (chat text smaller; chat detected by its icon now): Meph had run at players 7.
+- Esc that meant "close a dialog" opened the game menu (Ormus/Asheara/stash): `close_dialog()`.
+- Inventory toggles checked by the panel header (`inventory_open`): a lost one left it open over Durance 2.
+- Meph loot: leaves his body as soon as life drops in the name sweep (HP 96 -> 5 there once).
+- Fullscreen D2R (Stephen played): Alt+Enter before resizing (`Window.is_fullscreen`, X11 only; Windows says False).
+- Cube plan respects 99-stacks (Stephen moved the stuck sapphire; cube everything). Meph buys Ormus mana while the
+  stash has no rejuvs (`meph.buy_mana_when_dry`) instead of ~2 h of LK refill.
+- Frame-queue cap: not done. The Proton cost left is ~0.08 s a teleport, ~2% of a run: held as a future option.
+**Open:** GLaDOS stash is out of rejuvs (refill count 40); untested on Windows: everything above (compile/offline only).
+
 **2026-11-08: GLaDOS (Linux) port works. Meph 9/10 kills (same as Windows).** Branch `tasks` on both machines
 (CLAUDE.md). Details and all GLaDOS settings are in `docs/glados.md`. What it took, beyond the uinput/X11 backend:
 the bot launches D2R via Steam -> Battle.net (`--exec="launch OSI"`) and clicks the Offline tab; D2R moved to the SSD
@@ -10,9 +28,7 @@ and swap added (loads 30 s-2 min -> 12 s); per-machine game settings (Settings.j
 Brightness max, VSync off, Windowed 1280x720; capture 52 -> 17 ms a frame; Proton lag handled by `game.input_lag`
 (0.05 s) and `game.frame_lag` (0.08 s on teleport settles); chest tooltip finder made robust (thick letters, near-black
 shadows). LK: runs ok, about 56 s from the waypoint (upkeep games extra on a fresh `state.json`).
-**Open:** Meph's "couldn't get back from his platform" (also the top failure on Windows); occasional town WP miss in LK;
-cube has 1 Flawless Sapphire that can't go back (stack full), so cubing is skipped until someone moves it;
-frame-queue cap via Steam launch options not tried (ask Stephen).
+(Open items from this entry: all handled 16:35, above.)
 
 **2026-11-07 12:50: cubing at the stash (Stephen's ask).** "Leave five of each lower gems and rune, cube up through maybe Fal; account for gems required for runes." `bot/cube.py` plans (pure, `tests/test_cube.py`): runes first, bottom up, El..Ko -> up to Fal (Thul+ take a chipped/flawed gem, `RUNE_GEM`); then gems up to `cube.top_grade` (Flawless; Perfect is one word away, **ask Stephen**); gems rune recipes take (`FOR_RUNES`) are never cubed up, since the filter no longer picks up chipped/flawed. `bot/vision/stack_count.py` reads the Gems and Runes tab counts (digit shapes from the Gems tab, normalized correlation; a rune's "1" is dim: tens 1 by contrast with the stone, trailing 1 by score 0.65+). Live-checked counts by moving 9 of a stack into the cube. `bot/cubing.py`: Ctrl+Shift+click a stack -> one into the stash's cube grid, Transmute (224, 500), Ctrl+Shift+click the result back; every `cube.every_hours` (6) from `town_to_wp`. ~4.8 s a transmute. `tools/stash_probe.py` for live stash pokes.
 - Stephen answered (19:00): yes to both. `cube.top_grade: Perfect`; filter rule "Show lower gems" (21 chipped/flawed/normal codes) installed with D2R closed (backup `filter-20261107-190056`). Bot relaunched D2R; first Perfect pass planned 159 transmutes at 19:02. Watch: chipped stacks piling up (never cubed, kept for rune recipes); stash open needed 3 tries at 19:02.
