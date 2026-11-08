@@ -118,11 +118,17 @@ class Odometer:
         return float(moved[0]), float(moved[1])
 
 
+def frame_lag(bot) -> float:
+    """Extra seconds before the screen shows what an input did (config game.frame_lag, per platform).
+    GLaDOS/Proton, tools/tp_rate.py 2026-11-08: settle 0.30 s 10/10 hops, 0.20 s 4/10 (Windows: 0.15 s 10/10)."""
+    return float((getattr(bot, "cfg", None) or {}).get("game", {}).get("frame_lag") or 0.0)
+
+
 def hop(bot: Controller, odo: Odometer, dx: float, dy: float) -> tuple[float, float]:
     before, was_lost = getattr(bot, "frame", None), odo.lost
     bot.hops = getattr(bot, "hops", 0) + 1
     bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
-    bot.sleep(TP_SETTLE)
+    bot.sleep(TP_SETTLE + frame_lag(bot))
     bot.frame = bot.capture.grab()
     moved = odo.update(bot.frame, expect=(dx, dy))
     if odo.lost and not was_lost:  # keep the frame pair for review

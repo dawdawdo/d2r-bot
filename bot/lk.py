@@ -199,8 +199,10 @@ def check_fingerprint(bot: Controller, route: dict) -> None:
 
 
 def teleport(bot: Controller, dx: int, dy: int) -> None:
+    from .nav import frame_lag
+
     bot.click(CENTER[0] + dx, CENTER[1] + dy, "right")
-    bot.sleep(TP_SETTLE)
+    bot.sleep(TP_SETTLE + frame_lag(bot))
 
 
 def _tooltip_near(bot: Controller, x: int, y: int) -> bool:
