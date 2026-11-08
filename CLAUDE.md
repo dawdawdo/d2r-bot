@@ -66,6 +66,12 @@ Code goes in `bot/`, tests in `tests/`, fixtures in `fixtures/`. Starting from s
 
 ## Machines
 Singularity (Windows) and GLaDOS (Linux Mint, Proton) take turns running the bot, never both. Working on GLaDOS: read `docs/glados.md` first.
+- **One branch: `tasks`** on both machines (`main` is fast-forwarded to it now and then; never work on `main`).
+  At session start: `git checkout tasks && git pull`. Before stopping: commit (including `maps/*/learned.json`) and push.
+  (2026-11-08 GLaDOS started from a stale `main` and redid work that was already on `tasks`.)
+- Platform code stays in `bot/io/` (windows.py, linux.py, shared common.py). A change to one backend's interface needs
+  the other one too; GLaDOS can only compile-check windows.py, and Singularity can't run linux.py, so say so in the commit.
+- Per-machine values: per-platform keys in `config.yaml` (`{win32: ..., linux: ...}`) or the untracked `config.local.yaml`.
 
 ## PROGRESS.md format
 Current milestone · what works · what's broken · next step · open questions for Stephen.
