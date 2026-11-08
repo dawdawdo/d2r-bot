@@ -2,8 +2,15 @@
 
 game:
   window_title: "Diablo II: Resurrected"   # verify in M1
-  exe: "C:\\Program Files (x86)\\Diablo II Resurrected\\D2R.exe"  # direct launch, no Battle.net (verify)
+  exe:   # per platform (sys.platform)
+    win32: "C:\\Program Files (x86)\\Diablo II Resurrected\\D2R.exe"  # direct launch, no Battle.net
+    # GLaDOS: Steam shortcut (the Battle.net launcher, saved login) -> Battle.net.exe --exec="launch OSI"
+    # in the same Proton prefix (bot/io/linux.py launch_game). OSI = D2R's Battle.net product code.
+    linux: {steam_appid: 3949906016, proton: "Proton - Experimental", product: OSI}
   resolution: [1280, 720]                   # client area, windowed; verify in M1
+  # Captured frames are gamma-corrected to match the Windows fixtures: under Proton D2R's Gamma
+  # setting (155) has no effect, so Linux frames are darker. Fitted on static menu UI 2026-11-08.
+  capture_gamma: {win32: 1.0, linux: 0.70}
   difficulty: hell
   character: Blizzaga
   route: blizzaga_hell                      # maps/<route>/route.yaml
@@ -13,7 +20,10 @@ game:
   skip_terror: false                        # true = wait out a terrorized LK at the menu. Off 2026-11-03 (Stephen: she should handle it)
 
 paths:
-  save_dir: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
+  save_dir:   # per platform (sys.platform)
+    win32: "%USERPROFILE%\\Saved Games\\Diablo II Resurrected"
+    # GLaDOS: D2R runs under Proton as a non-Steam game (compatdata id 3949906016)
+    linux: "~/.steam/debian-installation/steamapps/compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected"
   backups: backups
   logs: logs
   raw_frames: fixtures/raw

@@ -14,6 +14,8 @@ dependencies = [
     "pynput>=1.7",
     "pyyaml>=6",
     "pydirectinput>=1.0; sys_platform == 'win32'",  # Windows input backend (bot/io/windows.py)
+    "evdev>=1.7; sys_platform == 'linux'",          # Linux input backend (bot/io/linux.py, uinput)
+    "python-xlib>=0.33; sys_platform == 'linux'",   # Linux window lookup (X11)
 ]
 
 [project.optional-dependencies]

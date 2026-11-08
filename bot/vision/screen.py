@@ -4,6 +4,10 @@ Each state lists one or more cues: a template image (in bot/assets/templates/) s
 for inside a region. A state matches when all its cues match. States are checked in
 config order, so put specific states (dead, waypoint menu) before general ones (in_game).
 A frame that is almost entirely black is "loading".
+
+A template may have a mask next to it (`<name>_mask.png`, white = compare, black = ignore):
+use it when the template has scenery showing through (e.g. text over the character-select
+scene, which differs between machines/acts).
 """
 from __future__ import annotations
 
@@ -28,14 +32,19 @@ class Cue:
     template: np.ndarray
     region: tuple[int, int, int, int]
     threshold: float
+    mask: np.ndarray | None = None
 
 
-def match_score(frame: np.ndarray, template: np.ndarray, region=None) -> tuple[float, tuple[int, int]]:
-    """Best normalized correlation of `template` in `region`; returns (score, (x, y) in frame)."""
+def match_score(frame: np.ndarray, template: np.ndarray, region=None,
+                mask: np.ndarray | None = None) -> tuple[float, tuple[int, int]]:
+    """Best normalized correlation of `template` in `region`; returns (score, (x, y) in frame).
+    With `mask` (same shape as the template), only the mask's nonzero pixels are compared."""
     hay = crop(frame, region) if region else frame
     if hay.shape[0] < template.shape[0] or hay.shape[1] < template.shape[1]:
         return 0.0, (0, 0)
-    res = cv2.matchTemplate(hay, template, cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(hay, template, cv2.TM_CCOEFF_NORMED, mask=mask)
+    if mask is not None:
+        res[~np.isfinite(res)] = 0  # flat patches under the mask give NaN/inf
     _, score, _, loc = cv2.minMaxLoc(res)
     ox, oy = (region[0], region[1]) if region else (0, 0)
     return float(score), (loc[0] + ox, loc[1] + oy)
@@ -68,14 +77,18 @@ class ScreenClassifier:
                     log.warning("state %s: missing template %s (state disabled)", name, path.name)
                     loaded = []
                     break
-                loaded.append(Cue(img, tuple(c["region"]), float(c.get("threshold", 0.85))))
+                mask_path = path.with_name(path.stem + "_mask" + path.suffix)
+                mask = cv2.imread(str(mask_path)) if mask_path.exists() else None
+                if mask is not None:
+                    mask = (mask > 127).astype(np.uint8)
+                loaded.append(Cue(img, tuple(c["region"]), float(c.get("threshold", 0.85)), mask))
             if loaded:
                 states[name] = loaded
         return cls(states)
 
     def classify(self, frame: np.ndarray) -> str:
         for name, cues in self.states.items():
-            if all(match_score(frame, c.template, c.region)[0] >= c.threshold for c in cues):
+            if all(match_score(frame, c.template, c.region, c.mask)[0] >= c.threshold for c in cues):
                 return name
         if is_loading(frame):
             return LOADING

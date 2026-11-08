@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import os
+import re
+import sys
 from pathlib import Path
 
 import yaml
@@ -19,6 +21,16 @@ def _merge(base: dict, over: dict) -> dict:
     return base
 
 
+_PLATFORMS = {"win32", "linux", "darwin"}
+_WIN_VAR = re.compile(r"%([^%]+)%")
+
+
+def _expand(value: str) -> str:
+    """Expand ~, $VAR and Windows-style %VAR% on any OS."""
+    value = _WIN_VAR.sub(lambda m: os.environ.get(m.group(1), m.group(0)), value)
+    return os.path.expandvars(os.path.expanduser(value))
+
+
 def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
     """config.local.yaml sits beside `path` and isn't in git: what differs per machine (game and save paths)."""
     path = Path(path)
@@ -31,6 +43,12 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
         _merge(cfg, cfg["risk_levels"][cfg["risk"]])
     paths = cfg.setdefault("paths", {})
     for key, value in paths.items():
-        p = Path(os.path.expandvars(os.path.expanduser(str(value))))
+        if isinstance(value, dict):  # per-platform value, keyed by sys.platform ("win32", "linux")
+            value = value[sys.platform]
+        p = Path(_expand(str(value)))
         paths[key] = p if p.is_absolute() else ROOT / p
+    game = cfg.get("game") or {}
+    for key, value in game.items():
+        if isinstance(value, dict) and set(value) <= _PLATFORMS:
+            game[key] = value.get(sys.platform)
     return cfg

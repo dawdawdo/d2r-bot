@@ -3,6 +3,13 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-08: GLaDOS (Linux) port, merged into `tasks` from `main`.** Details are in `docs/glados.md`. The Linux backend
+(`bot/io/linux.py`) is live: uinput input (0 px cursor error), X11 window lookup (Wine's 1280x720 render child), mss capture
+with gamma 0.70 (D2R's Gamma setting has no effect under Proton), and launch via Steam -> Battle.net -> `--exec="launch OSI"`.
+On GLaDOS (SSD + swap) `--mode lifecycle` passes: Hell game in about 12 s. The `difficulty` template now has a mask (`*_mask.png`):
+the character-select scene showed through it. **Next:** this branch's Act 1 spawn -> Act 3 on Linux (Blizzaga spawned in
+Act 1 Rogue Encampment), then LK runs.
+
 **2026-11-07 12:50: cubing at the stash (Stephen's ask).** "Leave five of each lower gems and rune, cube up through maybe Fal; account for gems required for runes." `bot/cube.py` plans (pure, `tests/test_cube.py`): runes first, bottom up, El..Ko -> up to Fal (Thul+ take a chipped/flawed gem, `RUNE_GEM`); then gems up to `cube.top_grade` (Flawless; Perfect is one word away, **ask Stephen**); gems rune recipes take (`FOR_RUNES`) are never cubed up, since the filter no longer picks up chipped/flawed. `bot/vision/stack_count.py` reads the Gems and Runes tab counts (digit shapes from the Gems tab, normalized correlation; a rune's "1" is dim: tens 1 by contrast with the stone, trailing 1 by score 0.65+). Live-checked counts by moving 9 of a stack into the cube. `bot/cubing.py`: Ctrl+Shift+click a stack -> one into the stash's cube grid, Transmute (224, 500), Ctrl+Shift+click the result back; every `cube.every_hours` (6) from `town_to_wp`. ~4.8 s a transmute. `tools/stash_probe.py` for live stash pokes.
 - Stephen answered (19:00): yes to both. `cube.top_grade: Perfect`; filter rule "Show lower gems" (21 chipped/flawed/normal codes) installed with D2R closed (backup `filter-20261107-190056`). Bot relaunched D2R; first Perfect pass planned 159 transmutes at 19:02. Watch: chipped stacks piling up (never cubed, kept for rune recipes); stash open needed 3 tries at 19:02.
 

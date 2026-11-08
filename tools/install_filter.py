@@ -12,7 +12,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -21,11 +20,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from bot.config import load_config  # noqa: E402
+from bot.io import game_running  # noqa: E402
 
 
 def d2r_running() -> bool:
-    out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq D2R.exe", "/NH"], capture_output=True, text=True).stdout
-    return "D2R.exe" in out
+    return game_running("D2R.exe")
 
 
 def rule_names(p: Path) -> list[str]:

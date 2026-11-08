@@ -3,7 +3,25 @@
 GLaDOS (Linux Mint 22.3, X11, D2R under Proton) runs the bot while Stephen uses Singularity. **Taking turns only; he has ruled out running both.**
 D2R must also stay closed on Singularity, on every character: they share the stash file, and Syncthing syncs the saves both ways within minutes.
 
-**Status: the Linux backend doesn't exist yet.** `open_backend` raises NotImplementedError on Linux. Start with LK; Mephisto and Duriel can come later.
+**Status (2026-11-08): the Linux backend works live** (`bot/io/linux.py`). `--mode lifecycle` passes. Not yet run on Linux: LK, Meph, cubing, the recorder.
+
+## GLaDOS facts (2026-11-08)
+- Python: Miniconda at `/data/AutoDev/miniconda3` (`/data` is root-owned). Env `d2r`: `/data/AutoDev/miniconda3/envs/d2r/bin/python`.
+- D2R under Proton Experimental, in the prefix of the Steam shortcut **3949906016 = Battle.net launcher** (saved login).
+  The game files live on the SSD at `~/Games/Diablo II Resurrected`. `/data/steam/games/Diablo II Resurrected` is a symlink to them
+  (the HDD copy `...hdd-backup` can be deleted once Stephen is happy). On the HDD, loads took 30 s-2 min and froze the desktop.
+- Saves: `~/.steam/debian-installation/steamapps/compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected`.
+  This is the folder Syncthing syncs. It's set per platform in `config.yaml` (`paths.save_dir.linux`), so no config.local.yaml is needed.
+- Launch (`launch_game`): `steam steam://rungameid/<appid<<32|0x02000000>` starts Battle.net. Then `proton run Battle.net.exe
+  --exec="launch OSI"` in the same prefix (sometimes ignored right after an update, so it's retried after 60 s). About 95 s cold.
+- Input: kernel uinput via python-evdev, a keyboard plus an absolute pointer spanning the X screen. `/dev/uinput` is writable through a uaccess ACL.
+  `tools/uinput_selftest.py` checks the mapping (0 px).
+- Window: Wine draws into a child X window inset 2 px. `client_rect` uses that child. The WM maximizes a screen-sized window,
+  so `launch_game` un-maximizes it. D2R options were set to Windowed 1280x720 (Settings.json is in the synced save folder!).
+- Colors: D2R's Gamma setting is ignored under Proton, so frames are about 0.7x darker. The capture applies gamma 0.70
+  (`game.capture_gamma.linux`), fitted on static menu UI against the Windows fixtures (mean error 27.7 -> 11.8).
+  Templates with scenery behind text can drop below threshold: add a `<template>_mask.png` (`tools/make_mask.py`).
+- RAM: 15 GB with an 8 GB swapfile (added 2026-11-08). Close the Claude desktop app (its VM uses about 1.5 GB) and browsers for long runs.
 
 ## New session on GLaDOS
 1. Copy `docs/notes/*.md` into this project's Claude memory folder. They're a snapshot of the notes from Singularity (2026-11-05). `MEMORY.md` is the index.
