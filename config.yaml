@@ -4,10 +4,9 @@ game:
   window_title: "Diablo II: Resurrected"   # verify in M1
   exe:   # per platform (sys.platform)
     win32: "C:\\Program Files (x86)\\Diablo II Resurrected\\D2R.exe"  # direct launch, no Battle.net
-    # GLaDOS: no auto-launch. The only Steam shortcut (appid 3949906016) is the Battle.net launcher,
-    # which means a Battle.net login (ask Stephen first). Start D2R by hand; the bot attaches to the window.
-    # A launcher would go here as "steam://rungameid/<appid << 32 | 0x02000000>" or a command line.
-    linux: null
+    # GLaDOS: Steam shortcut (the Battle.net launcher, saved login) -> Battle.net.exe --exec="launch OSI"
+    # in the same Proton prefix (bot/io/linux.py launch_game). OSI = D2R's Battle.net product code.
+    linux: {steam_appid: 3949906016, proton: "Proton - Experimental", product: OSI}
   resolution: [1280, 720]                   # client area, windowed; verify in M1
   difficulty: hell
   character: Blizzaga

@@ -12,8 +12,10 @@ an ACL (Steam's udev rules, uaccess).
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import time
+from pathlib import Path
 
 from evdev import UInput
 from evdev import ecodes as e
@@ -119,18 +121,60 @@ def window_info(title: str) -> dict | None:
     return {"client": w.client_rect(), "window": w.window_rect(), "foreground": w.is_foreground()}
 
 
-def launch_game(launch: str, title: str, timeout: float = 120.0) -> X11Window:
-    """Start the game if its window isn't up. On Linux `launch` is a Steam URL
-    (steam://rungameid/<id> for the non-Steam D2R shortcut) or a command line."""
-    if not find_window(title):
-        log.info("launching %s", launch)
-        cmd = ["steam", launch] if launch.startswith("steam://") else launch.split()
-        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-        deadline = time.monotonic() + timeout
-        while not find_window(title):
-            if time.monotonic() > deadline:
-                raise RuntimeError(f"game window {title!r} did not appear within {timeout}s")
-            time.sleep(1)
+def _battlenet_running() -> bool:
+    r = subprocess.run(["pgrep", "-f", r"Battle\.net\.exe"], capture_output=True)
+    return r.returncode == 0
+
+
+def _battlenet_ready() -> bool:
+    """Battle.net's main window is up (the 'Battle.net Login' window means still signing in)."""
+    return find_window("Battle.net")
+
+
+def _wait(pred, timeout: float, what: str, poll: float = 1.0) -> None:
+    deadline = time.monotonic() + timeout
+    while not pred():
+        if time.monotonic() > deadline:
+            raise RuntimeError(f"{what} did not happen within {timeout:.0f}s")
+        time.sleep(poll)
+
+
+def launch_game(launch: dict, title: str, timeout: float = 180.0) -> X11Window:
+    """Start D2R if its window isn't up: Steam shortcut -> Battle.net (saved login) ->
+    `Battle.net.exe --exec="launch <product>"` run inside the same Proton prefix.
+
+    `launch` (config game.exe on Linux): {steam_appid, proton, product, steam_root?}.
+    """
+    if find_window(title):
+        return X11Window(title)
+    root = Path(os.path.expanduser(launch.get("steam_root", "~/.steam/root")))
+    appid = int(launch["steam_appid"])
+    if not _battlenet_running():
+        gameid = (appid << 32) | 0x02000000  # non-Steam shortcut id for steam://rungameid
+        log.info("starting Battle.net via Steam shortcut %d", appid)
+        subprocess.Popen(["steam", f"steam://rungameid/{gameid}"], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+    _wait(_battlenet_ready, 120, "Battle.net main window (login)")
+    time.sleep(3)  # let the client finish loading before asking it to launch a game
+    env = {**os.environ,
+           "STEAM_COMPAT_DATA_PATH": str(root / "steamapps/compatdata" / str(appid)),
+           "STEAM_COMPAT_CLIENT_INSTALL_PATH": str(root)}
+    proton = root / "steamapps/common" / launch.get("proton", "Proton - Experimental") / "proton"
+    cmd = [str(proton), "run", r"C:\Program Files (x86)\Battle.net\Battle.net.exe",
+           f"--exec=launch {launch.get('product', 'OSI')}"]
+    deadline = time.monotonic() + timeout
+    for attempt in (1, 2):  # Battle.net ignores the request while it's still busy (updates, news)
+        log.info("asking Battle.net to launch %s (attempt %d)", launch.get("product", "OSI"), attempt)
+        subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+        try:
+            _wait(lambda: find_window(title), min(60.0, max(1.0, deadline - time.monotonic())),
+                  f"game window {title!r}")
+            break
+        except RuntimeError:
+            if attempt == 2:
+                raise
+    time.sleep(2)
     return X11Window(title)
 
 

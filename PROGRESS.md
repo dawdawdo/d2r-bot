@@ -1,24 +1,26 @@
 # Progress
 
-**GLaDOS port (2026-11-08), Linux Mint 22.3, X11. Backend built, not yet tried live.**
-- Miniconda is at `/data/AutoDev/miniconda3`. `/data` is root-owned and sudo needs a password, so it couldn't go in `/data/miniconda3`.
-  The env `d2r` (Python 3.12.16) uses `requirements.txt`, where each package is marked by platform. Run with `/data/AutoDev/miniconda3/envs/d2r/bin/python`.
-- Tests: **119 passed, 8 skipped**. The skips are `test_labels_real.py`, which needs `fixtures/raw/` (gitignored, not on GLaDOS).
-- **Linux backend (`bot/io/linux.py`):** Stephen said "most reliable", so it uses kernel **uinput** (python-evdev): a virtual keyboard
-  plus an absolute pointer whose axes span the X screen. Each move is checked with XQueryPointer and corrected once.
-  Window lookup is python-xlib (`_NET_CLIENT_LIST` and title). Capture is mss and hotkeys are pynput, now shared in `bot/io/common.py`.
-  `/dev/uinput` is already writable by stephen (ACL from uaccess), so no system change was needed. Offline tests: `tests/test_io_linux.py`.
-- Config: `paths.save_dir` and `game.exe` are set per platform (`win32`/`linux`). On Linux, `game.exe` is **null**: the only Steam
-  shortcut (appid 3949906016) is the **Battle.net launcher**, and launching through it means a Battle.net login, so ask Stephen first.
-  For now Stephen starts D2R by hand and the bot attaches to the window.
-- Saves: `~/.steam/debian-installation/steamapps/compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected`
-  (in Battle.net's prefix). Blizzaga.d2s was modified 2026-11-08 07:58, so Syncthing is live: never run on both machines at once.
-- **Next on GLaDOS (needs Stephen at the PC):**
-  1. `python tools/uinput_selftest.py` (moves the cursor only) should print OK.
-  2. Stephen starts D2R windowed 1280×720. Check that the window title matches `game.window_title` (`tools/peek.py`) and that
-     captured frames match the Windows fixtures (Proton rendering and colors).
-  3. Short live test of keys and clicks in game, then a 20-run batch.
-- Open question: should the bot launch D2R through Battle.net on Linux, or does Stephen keep starting it by hand?
+**GLaDOS port (2026-11-08), Linux Mint 22.3, X11. Live: launch works; loading too slow to run yet.**
+- Miniconda is at `/data/AutoDev/miniconda3` (`/data` is root-owned, no sudo). Run the env `d2r` as `/data/AutoDev/miniconda3/envs/d2r/bin/python`.
+  Tests: **119 passed, 8 skipped** (the skips need `fixtures/raw/`, which is gitignored).
+- **Input (`bot/io/linux.py`):** kernel uinput (evdev), a virtual keyboard plus an absolute pointer spanning the X screen. Window lookup is python-xlib.
+  `tools/uinput_selftest.py` live: **0 px error** at every target. Keys and clicks are not yet tested in game.
+- **Capture (`bot/io/common.py`):** X11 refuses a grab that crosses the screen edge (BadMatch), so grabs are clamped and the off-screen part padded black.
+- **Launch (`launch_game`, config `game.exe.linux`), Stephen wants the bot to start D2R:** Steam shortcut 3949906016 is the Battle.net launcher
+  (saved login, no prompt). Then `proton run Battle.net.exe --exec="launch OSI"` in the same prefix. Done by hand live: D2R started.
+  The bot's own code path is not yet tried end to end. Battle.net wanted an update on 2026-11-08.
+- Saves are in Battle.net's prefix `.../compatdata/3949906016/pfx/drive_c/users/steamuser/Saved Games/Diablo II Resurrected`.
+  Backup taken: `backups/20261108-082156`.
+- **BLOCKER: loading screens take 30 s to 2 min, and the desktop froze (killed D2R 08:4x).** Measured: io pressure 60-70%, MemAvailable about 0.7 GB
+  of 15 GB, **no swap**. D2R (28 GB) is on `/data` = a 7200 rpm laptop HDD. Memory users: D2R about 3.1 GB, Claude desktop cowork VM about 1.5 GB, browsers.
+  GPU: GTX 1050 Mobile with 2 GB, D2R runs on it, but prime-select=nvidia, so Xorg also takes about 450 MB of VRAM.
+  Proposed to Stephen (in this order):
+  1. Copy D2R to the SSD (`~/Games/Diablo II Resurrected`, 71 GB free), then point Battle.net at it with "Locate this game".
+  2. An 8 GB swapfile on the SSD (sudo, Stephen runs it).
+  3. Close the Claude desktop app and browsers during runs.
+  4. Optional: `prime-select on-demand`.
+- **Next:** fix loading (above). Then the bot launches D2R itself, set windowed 1280×720 in game options (don't edit Settings.json in the save dir),
+  check the window title and frames against the fixtures, a short live key/click test, then 20 runs.
 
 **Current milestone:** Phase 1 (LK) effectively done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched. Route = 6 super chests (2 bonfire camps × nw, nw_deep, ne).
 
