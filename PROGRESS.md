@@ -3,13 +3,16 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**2026-11-08: GLaDOS (Linux) port, merged into `tasks` from `main`.** Details are in `docs/glados.md`. The Linux backend
-(`bot/io/linux.py`) is live: uinput input (0 px cursor error), X11 window lookup (Wine's 1280x720 render child), mss capture
-with gamma 0.70 (D2R's Gamma setting has no effect under Proton), and launch via Steam -> Battle.net -> `--exec="launch OSI"`.
-On GLaDOS (SSD + swap) `--mode lifecycle` passes: Hell game in about 12 s. The `difficulty` template now has a mask (`*_mask.png`):
-the character-select scene showed through it. Live on GLaDOS: Act 1 spawn -> Act 3 works (unchanged code). An LK run got through
-the settings check, Hratli repair, the 9.2 s town walk and the stash, then cubing (my timeout cut it off mid-cube). Large Font Mode
-had to be turned on (panels). **Now:** Meph runs on GLaDOS (Stephen, 2026-11-08). Both machines use branch `tasks` (CLAUDE.md).
+**2026-11-08: GLaDOS (Linux) port works. Meph 9/10 kills (same as Windows).** Branch `tasks` on both machines
+(CLAUDE.md). Details and all GLaDOS settings are in `docs/glados.md`. What it took, beyond the uinput/X11 backend:
+the bot launches D2R via Steam -> Battle.net (`--exec="launch OSI"`) and clicks the Offline tab; D2R moved to the SSD
+and swap added (loads 30 s-2 min -> 12 s); per-machine game settings (Settings.json isn't synced): Large Font Mode,
+Brightness max, VSync off, Windowed 1280x720; capture 52 -> 17 ms a frame; Proton lag handled by `game.input_lag`
+(0.05 s) and `game.frame_lag` (0.08 s on teleport settles); chest tooltip finder made robust (thick letters, near-black
+shadows). LK: runs ok, about 56 s from the waypoint (upkeep games extra on a fresh `state.json`).
+**Open:** Meph's "couldn't get back from his platform" (also the top failure on Windows); occasional town WP miss in LK;
+cube has 1 Flawless Sapphire that can't go back (stack full), so cubing is skipped until someone moves it;
+frame-queue cap via Steam launch options not tried (ask Stephen).
 
 **2026-11-07 12:50: cubing at the stash (Stephen's ask).** "Leave five of each lower gems and rune, cube up through maybe Fal; account for gems required for runes." `bot/cube.py` plans (pure, `tests/test_cube.py`): runes first, bottom up, El..Ko -> up to Fal (Thul+ take a chipped/flawed gem, `RUNE_GEM`); then gems up to `cube.top_grade` (Flawless; Perfect is one word away, **ask Stephen**); gems rune recipes take (`FOR_RUNES`) are never cubed up, since the filter no longer picks up chipped/flawed. `bot/vision/stack_count.py` reads the Gems and Runes tab counts (digit shapes from the Gems tab, normalized correlation; a rune's "1" is dim: tens 1 by contrast with the stone, trailing 1 by score 0.65+). Live-checked counts by moving 9 of a stack into the cube. `bot/cubing.py`: Ctrl+Shift+click a stack -> one into the stash's cube grid, Transmute (224, 500), Ctrl+Shift+click the result back; every `cube.every_hours` (6) from `town_to_wp`. ~4.8 s a transmute. `tools/stash_probe.py` for live stash pokes.
 - Stephen answered (19:00): yes to both. `cube.top_grade: Perfect`; filter rule "Show lower gems" (21 chipped/flawed/normal codes) installed with D2R closed (backup `filter-20261107-190056`). Bot relaunched D2R; first Perfect pass planned 159 transmutes at 19:02. Watch: chipped stacks piling up (never cubed, kept for rune recipes); stash open needed 3 tries at 19:02.
