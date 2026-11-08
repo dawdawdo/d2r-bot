@@ -78,10 +78,40 @@ class X11Window(Window):
         self.wid = wid
         self.win = _display().create_resource_object("window", wid)
 
+    def _render_window(self):
+        """Wine/Proton draws the game into a child X window inset by its own 2 px border
+        (seen 2026-11-08: top-level 1284x724, child 1280x720 at +2+2). Use the largest
+        mapped child if there is one, else the top-level window itself."""
+        best, best_area = self.win, 0
+        for child in self.win.query_tree().children:
+            try:
+                if child.get_attributes().map_state != X.IsViewable:
+                    continue
+                g = child.get_geometry()
+            except Exception:
+                continue
+            if g.width * g.height > best_area:
+                best, best_area = child, g.width * g.height
+        return best
+
     def client_rect(self) -> Region:
-        geo = self.win.get_geometry()
-        pos = self.win.translate_coords(_root(), 0, 0)  # window origin relative to the root
+        win = self._render_window()
+        geo = win.get_geometry()
+        pos = win.translate_coords(_root(), 0, 0)  # window origin relative to the root
         return -pos.x, -pos.y, geo.width, geo.height
+
+    def unmaximize(self) -> None:
+        """The WM maximizes a window that starts out screen-sized; D2R then renders stretched."""
+        state = self.win.get_full_property(_atom("_NET_WM_STATE"), X.AnyPropertyType)
+        maxed = {_atom("_NET_WM_STATE_MAXIMIZED_VERT"), _atom("_NET_WM_STATE_MAXIMIZED_HORZ")}
+        if not state or not maxed & set(state.value):
+            return
+        log.info("un-maximizing the game window")
+        ev = xevent.ClientMessage(window=self.win, client_type=_atom("_NET_WM_STATE"),
+                                  data=(32, [0, *sorted(maxed), 1, 0]))  # 0 = remove
+        _root().send_event(ev, event_mask=X.SubstructureRedirectMask | X.SubstructureNotifyMask)
+        _display().flush()
+        time.sleep(1.0)
 
     def window_rect(self) -> Region:
         """Outer frame (WM decorations included), screen coordinates."""
@@ -146,7 +176,9 @@ def launch_game(launch: dict, title: str, timeout: float = 180.0) -> X11Window:
     `launch` (config game.exe on Linux): {steam_appid, proton, product, steam_root?}.
     """
     if find_window(title):
-        return X11Window(title)
+        win = X11Window(title)
+        win.unmaximize()
+        return win
     root = Path(os.path.expanduser(launch.get("steam_root", "~/.steam/root")))
     appid = int(launch["steam_appid"])
     if not _battlenet_running():
@@ -175,7 +207,9 @@ def launch_game(launch: dict, title: str, timeout: float = 180.0) -> X11Window:
             if attempt == 2:
                 raise
     time.sleep(2)
-    return X11Window(title)
+    win = X11Window(title)
+    win.unmaximize()
+    return win
 
 
 # Key names as used by the bot (pydirectinput style) -> evdev key codes.

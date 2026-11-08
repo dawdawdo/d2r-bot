@@ -15,19 +15,26 @@ class Backend:
     hotkeys: HotkeyListener
 
 
-def open_backend(window_title: str, launch_exe: str | None = None) -> Backend:
+def _capture_gamma() -> float:
+    from ..config import load_config  # config.yaml game.capture_gamma, per platform
+
+    return float(load_config()["game"].get("capture_gamma") or 1.0)
+
+
+def open_backend(window_title: str, launch_exe=None, capture_gamma: float | None = None) -> Backend:
     """Open the platform backend attached to the game window, launching the game first
-    if `launch_exe` is given and the window isn't up."""
+    if `launch_exe` is given and the window isn't up. `capture_gamma` defaults to config."""
+    gamma = _capture_gamma() if capture_gamma is None else capture_gamma
     if sys.platform == "win32":
         from .windows import DirectInput, MssCapture, PynputHotkeys, Win32Window, launch_game
 
         win = launch_game(launch_exe, window_title) if launch_exe else Win32Window(window_title)
-        return Backend(win, MssCapture(win), DirectInput(win), PynputHotkeys())
+        return Backend(win, MssCapture(win, gamma), DirectInput(win), PynputHotkeys())
     if sys.platform == "linux":
         from .linux import MssCapture, PynputHotkeys, UinputInput, X11Window, launch_game
 
         win = launch_game(launch_exe, window_title) if launch_exe else X11Window(window_title)
-        return Backend(win, MssCapture(win), UinputInput(win), PynputHotkeys())
+        return Backend(win, MssCapture(win, gamma), UinputInput(win), PynputHotkeys())
     raise NotImplementedError(f"no I/O backend for {sys.platform} yet")
 
 

@@ -47,17 +47,29 @@ class DesktopCapture(Capture):
         self.sct.close()
 
 
+def gamma_lut(gamma: float) -> np.ndarray | None:
+    """256-entry LUT for out = 255 * (in/255) ** gamma, or None for gamma 1 (no-op)."""
+    if abs(gamma - 1.0) < 1e-6:
+        return None
+    return np.clip(np.round(255.0 * (np.arange(256) / 255.0) ** gamma), 0, 255).astype(np.uint8)
+
+
 class MssCapture(Capture):
-    def __init__(self, window: Window) -> None:
+    """Grabs the game's client area. `gamma` < 1 brightens frames to match the Windows
+    reference: under Proton, D2R's in-game Gamma setting has no effect (measured 0.70 on GLaDOS)."""
+
+    def __init__(self, window: Window, gamma: float = 1.0) -> None:
         self.window = window
         self.sct = _MSS()
+        self.lut = gamma_lut(gamma)
 
     def grab(self, region: Region | None = None) -> np.ndarray:
         wx, wy, ww, wh = self.window.client_rect()
         if region is None:
             region = (0, 0, ww, wh)
         x, y, w, h = region
-        return grab_clamped(self.sct, wx + x, wy + y, w, h)
+        frame = grab_clamped(self.sct, wx + x, wy + y, w, h)
+        return frame if self.lut is None else self.lut[frame]
 
     def close(self) -> None:
         self.sct.close()

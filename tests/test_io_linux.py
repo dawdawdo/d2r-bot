@@ -107,3 +107,12 @@ def test_release_all_lifts_held_keys():
     down = [c for ev in inp.kbd.events if ev != "syn" for _, c, v in [ev] if v == 1]
     up = [c for ev in inp.kbd.events if ev != "syn" for _, c, v in [ev] if v == 0]
     assert sorted(down) == sorted(up)
+
+
+def test_gamma_lut_brightens_dark_and_keeps_ends():
+    from bot.io.common import gamma_lut
+
+    assert gamma_lut(1.0) is None
+    lut = gamma_lut(0.70)
+    assert lut[0] == 0 and lut[255] == 255
+    assert 60 <= lut[42] <= 75  # measured: Linux 42 ~ Windows 65 (fit runs a little bright mid-tone)
