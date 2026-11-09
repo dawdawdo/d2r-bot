@@ -3,6 +3,16 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**TODO (Stephen 2026-11-08 evening): web dashboard on his website.** "A hook that checks in to my website ... a
+console/dashboard kind of like my armory page but on the web ... remotely start and stop the bot and choose what's
+running without using Claude Code." GLaDOS side is DONE: `bot/supervisor.py` POSTs a status snapshot every 30 s
+(`remote.url` + `remote.token_file` in config.local.yaml, off until set) and applies the reply's `desired`
+(run/tasks/mode/max_fail_streak) or `command` (stop_now/stop_after_run). Outbound only. **Still needed from Stephen:**
+which site + stack/hosting (convergentblue.com? static or with functions/Workers?), the armory page URL/code to match
+its look, auth preference. Then build: the endpoint (store snapshot + desired), the dashboard page (status, runs/h,
+kill rate, loot feed, start/stop, task picker). Also: make the local `bot/web` go through desired.json instead of
+spawning bots; supervisor as a systemd --user unit for reboots (ask first: system setting).
+
 **2026-11-08 16:35: GLaDOS Meph 10/10 kills (~151 s a run, no potions drunk, merc never died).** Fixed today
 (Stephen away, asked: keep running Meph, make it better, fix the town WP, cube everything, frame-queue cap only if
 material):
