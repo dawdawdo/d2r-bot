@@ -13,6 +13,18 @@ its look, auth preference. Then build: the endpoint (store snapshot + desired), 
 kill rate, loot feed, start/stop, task picker). Also: make the local `bot/web` go through desired.json instead of
 spawning bots; supervisor as a systemd --user unit for reboots (ask first: system setting).
 
+**2026-11-09 12:20: after both machines restarted.** Syncthing test passed: Stephen's Singularity play (Blizzaga,
+stash, filter) arrived complete, no conflicts. His filter edit ("Hide gems" off: redundant with the two gem show
+rules, no change in what shows) is in the repo filter now. Supervisor restarted on GLaDOS (meph); it doesn't come
+back after a reboot (systemd --user unit still waits on Stephen's OK). New, untested live:
+- "Stash full" must hold on two stash visits in a row (different games) before a session stops.
+- Chest misses (~5% of chest visits, nw chests ~8%): failure frames show the chest visible and closed 30-45 px off,
+  between 35 px hover grid points; the retry used the same grid. Retry now scans a half-step-shifted grid, radius 105.
+  Check: `chest hidden` lines followed by a find. Deeper fix if it isn't enough: learned positions are grid points
+  that touched the chest edge, not its center.
+- Web dashboard: convergentblue.com is static on Cloudflare (via GitHub); Workers is an option. Stephen is getting a
+  handoff doc for the armory page.
+
 **2026-11-09 07:20: supervisor ran 7 h untouched overnight (3 sessions).** Fixed: a stowaway rescan misread 13
 cells and stopped a session on "stash full" with plenty of room (only pre-stash loot cells count now; a
 `stowaway_spill` frame is saved if it happens again). Filter regenerated + installed from the Chronicle (254/112 ->
