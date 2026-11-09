@@ -126,6 +126,9 @@ def cube_stash(bot: Controller) -> int:
                       top_grade=ccfg.get("top_grade", cube.TOP_GRADE))
     steps = steps[:ccfg.get("max_transmutes", 200)]
     log.info("cube: %d transmute(s) planned: %s", len(steps), dict(Counter(o for _, o in steps)))
+    log.info("cube: counts read: %s", {k: v for k, v in before.items() if v})
+    if short := cube.gem_short(before, steps, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE)):
+        log.info("cube: runes waiting on their gem (runes, gem, gems): %s", short)
     t0 = time.monotonic()
     done = 0
     for inputs, out in steps:

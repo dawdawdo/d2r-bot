@@ -72,3 +72,10 @@ def test_full_stack_not_overfilled():
         have[out] = have.get(out, 0) + 1
         assert have[out] <= 99
     assert have[gem("Perfect", "Sapphire")] > 0  # the full stack drained into Perfects
+
+
+def test_gem_short_names_runes_held_back_by_their_gem():
+    counts = {"Amn": 30, "Chipped Amethyst": 5, "Thul": 4}
+    steps = cube.plan(counts)
+    assert not [s for s in steps if s[1] == "Sol"]
+    assert cube.gem_short(counts, steps) == {"Amn": (30, "Chipped Amethyst", 5)}

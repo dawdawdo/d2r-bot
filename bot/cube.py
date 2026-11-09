@@ -7,6 +7,8 @@ Fal; rune recipes take gems, so those come first. Recipes (offline D2R, all of t
 """
 from __future__ import annotations
 
+from collections import Counter
+
 RUNES = ["El", "Eld", "Tir", "Nef", "Eth", "Ith", "Tal", "Ral", "Ort", "Thul", "Amn", "Sol", "Shael", "Dol",
          "Hel", "Io", "Lum", "Ko", "Fal", "Lem", "Pul", "Um", "Mal", "Ist", "Gul", "Vex", "Ohm", "Lo", "Sur",
          "Ber", "Jah", "Cham", "Zod"]
@@ -65,3 +67,18 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
                     do({low: 3}, high)
         if len(steps) == before:
             return steps
+
+
+def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RUNE) -> dict[str, tuple]:
+    """Runes the plan leaves with enough to cube but too few of their recipe gem: {rune: (runes, gem, gems)}.
+    (2026-11-09 Stephen: "a lot of Amn not being cubed": Amn takes a Chipped Amethyst, kept at `keep`.)"""
+    have = Counter(counts)
+    for inputs, out in steps:
+        have.subtract(inputs)
+        have[out] += 1
+    out = {}
+    for rune in RUNES[:RUNES.index(top)]:
+        g = RUNE_GEM.get(rune)
+        if g and have[rune] - 3 >= keep and have[g] - 1 < keep:
+            out[rune] = (have[rune], g, have[g])
+    return out
