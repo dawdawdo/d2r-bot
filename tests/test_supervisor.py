@@ -85,3 +85,20 @@ def test_f12_on_a_session_started_elsewhere(sup, monkeypatch):
     monkeypatch.setattr(sup, "start", lambda d: started.append(d))
     sup.tick()
     assert not started and sv.read_desired()["run"] is False
+
+
+def test_new_tasks_restart_the_session_after_this_run(sup, monkeypatch):
+    monkeypatch.setattr(sup, "remote", lambda: None)
+    monkeypatch.setattr(sup, "write_status", lambda: None)
+    monkeypatch.setattr(sup, "other_bot", lambda: False)
+    asked = []
+    monkeypatch.setattr(sup, "stop", lambda now: asked.append(now))
+    sup.proc, sup.session = FakeProc(None), ("chests", "meph")
+    sup.tick()
+    assert asked == []  # same tasks: nothing to do
+    sv.write_desired(tasks="lk")
+    sup.tick()
+    sup.tick()
+    assert asked == [False]  # once, after the current run
+    end_with(sup, "run 3/150 ok in 90s\nstop requested (web page); not starting run 4\n", 1)
+    assert sv.read_desired()["run"] is True and sup.state == "idle"  # not "stopped": the next tick starts lk

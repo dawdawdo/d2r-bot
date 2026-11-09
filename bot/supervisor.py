@@ -114,6 +114,8 @@ class Supervisor:
         self.proc = subprocess.Popen(cmd, cwd=ROOT, stdout=open(BOT_OUT, "ab"), stderr=subprocess.STDOUT)
         self.started = time.time()
         self.state = "running"
+        self.session = (d["mode"], d["tasks"])
+        self.switching = False
         log.info("session started: %s (pid %d)", " ".join(cmd[3:]), self.proc.pid)
 
     def session_output(self) -> str:
@@ -131,6 +133,11 @@ class Supervisor:
         took = time.time() - self.started
         runs_done = len(re.findall(r"run \d+/\d+ (?:ok|fail|chicken)", out))
         self.proc = None
+        if getattr(self, "switching", False) and "stopped by kill switch" not in out:
+            self.switching = False
+            self.fails, self.last_end, self.state = 0, "stopped to switch tasks", "idle"
+            log.info("session stopped to switch tasks after %.0f min", took / 60)
+            return
         if "stopped by kill switch" in out or "stop requested" in out:
             why = "F12" if "stopped by kill switch" in out else "stop request"  # every session logs "kill switch armed"
             log.info("session stopped on purpose (%s): staying stopped", why)
@@ -235,6 +242,11 @@ class Supervisor:
                 self.start(d)
             else:
                 self.state = "backoff"
+        elif (d["run"] and self.running() and not getattr(self, "switching", False)
+              and getattr(self, "session", None) not in (None, (d["mode"], d["tasks"]))):
+            log.info("tasks changed to %s: stopping after this run to restart with them", d["tasks"])
+            self.switching = True
+            self.stop(now=False)
         elif not d["run"] and self.running() and control.read() is None:
             self.stop(now=False)
         elif not d["run"] and not self.running():
