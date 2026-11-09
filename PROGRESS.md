@@ -3,15 +3,13 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**TODO (Stephen 2026-11-08 evening): web dashboard on his website.** "A hook that checks in to my website ... a
-console/dashboard kind of like my armory page but on the web ... remotely start and stop the bot and choose what's
-running without using Claude Code." GLaDOS side is DONE: `bot/supervisor.py` POSTs a status snapshot every 30 s
-(`remote.url` + `remote.token_file` in config.local.yaml, off until set) and applies the reply's `desired`
-(run/tasks/mode/max_fail_streak) or `command` (stop_now/stop_after_run). Outbound only. **Still needed from Stephen:**
-which site + stack/hosting (convergentblue.com? static or with functions/Workers?), the armory page URL/code to match
-its look, auth preference. Then build: the endpoint (store snapshot + desired), the dashboard page (status, runs/h,
-kill rate, loot feed, start/stop, task picker). Also: make the local `bot/web` go through desired.json instead of
-spawning bots; supervisor as a systemd --user unit for reboots (ask first: system setting).
+**Web dashboard (2026-11-09):** built, not deployed. convergentblue repo cloned at /data/AutoDev/convergentblue, commit
+2fed138 local only (site CLAUDE.md: `npm run build` must pass first; no Node on GLaDOS yet). `worker/bot.js`: Durable
+Object `BotState` (SQLite; KV free tier is too few writes), `/api/bot/checkin` (BOT_TOKEN), `/api/bot/state` +
+`/control` (DASH_TOKEN = page password); queued desired/command is delivered once, so F12 is never overridden.
+Page `/bot/` (armory look, noindex, not in sitemap). Bot side live: config.local.yaml `remote`, tokens in
+~/.config/d2r-bot/ (bot_token, dash_password). Waiting on Stephen: Node OK (or build/push from Singularity), the two
+Worker secrets in the Cloudflare dashboard. Later: local `bot/web` through desired.json; systemd --user unit.
 
 **2026-11-09 12:20: after both machines restarted.** Syncthing test passed: Stephen's Singularity play (Blizzaga,
 stash, filter) arrived complete, no conflicts. His filter edit ("Hide gems" off: redundant with the two gem show
