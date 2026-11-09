@@ -1121,6 +1121,14 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     if inv["other"] and not stash:
         return None
     done = {"stashed": 0, "dropped": 0}
+    loot_cells = set(inv["other"])
+
+    def still_there() -> list:
+        """Loot cells still occupied. Only cells that held loot before the stash opened count: 2026-11-09 06:31
+        a rescan saw 13 "items" (11 of them cells that were empty) and the session stopped on a stash that had
+        plenty of room."""
+        return [cell for cell in _scan_inventory(bot)["other"] if cell in loot_cells]
+
     if inv["other"]:
         if open_stash(bot):
             scfg = bot.cfg["stash"]
@@ -1154,12 +1162,12 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 _ctrl_click(bot, *cell_center(c, r))
                 items += 1
                 charms += charm
-            left = _scan_inventory(bot)["other"]
+            left = still_there()
             retry = [cell for cell in left if cell in stack_cells]
             if retry:  # one more try, so that a missed click isn't taken for a full stack
                 for cell in retry:
                     _ctrl_click(bot, *cell_center(*cell))
-                left = _scan_inventory(bot)["other"]
+                left = still_there()
             spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
             if spill:  # that tab is full: try the other one (Stephen clears both between sessions, 2026-10-31)
                 other = "shared_tab" if tab == "personal_tab" else "personal_tab"
@@ -1168,10 +1176,11 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 bot.kill.sleep(0.4)
                 for cell in spill:
                     _ctrl_click(bot, *cell_center(*cell))
-                left = _scan_inventory(bot)["other"]
+                left = still_there()
                 spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
                 if spill and not getattr(bot, "stash_full", False):  # once full it stays full: no tour every game
-                    left = _spill_to_shared_pages(bot, spill, left)
+                    bot.save_failure("stowaway_spill")  # what "didn't fit" looked like
+                    left = [cell for cell in _spill_to_shared_pages(bot, spill, left) if cell in loot_cells]
                     bot.stash_full = bool(supplies.needs_a_page(left, rejuv_cells, stack_cells))
             done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
