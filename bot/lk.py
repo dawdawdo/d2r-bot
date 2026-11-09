@@ -629,7 +629,9 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
             clear_spot(bot, cx, cy)
             odo.update(bot.capture.grab())
             cx, cy = world_to_screen(odo, *chest_world(t, i, learned))
-            found = open_chest(bot, cx, cy, odo=odo, radius=70)
+            # The same grid again missed the same way: a small chest can sit between 35 px grid points (2026-11-09:
+            # east_nw/west_nw visible and closed, 30-45 px off, both scans empty). Look half a step over.
+            found = open_chest(bot, cx + 17, cy + 17, odo=odo, radius=105)
         if found and "world" in t and not odo.lost:  # before the update below: opening walks us to it
             learn_chest(route, learned, t, i, (odo.pos[0] + found[0] - C[0], odo.pos[1] + found[1] - C[1]))
         odo.update(bot.capture.grab())  # a when-struck teleport during the scan moves us too
