@@ -19,6 +19,10 @@ material):
 - Cube plan respects 99-stacks (Stephen moved the stuck sapphire; cube everything). `meph.buy_mana_when_dry` (Ormus
   mana instead of LK refill) built but OFF: Stephen wants LK refill runs, then Meph (2026-11-08).
 - Frame-queue cap: not done. The Proton cost left is ~0.08 s a teleport, ~2% of a run: held as a future option.
+- Evening (Stephen's calls): never buy red/blue potions (belt ones drunk in town to make room for rejuvs); stash
+  dry -> LK refill to 40, kept across session restarts; merc revive retried the next run (was 10 runs later), his
+  Insight is her regen; cubing switches to the Runes tab first (Personal has no cube grid: nothing cubed all day,
+  then 95 transmutes at 18:51); /players remembered with its value, not just the D2R window.
 **Open:** GLaDOS stash is out of rejuvs (refill count 40); untested on Windows: everything above (compile/offline only).
 
 **2026-11-08: GLaDOS (Linux) port works. Meph 9/10 kills (same as Windows).** Branch `tasks` on both machines

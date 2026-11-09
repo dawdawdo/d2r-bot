@@ -30,8 +30,10 @@ from .vision.screen import ScreenClassifier
 
 log = logging.getLogger("bot.run")
 RUNS_CSV = ROOT / "runs.csv"
-MERC_RETRY_RUNS = 10  # after a failed revive, try again this many runs later
-MERC_MAX_FAILS = 3    # ... until this many in a row failed (no gold?)
+MERC_RETRY_RUNS = 1   # after a failed revive, try again the next run: his Insight is her mana regen (Stephen
+                      # 2026-11-08: "the merc is dead, so she's not getting any regen; that's why LK is failing")
+MERC_MAX_FAILS = 3    # this many in a row (no gold?): wait MERC_PAUSE_RUNS, then start over
+MERC_PAUSE_RUNS = 10
 FIELDS = ["start", "duration_s", "result", "chests", "picked", "error", "task"]
 
 
@@ -44,7 +46,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         bot.wait_for("in_game", 10)
         if players and set_players(bot, players):
             bot.players_now = players
-            state.save({**state.load(), "players_window": bot.game_window_id})
+            state.save({**state.load(), "players_window": bot.game_window_id, "players_n": players})
         ensure_loot_filter(bot)  # Stephen may have picked his own filter while playing
         if corpse:  # only after a death (or at session start: the last session may have ended in one)
             recover_corpse(bot)
@@ -53,9 +55,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         if leave_other_act(bot, bot.act):  # Stephen's own game ended in Act 1 or 2
             bot.act = spawn_act(bot)
         log.info("spawn: act %d, HP %.0f%% MP %.0f%%", bot.act, bot.hp or 0, bot.mp or 0)
-        if not bot.merc_revive and getattr(bot, "merc_fails", 0) < MERC_MAX_FAILS:
+        if not bot.merc_revive:
             bot.merc_wait = getattr(bot, "merc_wait", 0) - 1
             bot.merc_revive = bot.merc_wait <= 0
+            if bot.merc_revive and getattr(bot, "merc_fails", 0) >= MERC_MAX_FAILS:
+                bot.merc_fails = 0  # the pause is over: a fresh set of tries
         if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
             stow = stowaway(bot, stash=False) is None
         if bot.act == 4 and (stow or repair or buy_keys or needs_heal(bot) or belt_needs_restock(bot)
@@ -70,7 +74,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                 # without a merc all night: chickens 1% -> 11%, 2 deaths); give up after MERC_MAX_FAILS in a row
                 bot.merc_fails = getattr(bot, "merc_fails", 0) + 1
                 bot.merc_revive = False
-                bot.merc_wait = MERC_RETRY_RUNS
+                bot.merc_wait = MERC_PAUSE_RUNS if bot.merc_fails >= MERC_MAX_FAILS else MERC_RETRY_RUNS
             save_and_exit(bot)
             create_game(bot, cfg["game"]["difficulty"])
             bot.wait_for("in_game", 10)
@@ -210,7 +214,9 @@ def main() -> int:
     # /players holds until D2R exits, and soaks run as many short sessions on one D2R: once per D2R window.
     bot.game_window_id = getattr(backend.window, "hwnd", None) or getattr(backend.window, "wid", None)  # Win32 / X11
     want_players = supplies.players_for(tasks, cfg)
-    players_due = bot.game_window_id is None or state.load().get("players_window") != bot.game_window_id
+    st0 = state.load()  # which value too: a window id alone let a Meph session run at LK's 7 (2026-11-08)
+    players_due = (bot.game_window_id is None or st0.get("players_window") != bot.game_window_id
+                   or st0.get("players_n") != want_players)
     if players_setting(cfg) == want_players:
         players_due = False  # D2R keeps /players as a setting: no typing needed
         bot.players_now = want_players  # known, so a later switch of tasks retypes it

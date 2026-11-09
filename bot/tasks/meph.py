@@ -89,6 +89,7 @@ class Mephisto(Task):
 
             st = state.load()
             st.pop("players_window", None)
+            st["players_n"] = n
             state.save(st)
         bot.sleep(1.0)
         auto2 = ROOT / "maps" / self.cfg["game"]["route"] / "durance2_auto"

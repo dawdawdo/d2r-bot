@@ -864,6 +864,27 @@ def _has_potion(cell: np.ndarray) -> bool:
     return float(((hsv[..., 1] > 80) & (hsv[..., 2] > 60)).mean()) > 0.05
 
 
+def drink_vendor_potions(bot: Controller) -> int:
+    """Red/blue potions in the belt (Ormus buys from before): drink them in town so their columns take rejuvs.
+    Stephen 2026-11-08: they aren't useful, sell them and never buy more; drinking frees the belt just the same and
+    belt potions can't be sold from the belt. Returns potions drunk."""
+    from .vision.orbs import belt_kinds
+
+    keys, belt = bot.cfg["hotkeys"]["potions"], bot.cfg["vision"]["belt"]
+    drunk = 0
+    for _ in range(16):  # 4 columns x up to 4 deep
+        kinds = belt_kinds(bot.capture.grab(), belt)
+        col = next((i for i, k in enumerate(kinds) if k in ("hp", "mp")), None)
+        if col is None:
+            break
+        bot.press(keys[col])
+        bot.kill.sleep(0.6)  # the next one moves up into the visible slot
+        drunk += 1
+    if drunk:
+        log.info("drank %d red/blue potion(s) in town to make room for rejuvs", drunk)
+    return drunk
+
+
 def restock_belt(bot: Controller) -> int:
     """If any visible belt slot is empty, open the stash (next to the town WP) and shift-click
     Full Rejuvenation Potions from the Materials tab until the belt row is full. Returns potions moved."""
@@ -873,6 +894,8 @@ def restock_belt(bot: Controller) -> int:
 
     scfg = bot.cfg["stash"]
     belt = bot.cfg["vision"]["belt"]
+    if not bot.cfg.get("meph", {}).get("buy_mana"):
+        drink_vendor_potions(bot)
     bot.observe()
     if all(belt_slots(bot.frame, belt)):
         return 0
