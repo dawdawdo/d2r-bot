@@ -13,6 +13,14 @@ its look, auth preference. Then build: the endpoint (store snapshot + desired), 
 kill rate, loot feed, start/stop, task picker). Also: make the local `bot/web` go through desired.json instead of
 spawning bots; supervisor as a systemd --user unit for reboots (ask first: system setting).
 
+**2026-11-09 07:20: supervisor ran 7 h untouched overnight (3 sessions).** Fixed: a stowaway rescan misread 13
+cells and stopped a session on "stash full" with plenty of room (only pre-stash loot cells count now; a
+`stowaway_spill` frame is saved if it happens again). Filter regenerated + installed from the Chronicle (254/112 ->
+117 unique + 22 set codes; GLaDOS reads the tables from fixtures/chronicle via config.local.yaml). **Open:** the
+chest sweep sometimes hovers right over a visible, closed chest and gets no tooltip (07:04 west_nw: chest 37 px from
+expected, a pack beside it; 3 Glacial Spikes, 2nd sweep missed too). About 33 chests lost in ~174 LK runs this way.
+Next: tooltip frames with D2R_DEBUG_TOOLTIPS to see what the hover shows.
+
 **2026-11-08 16:35: GLaDOS Meph 10/10 kills (~151 s a run, no potions drunk, merc never died).** Fixed today
 (Stephen away, asked: keep running Meph, make it better, fix the town WP, cube everything, frame-queue cap only if
 material):
