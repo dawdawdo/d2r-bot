@@ -3,13 +3,18 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**Web dashboard (2026-11-09):** built, not deployed. convergentblue repo cloned at /data/AutoDev/convergentblue, commit
-2fed138 local only (site CLAUDE.md: `npm run build` must pass first; no Node on GLaDOS yet). `worker/bot.js`: Durable
-Object `BotState` (SQLite; KV free tier is too few writes), `/api/bot/checkin` (BOT_TOKEN), `/api/bot/state` +
-`/control` (DASH_TOKEN = page password); queued desired/command is delivered once, so F12 is never overridden.
-Page `/bot/` (armory look, noindex, not in sitemap). Bot side live: config.local.yaml `remote`, tokens in
-~/.config/d2r-bot/ (bot_token, dash_password). Waiting on Stephen: Node OK (or build/push from Singularity), the two
-Worker secrets in the Cloudflare dashboard. Later: local `bot/web` through desired.json; systemd --user unit.
+**Web dashboard (2026-11-09 15:10):** done, waiting on Stephen. Site commit 16578fc in /data/AutoDev/convergentblue
+(builds; Worker tested locally with wrangler dev): push to main was refused by the auto-mode classifier
+(production deploy), so Stephen pushes. Then he sets Worker secrets BOT_TOKEN / DASH_TOKEN (values in
+~/.config/d2r-bot/bot_token, dash_password). `worker/bot.js`: Durable Object `BotState`, `/api/bot/checkin|state|control`;
+queued start/stop delivered once. Page `/bot/`. Node 22: conda env `node22`. Supervisor: tasks change restarts the
+session after its run (20df660; loads at the next supervisor restart, the running one predates it).
+Later: local `bot/web` through desired.json; systemd --user unit (ask).
+
+**2026-11-09 15:00: every session stopped at game start ("mouse moved by user", same spot)** after Stephen used
+GLaDOS by hand: D2R's in-game cursor was stale, the weapon-set check's inventory toggle warped from it. Restarting
+D2R fixed it (docs/glados.md). Cube: Amn 54 waiting on Chipped Amethyst (5); rune recipes now use their gems down to
+0 (`cube.gem_keep`), 40 Amn still wait for gem drops.
 
 **2026-11-09 12:20: after both machines restarted.** Syncthing test passed: Stephen's Singularity play (Blizzaga,
 stash, filter) arrived complete, no conflicts. His filter edit ("Hide gems" off: redundant with the two gem show
