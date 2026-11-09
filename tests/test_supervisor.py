@@ -1,0 +1,75 @@
+import json
+
+import pytest
+
+from bot import supervisor as sv
+
+
+class FakeProc:
+    def __init__(self, code):
+        self.returncode, self.pid = code, 1
+
+    def poll(self):
+        return self.returncode
+
+
+@pytest.fixture
+def sup(tmp_path, monkeypatch):
+    monkeypatch.setattr(sv, "DESIRED", tmp_path / "desired.json")
+    monkeypatch.setattr(sv, "BOT_OUT", tmp_path / "bot.out")
+    monkeypatch.setattr(sv.control, "read_status", lambda: {})
+    s = sv.Supervisor({})
+    s.started = sv.time.time() - 1000
+    sv.write_desired(run=True, tasks="meph")
+    return s
+
+
+def end_with(s, out, code):
+    sv.BOT_OUT.write_text(out)
+    s.out_offset, s.proc = 0, FakeProc(code)
+    s.ended()
+
+
+def test_f12_stays_stopped(sup):
+    end_with(sup, "run 1/150 ok in 150s\nstopped by kill switch: F12 pressed\n", 1)
+    assert sv.read_desired()["run"] is False and sup.state == "stopped"
+
+
+def test_normal_end_restarts(sup):
+    end_with(sup, "run 150/150 ok\n140/150 runs ok\n", 1)
+    assert sv.read_desired()["run"] is True and sup.state == "idle" and sup.fails == 0
+
+
+def test_fail_streak_backs_off_and_doubles(sup):
+    end_with(sup, "run 1/150 fail\nERROR 4 failures in a row; stopping\n", 1)
+    first = sup.backoff_until - sv.time.time()
+    sup.started = sv.time.time() - 1000
+    end_with(sup, "run 1/150 fail\nERROR 4 failures in a row; stopping\n", 1)
+    assert sup.state == "backoff" and sup.fails == 2
+    assert sup.backoff_until - sv.time.time() > first * 1.5
+
+
+def test_quick_death_counts_as_failure(sup):
+    sup.started = sv.time.time() - 30
+    end_with(sup, "ERROR D2R didn't start\n", 1)
+    assert sup.state == "backoff"
+
+
+def test_remote_reply_sets_desired(sup, monkeypatch):
+    sup.remote_url = "https://example.invalid/hook"
+
+    class Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return json.dumps({"desired": {"run": False, "tasks": "lk"}}).encode()
+
+    monkeypatch.setattr(sv.urllib.request, "urlopen", lambda req, timeout: Resp())
+    monkeypatch.setattr(sv, "tail_csv", lambda p, n: [])
+    sup.remote()
+    d = sv.read_desired()
+    assert d["run"] is False and d["tasks"] == "lk" and d["set_by"] == "remote"
