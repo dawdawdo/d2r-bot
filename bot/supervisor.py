@@ -91,6 +91,7 @@ class Supervisor:
         self.remote_at = 0.0
         r = (cfg.get("remote") or {})
         self.remote_url = r.get("url")
+        self.remote_synced = False
         tf = r.get("token_file")
         self.remote_token = Path(tf).expanduser().read_text().strip() if tf and Path(tf).expanduser().exists() else ""
 
@@ -131,7 +132,7 @@ class Supervisor:
         runs_done = len(re.findall(r"run \d+/\d+ (?:ok|fail|chicken)", out))
         self.proc = None
         if "stopped by kill switch" in out or "stop requested" in out:
-            why = "F12" if "kill switch" in out else "stop request"
+            why = "F12" if "stopped by kill switch" in out else "stop request"  # every session logs "kill switch armed"
             log.info("session stopped on purpose (%s): staying stopped", why)
             write_desired(run=False, stopped_by=why)
             self.fails, self.last_end = 0, f"stopped ({why})"
@@ -172,7 +173,7 @@ class Supervisor:
             "supervisor": {"state": self.state, "fails": self.fails, "backoff_until": self.backoff_until,
                            "last_end": self.last_end, "pid": self.proc.pid if self.running() else None},
             "desired": read_desired(), "bot": control.read_status(),
-            "runs": tail_csv(RUNS_CSV, 30),
+            "runs": tail_csv(RUNS_CSV, 30 if self.remote_synced or not self.remote_url else 1000),  # 1st: backfill
             "loot": [ln for ln in tail_lines(LOOT_CSV, 40)],
         }
 
@@ -181,7 +182,7 @@ class Supervisor:
             return
         self.remote_at = time.time()
         req = urllib.request.Request(self.remote_url, data=json.dumps(self.snapshot(), default=str).encode(),
-                                     headers={"Content-Type": "application/json",
+                                     headers={"Content-Type": "application/json", "User-Agent": "d2r-bot-supervisor/1",
                                               "Authorization": f"Bearer {self.remote_token}"}, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=15) as resp:
@@ -189,10 +190,13 @@ class Supervisor:
         except Exception as e:  # the site being down must never stop the bot
             log.debug("remote check-in failed: %s", e)
             return
+        self.remote_synced = True
         want = reply.get("desired")
         if isinstance(want, dict):
             keep = {k: want[k] for k in ("run", "tasks", "mode", "max_fail_streak") if k in want}
             cur = read_desired()
+            if keep.get("run"):
+                keep["stopped_by"] = None  # started from the site: an old F12 no longer applies
             if any(cur.get(k) != v for k, v in keep.items()):
                 log.info("remote: desired %s", keep)
                 write_desired(**keep, set_by="remote")

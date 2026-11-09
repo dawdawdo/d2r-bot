@@ -46,3 +46,8 @@ Ber 1, Sur 2, Ohm 3, Vex 3, Gul 10, Mal 5, Ist 1, Um 3, Pul 5, Lem 3, Fal 3 (ple
 ## Charms
 - Reroll: 3 perfect gems + magic charm, keeps item level.
 - Skillers wanted: Martial Arts, Cold, Paladin Combat, Barbarian Combat, one Warlock tree. Pick up every magic charm the bot finds.
+
+## Corrections (Stephen, 2026-11-09)
+- Blizzaga plays **Blizzard + Glacial Spike** (respecced after Call to Arms), not Frozen Orb / Ice Bolt.
+- Ancients' statues drop from **non-terrorized** act bosses too; terrorized roughly doubles the rate.
+- Rune counts and Chronicle numbers above are from Nov 3-4 and stale.
