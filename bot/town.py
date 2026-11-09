@@ -1169,6 +1169,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                     _ctrl_click(bot, *cell_center(*cell))
                 left = still_there()
             spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
+            if not spill:
+                bot.stash_full_strikes = 0  # everything fit: a lone "full" before was a misread
             if spill:  # that tab is full: try the other one (Stephen clears both between sessions, 2026-10-31)
                 other = "shared_tab" if tab == "personal_tab" else "personal_tab"
                 log.info("stowaway: %d item(s) didn't fit; trying the %s", len(spill), other.replace("_", " "))
@@ -1178,10 +1180,18 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                     _ctrl_click(bot, *cell_center(*cell))
                 left = still_there()
                 spill = supplies.needs_a_page(left, rejuv_cells, stack_cells)
+                if not spill:
+                    bot.stash_full_strikes = 0
                 if spill and not getattr(bot, "stash_full", False):  # once full it stays full: no tour every game
                     bot.save_failure("stowaway_spill")  # what "didn't fit" looked like
                     left = [cell for cell in _spill_to_shared_pages(bot, spill, left) if cell in loot_cells]
-                    bot.stash_full = bool(supplies.needs_a_page(left, rejuv_cells, stack_cells))
+                    full_now = bool(supplies.needs_a_page(left, rejuv_cells, stack_cells))
+                    # Two stash visits in a row (different games) must agree before the session stops: one
+                    # misread rescan stopped a whole night once (2026-11-09 06:31, Stephen asked for a guard).
+                    bot.stash_full_strikes = getattr(bot, "stash_full_strikes", 0) + 1 if full_now else 0
+                    bot.stash_full = bot.stash_full_strikes >= 2
+                    if full_now and not bot.stash_full:
+                        log.warning("stowaway: %d item(s) didn't fit anywhere; checking again next game", len(left))
             done["stashed"] = max(0, items - len(left))
             bot.click(*scfg["runes_tab"])
             bot.input.move(640, 600)
