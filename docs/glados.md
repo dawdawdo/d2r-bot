@@ -34,6 +34,11 @@ D2R must also stay closed on Singularity, on every character: they share the sta
 - The first session with a fresh `logs/state.json` cubes right away (every 6 h): 171 transmutes, about 14 min, no per-step log lines.
 - RAM: 15 GB with an 8 GB swapfile (added 2026-11-08). Close the Claude desktop app (its VM uses about 1.5 GB) and browsers for long runs.
 
+- **Every session stops at game start with "mouse moved by user" at the same spot (2026-11-09):** D2R's own idea of
+  the cursor went stale after Stephen used the desktop/game by hand. Opening a panel (the weapon-set check opens the
+  inventory) warps the cursor 240 px from that stale point, not from where the bot put it. Fix: close D2R
+  (`wmctrl -c "Diablo II: Resurrected"`, saves normally) and let the bot relaunch it.
+
 ## New session on GLaDOS
 1. Copy `docs/notes/*.md` into this project's Claude memory folder. They're a snapshot of the notes from Singularity (2026-11-05). `MEMORY.md` is the index.
 2. Read `CLAUDE.md`, then `PROGRESS.md`.
