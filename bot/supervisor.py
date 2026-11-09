@@ -208,11 +208,21 @@ class Supervisor:
         tmp.write_text(json.dumps(self.snapshot()["supervisor"] | {"updated": time.time()}))
         os.replace(tmp, SUP_STATUS)
 
+    def f12_seen(self, d: dict) -> bool:
+        """F12 ended a session (ours or one started elsewhere) after the last desired change: stay stopped."""
+        st = control.read_status()
+        upd = float(st.get("updated", 0) or 0)
+        return (st.get("state") == "idle" and "kill switch" in (st.get("tally") or {})
+                and upd > float(d.get("updated", 0) or 0))
+
     def tick(self) -> None:
         d = read_desired()
         if self.proc is not None and self.proc.poll() is not None:
             self.ended()
             d = read_desired()
+        if d["run"] and not self.running() and self.f12_seen(d):
+            log.info("F12 ended the last session: staying stopped")
+            d = write_desired(run=False, stopped_by="F12")
         self.check_hang()
         if d["run"] and not self.running():
             if self.other_bot():

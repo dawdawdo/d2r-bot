@@ -73,3 +73,15 @@ def test_remote_reply_sets_desired(sup, monkeypatch):
     sup.remote()
     d = sv.read_desired()
     assert d["run"] is False and d["tasks"] == "lk" and d["set_by"] == "remote"
+
+
+def test_f12_on_a_session_started_elsewhere(sup, monkeypatch):
+    later = sv.time.time() + 5
+    monkeypatch.setattr(sv.control, "read_status",
+                        lambda: {"state": "idle", "tally": {"kill switch": 1}, "updated": later})
+    monkeypatch.setattr(sup, "remote", lambda: None)
+    monkeypatch.setattr(sup, "write_status", lambda: None)
+    started = []
+    monkeypatch.setattr(sup, "start", lambda d: started.append(d))
+    sup.tick()
+    assert not started and sv.read_desired()["run"] is False
