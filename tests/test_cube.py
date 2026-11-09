@@ -25,15 +25,17 @@ def test_made_runes_feed_the_next_step():
     assert (have["El"], have["Eld"], have["Tir"]) == (5, 7, 1)
 
 
-def test_rune_recipe_needs_a_spare_gem():
-    assert cube.plan({"Thul": 8, "Chipped Topaz": 5}) == []  # the 5 gems are kept too
-    assert cube.plan({"Thul": 8, "Chipped Topaz": 6}) == [({"Thul": 3, "Chipped Topaz": 1}, "Amn")]
+def test_rune_recipes_use_their_gems_down_to_none():
+    assert cube.plan({"Thul": 8}) == []
+    assert cube.plan({"Thul": 11, "Chipped Topaz": 1}) == [({"Thul": 3, "Chipped Topaz": 1}, "Amn")]
+    assert cube.plan({"Thul": 8, "Chipped Topaz": 5}, gem_keep=5) == []  # the old rule, still configurable
 
 
 def test_runes_take_gems_before_gem_upgrades():
     counts = {"Thul": 11, "Chipped Topaz": 8}
     have = final(counts, cube.plan(counts))
     assert have["Amn"] == 2 and have["Chipped Topaz"] == 6 and have["Flawed Topaz"] == 0
+    assert final({"Thul": 30, "Chipped Topaz": 3}, cube.plan({"Thul": 30, "Chipped Topaz": 3}))["Chipped Topaz"] == 0
 
 
 def test_never_past_fal():
@@ -75,7 +77,7 @@ def test_full_stack_not_overfilled():
 
 
 def test_gem_short_names_runes_held_back_by_their_gem():
-    counts = {"Amn": 30, "Chipped Amethyst": 5, "Thul": 4}
+    counts = {"Amn": 30, "Chipped Amethyst": 2, "Thul": 4}
     steps = cube.plan(counts)
-    assert not [s for s in steps if s[1] == "Sol"]
-    assert cube.gem_short(counts, steps) == {"Amn": (30, "Chipped Amethyst", 5)}
+    assert len([s for s in steps if s[1] == "Sol"]) == 2
+    assert cube.gem_short(counts, steps) == {"Amn": (24, "Chipped Amethyst", 0)}

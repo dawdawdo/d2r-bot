@@ -30,13 +30,15 @@ RUNE_GEM = {  # rune -> the gem its upgrade also takes
 # the stash can't get more)
 FOR_RUNES = set(RUNE_GEM.values())
 KEEP = 5
+GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-09: "runes first, then gems"; at 5,
+              # Amn piled up waiting on a 6th Chipped Amethyst)
 STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
 TOP_RUNE = "Fal"  # the highest rune cubing makes
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
 
 def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
-         top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX) -> list[tuple[dict[str, int], str]]:
+         top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX, gem_keep: int = GEM_KEEP) -> list[tuple[dict[str, int], str]]:
     """Transmutes in order, each ({input: n}, output). `counts` names runes and gems as in RUNES / gem();
     missing names count 0. Runes first, bottom up, so what one step makes feeds the next; gems after, with
     whatever the runes left, except gems saved for runes (FOR_RUNES); repeated until nothing changes."""
@@ -59,7 +61,7 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
         for i in range(last):
             rune, nxt = RUNES[i], RUNES[i + 1]
             g = RUNE_GEM.get(rune)
-            while n(rune) - 3 >= keep and (g is None or n(g) - 1 >= keep) and n(nxt) < stack_max:
+            while n(rune) - 3 >= keep and (g is None or n(g) - 1 >= gem_keep) and n(nxt) < stack_max:
                 do({rune: 3, g: 1} if g else {rune: 3}, nxt)
         for ladder in GEM_LADDERS:
             for low, high in zip(ladder[:grades], ladder[1:grades]):
@@ -69,7 +71,8 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
             return steps
 
 
-def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RUNE) -> dict[str, tuple]:
+def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RUNE,
+              gem_keep: int = GEM_KEEP) -> dict[str, tuple]:
     """Runes the plan leaves with enough to cube but too few of their recipe gem: {rune: (runes, gem, gems)}.
     (2026-11-09 Stephen: "a lot of Amn not being cubed": Amn takes a Chipped Amethyst, kept at `keep`.)"""
     have = Counter(counts)
@@ -79,6 +82,6 @@ def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RU
     out = {}
     for rune in RUNES[:RUNES.index(top)]:
         g = RUNE_GEM.get(rune)
-        if g and have[rune] - 3 >= keep and have[g] - 1 < keep:
+        if g and have[rune] - 3 >= keep and have[g] - 1 < gem_keep:
             out[rune] = (have[rune], g, have[g])
     return out

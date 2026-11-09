@@ -123,11 +123,12 @@ def cube_stash(bot: Controller) -> int:
     bot.cube_blocked, bot.cube_blocked_n = False, 0
     before = c.counts()
     steps = cube.plan(before, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
-                      top_grade=ccfg.get("top_grade", cube.TOP_GRADE))
+                      top_grade=ccfg.get("top_grade", cube.TOP_GRADE), gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP))
     steps = steps[:ccfg.get("max_transmutes", 200)]
     log.info("cube: %d transmute(s) planned: %s", len(steps), dict(Counter(o for _, o in steps)))
     log.info("cube: counts read: %s", {k: v for k, v in before.items() if v})
-    if short := cube.gem_short(before, steps, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE)):
+    if short := cube.gem_short(before, steps, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
+                                gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP)):
         log.info("cube: runes waiting on their gem (runes, gem, gems): %s", short)
     t0 = time.monotonic()
     done = 0

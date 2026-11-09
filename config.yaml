@@ -198,6 +198,7 @@ cube:
   enabled: true
   every_hours: 6                # on the way through town, once this long after the last time
   keep: 5
+  gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)
   top_rune: Fal
   top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200
