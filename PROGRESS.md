@@ -18,6 +18,7 @@
   session saves fixtures/raw/cube_{runes,gems}_last.png: compare reads to armory/pagedata.json (rune 11 fix 6884e2b;
   Flawless Skull read 13 vs plan 3, maybe the same tens-digit miss on gems). (3) 11-10 09:31 the stale-cursor trip
   happened on a fresh D2R; closing D2R (`wmctrl -c "Diablo II: Resurrected"`) and restarting fixed it. Root cause open.
+- convergentblue local commit cbb3ac6 (armory: ilvl in item meta) NOT pushed (11-10 14:15): another Claude session is editing the site; fetch, rebase onto its work, build, then push.
 - Node 22: conda env `node22`. Site pushes: Stephen allowed `git -C /data/AutoDev/convergentblue push origin main`.
   Later: local `bot/web` through desired.json; systemd --user unit (ask).
 
