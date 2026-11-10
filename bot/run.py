@@ -276,6 +276,7 @@ def main() -> int:
                         (since_repair or 0) + 1 >= cfg["town"]["repair_every"] or (due is not None and due - 1 <= 0))
                     keys = chests and (bot.keys_left is None or bot.keys_left <= cfg["town"]["keys_min"])
                     bot.keys_used = 0
+                    bot.died_on_exit = False
                     try:
                         stats = one_run(bot, cfg, args.mode, repair=repair, buy_keys=keys,
                                         players=want_players if (players_due and i == 0) or getattr(bot, "players_now", None)
@@ -340,7 +341,9 @@ def main() -> int:
                 except Exception as e:  # noqa: BLE001 - one bad run must not end an unattended soak
                     if not isinstance(e, BotError):
                         log.exception("run %d: unexpected error", i + 1)
-                    row.update(result="timeout" if isinstance(e, RunTimeout) else "fail", error=str(e))
+                    died = getattr(bot, "died_on_exit", False)  # a death the exit saw, then failed after
+                    row.update(result="died" if died else "timeout" if isinstance(e, RunTimeout) else "fail",
+                               error=str(e))
                     corpse = stow = True  # a death we didn't see may be behind it
                     streak += 1
                     log.error("run %d failed: %s", i + 1, e)

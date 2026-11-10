@@ -315,3 +315,41 @@ def test_guardian_flee_instead_of_chicken(cfg):
     t[0] += 10.0
     with pytest.raises(C.Chicken):
         bot.observe()
+
+
+class DeadGame(SimGame):
+    """'You have died' screen over the game: the first Esc respawns her in town through a ~10 s load."""
+
+    def __init__(self, ui, clock):
+        super().__init__(ui, state="in_game")
+        self.dead, self.clock, self.load_until = True, clock, 0.0
+
+    def classify(self, frame):
+        if self.clock() < self.load_until:
+            return "loading"
+        return super().classify(frame)
+
+    def key_down(self, key):
+        self.log.append(f"key:{key}")
+        if key == "esc" and self.dead:
+            self.dead, self.load_until = False, self.clock() + 10
+        elif key == "esc" and self.state == "in_game" and self.clock() >= self.load_until:
+            self.state = "esc_menu"
+
+
+def test_save_and_exit_after_death(cfg, monkeypatch):
+    # 2026-11-10: two deaths ended as "could not open the esc menu" (the load after the death screen ate the tries)
+    t = [0.0]
+
+    def clock():
+        t[0] += 0.05
+        return t[0]
+
+    game = DeadGame(cfg["ui"], clock)
+    bot = make_bot(cfg, game, clock=clock)
+    monkeypatch.setattr(bot, "_check_vitals", lambda: None)
+    monkeypatch.setattr(bot, "sleep", lambda s: t.__setitem__(0, t[0] + s))
+    monkeypatch.setattr(bot.kill, "sleep", lambda s: t.__setitem__(0, t[0] + s))
+    bot.hp = 0
+    save_and_exit(bot)
+    assert game.state == "main_menu" and bot.died_on_exit

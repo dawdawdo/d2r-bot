@@ -139,12 +139,29 @@ def ensure_main_menu(bot: Controller) -> None:
         save_and_exit(bot)
 
 
+def _wait_out_loading(bot: Controller) -> None:
+    if bot.observe() == "loading":
+        try:
+            bot.wait_for(("in_game", "esc_menu", "main_menu"), T_LOAD)
+        except BotError:
+            pass
+        bot.sleep(0.5)
+
+
 def save_and_exit(bot: Controller) -> None:
     """Esc menu -> Save and Exit -> main menu. Sets bot.died_on_exit when the life orb was empty on the way
     out (a chicken that came too late: 2026-11-01 22:00 "You have died" behind a chicken; the corpse
     must be picked up next game)."""
     bot.guard(False)  # we're leaving; don't raise Chicken while trying to exit
-    bot.died_on_exit = False
+    bot.died_on_exit = bot.hp is not None and bot.hp <= 1
+    if bot.died_on_exit:
+        # "You have died / Press ESC to continue": that Esc respawns her in town through a load, and the
+        # 3 Esc attempts below used to burn out on it (2026-11-10 02:16 and 07:45: deaths logged as
+        # "could not open the esc menu")
+        log.warning("died: dismissing the death screen before save & exit")
+        bot.press("esc")
+        bot.sleep(1.0)
+        _wait_out_loading(bot)
     for tries in range(2):
         for attempt in range(3):
             bot.press("esc")
@@ -156,7 +173,8 @@ def save_and_exit(bot: Controller) -> None:
                     return
                 if bot.hp is not None and bot.hp <= 1:
                     bot.died_on_exit = True
-                log.info("esc menu not up (attempt %d)", attempt + 1)
+                log.info("esc menu not up (attempt %d, state %s)", attempt + 1, bot.state)
+                _wait_out_loading(bot)  # an Esc that landed on the death screen started a load
         else:
             raise BotError("could not open the esc menu")
         bot.click_ui("save_and_exit")
