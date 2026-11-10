@@ -87,7 +87,9 @@ def read_band(band: np.ndarray, rune: bool = False) -> int | None:
         if len(run) == 2 or not _adjacent(k, run[0]):
             break
         run.insert(0, k)
-    if len(run) == 1 and run[0][3] != "1":  # a faint tens 1 right before the units digit
+    # a faint tens 1 right before the units digit. On a rune also before a units 1 (Tir 11 and Ral 11 read 1,
+    # 2026-11-10: the units 1 matched strongly, the dim tens one only faintly); the contrast check still applies
+    if len(run) == 1 and (run[0][3] != "1" or rune):
         tens = [h for h in hits if h[3] == "1" and _adjacent(h, run[0]) and not _overlap(h, run[0])
                 and abs(h[4] - run[0][4]) <= 1 and (not rune or _bar_contrast(band, h) >= RUNE_TENS_CONTRAST)]
         if tens:

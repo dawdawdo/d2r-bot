@@ -16,6 +16,9 @@ import numpy as np
 from . import cube, state
 from .controller import Controller
 from .vision import stack_count as sc
+from .config import ROOT
+
+RAW = ROOT / "fixtures" / "raw"
 
 log = logging.getLogger(__name__)
 
@@ -70,9 +73,17 @@ class Cuber:
 
     def counts(self) -> dict[str, int]:
         self.open_tab("runes")
-        out = sc.rune_counts(self.look())
+        runes = self.look()
+        out = sc.rune_counts(runes)
         self.open_tab("gems")
-        out.update(sc.gem_counts(self.look()))
+        gems = self.look()
+        out.update(sc.gem_counts(gems))
+        try:  # the latest pair, to check misreads against the armory's save-file counts (overwritten each time)
+            RAW.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(RAW / "cube_runes_last.png"), runes)
+            cv2.imwrite(str(RAW / "cube_gems_last.png"), gems)
+        except Exception:
+            pass
         return out
 
     def empty_cube(self) -> bool:
