@@ -1,0 +1,308 @@
+<title>Blizzaga's Armory</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+__STYLE__
+<style>
+.goal{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:14px}
+.goal>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.goal>summary::-webkit-details-marker{display:none}
+.goal>summary h3{font-family:var(--display);font-weight:700;font-size:18px;margin:0;flex:1 1 220px;text-wrap:balance}
+.goal>summary .who{color:var(--mute);font-size:14px}
+.bar{height:6px;background:var(--chip);border-radius:3px;overflow:hidden;flex:1 1 100%}
+.bar i{display:block;height:100%;background:var(--ok)}
+.steps2{list-style:none;margin:0;padding:0 16px 14px;counter-reset:s}
+.steps2 li{display:grid;grid-template-columns:28px 1fr auto;gap:4px 10px;padding:10px 0;border-top:1px solid var(--line);counter-increment:s;align-items:start}
+.steps2 input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--ok)}
+.steps2 .t{min-width:0}
+.steps2 .t b{font-weight:700}
+.steps2 .h{font-size:14px;color:var(--mute);margin-top:2px}
+.steps2 li.done .t{opacity:.55}
+.steps2 li.done .t b{text-decoration:line-through}
+.chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--mute);white-space:nowrap}
+.chip.now{color:var(--accent)}.chip.farm{color:var(--magic)}.chip.done{color:var(--ok)}.chip.ditch{color:var(--bad)}.chip.move{color:var(--accent)}.chip.use{color:var(--ok)}
+.bank{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 18px}
+.bank span{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:3px 8px}
+.bank span b{color:var(--rune);font-family:var(--display);font-weight:700}
+.bank span.m b{color:var(--accent)}
+a.jump{color:var(--magic);font-size:13px}
+.farmcard{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 16px;display:grid;gap:6px}
+.farmlist{display:grid;gap:12px}
+.farmcard h3{font-family:var(--display);font-size:17px;margin:0}
+.farmcard .need{font-size:13px;color:var(--mute)}
+.farmcard ul{margin:0;padding-left:18px}
+.farmcard:target{outline:2px solid var(--accent)}
+</style>
+
+<style>
+table.cube td:first-child{max-width:60ch}
+table.craft td{white-space:nowrap}table.craft th{white-space:nowrap}
+.rwc .rl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rwc .rl span{font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:4px;padding:2px 8px;background:var(--bg)}
+.rwc .rl span b{font-family:var(--display);color:var(--rune)}
+.rwc .short{font-size:14px;color:var(--bad)}.rwc .ready{font-size:14px;color:var(--ok);font-weight:700}
+</style>
+<div class="wrap">
+<header>
+  <h1>Blizzaga's Armory</h1>
+  <p>All eight characters and the shared stash · snapshot Nov 5 2026, 12:27 PM</p>
+</header>
+<nav id="tabs"><a href="#goals">Goals</a><a href="#farm">Farm guide</a><a href="#inventory">Inventory</a><a href="#ref">Reference</a></nav>
+
+<section id="v-goals">
+  <p class="lede">Work top to bottom. Each step is marked <span class="chip now">Do now</span> (you have everything), <span class="chip farm">Farm</span> (go get it; the link opens the farm guide) or <span class="chip done">Done</span>. Steps the snapshot can verify tick themselves; tick the rest by hand. Ticks are saved in this browser.</p>
+  <div id="goallist"></div>
+</section>
+
+<section id="v-farm" hidden>
+  <p class="lede">Everything the goals still need, with the best ways to get it. Terror Zone tips: run them offline with <span class="mono">/players 8</span> for better drops, and use a Worldstone Shard to terrorize a whole act on demand. Heralds spawn as you kill elites in a Terror Zone and climb a tier with each kill until you leave the game.</p>
+  <div class="farmlist" id="farmlist"></div>
+</section>
+
+<section id="v-inventory" hidden>
+  <h2>Materials</h2>
+  <div class="bank" id="bank"></div>
+  <h2>Items</h2>
+  <div class="filters">
+    <input type="search" id="q" placeholder="Search name, base, stat…" aria-label="Search items">
+    <select id="fc" aria-label="Where"><option value="">Everywhere</option></select>
+    <select id="fs" aria-label="Status"><option value="">Any status</option><option>In use</option><option>Move</option><option>Keep</option><option>Ditch</option></select>
+    <select id="fq" aria-label="Quality"><option value="">All qualities</option><option>Unique</option><option>Set</option><option>Rare</option><option>Magic</option><option value="RW">Runeword</option><option>Normal</option></select>
+    <span class="small" id="cnt"></span>
+  </div>
+  <div class="tbl"><table><thead><tr><th>Item</th><th>Lives in</th><th>Status</th><th>Stats</th></tr></thead><tbody id="inv"></tbody></table></div>
+</section>
+
+<section id="v-ref" hidden>
+<p class="lede">Horadric Cube recipes from the 3.0 game tables (cubemain.txt). Type to filter, e.g. <span class="mono">Ber</span>, <span class="mono">socket</span>, <span class="mono">Ral</span>.</p>
+<h2>Runewords I'm after</h2>
+<p class="lede">Rune counts come from the page snapshot (stash may have changed since). Missing runes show the cube step that makes them.</p>
+<div class="farmlist" id="rwwant"></div>
+<h2>Chronicle progress</h2>
+<div class="grid" id="chronbar"></div>
+<details class="goal" style="margin-top:12px"><summary><h3>Missing uniques</h3><span class="who" id="mucnt"></span></summary><p class="stats" style="padding:0 16px 14px" id="mulist"></p></details>
+<details class="goal"><summary><h3>Missing set items</h3><span class="who" id="mscnt"></span></summary><p class="stats" style="padding:0 16px 14px" id="mslist"></p></details>
+<h2>Runewords not yet in your Chronicle</h2>
+<p class="lede" id="rwlede"></p>
+<input id="rwq" class="mono" placeholder="Filter, e.g. Ber, shield, Enigma" style="width:100%;max-width:420px;padding:8px;margin:0 0 12px">
+<div class="small" id="rwcount"></div>
+<div class="farmlist" id="rwrest"></div>
+<h2>Cube recipes</h2>
+<div class="filters"><input type="search" id="cq" placeholder="Filter recipes…" aria-label="Filter cube recipes"><span class="small" id="ccnt"></span></div>
+<h2 class="cg">Runes</h2><div class="tbl cg"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr><td>3 El Runes</td><td><b>Eld Rune</b></td></tr><tr><td>3 Eld Runes</td><td><b>Tir Rune</b></td></tr><tr><td>3 Tir Runes</td><td><b>Nef Rune</b></td></tr><tr><td>3 Nef Runes</td><td><b>Eth Rune</b></td></tr><tr><td>3 Eth Runes</td><td><b>Ith Rune</b></td></tr><tr><td>3 Ith Runes</td><td><b>Tal Rune</b></td></tr><tr><td>3 Tal Runes</td><td><b>Ral Rune</b></td></tr><tr><td>3 Ral Runes</td><td><b>Ort Rune</b></td></tr><tr><td>3 Ort Runes</td><td><b>Thul Rune</b></td></tr><tr><td>3 Thul Runes + 1 Chipped Topaz</td><td><b>Amn Rune</b></td></tr><tr><td>3 Amn Runes + 1 Chipped Amethyst</td><td><b>Sol Rune</b></td></tr><tr><td>3 Sol Runes + 1 Chipped Sapphire</td><td><b>Shael Rune</b></td></tr><tr><td>3 Shael Runes + 1 Chipped Ruby</td><td><b>Dol Rune</b></td></tr><tr><td>3 Dol Runes + 1 Chipped Emerald</td><td><b>Hel Rune</b></td></tr><tr><td>3 Hel Runes + 1 Chipped Diamond</td><td><b>Io Rune</b></td></tr><tr><td>3 Io Runes + 1 Flawed Topaz</td><td><b>Lum Rune</b></td></tr><tr><td>3 Lum Runes + 1 Flawed Amethyst</td><td><b>Ko Rune</b></td></tr><tr><td>3 Ko Runes + 1 Flawed Sapphire</td><td><b>Fal Rune</b></td></tr><tr><td>3 Fal Runes + 1 Flawed Ruby</td><td><b>Lem Rune</b></td></tr><tr><td>3 Lem Runes + 1 Flawed Emerald</td><td><b>Pul Rune</b></td></tr><tr><td>2 Pul Runes + 1 Flawed Diamond</td><td><b>Um Rune</b></td></tr><tr><td>2 Um Runes + 1 Standard Topaz</td><td><b>Mal Rune</b></td></tr><tr><td>2 Mal Runes + 1 Standard Amethyst</td><td><b>Ist Rune</b></td></tr><tr><td>2 Ist Runes + 1 Standard Sapphire</td><td><b>Gul Rune</b></td></tr><tr><td>2 Gul Runes + 1 Standard Ruby</td><td><b>Vex Rune</b></td></tr><tr><td>2 Vex Runes + 1 Standard Emerald</td><td><b>Ohm Rune</b></td></tr><tr><td>2 Ohm Runes + 1 Standard Diamond</td><td><b>Lo Rune</b></td></tr><tr><td>2 Lo Runes + 1 Flawless Topaz</td><td><b>Sur Rune</b></td></tr><tr><td>2 Sur Runes + 1 Flawless Amethyst</td><td><b>Ber Rune</b></td></tr><tr><td>2 Ber Runes + 1 Flawless Sapphire</td><td><b>Jah Rune</b></td></tr><tr><td>2 Jah Runes + 1 Flawless Ruby</td><td><b>Cham Rune</b></td></tr><tr><td>2 Cham Runes + 1 Flawless Emerald</td><td><b>Zod Rune</b></td></tr></tbody></table></div>
+<h2 class="cg">Sockets &amp; upgrades</h2><div class="tbl cg"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr><td>3 Standard Gems + 1 Socketed Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr><td>3 Flawless Gems + 1 Magic Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr><td>1 Tal Rune + 1 Thul Rune + 1 Perfect Topaz + 1 Normal Torso Armor</td><td><b>Socketed Torso Armor</b></td></tr><tr><td>1 Ral Rune + 1 Amn Rune + 1 Perfect Amethyst + 1 Normal Weapon</td><td><b>Socketed Weapon</b></td></tr><tr><td>1 Ral Rune + 1 Thul Rune + 1 Perfect Sapphire + 1 Normal Helm</td><td><b>Socketed Helm</b></td></tr><tr><td>1 Tal Rune + 1 Amn Rune + 1 Perfect Ruby + 1 Normal Shield</td><td><b>Socketed Shield</b></td></tr><tr><td>1 Eld Rune + 1 Chipped Gem (Any) + 1 Low Quality Weapon</td><td><b>Normal Weapon</b></td></tr><tr><td>1 El Rune + 1 Chipped Gem (Any) + 1 Low Quality Armor</td><td><b>Normal Armor</b></td></tr><tr><td>1 Ral Rune + 1 Sol Rune + 1 Perfect Emerald + 1 Normal Unique Weapon</td><td><b>Exceptional Unique Weapon</b></td></tr><tr><td>1 Tal Rune + 1 Shael Rune + 1 Perfect Diamond + 1 Normal Unique Armor</td><td><b>Exceptional Unique Armor</b></td></tr><tr><td>1 Lum Rune + 1 Pul Rune + 1 Perfect Emerald + 1 Exceptional Unique Weapon</td><td><b>Elite Unique Weapon</b></td></tr><tr><td>1 Ko Rune + 1 Lem Rune + 1 Perfect Diamond + 1 Exceptional Unique Armor</td><td><b>Elite Unique Armor</b></td></tr><tr><td>1 Hel Rune + Scroll of Town Portal + 1 Socketed Item</td><td><b>Clear Sockets on Item</b></td></tr><tr><td>3 Chipped Gems (Any) + 1 Magic Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr><td>1 Ral Rune + 1 Sol Rune + 1 Perfect Emerald + 1 Normal Set Weapon</td><td><b>Exceptional Set Weapon</b> <span class=chip>Ladder (works offline)</span></td></tr><tr><td>1 Tal Rune + 1 Shael Rune + 1 Perfect Diamond + 1 Normal Set Armor</td><td><b>Exceptional Set Armor</b> <span class=chip>Ladder (works offline)</span></td></tr><tr><td>1 Lum Rune + 1 Pul Rune + 1 Perfect Emerald + 1 Exceptional Set Weapon</td><td><b>Elite Set Weapon</b> <span class=chip>Ladder (works offline)</span></td></tr><tr><td>1 Ko Rune + 1 Lem Rune + 1 Perfect Diamond + 1 Exceptional Set Armor</td><td><b>Elite Set Armor</b> <span class=chip>Ladder (works offline)</span></td></tr></tbody></table></div>
+<h2 class="cg">Rerolls &amp; rares</h2><div class="tbl cg"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr><td>3 Perfect Gems (Any) + 1 Magic Item</td><td><b>Re-rolled Magic Item</b></td></tr><tr><td>6 Perfect Skulls + 1 Rare Item</td><td><b>1 Low Quality Rare Item</b></td></tr><tr><td>1 Perfect Skull + 1 Rare Item + 1 Stone of Jordan</td><td><b>1 High Quality Rare Item</b></td></tr><tr><td>3 Perfect Skull + 1 Rare Item + 1 Stone of Jordan</td><td><b>Add 1 Socket to Rare Item</b></td></tr><tr><td>1 Ort Rune + 1 Amn Rune + 1 Perfect Sapphire + 1 Normal Rare Weapon</td><td><b>Exceptional Rare Weapon</b></td></tr><tr><td>1 Ral Rune + 1 Thul Rune + 1 Perfect Amethyst + 1 Normal Rare Armor</td><td><b>Exceptional Rare Armor</b></td></tr><tr><td>1 Fal Rune + 1 Um Rune + 1 Perfect Sapphire + 1 Exceptional Rare Weapon</td><td><b>Elite Rare Weapon</b></td></tr><tr><td>1 Ko Rune + 1 Pul Rune + 1 Perfect Amethyst + 1 Exceptional Rare Armor</td><td><b>Elite Rare Armor</b></td></tr></tbody></table></div>
+<h2 class="cg">Repair &amp; recharge</h2><div class="tbl cg"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr><td>1 Ort Rune + 1 Weapon</td><td><b>Fully Repaired Weapon</b></td></tr><tr><td>1 Ral Rune + 1 Armor</td><td><b>Fully Repaired Armor</b></td></tr><tr><td>1 Ort Rune + 1 Chipped Gem (Any) + 1 Weapon</td><td><b>Fully Repaired and Recharged Weapon</b></td></tr><tr><td>1 Ral Rune + 1 Flawed Gem (Any) + 1 Armor</td><td><b>Fully Repaired and Recharged Armor</b></td></tr></tbody></table></div>
+<h2 class="cg">Reign of the Warlock</h2><div class="tbl cg"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr><td>1 Twisted Essence of Suffering + 1 Charged Essence of Hatred + 1 Burning Essence of Terror + 1 Festering Essence of Destruction</td><td><b>Token of Absolution</b></td></tr><tr><td>1 Latent Sunder charm (Herald drop only) + 1 Perfect gem + 1 Rune + 1 Worldstone Shard <span class="small">(gem/rune/shard depend on the charm, e.g. Flame Rift: Perfect Ruby + Fal + Southern Shard)</span></td><td><b>Renewed Sunder charm</b> <span class=chip>Patch 3.2</span></td></tr></tbody></table></div>
+<h2 class="cg">Crafting</h2><p class="lede cg">Each craft = magic base + jewel + rune + the column’s perfect gem.</p><div class="tbl cg"><table class="cube craft"><thead><tr><th>Slot</th><th>Hit Power<br><span class="small">Perfect Sapphire</span></th><th>Blood<br><span class="small">Perfect Ruby</span></th><th>Caster<br><span class="small">Perfect Amethyst</span></th><th>Safety<br><span class="small">Perfect Emerald</span></th></tr></thead><tbody><tr><td><b>Helm</b></td><td>Full Helm <span class="rw-runes">+ Ith</span></td><td>Helm <span class="rw-runes">+ Ral</span></td><td>Mask <span class="rw-runes">+ Nef</span></td><td>Crown <span class="rw-runes">+ Ith</span></td></tr><tr><td><b>Body</b></td><td>Field Plate <span class="rw-runes">+ Nef</span></td><td>Plate Mail <span class="rw-runes">+ Thul</span></td><td>Light Plate <span class="rw-runes">+ Tal</span></td><td>Breast Plate <span class="rw-runes">+ Eth</span></td></tr><tr><td><b>Shield</b></td><td>Gothic Shield <span class="rw-runes">+ Eth</span></td><td>Spiked Shield <span class="rw-runes">+ Ith</span></td><td>Small Shield <span class="rw-runes">+ Eth</span></td><td>Kite Shield <span class="rw-runes">+ Nef</span></td></tr><tr><td><b>Gloves</b></td><td>Chain Gloves <span class="rw-runes">+ Ort</span></td><td>Heavy Gloves <span class="rw-runes">+ Nef</span></td><td>Leather Gloves <span class="rw-runes">+ Ort</span></td><td>Gauntlets <span class="rw-runes">+ Ral</span></td></tr><tr><td><b>Boots</b></td><td>Chain Boots <span class="rw-runes">+ Ral</span></td><td>Light Plated Boots <span class="rw-runes">+ Eth</span></td><td>Boots <span class="rw-runes">+ Thul</span></td><td>Plated Boots <span class="rw-runes">+ Ort</span></td></tr><tr><td><b>Belt</b></td><td>Heavy Belt <span class="rw-runes">+ Tal</span></td><td>Belt <span class="rw-runes">+ Tal</span></td><td>Light Belt <span class="rw-runes">+ Ith</span></td><td>Sash <span class="rw-runes">+ Tal</span></td></tr><tr><td><b>Amulet</b></td><td>Amulet <span class="rw-runes">+ Thul</span></td><td>Amulet <span class="rw-runes">+ Amn</span></td><td>Amulet <span class="rw-runes">+ Ral</span></td><td>Amulet <span class="rw-runes">+ Thul</span></td></tr><tr><td><b>Ring</b></td><td>Ring <span class="rw-runes">+ Amn</span></td><td>Ring <span class="rw-runes">+ Sol</span></td><td>Ring <span class="rw-runes">+ Amn</span></td><td>Ring <span class="rw-runes">+ Amn</span></td></tr><tr><td><b>Weapon</b></td><td>Blunt Weapon <span class="rw-runes">+ Tir</span></td><td>Axe <span class="rw-runes">+ Ort</span></td><td>Rod <span class="rw-runes">+ Tir</span></td><td>Spear <span class="rw-runes">+ Sol</span></td></tr></tbody></table></div>
+</section>
+
+</div>
+
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store = { get(k) { try { return JSON.parse(localStorage.getItem('armory:' + k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem('armory:' + k, JSON.stringify(v)); } catch (e) {} } };
+const owner = l => l.split(/[: ]/)[0];
+const pretty = l => l.replace('Shared:tab6(AdvancedStash)', 'Shared tab 6').replace('Shared:tab', 'Shared tab ').replace(' merc:', ' merc · ').replace(':', ' · ');
+const has = (n, who) => D.items.some(i => i.n === n && (!who || owner(i.l) === who));
+const rw = n => D.items.some(i => i.rw && i.n === n);
+const M = k => D.mats[k] || 0;
+
+// ---------- status tags for inventory ----------
+const MOVES = {
+  "Highlord's Wrath": ['Damon', 'ThroatCutter'], "Raven Frost": ['Shared', 'Blizzaga'],
+  "Verdugo's Hearty Cord": ['Shared', 'Blizzaga'], "Aldur's Advance": ['Shared', 'Blizzaga'], "The Mahim-Oak Curio": ['Shared', 'Damon'],
+  "Spirit": ['Shared', 'Smoked'], "Giant Thresher": ['Shared', 'ThroatCutter merc (Infinity base)'],
+};
+const DITCH = { 'Woestave':1, 'Frostburn':1, 'Venom Grip':1, 'Rockstopper':1, 'Spiritual Custodian':1, 'Credendum':1, "Heaven's Taebaek":1, 'Light Gauntlets':1 };
+const DITCH_IF_SHARED = { 'Goblin Toe':1, 'Great Helm':1, "Griswold's Heart":1, "Immortal King's Forge":1, "Immortal King's Pillar":1, "Immortal King's Detail":1 };
+function status(i) {
+  const m = MOVES[i.n];
+  if (m && owner(i.l) === m[0]) return ['Move', 'move', '→ ' + m[1]];
+  if (i.eq) return ['In use', 'use', ''];
+  if (DITCH[i.n] || (DITCH_IF_SHARED[i.n] && i.l.startsWith('Shared')) || (i.n === 'Diadem' && i.q === 'Rare' && owner(i.l) === 'ThroatCutter')) return ['Ditch', 'ditch', ''];
+  return ['Keep', '', ''];
+}
+
+// ---------- goals ----------
+const F = k => `<a class="jump" href="#farm-${k}">how to farm</a>`;
+const GOALS = [
+  { id: 'trist', title: 'ThroatCutter hit list: Ubers and Diablo Clone', who: 'ThroatCutter · Mosaic Assassin (est. Hell res now: fire ~4, light ~31, cold ~18, poison ~-7)', steps: [
+    ['respec', 'Respec: Tiger Strike (10) and Dragon Talon (9) into Fade', 'Fade adds all resists and physical damage reduction. Tokens of Absolution: ' + M('toa') + '.', 'now'],
+    ['hlw', "Move Highlord's Wrath from Damon to ThroatCutter", 'His amulet slot is empty. +1 skills, 20 IAS, 35 lightning res.', () => has("Highlord's Wrath", 'ThroatCutter') ? 'done' : 'now'],
+    ['coh', 'Cube Chains of Honor (Dol Um Ber Ist) into a 4-socket armor; replaces Vipermagi', '+65 all res, +2 skills, 8% DR. Uses your only Ber. Pick a base under 115 Str (Archon Plate is 103).', () => rw('Chains of Honor') ? 'done' : 'now'],
+    ['charms', "Swap Gheed's for the four all-res small charms in shared tab 4", '+19 to every resist. With CoH and Highlord\'s, all four resists clear 75.', 'now'],
+    ['res', 'Check resists in Hell: 75 in each', 'Fire highest for Uber Diablo; Dwarf Star absorbs fire too.', 'now'],
+    ['cta', 'Put a Call to Arms (+4 or better Battle Orders) and a Spirit shield on his weapon switch', "Jadetalons sit on switch now. Blizzaga's CTA rolled +1 Battle Orders: remake it (Amn Ral Mal Ist Ohm) and pass the best one through the stash.", 'farm', 'ctabase'],
+    ['dracul', "Farm Dracul's Grasp", 'More leech plus Life Tap. Wear for Ubers, Vampirebone (+3 Martial Arts) for farming.', () => has("Dracul's Grasp") ? 'done' : 'farm', 'dracul'],
+    ['ring', "Later: Bul-Kathos' Wedding Band or Stone of Jordan in place of Dwarf Star", 'Keep Dwarf Star as the Uber Diablo / Clone swap (fire absorb). Raven Frost stays.', () => has('The Stone of Jordan', 'ThroatCutter') ? 'done' : 'farm', 'soj'],
+    ['minis', 'Run the mini-Ubers, then Uber Tristram', `Key sets: ${Math.min(M('pk1'), M('pk2'), M('pk3'))}. Organ sets: ${Math.min(M('mbr'), M('dhn'), M('bey'))}. Full rejuvs: ${M('rvl')}.`, 'now', 'torch'],
+  ]},
+  { id: 'tcmerc', title: "ThroatCutter's merc", who: 'Act 2 · now Tal Rasha helm, Griswold\'s Heart, Hustle', steps: [
+    ['minf', 'Give him Infinity from shared tab 5; replaces Hustle', 'Conviction lowers Uber fire, cold and lightning resist for Mosaic.', () => D.items.some(i => i.n === 'Infinity' && i.l.startsWith('ThroatCutter merc')) ? 'done' : 'now'],
+    ['mfort', "Cube ethereal Fortitude (El Sol Dol Lo) in a 4-socket Archon Plate; replaces Griswold's Heart", `Make the Lo from 2 Ohm + a Diamond. Ohm on hand: ${D.runes.Ohm || 0}.`, 'farm'],
+    ['mhelm', "Keep Tal Rasha's helm; later an ethereal Andariel's Visage", 'More leech. Its -30 fire res is harmless on a merc.', 'farm'],
+    ['maura', 'Optional: re-hire as Act 2 Nightmare Defensive (Holy Freeze)', 'Slows Ubers. Skip if he is already Might and you would rather not re-level.', 'now'],
+  ]},
+  { id: 'clone', term: 'long', title: 'Diablo Clone and Annihilus', who: 'ThroatCutter', steps: [
+    ['soj', 'Farm two or three Stones of Jordan', 'Selling one to a vendor in Hell summons the Clone in that game. Spares give you retries.', () => has('The Stone of Jordan') ? 'done' : 'farm', 'soj'],
+    ['cloneprep', 'Pack the swaps', 'Wisp (lightning absorb, tab 4), Infernostride and Nokozan Relic (+max fire res), Dwarf Star (fire absorb, worn). Overcap lightning and fire.', 'now'],
+    ['clonego', 'Sell an SoJ in Hell and hunt the Clone', 'He spawns in place of a superunique in that game. Annihilus goes in a charm slot.', 'now', 'anni'],
+  ]},
+  { id: 'colossal', term: 'long', title: 'Colossal Ancients', who: 'Damon (Echoing Strike Warlock) or Smoked (Fist of the Heavens)', steps: [
+    ['st1', "Talic's Anguish (Act 1)", `Owned: ${M('ua1')}.`, () => M('ua1') ? 'done' : 'farm', 'statues'],
+    ['st2', "Korlic's Pain (Act 2)", `Terrorized Duriel. Eastern shards: ${M('xa2')}.`, () => M('ua2') ? 'done' : 'farm', 'statues'],
+    ['st3', "Madawc's Ire (Act 3)", `Terrorized Mephisto. Southern shards: ${M('xa3')}.`, () => M('ua3') ? 'done' : 'farm', 'statues'],
+    ['st4', "Bul-Kathos' Nightmare (Act 4)", `Terrorized Diablo. Deep shards: ${M('xa4')}.`, () => M('ua4') ? 'done' : 'farm', 'statues'],
+    ['st5', "Worusk's End (Act 5)", `Terrorized Baal. Northern shards: ${M('xa5')}.`, () => M('ua5') ? 'done' : 'farm', 'statues'],
+    ['colprep', 'Gear up: overcap every resist, Cannot Be Frozen, Life Tap or heavy leech', 'Each Ancient has a Conviction aura that strips 100% of one element. Bring Thawing and full rejuvenation potions.', 'now'],
+    ['colgo', 'Cube all five statues in Act 5 Hell and fight', 'Statues are consumed on use. The last Ancient killed decides which jewel pair can drop.', 'now'],
+  ]},
+  { id: 'barb', term: 'long', title: 'Shamelock: finish Hell, then magic find', who: 'Shamelock · Whirlwind Barbarian', steps: [
+    ['hell', 'Beat Hell', 'He is under level 70. Immortal King\'s Stone Crusher was sold, so the set waits.', 'now'],
+    ['mfkit', 'Assemble a magic-find swap kit', "Chance Guards, two Nagelrings, the 7% MF small charms, a Gheed's, both Blade of Ali Baba. Immortal King's Will already has 38% MF.", 'now'],
+  ]},
+  { id: 'blizz', title: 'Blizzaga hit list: MF, Terror Zones, cold immunes', who: 'Blizzaga · Blizzard / Energy Shield Sorceress (FCR 106%, breakpoint 105)', steps: [
+    ['bring', 'Swap the rare ring for Raven Frost (shared tab 4)', 'Cannot Be Frozen; Cold Rupture costs her 84 cold res.', () => has('Raven Frost', 'Blizzaga') ? 'done' : 'now'],
+    ['bcharm', 'Replace the fire-damage and 7-mana small charms', 'Cold skill grand charms first (each is +1 Blizzard, Glacial Spike, Cold Mastery), then life and resist charms.', 'farm'],
+    ['bjewel', "Farm cold Rainbow Facets and Protector's Frost", "Full-strength -enemy cold res, even on sundered immunes. Protector's Frost: kill Korlic last in the Colossal Ancients.", 'farm', 'statues'],
+    ['bmon', 'Find a 4-socket Monarch for a second Spirit on her switch', '+2 skills to Battle Orders and a faster cast.', 'farm'],
+    ['barmor', "Later: Enigma (MF) or Chains of Honor (resists) in place of Vipermagi", "Enigma gives about 68% MF at her level plus +2 skills; CoH gives +65 all res. Both drop Vipermagi's 30 FCR, so pair with Arachnid Mesh and a 10% FCR ring to stay at 105%.", 'farm'],
+    ['bfcr', 'Keep FCR at 105% or more when swapping gear', 'Oculus 30 + Spirit 26 + Vipermagi 30 + Magefist 20 = 106%.', 'now'],
+    ['arach', "Later: Arachnid Mesh (then Chance Guards replace Magefist) and a Stone of Jordan", 'Arachnid keeps the FCR breakpoint; SoJ adds +1 skills and 25% max mana.', 'farm', 'caster'],
+  ]},
+  { id: 'bmerc', title: "Blizzaga's merc", who: 'Act 2 Prayer · Insight, Tal Rasha helm, eth Duriel\'s Shell · 58 base res in Hell', steps: [
+    ['bins', 'Remake Insight for Meditation 16-17', 'Current one rolled 12 (the minimum). Ral Tir Tal Sol in an ethereal Giant Thresher or Cryptic Axe.', 'farm', 'base'],
+    ['bfort', "Ethereal Fortitude in Archon Plate; replaces Duriel's Shell", 'His resists stay capped thanks to the 58 base.', 'farm'],
+    ['bhelm', "Ethereal Andariel's Visage if Tal Rasha's helm leaves", 'Smoked\'s merc has another Tal\'s helm in the meantime.', 'farm'],
+  ]},
+  { id: 'damon', title: "Damon's Horazon's set", who: 'Damon · Warlock', steps: [
+    ['dam', 'Equip The Mahim-Oak Curio once Highlord\'s leaves', 'Shared tab 4.', () => has('The Mahim-Oak Curio', 'Damon') ? 'done' : 'now'],
+    ['dom', "Farm Horazon's Dominion", "Completes Horazon's Splendor.", () => has("Horazon's Dominion") ? 'done' : 'farm', 'sets'],
+  ]},
+  { id: 'smoked', title: 'Smoked the Chaos farmer', who: 'Smoked · Fist of the Heavens Paladin', steps: [
+    ['sword', 'Move the spare Spirit Crystal Sword from shared tab 1 to his main hand', 'Replaces Devil Star: +2 skills, faster cast. Consider moving the Spirit shield off weapon switch too.', 'now'],
+    ['shako', 'Farm a Harlequin Crest', 'Replaces his melee helm.', 'farm', 'caster'],
+  ]},
+];
+function renderGoals() {
+  const ticks = store.get('ticks') || {};
+  $('#goallist').innerHTML = [...GOALS.filter(g => !g.term), ...GOALS.filter(g => g.term)].map((g, gi, arr) => {
+    let done = 0;
+    const lis = g.steps.map(([id, t, h, st, fk]) => {
+      const auto = typeof st === 'function' ? st() : st;
+      const isDone = auto === 'done' || ticks[g.id + ':' + id];
+      if (isDone) done++;
+      const chip = isDone ? '<span class="chip done">Done</span>' : auto === 'farm' ? '<span class="chip farm">Farm</span>' : '<span class="chip now">Do now</span>';
+      return `<li class="${isDone ? 'done' : ''}"><input type="checkbox" id="c-${g.id}-${id}" data-k="${g.id}:${id}" ${isDone ? 'checked' : ''} ${auto === 'done' ? 'disabled' : ''} aria-label="${esc(t)}"><div class="t"><b>${esc(t)}</b><div class="h">${esc(h)}${fk ? ' · ' + F(fk) : ''}</div></div>${chip}</li>`;
+    }).join('');
+    const pct = Math.round(100 * done / g.steps.length);
+    const open = store.get('open:' + g.id);
+    return (gi === 0 ? '<h2>Immediate goals</h2>' : '') + (g.term && !(arr[gi - 1] || {}).term ? '<h2>Long-term goals</h2>' : '') + `<details class="goal" data-g="${g.id}" ${open === false ? '' : (pct < 100 ? 'open' : '')}><summary><h3>${esc(g.title)}</h3><span class="who">${esc(g.who)}</span><span class="chip ${pct === 100 ? 'done' : ''}">${done}/${g.steps.length}</span><span class="bar"><i style="width:${pct}%"></i></span></summary><ol class="steps2">${lis}</ol></details>`;
+  }).join('');
+  document.querySelectorAll('.steps2 input').forEach(cb => cb.addEventListener('change', e => { const t = store.get('ticks') || {}; t[e.target.dataset.k] = e.target.checked; store.set('ticks', t); renderGoals(); }));
+  document.querySelectorAll('details.goal').forEach(d => d.addEventListener('toggle', () => store.set('open:' + d.dataset.g, d.open)));
+}
+renderGoals();
+
+// ---------- farm guide ----------
+const FARMS = [
+  ['dracul', "Dracul's Grasp", 'Uber Tristram (ThroatCutter)', ["Dracul's Grasp"], ['Hell Mephisto and Baal runs', 'Chaos Sanctuary', 'Terror Zones with /players 8; Tier 3+ Heralds drop more rares']],
+  ['base', '4-socket Infinity base', 'Uber Tristram (ThroatCutter)', [], ['Hell Cows: lots of plain elite polearms fast', 'Hold Alt and look for "Socketed (4)"; grab ethereal ones', 'Or cube a plain one: Ral + Amn + Perfect Amethyst rolls random sockets (one try per base)', 'Scythe family (Thresher, Giant Thresher) or Mancatcher swings fastest']],
+  ['ctabase', 'Call to Arms base: plain Flail', 'Call to Arms (switch weapon for everyone)', [], ['Needs a plain white Flail at item level 41+ so it can take 5 sockets. Anything that drops in Hell qualifies', 'Easy finds: Hell Cows, Act 1 Hell, or check Hell vendors (Charsi, Fara) for one', 'Socket it with the Larzuk quest (exactly 5). Check which characters still have it unused', 'No quest left? Ral + Amn + Perfect Amethyst gives random sockets (1-5); retry with another Flail', 'Requirements: 41 Str / 35 Dex. Double Axe (43 Str, no Dex) or Long Bow (22 Str / 19 Dex) also get exactly 5 from Larzuk']],
+  ['torch', 'Hellfire Torch', 'Uber Tristram (ThroatCutter)', ['Hellfire Torch'], ['Uber Tristram only. Class is random; a wrong-class Torch means another run', 'More organs: mini-Ubers in Harrogath, one key of each type per portal']],
+  ['soj', 'Stone of Jordan', 'Diablo Clone', ['Stone of Jordan'], ['Hell Mephisto', 'Terror Zones with /players 8', 'LK super chests (your bot): low odds, but unattended volume', 'Any Hell monster can drop one']],
+  ['anni', 'Annihilus', 'Diablo Clone', ['Annihilus'], ['Sell a Stone of Jordan to a vendor in Hell', 'The Clone replaces a superunique in that game; kill him for Annihilus']],
+  ['statues', 'Colossal Ancient statues', 'Colossal Ancients', [], ["Use that act's Worldstone Shard to terrorize the act, then kill the act boss in Hell", 'Drops are not guaranteed; expect repeats', `Shards: Western ${M('xa1')} · Eastern ${M('xa2')} · Southern ${M('xa3')} · Deep ${M('xa4')} · Northern ${M('xa5')}`, 'Shards drop about 1 in 500 elite kills; magic find does not help']],
+  ['sets', 'Set pieces: Soul Cage, Adjudication, Dominion', 'Shamelock, Blizzaga, Damon', ["Immortal King's Soul Cage", "Tal Rasha's Adjudication", "Horazon's Dominion"], ['Any Hell area; set items are slow random drops', 'Terror Zones with /players 8 maximize rolls', 'Shamelock with the magic-find kit is your best farmer']],
+  ['caster', "Caster gear: Shako, Arachnid Mesh, Death's Fathom", 'Blizzaga, Smoked', ['Harlequin Crest', 'Arachnid Mesh', "Death's Fathom"], ['Hell Mephisto, Baal, Chaos Sanctuary', "Death's Fathom also drops from Hell Andariel and in Ancient Tunnels"]],
+  ['runes', 'Runes: Ohm, Vex, Lo, Ber', 'Call to Arms, Chains of Honor', [], ['Travincal council, Chaos Sanctuary, Hell Cows', 'Hell Countess (up to Ist) for the cube chain', 'LK super chests (your bot)', `Have: Vex ${D.runes.Vex} · Ohm ${D.runes.Ohm} · Lo ${D.runes.Lo} · Sur ${D.runes.Sur} · Ber ${D.runes.Ber}`]],
+  ['sunder', 'Latent Sunder charms (Heralds)', 'Immunity breaking for farming', [], ['Heralds in Terror Zones; Tier 4-5 in offline files', 'Cube a latent with a perfect gem, a rune and a shard into a Renewed charm with a smaller penalty plus a bonus like magic find or life', 'Not needed for Ubers or the Clone']],
+];
+$('#farmlist').innerHTML = FARMS.map(([id, name, need, statKeys, how]) => {
+  const stats = statKeys.map(k => D.farm[k] ? `<div class="stats"><b style="color:var(--unique)">${esc(k)}</b> · ${esc(D.farm[k].join(' · '))}</div>` : '').join('');
+  return `<div class="farmcard" id="farm-${id}"><h3>${esc(name)}</h3><div class="need">Needed for: ${esc(need)}</div>${stats}<ul>${how.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>`;
+}).join('');
+
+// ---------- inventory ----------
+const MAT = [['toa','Tokens'],['pk1','Key of Terror'],['pk2','Key of Hate'],['pk3','Key of Destruction'],['mbr','Brain'],['dhn','Horn'],['bey','Eye'],['ua1',"Talic's Anguish"],['ua2',"Korlic's Pain"],['ua3',"Madawc's Ire"],['ua4',"Bul-Kathos' Nightmare"],['ua5',"Worusk's End"],['xa1','Western shard'],['xa2','Eastern shard'],['xa3','Southern shard'],['xa4','Deep shard'],['xa5','Northern shard'],['rvl','Full rejuv']];
+const RUNES = "El Eld Tir Nef Eth Ith Tal Ral Ort Thul Amn Sol Shael Dol Hel Io Lum Ko Fal Lem Pul Um Mal Ist Gul Vex Ohm Lo Sur Ber Jah Cham Zod".split(' ');
+$('#bank').innerHTML = RUNES.filter(r => D.runes[r]).map(r => `<span><b>${r}</b> ${D.runes[r]}</span>`).join('') + MAT.filter(([k]) => M(k)).map(([k, n]) => `<span class="m"><b>${esc(n)}</b> ${M(k)}</span>`).join('');
+const owners = [...new Set(D.items.map(i => owner(i.l)))];
+$('#fc').innerHTML += owners.map(o => `<option>${esc(o)}</option>`).join('');
+function renderInv() {
+  const q = $('#q').value.trim().toLowerCase(), fc = $('#fc').value, fs = $('#fs').value, fq = $('#fq').value;
+  const order = { Unique: 0, Set: 1, Rare: 2, Magic: 3, Superior: 4, Normal: 5 };
+  const rows = D.items.map(i => [i, status(i)]).filter(([i, s]) =>
+    (!fc || owner(i.l) === fc) && (!fs || s[0] === fs) && (!fq || (fq === 'RW' ? i.rw : i.q === fq && !i.rw)) &&
+    (!q || [i.n, i.b, i.st.join(' '), i.s.join(' ')].join(' ').toLowerCase().includes(q)));
+  rows.sort(([a], [b]) => owner(a.l).localeCompare(owner(b.l)) || (b.eq - a.eq) || (b.rw - a.rw) || order[a.q] - order[b.q] || a.n.localeCompare(b.n));
+  $('#cnt').textContent = `${rows.length} of ${D.items.length}`;
+  $('#inv').innerHTML = rows.map(([i, s]) => `<tr><td class="q-${i.rw ? 'RW' : i.q}">${esc(i.n)}${i.e ? ' <span class="small">eth</span>' : ''}<div class="small" style="font-weight:400">${esc(i.b)}${i.t ? ' · ' + i.t : ''}${i.s.length ? ' · sockets ' + esc(i.s.join(' ')) : ''}</div></td><td class="small">${esc(pretty(i.l))}<br><span class="chip">${i.eq ? 'Equipped' : 'Stored'}</span></td><td><span class="chip ${s[1]}">${s[0]}</span>${s[2] ? `<div class="small">${esc(s[2])}</div>` : ''}</td><td class="stats">${esc(i.st.join(' · '))}</td></tr>`).join('');
+  store.set('filters', { fc, fs, fq });
+}
+const saved = store.get('filters'); if (saved) { $('#fc').value = saved.fc || ''; $('#fs').value = saved.fs || ''; $('#fq').value = saved.fq || ''; }
+['q', 'fc', 'fs', 'fq'].forEach(id => $('#' + id).addEventListener('input', renderInv));
+renderInv();
+
+// ---------- views ----------
+function show() {
+  let h = location.hash.slice(1), v = 'goals';
+  if (h.startsWith('farm')) v = 'farm'; else if (h === 'inventory') v = 'inventory'; else if (h === 'ref') v = 'ref';
+  ['goals', 'farm', 'inventory', 'ref'].forEach(x => $('#v-' + x).hidden = x !== v);
+  document.querySelectorAll('#tabs a').forEach(a => a.hash === '#' + v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  if (h.startsWith('farm-')) { const el = document.getElementById(h); if (el) el.scrollIntoView({ block: 'start' }); }
+}
+// ---------- wanted runewords ----------
+(function(){
+ const WANT=[['Enigma','Teleport for non-sorcs'],['Chains of Honor','ThroatCutter armor'],['Fortitude','Both mercs (ethereal Archon Plate)'],['Insight','Blizzaga merc remake (Meditation 16-17)']];
+ const LAD='El Eld Tir Nef Eth Ith Tal Ral Ort Thul Amn Sol Shael Dol Hel Io Lum Ko Fal Lem Pul Um Mal Ist Gul Vex Ohm Lo Sur Ber Jah Cham Zod'.split(' ');
+ const LVL=[11,11,13,13,15,15,17,19,21,23,25,27,29,31,0,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69];
+ const GEM=[,,,,,,,,,,'Chipped Topaz','Chipped Amethyst','Chipped Sapphire','Chipped Ruby','Chipped Emerald','Chipped Diamond','Flawed Topaz','Flawed Amethyst','Flawed Sapphire','Flawed Ruby','Flawed Emerald','Flawed Diamond','Topaz','Amethyst','Sapphire','Ruby','Emerald','Diamond','Flawless Topaz','Flawless Amethyst','Flawless Sapphire','Flawless Ruby','Flawless Emerald'];
+ const TY={weap:'Any weapon',mele:'Melee weapon',miss:'Missile weapon',pole:'Polearm',spea:'Spear',tors:'Body armor',shld:'Shield',ashd:'Paladin shield',pala:'Paladin shield',head:'Necro shrunken head',grim:'Grimoire',helm:'Helm',swor:'Sword',axe:'Axe',club:'Club',hamm:'Hammer',mace:'Mace',scep:'Scepter',staf:'Staff',wand:'Wand',knif:'Dagger',h2h:'Claw'};
+ const how=r=>{const i=LAD.indexOf(r);if(i<1)return '';const n=i<=20?3:2,g=GEM[i];return `${n} ${LAD[i-1]}${g?' + '+g:''}`;};
+ const card=(n,why)=>{const w=D.rwdb[n];if(!w)return '';const rs=w.runes.split(' ');const need={};rs.forEach(r=>need[r]=(need[r]||0)+1);
+  const lvl=Math.max(...rs.map(r=>LVL[LAD.indexOf(r)]));
+  const chips=rs.map(r=>`<span><b>${r}</b> ${D.runes[r]??0}</span>`).join('');
+  const short=Object.entries(need).filter(([r,c])=>(D.runes[r]??0)<c).map(([r,c])=>`${r} ×${c-(D.runes[r]??0)} (cube: ${how(r)})`);
+  const done=typeof rw==='function'&&rw(n);
+  return `<div class="farmcard rwc"><h3><span class="q-RW">${esc(n)}</span> <span class="small">· ${rs.length} sockets · level ${lvl}</span></h3><div class="need">${esc(why)} · Base: ${w.types.map(t=>TY[t]||t).join(' / ')}${w.patch&&/Ladder/.test(w.patch)?' · formerly ladder-only':''}</div><div class="rl">${chips}</div>${done?'<div class="ready">Already made</div>':short.length?`<div class="short">Short: ${esc(short.join(' · '))}</div>`:'<div class="ready">You have every rune for this</div>'}<div class="stats">${esc(w.mods.join(' · '))}</div></div>`;};
+ $('#rwwant').innerHTML=WANT.map(([n,why])=>card(n,why)).join('');
+ const CH=D.chron||{u:[0,1],s:[0,1],rw:[],rwn:99,mu:[],ms:[]};
+ const CHR=CH.rw.flatMap(n=>n.startsWith('Hustle')?['Hustle (armor)','Hustle (weapon)']:[n]);
+ const pct=(a,b)=>Math.round(100*a/b);
+ $('#chronbar').innerHTML=[['Uniques',CH.u[0],CH.u[1]],['Set items',CH.s[0],CH.s[1]],['Runewords',CH.rw.length,CH.rwn]].map(([k,a,b])=>`<div class="tile"><div class="k">${k}</div><div class="v">${pct(a,b)}%</div><div class="d">${a} of ${b} found</div><div class="bar" style="margin-top:6px"><i style="width:${pct(a,b)}%"></i></div></div>`).join('');
+ $('#mucnt').textContent=CH.mu.length+' left';$('#mulist').textContent=CH.mu.join(' · ');
+ $('#mscnt').textContent=CH.ms.length+' left';$('#mslist').textContent=CH.ms.join(' · ');
+ $('#rwlede').textContent=`Recorded so far: ${CH.rw.join(', ')}. The rest are below: ones you can make now first, then fewest runes short. Making one should log it. Type to filter by name, rune or base.`;
+ const gap=n=>{const rs=D.rwdb[n].runes.split(' ');const need={};rs.forEach(r=>need[r]=(need[r]||0)+1);return Object.entries(need).reduce((s,[r,c])=>s+Math.max(0,c-(D.runes[r]??0)),0);};
+ const top=n=>Math.max(...D.rwdb[n].runes.split(' ').map(r=>LAD.indexOf(r)));
+ const REST=Object.keys(D.rwdb).filter(n=>!CHR.includes(n)).sort((a,b)=>gap(a)-gap(b)||top(a)-top(b)||a.localeCompare(b));
+ const html=REST.map(n=>[n,card(n,(gap(n)?gap(n)+' rune'+(gap(n)>1?'s':'')+' short':'Ready to make')+(D.rwdb[n].patch?' · patch '+D.rwdb[n].patch:''))]);
+ const draw=()=>{const q=($('#rwq').value||'').trim().toLowerCase();const sh=html.filter(([n,h])=>!q||h.toLowerCase().includes(q));$('#rwrest').innerHTML=sh.map(x=>x[1]).join('');$('#rwcount').textContent=`${sh.length} of ${REST.length} shown · ${REST.filter(n=>!gap(n)).length} ready to make now`;};
+ $('#rwq').addEventListener('input',draw);draw();
+})();
+
+// ---------- collapsible sections ----------
+(function(){
+ const OPEN=['Chronicle progress','Materials','Items'];
+ document.querySelectorAll('#v-ref, #v-inventory').forEach(sec=>{
+  [...sec.querySelectorAll(':scope > h2:not(.cg)')].forEach(h=>{
+   const d=document.createElement('details');d.className='goal sec';d.open=OPEN.includes(h.textContent.trim());
+   const s=document.createElement('summary');s.innerHTML='<h3>'+h.innerHTML+'</h3>';d.appendChild(s);
+   const body=document.createElement('div');body.style.padding='0 16px 14px';d.appendChild(body);
+   let n=h.nextElementSibling;while(n&&!(n.tagName==='H2'&&!n.classList.contains('cg'))){const nx=n.nextElementSibling;body.appendChild(n);n=nx;}
+   h.replaceWith(d);});
+  // loose content before the first section stays as is
+ });
+})();
+// ---------- cube filter ----------
+function cubeFilter(){const q=$('#cq').value.trim().toLowerCase();let n=0;
+ document.querySelectorAll('#v-ref table.cube').forEach(t=>{let k=0;t.querySelectorAll('tbody tr').forEach(r=>{const m=!q||r.textContent.toLowerCase().includes(q);r.hidden=!m;if(m)k++});n+=k;
+  const w=t.closest('.tbl');w.hidden=!k;let h=w.previousElementSibling;while(h&&h.tagName!=='H2')h=h.previousElementSibling;if(h)h.hidden=!k;
+  const l=w.previousElementSibling;if(l&&l.classList.contains('lede'))l.hidden=!k;});
+ $('#ccnt').textContent=q?n+' match'+(n===1?'':'es'):'';}
+$('#cq').addEventListener('input',cubeFilter);
+addEventListener('hashchange', show); show();
+</script>

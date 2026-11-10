@@ -1,0 +1,8 @@
+[package]
+name = "d2dump"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+d2s = { version = "0.1.1", features = ["serde"] }
+serde_json = "1.0.154"

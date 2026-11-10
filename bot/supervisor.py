@@ -29,7 +29,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from . import control
+from . import armory, control
 from .config import ROOT, load_config
 
 log = logging.getLogger("bot.supervisor")
@@ -252,6 +252,8 @@ class Supervisor:
         elif not d["run"] and not self.running():
             self.state = "stopped" if d.get("stopped_by") else "idle"
         self.remote()
+        if self.remote_url:
+            armory.maybe_refresh(self.cfg)  # new save backup -> rebuild + upload the armory, in a thread
         self.write_status()
 
     def loop(self) -> None:

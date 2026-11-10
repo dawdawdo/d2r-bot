@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Blizzaga's Armory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Cinzel:wght@600;700&display=swap">
+<style>
+/* Blizzaga's Armory v3. One question per tab: Plan (what next), Chronicle (what's missing),
+   Stash (what I own), Cube (how to make it). Meaning never rides on hue alone:
+   every status has a shape and a word; colour is the D2 item-quality bonus layer. */
+:root{
+  --bg:#f5f2eb;--panel:#fffdf9;--raise:#efeadf;--line:#e2dccf;--line2:#cbc2b2;--fg:#1d1a15;--mute:#565044;--faint:#857c6d;
+  --accent:#87590f;--accent-ink:#fff8ea;--unique:#7a5f22;--set:#23731f;--rare:#756500;--magic:#2f4fb5;--rw:#a1500b;--normal:#3d3a35;
+  --ok:#2b6e28;--bad:#a3302a;--flash:#f6dfa6;
+  --display:"Cinzel",Georgia,serif;--body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#100f0d;--panel:#181613;--raise:#211e1a;--line:#2d2924;--line2:#423b32;--fg:#eee8dc;--mute:#b1a897;--faint:#81796c;
+  --accent:#e2b45c;--accent-ink:#1a1307;--unique:#d2b77f;--set:#63d660;--rare:#eedd5c;--magic:#93a3ff;--rw:#eda352;--normal:#ddd8cd;
+  --ok:#82cc7f;--bad:#f2806f;--flash:#4a3a16;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#100f0d;--panel:#181613;--raise:#211e1a;--line:#2d2924;--line2:#423b32;--fg:#eee8dc;--mute:#b1a897;--faint:#81796c;
+  --accent:#e2b45c;--accent-ink:#1a1307;--unique:#d2b77f;--set:#63d660;--rare:#eedd5c;--magic:#93a3ff;--rw:#eda352;--normal:#ddd8cd;
+  --ok:#82cc7f;--bad:#f2806f;--flash:#4a3a16;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.measure{max-width:880px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- header ---------- */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:22px 0 6px}
+.top h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4.4vw,34px);letter-spacing:.03em;line-height:1.1;margin:0;color:var(--accent)}
+.top .sub{margin:2px 0 0;color:var(--mute);font-size:15px}
+.brand{flex:1 1 280px;min-width:0}
+.fresh{position:relative}
+.freshbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--panel);border-radius:99px;padding:7px 14px;font-size:15px;cursor:pointer;min-height:40px}
+.freshbtn .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);flex:none}
+.freshbtn.stale .dot{background:transparent;border:2px solid var(--bad)}
+.freshbtn.stale b{color:var(--bad)}
+.pop{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:14px 16px;box-shadow:0 12px 40px rgb(0 0 0/.25);font-size:15px}
+.pop p{margin:0 0 8px}.pop p:last-child{margin:0}
+.pop code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;background:var(--raise);padding:1px 6px;border-radius:4px}
+
+/* ---------- sticky bar: tabs + find ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);margin:10px 0 22px}
+.barin{display:flex;align-items:center;gap:12px}
+.tabs{display:flex;gap:2px;overflow-x:auto;flex:1 1 auto;scrollbar-width:none}
+.tabs a{display:flex;align-items:baseline;gap:7px;padding:12px 14px 11px;color:var(--mute);text-decoration:none;font-weight:700;font-size:16px;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:var(--fg)}
+.tabs a[aria-current="page"]{color:var(--fg);border-color:var(--accent)}
+.tabs a small{font-weight:400;font-size:14px;color:var(--faint)}
+.find{position:relative;flex:0 1 340px;min-width:0}
+.find input{width:100%;height:40px;border:1px solid var(--line2);border-radius:99px;background:var(--panel);padding:0 40px 0 16px;font-size:15px}
+.find input:not(:placeholder-shown)~kbd{display:none}
+.find kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:var(--body);font-size:13px;color:var(--faint);border:1px solid var(--line2);border-radius:5px;padding:0 6px;pointer-events:none}
+.results{position:absolute;right:0;top:calc(100% + 6px);width:min(520px,calc(100vw - 32px));max-height:min(70vh,560px);overflow:auto;background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:0 14px 44px rgb(0 0 0/.28);padding:6px;z-index:45}
+.results .rg{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:10px 10px 4px}
+.results button{display:block;width:100%;text-align:left;border:0;background:none;border-radius:8px;padding:8px 10px;cursor:pointer}
+.results button[aria-selected="true"],.results button:hover{background:var(--raise)}
+.results button span{display:block;font-size:14px;color:var(--mute)}
+.results .none{padding:14px 10px;color:var(--mute)}
+@media (max-width:700px){.bar{position:static}.barin{flex-wrap:wrap;gap:8px;padding-bottom:10px}.find{flex:1 1 100%}.find kbd{display:none}}
+
+/* ---------- type & building blocks ---------- */
+h2{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.02em;margin:34px 0 12px;display:flex;align-items:center;gap:14px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+h2 small{font-family:var(--body);font-weight:400;font-size:15px;color:var(--mute);letter-spacing:0}
+section>h2:first-child,.first{margin-top:0}
+.lede{color:var(--mute);margin:0 0 14px;max-width:72ch}
+.muted{color:var(--mute)}.faint{color:var(--faint)}
+.small{font-size:14px;color:var(--mute)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.q-Unique{color:var(--unique)}.q-Set{color:var(--set)}.q-Rare{color:var(--rare)}.q-Magic{color:var(--magic)}.q-RW{color:var(--rw)}.q-Normal,.q-Superior{color:var(--normal)}
+.nm{font-weight:700}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:0 0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:5px 13px;border-radius:99px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-size:15px;white-space:nowrap}
+.chip small{font-size:13px;color:var(--faint)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.75}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:99px;background:var(--panel);padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:99px;padding:6px 14px;min-height:32px;cursor:pointer;font-size:15px;color:var(--mute);white-space:nowrap}
+.seg button b{font-weight:700;color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"] b{color:inherit}
+input.filter{height:40px;border:1px solid var(--line2);border-radius:8px;background:var(--panel);padding:0 12px;font-size:15px;flex:1 1 220px;min-width:0}
+
+/* status tags: shape + word */
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:700;white-space:nowrap;color:var(--mute)}
+.tag i{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
+.t-now{color:var(--fg)}.t-now i{background:var(--accent)}
+.t-farm i{border:2px solid var(--fg)}
+.t-later{color:var(--faint);font-weight:400}.t-later i{border:2px dashed var(--faint)}
+.t-done{color:var(--ok)}.t-done i{border-radius:0;width:12px;height:7px;border:0;border-left:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(-45deg) translate(1px,-2px)}
+.t-move i{border-radius:2px;background:var(--fg);clip-path:polygon(0 15%,60% 15%,60% 0,100% 50%,60% 100%,60% 85%,0 85%)}
+.t-ditch{color:var(--bad)}.t-ditch i{border-radius:0;background:currentColor;clip-path:polygon(20% 0,50% 30%,80% 0,100% 20%,70% 50%,100% 80%,80% 100%,50% 70%,20% 100%,0 80%,30% 50%,0 20%)}
+.t-new{color:var(--accent)}.t-new i{border-radius:0;background:currentColor;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.t-worn i{border-radius:2px;background:var(--mute);width:10px;height:10px}
+.t-ready{color:var(--ok)}.t-ready i{background:currentColor}
+.t-short{color:var(--mute);font-weight:400}.t-short i{border:2px solid currentColor}
+
+/* rune chips */
+.runes{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.rc{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--line2);border-radius:6px;padding:2px 9px;font-size:15px;background:var(--bg)}
+.rc b{color:var(--rw)}
+.rc.short{border-style:dashed;color:var(--mute)}
+.rc.short::after{content:"short";font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--bad);font-weight:700}
+
+/* ---------- plan ---------- */
+.news{padding:16px 18px;margin:0 0 22px;border-color:var(--line2);position:relative}
+.news h3{margin:0 0 8px;font-size:17px;display:flex;align-items:center;gap:10px}
+.news .row{margin:6px 0 0}
+.news .row>b{display:inline-block;min-width:96px;color:var(--mute);font-weight:700}
+.news .dismiss{position:absolute;top:12px;right:12px;border:1px solid var(--line2);background:none;border-radius:99px;padding:4px 12px;cursor:pointer;font-size:14px;color:var(--mute)}
+.goal{margin:0 0 14px;overflow:hidden}
+.goal>summary{list-style:none;cursor:pointer;padding:14px 18px 13px;display:grid;grid-template-columns:1fr auto;gap:2px 16px;align-items:baseline}
+.goal>summary::-webkit-details-marker{display:none}
+.goal>summary h3{margin:0;font-family:var(--display);font-weight:700;font-size:18px;line-height:1.3;text-wrap:balance}
+.goal>summary h3::before{content:"";display:inline-block;width:8px;height:8px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(-45deg);margin:0 12px 2px 0;transition:transform .15s}
+.goal[open]>summary h3::before{transform:rotate(45deg)}
+.goal .who{grid-column:1;color:var(--mute);font-size:15px;padding-left:22px}
+.goal .prog{grid-row:1;grid-column:2;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mute);font-variant-numeric:tabular-nums}
+.meter{display:block;width:72px;height:6px;border-radius:3px;background:var(--raise);overflow:hidden;border:1px solid var(--line)}
+.meter i{display:block;height:100%;background:var(--fg)}
+.goal .ctx{margin:0 18px 6px 40px;font-size:15px;color:var(--mute)}
+.steps{list-style:none;margin:0;padding:0 18px 6px}
+.step{display:grid;grid-template-columns:28px 1fr auto;gap:2px 12px;padding:13px 0;border-top:1px solid var(--line);align-items:start}
+.step input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+.step .t{font-weight:700;line-height:1.35}
+.step .h{color:var(--mute);margin-top:3px}
+.step.s-later .t{font-weight:400;color:var(--mute)}
+.step.s-done .t{font-weight:400;color:var(--mute);text-decoration:line-through;text-decoration-color:var(--line2)}
+.step .tag{margin-top:2px}
+.how{margin-top:8px}
+.how>summary{cursor:pointer;color:var(--accent);font-weight:700;font-size:15px;width:max-content;list-style:none}
+.how>summary::-webkit-details-marker{display:none}
+.how>summary::after{content:" ▸"}.how[open]>summary::after{content:" ▾"}
+.how .box{margin-top:8px;padding:10px 14px;background:var(--raise);border-radius:8px;font-size:15px}
+.how ul{margin:4px 0 0;padding-left:18px}.how li{margin:3px 0}
+.how .tgt{color:var(--mute);margin:0 0 4px}
+.donefold{border-top:1px solid var(--line);margin:0 18px;padding:10px 0 12px}
+.donefold>summary{cursor:pointer;color:var(--mute);font-size:15px;list-style:none;width:max-content}
+.donefold>summary::-webkit-details-marker{display:none}
+.donefold .steps{padding:0}
+.tips{padding:12px 16px;margin:0 0 18px;font-size:15px;color:var(--mute)}
+.empty{padding:22px;text-align:center;color:var(--mute)}
+
+.plangrid{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:28px;align-items:start}
+.planmain{min-width:0;max-width:820px}
+.rail{position:sticky;top:76px;display:grid;gap:14px}
+.rail .card{padding:14px 16px}
+.rail h4{margin:0 0 8px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.rail ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.rail li button{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 8px;margin:0 -8px;border-radius:6px;cursor:pointer;width:calc(100% + 16px)}
+.rail li button:hover{background:var(--raise)}
+.rail li span{display:block;font-size:14px;color:var(--mute)}
+.rail .big{font-size:26px;font-weight:700;line-height:1.1}
+.rail a{font-weight:700}
+@media (max-width:1060px){.plangrid{grid-template-columns:1fr}.rail{position:static;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+/* ---------- chronicle ---------- */
+.meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mt{padding:16px 18px}
+.mt .k{font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.mt .v{font-size:34px;font-weight:700;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.mt .meter{width:100%;height:8px;margin-top:10px}
+.mt .d{color:var(--mute);font-size:15px}
+.mt .up{color:var(--ok);font-weight:700}
+.rwl{display:grid;gap:8px}
+.rw>summary{list-style:none;cursor:pointer;padding:12px 16px;display:grid;grid-template-columns:minmax(150px,220px) 1fr auto;gap:4px 16px;align-items:center}
+.rw>summary::-webkit-details-marker{display:none}
+.rw .nm{color:var(--rw);font-size:17px}
+.rw .meta{grid-column:1/3;font-size:14px;color:var(--mute)}
+.rw .runes{margin:0}
+.rw .body{padding:0 16px 14px;font-size:15px}
+.rw .body p{margin:6px 0}
+.rw .mods{color:var(--mute)}
+.warn{color:var(--bad)}
+.star{color:var(--accent);font-weight:700;font-size:14px;margin-left:6px;white-space:nowrap}
+.groups{display:grid;gap:8px}
+.grp>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;gap:10px;align-items:baseline}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary b{font-size:16px}
+.grp>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(-45deg);margin-right:4px;flex:none;align-self:center;transition:transform .15s}
+.grp[open]>summary::before{transform:rotate(45deg)}
+.grp .list{padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px}
+.mi{border:1px solid var(--line);border-radius:6px;padding:3px 10px;font-size:15px;background:var(--bg)}
+.mi span{color:var(--mute);font-size:14px}
+
+/* ---------- stash ---------- */
+.runegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.rn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 4px 5px;text-align:center}
+.rn b{display:block;font-size:14px;color:var(--rw)}
+.rn span{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.rn.zero{background:transparent;border-style:dashed}
+.rn.zero b,.rn.zero span{color:var(--faint);font-weight:400}
+.ledger2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;padding:4px 16px 16px}
+.ledger2 table{width:100%;border-collapse:collapse;font-size:15px}
+.ledger2 th,.ledger2 td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.ledger2 th:first-child,.ledger2 td:first-child{text-align:left}
+.ledger2 th{font-size:13px;color:var(--mute);font-weight:700}
+.ledger2 td.z{color:var(--faint)}
+.matg h4{margin:0 0 4px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.matg{display:grid;gap:12px;align-content:start}
+.matg .ml{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:15px}
+.matg .ml span b{font-variant-numeric:tabular-nums}
+.fold>summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:700;display:flex;gap:10px;align-items:baseline}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(-45deg);margin-right:4px;flex:none;align-self:center;transition:transform .15s}
+.fold[open]>summary::before{transform:rotate(45deg)}
+.fold>summary span{font-weight:400;color:var(--mute);font-size:15px}
+.hk{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hk .chip i{width:11px;height:11px}
+.ig{margin:0 0 10px}
+.ig>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:13px 16px}
+.ig>summary::-webkit-details-marker{display:none}
+.ig>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(-45deg);margin-right:4px;flex:none;align-self:center;transition:transform .15s}
+.ig[open]>summary::before{transform:rotate(45deg)}
+.ig[open]>summary{border-bottom:1px solid var(--line)}
+.ig>summary b{font-size:16px}
+.it{display:grid;grid-template-columns:minmax(200px,300px) 1fr minmax(120px,auto);gap:4px 18px;padding:11px 16px;border-top:1px solid var(--line);cursor:pointer;align-items:start}
+.ig>summary+.it{border-top:0}
+.it:hover{background:var(--raise)}
+.it .meta{font-size:14px;color:var(--mute);margin-top:1px}
+.it .ist{font-size:15px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.it.open .ist{display:block;color:var(--fg)}
+.it .st{display:grid;gap:3px;justify-items:start;font-size:14px}
+.it .st .pl{color:var(--mute)}
+@media (max-width:760px){.it{grid-template-columns:1fr auto}.it .ist{grid-column:1/-1;grid-row:2}.rw>summary{grid-template-columns:1fr auto}.rw .runes{grid-column:1/-1}.rw .meta{grid-column:1/-1}}
+
+/* ---------- cube ---------- */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.tbl table{border-collapse:collapse;width:100%;font-size:15px}
+.tbl th,.tbl td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:700;background:var(--raise)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl td.z{color:var(--faint)}
+.tbl .chip{min-height:0;padding:1px 9px;font-size:13px;cursor:default;margin-left:6px}
+table.craft td,table.craft th{white-space:nowrap}
+.rw-runes{color:var(--rw);font-weight:700}
+.cubegrid{display:grid;gap:10px;max-width:900px}
+.csec .tbl{border:0;border-radius:0 0 12px 12px;border-top:1px solid var(--line)}
+.csec .lede{padding:12px 16px 0;margin:0 0 10px}
+.cubetools{display:flex;justify-content:flex-end;gap:6px;max-width:900px;margin:0 0 10px}
+.cubegrid h3{font-size:16px;margin:0 0 8px}
+
+.flash{animation:flash 1.8s ease-out}
+@keyframes flash{0%,35%{background:var(--flash)}100%{background:transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none;outline:3px solid var(--accent)}.goal>summary h3::before,.grp>summary::before,.fold>summary::before{transition:none}}
+@media (max-width:600px){.goal .ctx{margin-left:18px}.goal .who{padding-left:0}.goal>summary h3::before{display:none}}
+footer{margin-top:48px;color:var(--faint);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><h1>Blizzaga's Armory</h1><p class="sub" id="sub"></p></div>
+  <div class="fresh">
+    <button class="freshbtn" id="freshbtn" aria-expanded="false" aria-controls="freshpop"><span class="dot"></span><span id="freshtxt"></span></button>
+    <div class="pop" id="freshpop" hidden></div>
+  </div>
+</header>
+<div class="bar"><div class="barin">
+  <nav class="tabs" id="tabs" aria-label="Views">
+    <a href="#plan">Plan <small id="tc-plan"></small></a>
+    <a href="#chronicle">Chronicle <small id="tc-chron"></small></a>
+    <a href="#stash">Stash <small id="tc-stash"></small></a>
+    <a href="#cube">Cube</a>
+  </nav>
+  <div class="find" role="search">
+    <input id="find" type="search" autocomplete="off" placeholder="Find an item, runeword, recipe…" aria-label="Find anything" aria-controls="results" aria-expanded="false">
+    <kbd>/</kbd>
+    <div class="results" id="results" role="listbox" hidden></div>
+  </div>
+</div></div>
+
+<main>
+<section id="v-plan"><div class="plangrid"><div class="planmain">
+  <div id="news"></div>
+  <div class="controls"><div class="chips" id="chP" aria-label="Character"></div><div class="seg" id="mode" aria-label="Show"></div></div>
+  <div id="tips"></div>
+  <div id="goals"></div>
+</div><aside class="rail" id="rail" aria-label="At a glance"></aside></div>
+</section>
+
+<section id="v-chronicle" hidden>
+  <div class="controls"><input class="filter" id="cq" type="search" autocomplete="off" placeholder="Search the Chronicle: unique, set, runeword, rune, stat" aria-label="Search the Chronicle"></div>
+  <div class="meters" id="meters"></div>
+  <div id="recwrap" hidden><h2>Already recorded <small id="recsub"></small></h2><div class="card"><div class="list" id="reclist"></div></div></div>
+  <h2>Runewords <small id="rwsub"></small></h2>
+  <div class="controls"><div class="seg" id="rwmode" aria-label="Runeword list"></div></div>
+  <p class="lede" id="rwlede"></p>
+  <div class="rwl" id="rwlist"></div>
+  <h2>Uniques not found yet <small id="musub"></small></h2>
+  <div class="groups" id="mulist"></div>
+  <h2>Set items not found yet <small id="mssub"></small></h2>
+  <div class="groups" id="mslist"></div>
+</section>
+
+<section id="v-stash" hidden>
+  <h2 class="first">Runes <small>all characters and the shared stash</small></h2>
+  <div class="runegrid" id="runegrid"></div>
+  <details class="card fold" id="matfold" style="margin-top:12px"><summary>Gems and endgame materials <span id="matsum"></span></summary><div class="ledger2" id="ledger2"></div></details>
+  <h2>Items <small id="icount"></small></h2>
+  <div class="controls"><div class="chips" id="chS" aria-label="Where"></div></div>
+  <div class="controls"><div class="hk" id="hk"></div><div class="seg" id="iqual" aria-label="Quality"></div><input class="filter" id="iq" type="search" placeholder="Filter by name, base or stat" aria-label="Filter items"></div>
+  <div id="items"></div>
+</section>
+
+<section id="v-cube" hidden>
+  <div class="cubetools"><button class="chip" id="cubeall">Open all</button><button class="chip" id="cubenone">Close all</button></div>
+  <div class="cubegrid">
+    <details class="card fold csec" data-c="runes"><summary>Rune upgrades <span>uses your current stock</span></summary>
+    <div class="tbl"><table><thead><tr><th>Put in</th><th>Get</th><th style="text-align:right">Have</th><th style="text-align:right">Can make</th></tr></thead><tbody id="runeup"></tbody></table></div></details>
+    <details class="card fold csec" data-c="socketsamp"><summary>Sockets &amp; upgrades <span></span></summary><div class="tbl"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr data-find=""><td>3 Standard Gems + 1 Socketed Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr data-find=""><td>3 Flawless Gems + 1 Magic Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr data-find=""><td>1 Tal Rune + 1 Thul Rune + 1 Perfect Topaz + 1 Normal Torso Armor</td><td><b>Socketed Torso Armor</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Amn Rune + 1 Perfect Amethyst + 1 Normal Weapon</td><td><b>Socketed Weapon</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Thul Rune + 1 Perfect Sapphire + 1 Normal Helm</td><td><b>Socketed Helm</b></td></tr><tr data-find=""><td>1 Tal Rune + 1 Amn Rune + 1 Perfect Ruby + 1 Normal Shield</td><td><b>Socketed Shield</b></td></tr><tr data-find=""><td>1 Eld Rune + 1 Chipped Gem (Any) + 1 Low Quality Weapon</td><td><b>Normal Weapon</b></td></tr><tr data-find=""><td>1 El Rune + 1 Chipped Gem (Any) + 1 Low Quality Armor</td><td><b>Normal Armor</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Sol Rune + 1 Perfect Emerald + 1 Normal Unique Weapon</td><td><b>Exceptional Unique Weapon</b></td></tr><tr data-find=""><td>1 Tal Rune + 1 Shael Rune + 1 Perfect Diamond + 1 Normal Unique Armor</td><td><b>Exceptional Unique Armor</b></td></tr><tr data-find=""><td>1 Lum Rune + 1 Pul Rune + 1 Perfect Emerald + 1 Exceptional Unique Weapon</td><td><b>Elite Unique Weapon</b></td></tr><tr data-find=""><td>1 Ko Rune + 1 Lem Rune + 1 Perfect Diamond + 1 Exceptional Unique Armor</td><td><b>Elite Unique Armor</b></td></tr><tr data-find=""><td>1 Hel Rune + Scroll of Town Portal + 1 Socketed Item</td><td><b>Clear Sockets on Item</b></td></tr><tr data-find=""><td>3 Chipped Gems (Any) + 1 Magic Weapon</td><td><b>Socketed Magic Weapon</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Sol Rune + 1 Perfect Emerald + 1 Normal Set Weapon</td><td><b>Exceptional Set Weapon</b> <span class=chip>Ladder (works offline)</span></td></tr><tr data-find=""><td>1 Tal Rune + 1 Shael Rune + 1 Perfect Diamond + 1 Normal Set Armor</td><td><b>Exceptional Set Armor</b> <span class=chip>Ladder (works offline)</span></td></tr><tr data-find=""><td>1 Lum Rune + 1 Pul Rune + 1 Perfect Emerald + 1 Exceptional Set Weapon</td><td><b>Elite Set Weapon</b> <span class=chip>Ladder (works offline)</span></td></tr><tr data-find=""><td>1 Ko Rune + 1 Lem Rune + 1 Perfect Diamond + 1 Exceptional Set Armor</td><td><b>Elite Set Armor</b> <span class=chip>Ladder (works offline)</span></td></tr></tbody></table></div></details>
+    <details class="card fold csec" data-c="rerollsamp"><summary>Rerolls &amp; rares <span></span></summary><div class="tbl"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr data-find=""><td>3 Perfect Gems (Any) + 1 Magic Item</td><td><b>Re-rolled Magic Item</b></td></tr><tr data-find=""><td>6 Perfect Skulls + 1 Rare Item</td><td><b>1 Low Quality Rare Item</b></td></tr><tr data-find=""><td>1 Perfect Skull + 1 Rare Item + 1 Stone of Jordan</td><td><b>1 High Quality Rare Item</b></td></tr><tr data-find=""><td>3 Perfect Skull + 1 Rare Item + 1 Stone of Jordan</td><td><b>Add 1 Socket to Rare Item</b></td></tr><tr data-find=""><td>1 Ort Rune + 1 Amn Rune + 1 Perfect Sapphire + 1 Normal Rare Weapon</td><td><b>Exceptional Rare Weapon</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Thul Rune + 1 Perfect Amethyst + 1 Normal Rare Armor</td><td><b>Exceptional Rare Armor</b></td></tr><tr data-find=""><td>1 Fal Rune + 1 Um Rune + 1 Perfect Sapphire + 1 Exceptional Rare Weapon</td><td><b>Elite Rare Weapon</b></td></tr><tr data-find=""><td>1 Ko Rune + 1 Pul Rune + 1 Perfect Amethyst + 1 Exceptional Rare Armor</td><td><b>Elite Rare Armor</b></td></tr></tbody></table></div></details>
+    <details class="card fold csec" data-c="repairampr"><summary>Repair &amp; recharge <span></span></summary><div class="tbl"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr data-find=""><td>1 Ort Rune + 1 Weapon</td><td><b>Fully Repaired Weapon</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Armor</td><td><b>Fully Repaired Armor</b></td></tr><tr data-find=""><td>1 Ort Rune + 1 Chipped Gem (Any) + 1 Weapon</td><td><b>Fully Repaired and Recharged Weapon</b></td></tr><tr data-find=""><td>1 Ral Rune + 1 Flawed Gem (Any) + 1 Armor</td><td><b>Fully Repaired and Recharged Armor</b></td></tr></tbody></table></div></details>
+    <details class="card fold csec" data-c="reignofthe"><summary>Reign of the Warlock <span></span></summary><div class="tbl"><table class="cube"><thead><tr><th>Put in</th><th>Get</th></tr></thead><tbody><tr data-find=""><td>1 Twisted Essence of Suffering + 1 Charged Essence of Hatred + 1 Burning Essence of Terror + 1 Festering Essence of Destruction</td><td><b>Token of Absolution</b></td></tr><tr data-find=""><td>1 Latent Sunder charm (Herald drop only) + 1 Perfect gem + 1 Rune + 1 Worldstone Shard <span class="small">(gem/rune/shard depend on the charm, e.g. Flame Rift: Perfect Ruby + Fal + Southern Shard)</span></td><td><b>Renewed Sunder charm</b> <span class=chip>Patch 3.2</span></td></tr></tbody></table></div></details>
+    <details class="card fold csec" data-c="crafting"><summary>Crafting <span></span></summary><p class="lede">Each craft = magic base + jewel + rune + the column’s perfect gem.</p><div class="tbl"><table class="cube craft"><thead><tr><th>Slot</th><th>Hit Power<br><span class="small">Perfect Sapphire</span></th><th>Blood<br><span class="small">Perfect Ruby</span></th><th>Caster<br><span class="small">Perfect Amethyst</span></th><th>Safety<br><span class="small">Perfect Emerald</span></th></tr></thead><tbody><tr data-find="craft crafted Helm" data-t="Crafted helm"><td><b>Helm</b></td><td>Full Helm <span class="rw-runes">+ Ith</span></td><td>Helm <span class="rw-runes">+ Ral</span></td><td>Mask <span class="rw-runes">+ Nef</span></td><td>Crown <span class="rw-runes">+ Ith</span></td></tr><tr data-find="craft crafted Body" data-t="Crafted body"><td><b>Body</b></td><td>Field Plate <span class="rw-runes">+ Nef</span></td><td>Plate Mail <span class="rw-runes">+ Thul</span></td><td>Light Plate <span class="rw-runes">+ Tal</span></td><td>Breast Plate <span class="rw-runes">+ Eth</span></td></tr><tr data-find="craft crafted Shield" data-t="Crafted shield"><td><b>Shield</b></td><td>Gothic Shield <span class="rw-runes">+ Eth</span></td><td>Spiked Shield <span class="rw-runes">+ Ith</span></td><td>Small Shield <span class="rw-runes">+ Eth</span></td><td>Kite Shield <span class="rw-runes">+ Nef</span></td></tr><tr data-find="craft crafted Gloves" data-t="Crafted gloves"><td><b>Gloves</b></td><td>Chain Gloves <span class="rw-runes">+ Ort</span></td><td>Heavy Gloves <span class="rw-runes">+ Nef</span></td><td>Leather Gloves <span class="rw-runes">+ Ort</span></td><td>Gauntlets <span class="rw-runes">+ Ral</span></td></tr><tr data-find="craft crafted Boots" data-t="Crafted boots"><td><b>Boots</b></td><td>Chain Boots <span class="rw-runes">+ Ral</span></td><td>Light Plated Boots <span class="rw-runes">+ Eth</span></td><td>Boots <span class="rw-runes">+ Thul</span></td><td>Plated Boots <span class="rw-runes">+ Ort</span></td></tr><tr data-find="craft crafted Belt" data-t="Crafted belt"><td><b>Belt</b></td><td>Heavy Belt <span class="rw-runes">+ Tal</span></td><td>Belt <span class="rw-runes">+ Tal</span></td><td>Light Belt <span class="rw-runes">+ Ith</span></td><td>Sash <span class="rw-runes">+ Tal</span></td></tr><tr data-find="craft crafted Amulet" data-t="Crafted amulet"><td><b>Amulet</b></td><td>Amulet <span class="rw-runes">+ Thul</span></td><td>Amulet <span class="rw-runes">+ Amn</span></td><td>Amulet <span class="rw-runes">+ Ral</span></td><td>Amulet <span class="rw-runes">+ Thul</span></td></tr><tr data-find="craft crafted Ring" data-t="Crafted ring"><td><b>Ring</b></td><td>Ring <span class="rw-runes">+ Amn</span></td><td>Ring <span class="rw-runes">+ Sol</span></td><td>Ring <span class="rw-runes">+ Amn</span></td><td>Ring <span class="rw-runes">+ Amn</span></td></tr><tr data-find="craft crafted Weapon" data-t="Crafted weapon"><td><b>Weapon</b></td><td>Blunt Weapon <span class="rw-runes">+ Tir</span></td><td>Axe <span class="rw-runes">+ Ort</span></td><td>Rod <span class="rw-runes">+ Tir</span></td><td>Spear <span class="rw-runes">+ Sol</span></td></tr></tbody></table></div></details>
+  </div>
+</section>
+</main>
+<footer id="foot"></footer>
+</div>
+
+<script>
+const D = __DATA__;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem('armory3:' + k)); return v ?? d; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem('armory3:' + k, JSON.stringify(v)); } catch (e) {} } };
+const RUNES = 'El Eld Tir Nef Eth Ith Tal Ral Ort Thul Amn Sol Shael Dol Hel Io Lum Ko Fal Lem Pul Um Mal Ist Gul Vex Ohm Lo Sur Ber Jah Cham Zod'.split(' ');
+const R = r => D.runes[r] || 0, M = k => (D.mats || {})[k] || 0;
+const owner = l => l.split(/[: ]/)[0];
+const has = (n, who) => D.items.some(i => i.n === n && (!who || owner(i.l) === who));
+const made = n => D.items.some(i => i.rw && i.n === n);
+const CHARS = D.chars || [];
+const MULES = CHARS.filter(c => c.lv <= 1).map(c => c.n);
+const PLAYERS = CHARS.filter(c => c.lv > 1).sort((a, b) => b.lv - a.lv);
+const CH = D.chron || { u: [0, 1], s: [0, 1], rw: [], rwn: 99, mug: [], msg: [] };
+const DL = D.delta || null;
+const NEW = new Set(DL ? DL.items : []);
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+const fmtTime = ms => new Date(ms).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; };
+const state = { tab: 'plan', ch: store.get('ch', 'all'), mode: store.get('mode', 'now'), rwmode: store.get('rwmode', 'ready'), iqual: 'all', ist: null, iq: '' };
+const saveState = () => { store.set('ch', state.ch); store.set('mode', state.mode); store.set('rwmode', state.rwmode); };
+
+/* ---------- item status ---------- */
+const MOVES = { "Highlord's Wrath": ['Damon', 'ThroatCutter'], 'Raven Frost': ['Shared', 'Blizzaga'], "Verdugo's Hearty Cord": ['Shared', 'Blizzaga'],
+  "Aldur's Advance": ['Shared', 'Blizzaga'], 'The Mahim-Oak Curio': ['Shared', 'Damon'], 'Spirit': ['Shared', 'Smoked'], 'Giant Thresher': ['Shared', "ThroatCutter's merc"] };
+const DITCH = { 'Woestave':1, 'Frostburn':1, 'Venom Grip':1, 'Rockstopper':1, 'Spiritual Custodian':1, 'Credendum':1, "Heaven's Taebaek":1, 'Light Gauntlets':1 };
+const DITCH_IF_SHARED = { 'Goblin Toe':1, 'Great Helm':1, "Griswold's Heart":1, "Immortal King's Forge":1, "Immortal King's Pillar":1, "Immortal King's Detail":1 };
+function status(i) {
+  const m = MOVES[i.n];
+  if (m && owner(i.l) === m[0]) return ['move', 'Move', 'to ' + m[1]];
+  if (i.eq) return ['worn', '', ''];
+  if (DITCH[i.n] || (DITCH_IF_SHARED[i.n] && i.l.startsWith('Shared')) || (i.n === 'Diadem' && i.q === 'Rare' && owner(i.l) === 'ThroatCutter')) return ['ditch', 'Ditch', ''];
+  return ['keep', '', ''];
+}
+const QL = { Unique: 'Unique', Set: 'Set', Rare: 'Rare', Magic: 'Magic', Normal: 'Base', Superior: 'Superior' };
+const qkey = i => i.rw ? 'RW' : i.q;
+const qlabel = i => i.rw ? 'Runeword' : QL[i.q] || i.q;
+const TIER = { norm: 'normal', exc: 'exceptional', elite: 'elite' };
+function place(i) {
+  const [who, p] = i.l.split(':'); const o = owner(i.l);
+  const merc = who.includes(' merc');
+  const grp = o === 'Shared' ? 'Shared stash' : merc ? o + "'s merc" : o;
+  let where = o === 'Shared' ? 'Tab ' + (p || '').replace(/^tab(\d+).*/, '$1') : { equipped: 'Worn', inventory: 'Inventory', stash: 'Stash', belt: 'Belt', cube: 'Cube' }[p] || p;
+  if (merc) where = 'Worn by merc';
+  return { o, grp, where };
+}
+
+/* ---------- runewords ---------- */
+const LVL = [11,11,13,13,15,15,17,19,21,23,25,27,29,31,15,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69];
+const GEM = [,,,,,,,,,,'Chipped Topaz','Chipped Amethyst','Chipped Sapphire','Chipped Ruby','Chipped Emerald','Chipped Diamond','Flawed Topaz','Flawed Amethyst','Flawed Sapphire','Flawed Ruby','Flawed Emerald','Flawed Diamond','Topaz','Amethyst','Sapphire','Ruby','Emerald','Diamond','Flawless Topaz','Flawless Amethyst','Flawless Sapphire','Flawless Ruby','Flawless Emerald'];
+const GEMC = n => { const [g, t] = n.includes(' ') ? n.split(' ') : ['', n]; const tl = { Topaz: 'y', Amethyst: 'v', Sapphire: 'b', Ruby: 'r', Emerald: 'g', Diamond: 'w' }[t];
+  if (g === 'Flawless' && tl === 'v') return 'gzv'; return ({ Chipped: 'gc', Flawed: 'gf', '': 'gs', Flawless: 'gl', Perfect: 'gp' }[g]) + tl; };
+const TY = { weap:'any weapon', mele:'melee weapon', miss:'missile weapon', pole:'polearm', spea:'spear', tors:'body armor', shld:'shield', ashd:'paladin shield', pala:'paladin shield', head:'shrunken head', grim:'grimoire', helm:'helm', swor:'sword', axe:'axe', club:'club', hamm:'hammer', mace:'mace', scep:'scepter', staf:'staff', wand:'wand', knif:'dagger', h2h:'claw' };
+const upHow = r => { const i = RUNES.indexOf(r); if (i < 1) return 'drop only'; return `${i <= 20 ? 3 : 2} ${RUNES[i - 1]}${GEM[i] ? ' + ' + GEM[i] : ''}`; };
+const WANT = { 'Enigma': 'Teleport for non-sorcs', 'Chains of Honor': "ThroatCutter's armor", 'Fortitude': 'Both mercs (ethereal Archon Plate)', 'Insight': "Blizzaga's merc remake (Meditation 16-17)" };
+const RWN = Object.keys(D.rwdb || {});
+const inChron = new Set(CH.rw.flatMap(n => n.startsWith('Hustle') ? ['Hustle (armor)', 'Hustle (weapon)', n] : [n]));
+const need = n => { const c = {}; D.rwdb[n].runes.split(' ').forEach(r => c[r] = (c[r] || 0) + 1); return c; };
+const gap = n => Object.entries(need(n)).reduce((s, [r, c]) => s + Math.max(0, c - R(r)), 0);
+const topRune = n => Math.max(...D.rwdb[n].runes.split(' ').map(r => RUNES.indexOf(r)));
+function runeChips(n) {
+  const nd = need(n), seen = {};
+  return '<div class="runes">' + D.rwdb[n].runes.split(' ').map(r => { seen[r] = (seen[r] || 0) + 1; const short = R(r) < seen[r];
+    return `<span class="rc${short ? ' short' : ''}" title="${esc(r)}: have ${R(r)}, need ${nd[r]}"><b>${esc(r)}</b>${R(r)}</span>`; }).join('') + '</div>';
+}
+function shortText(n) {
+  const s = Object.entries(need(n)).filter(([r, c]) => R(r) < c).map(([r, c]) => `${r} ×${c - R(r)} (cube: ${upHow(r)})`);
+  return s.length ? 'Short: ' + s.join(' · ') : '';
+}
+const rwState = n => inChron.has(n) ? 'made' : gap(n) ? 'short' : 'ready';
+const conflict = n => { if (WANT[n] && !made(n)) return ''; const nd = need(n);
+  for (const w of Object.keys(WANT)) { if (w === n || made(w) || !D.rwdb[w]) continue; const nw = need(w);
+    for (const r in nd) if (nw[r] && R(r) < nd[r] + nw[r]) return `Uses ${R(r) === 1 ? 'your only' : 'the'} ${r} that ${w} needs`; }
+  return ''; };
+
+/* ---------- goals ---------- */
+const hasRW = (n, who) => D.items.some(i => i.rw && i.n === n && (!who || i.l.startsWith(who)));
+const GOALS = [
+  { id: 'trist', ch: ['ThroatCutter'], title: 'ThroatCutter: Ubers and Diablo Clone', who: 'Mosaic martial-arts Assassin', ctx: 'Estimated Hell resists now: fire ~4 · lightning ~31 · cold ~18 · poison ~−7. Target 75 each.', steps: [
+    { id: 'respec', t: 'Respec Tiger Strike (10) and Dragon Talon (9) into Fade', h: () => `Fade adds all resists and physical damage reduction. Tokens of Absolution: ${M('toa')}.`, st: 'now' },
+    { id: 'hlw', t: "Move Highlord's Wrath from Damon to ThroatCutter", h: 'Her amulet slot is empty. +1 skills, 20 IAS, 35 lightning res.', st: () => has("Highlord's Wrath", 'ThroatCutter') ? 'done' : 'now' },
+    { id: 'coh', t: 'Cube Chains of Honor into a 4-socket armor; replaces Vipermagi', h: '+65 all res, +2 skills, 8% DR. Uses your only Ber. Pick a base under 115 Str (Archon Plate is 103).', rw: 'Chains of Honor', st: () => made('Chains of Honor') ? 'done' : gap('Chains of Honor') ? 'farm' : 'now', farm: 'runes' },
+    { id: 'charms', t: "Swap Gheed's for the four all-res small charms in shared tab 4", h: "+19 to every resist. With CoH and Highlord's, all four resists clear 75.", st: 'now' },
+    { id: 'res', t: 'Check resists in Hell: 75 in each', h: 'Fire highest for Uber Diablo; Dwarf Star absorbs fire too.', st: 'now', after: ['coh', 'charms', 'hlw'] },
+    { id: 'cta', t: 'Put a Call to Arms (+4 or better Battle Orders) and a Spirit shield on her weapon switch', h: "Jadetalons sit on switch now. Blizzaga's CTA rolled +1 Battle Orders: remake it and pass the best one through the stash.", rw: 'Call to Arms', st: 'farm', farm: 'ctabase' },
+    { id: 'dracul', t: "Farm Dracul's Grasp", h: 'More leech plus Life Tap. Wear for Ubers, Vampirebone (+3 Martial Arts) for farming.', st: () => has("Dracul's Grasp") ? 'done' : 'farm', farm: 'dracul' },
+    { id: 'minis', t: 'Run the mini-Ubers, then Uber Tristram', h: () => `Key sets: ${Math.min(M('pk1'), M('pk2'), M('pk3'))} · organ sets: ${Math.min(M('mbr'), M('dhn'), M('bey'))} · full rejuvs: ${M('rvl')}.`, st: 'now', farm: 'torch', after: ['res'] },
+    { id: 'ring', t: "Bul-Kathos' Wedding Band or Stone of Jordan in place of Dwarf Star", h: 'Keep Dwarf Star as the Uber Diablo / Clone swap (fire absorb). Raven Frost stays.', st: () => has('The Stone of Jordan', 'ThroatCutter') ? 'done' : 'later', farm: 'soj' },
+  ]},
+  { id: 'tcmerc', ch: ['ThroatCutter'], title: "ThroatCutter's merc", who: "Act 2 · Tal Rasha's helm, Griswold's Heart, Hustle", steps: [
+    { id: 'minf', t: 'Give him Infinity from shared tab 5; replaces Hustle', h: 'Conviction lowers Uber fire, cold and lightning resist for Mosaic.', st: () => D.items.some(i => i.n === 'Infinity' && i.l.startsWith('ThroatCutter merc')) ? 'done' : 'now' },
+    { id: 'mfort', t: "Ethereal Fortitude in a 4-socket Archon Plate; replaces Griswold's Heart", h: () => `Make the Lo from 2 Ohm + a Diamond (Ohm on hand: ${R('Ohm')}).`, rw: 'Fortitude', st: () => hasRW('Fortitude', 'ThroatCutter merc') ? 'done' : 'farm', farm: 'runes' },
+    { id: 'mhelm', t: "Keep Tal Rasha's helm; later an ethereal Andariel's Visage", h: 'More leech. Its −30 fire res is harmless on a merc.', st: 'later' },
+    { id: 'maura', t: 'Optional: re-hire as Act 2 Nightmare Defensive (Holy Freeze)', h: 'Slows Ubers. Skip if he is already Might and you would rather not re-level.', st: 'now' },
+  ]},
+  { id: 'blizz', ch: ['Blizzaga'], title: 'Blizzaga: magic find, Terror Zones, cold immunes', who: 'Blizzard / Energy Shield Sorceress', ctx: 'FCR 106% (breakpoint 105): Oculus 30 + Spirit 26 + Vipermagi 30 + Magefist 20. Keep 105+ when swapping gear.', steps: [
+    { id: 'bring', t: 'Swap the rare ring for Raven Frost (shared tab 4)', h: 'Cannot Be Frozen; Cold Rupture costs her 84 cold res.', st: () => has('Raven Frost', 'Blizzaga') ? 'done' : 'now' },
+    { id: 'bcharm', t: 'Replace the fire-damage and 7-mana small charms', h: 'Cold skill grand charms first (each is +1 Blizzard, Glacial Spike, Cold Mastery), then life and resist charms.', st: 'farm' },
+    { id: 'bjewel', t: "Farm cold Rainbow Facets and Protector's Frost", h: "Full-strength −enemy cold res, even on sundered immunes. Protector's Frost: kill Korlic last in the Colossal Ancients.", st: 'farm', farm: 'statues' },
+    { id: 'bmon', t: 'Find a 4-socket Monarch for a second Spirit on her switch', h: '+2 skills to Battle Orders and a faster cast.', st: 'farm' },
+    { id: 'barmor', t: 'Enigma (MF) or Chains of Honor (resists) in place of Vipermagi', h: "Enigma gives about 68% MF at her level plus +2 skills; CoH gives +65 all res. Both drop Vipermagi's 30 FCR, so pair with Arachnid Mesh and a 10% FCR ring to stay at 105%.", rw: 'Enigma', st: 'later', farm: 'runes' },
+    { id: 'arach', t: 'Arachnid Mesh (then Chance Guards replace Magefist) and a Stone of Jordan', h: 'Arachnid keeps the FCR breakpoint; SoJ adds +1 skills and 25% max mana.', st: () => has('Arachnid Mesh', 'Blizzaga') ? 'done' : 'later', farm: 'caster' },
+  ]},
+  { id: 'bmerc', ch: ['Blizzaga'], title: "Blizzaga's merc", who: "Act 2 Prayer · Insight, Tal Rasha's helm, eth Duriel's Shell · 58 base res in Hell", steps: [
+    { id: 'bins', t: 'Remake Insight for Meditation 16-17', h: 'Current one rolled 12 (the minimum). Ethereal Giant Thresher or Cryptic Axe.', rw: 'Insight', st: 'farm', farm: 'base' },
+    { id: 'bfort', t: "Ethereal Fortitude in Archon Plate; replaces Duriel's Shell", h: 'His resists stay capped thanks to the 58 base.', rw: 'Fortitude', st: () => hasRW('Fortitude', 'Blizzaga merc') ? 'done' : 'farm', farm: 'runes' },
+    { id: 'bhelm', t: "Ethereal Andariel's Visage if Tal Rasha's helm leaves", h: "Smoked's merc has another Tal's helm in the meantime.", st: 'later' },
+  ]},
+  { id: 'damon', ch: ['Damon'], title: "Damon: finish Horazon's set", who: 'Warlock · 4 of 5 Horazon pieces', steps: [
+    { id: 'dam', t: 'Equip The Mahim-Oak Curio once Highlord\'s leaves', h: 'Shared tab 4.', st: () => has('The Mahim-Oak Curio', 'Damon') ? 'done' : has("Highlord's Wrath", 'Damon') ? 'later' : 'now' },
+    { id: 'dom', t: "Farm Horazon's Dominion", h: "Completes Horazon's Splendor.", st: () => has("Horazon's Dominion") ? 'done' : 'farm', farm: 'sets' },
+  ]},
+  { id: 'smoked', ch: ['Smoked'], title: 'Smoked: Chaos farmer', who: 'Fist of the Heavens Paladin', steps: [
+    { id: 'sword', t: 'Move the spare Spirit Crystal Sword from shared tab 1 to his main hand', h: 'Replaces Devil Star: +2 skills, faster cast. Consider moving the Spirit shield off weapon switch too.', st: () => D.items.some(i => i.n === 'Spirit' && i.eq && owner(i.l) === 'Smoked' && /Sword/.test(i.b)) ? 'done' : 'now' },
+    { id: 'shako', t: 'Farm a Harlequin Crest', h: 'Replaces his melee helm.', st: () => has('Harlequin Crest', 'Smoked') ? 'done' : 'farm', farm: 'caster' },
+  ]},
+  { id: 'clone', term: 1, ch: ['ThroatCutter'], title: 'Diablo Clone and Annihilus', who: 'ThroatCutter', steps: [
+    { id: 'soj', t: 'Farm two or three Stones of Jordan', h: 'Selling one to a vendor in Hell summons the Clone in that game. Spares give you retries.', st: () => has('The Stone of Jordan') ? 'done' : 'farm', farm: 'soj' },
+    { id: 'cloneprep', t: 'Pack the swaps', h: 'Wisp (lightning absorb, tab 4), Infernostride and Nokozan Relic (+max fire res), Dwarf Star (fire absorb, worn). Overcap lightning and fire.', st: 'now', after: ['soj'] },
+    { id: 'clonego', t: 'Sell an SoJ in Hell and hunt the Clone', h: 'He spawns in place of a superunique in that game. Annihilus goes in a charm slot.', st: 'now', farm: 'anni', after: ['soj'] },
+  ]},
+  { id: 'colossal', term: 1, ch: ['Damon', 'Smoked'], title: 'Colossal Ancients', who: 'Damon (Echoing Strike) or Smoked (Fist of the Heavens)', steps: [
+    { id: 'st1', t: "Talic's Anguish (Act 1)", h: () => `Owned: ${M('ua1')}.`, st: () => M('ua1') ? 'done' : 'farm', farm: 'statues' },
+    { id: 'st2', t: "Korlic's Pain (Act 2)", h: () => `Terrorized Duriel. Eastern shards: ${M('xa2')}.`, st: () => M('ua2') ? 'done' : 'farm', farm: 'statues' },
+    { id: 'st3', t: "Madawc's Ire (Act 3)", h: () => `Terrorized Mephisto. Southern shards: ${M('xa3')}.`, st: () => M('ua3') ? 'done' : 'farm', farm: 'statues' },
+    { id: 'st4', t: "Bul-Kathos' Nightmare (Act 4)", h: () => `Terrorized Diablo. Deep shards: ${M('xa4')}.`, st: () => M('ua4') ? 'done' : 'farm', farm: 'statues' },
+    { id: 'st5', t: "Worusk's End (Act 5)", h: () => `Terrorized Baal. Northern shards: ${M('xa5')}.`, st: () => M('ua5') ? 'done' : 'farm', farm: 'statues' },
+    { id: 'colprep', t: 'Gear up: overcap every resist, Cannot Be Frozen, Life Tap or heavy leech', h: 'Each Ancient has a Conviction aura that strips 100% of one element. Bring Thawing and full rejuvenation potions.', st: 'now', after: ['st1', 'st2', 'st3', 'st4', 'st5'] },
+    { id: 'colgo', t: 'Cube all five statues in Act 5 Hell and fight', h: 'Statues are consumed on use. The last Ancient killed decides which jewel pair can drop.', st: 'now', after: ['st1', 'st2', 'st3', 'st4', 'st5'] },
+  ]},
+  { id: 'barb', term: 1, ch: ['Shamelock'], title: 'Shamelock: finish Hell, then magic find', who: 'Whirlwind Barbarian', steps: [
+    { id: 'hell', t: 'Beat Hell', h: "Under level 70. Immortal King's Stone Crusher was sold, so the set waits.", st: 'now' },
+    { id: 'mfkit', t: 'Assemble a magic-find swap kit', h: "Chance Guards, two Nagelrings, the 7% MF small charms, a Gheed's, both Blade of Ali Baba. Immortal King's Will already has 38% MF.", st: 'now' },
+  ]},
+];
+const FARMS = {
+  dracul: ["Dracul's Grasp", ['Hell Mephisto and Baal runs', 'Chaos Sanctuary', 'Terror Zones with /players 8; Tier 3+ Heralds drop more rares']],
+  base: ['4-socket ethereal polearm base', ['Hell Cows: lots of plain elite polearms fast', 'Hold Alt and look for "Socketed (4)"; grab ethereal ones', 'Or cube a plain one: Ral + Amn + Perfect Amethyst rolls random sockets (one try per base)', 'Scythe family (Thresher, Giant Thresher) or Mancatcher swings fastest']],
+  ctabase: ['Call to Arms base: plain Flail', ['Needs a plain white Flail at item level 41+ so it can take 5 sockets; anything that drops in Hell qualifies', 'Easy finds: Hell Cows, Act 1 Hell, or Hell vendors (Charsi, Fara)', 'Socket it with the Larzuk quest (exactly 5); check which characters still have it unused', 'No quest left? Ral + Amn + Perfect Amethyst gives random sockets (1-5); retry with another Flail', 'Requirements 41 Str / 35 Dex. Double Axe or Long Bow also get exactly 5 from Larzuk']],
+  torch: ['Hellfire Torch', ['Uber Tristram only. Class is random; a wrong-class Torch means another run', 'More organs: mini-Ubers in Harrogath, one key of each type per portal']],
+  soj: ['Stone of Jordan', ['Hell Mephisto', 'Terror Zones with /players 8', 'LK super chests (your bot): low odds, but unattended volume', 'Any Hell monster can drop one']],
+  anni: ['Annihilus', ['Sell a Stone of Jordan to a vendor in Hell', 'The Clone replaces a superunique in that game; kill him for Annihilus']],
+  statues: ['Colossal Ancient statues', ["Use that act's Worldstone Shard to terrorize the act, then kill the act boss in Hell", 'Drops are not guaranteed; expect repeats', () => `Shards: Western ${M('xa1')} · Eastern ${M('xa2')} · Southern ${M('xa3')} · Deep ${M('xa4')} · Northern ${M('xa5')}`, 'Shards drop about 1 in 500 elite kills; magic find does not help']],
+  sets: ['Set pieces', ['Any Hell area; set items are slow random drops', 'Terror Zones with /players 8 maximize rolls', 'Shamelock with the magic-find kit is your best farmer']],
+  caster: ["Caster gear: Shako, Arachnid Mesh, Death's Fathom", ['Hell Mephisto, Baal, Chaos Sanctuary', "Death's Fathom also drops from Hell Andariel and in Ancient Tunnels"]],
+  runes: ['High runes', ['Travincal council, Chaos Sanctuary, Hell Cows', 'Hell Countess (up to Ist) for the cube chain', 'LK super chests (your bot)', () => `Have: Vex ${R('Vex')} · Ohm ${R('Ohm')} · Lo ${R('Lo')} · Sur ${R('Sur')} · Ber ${R('Ber')} · Jah ${R('Jah')}`]],
+};
+const FARM_ITEMS = { dracul: ["Dracul's Grasp"], torch: ['Hellfire Torch'], soj: ['Stone of Jordan'], anni: ['Annihilus'], caster: ['Harlequin Crest', 'Arachnid Mesh', "Death's Fathom"], sets: ["Horazon's Dominion"] };
+const val = x => typeof x === 'function' ? x() : x;
+function stepState(g, s, ticks) {
+  const a = val(s.st);
+  if (a === 'done' || ticks[g.id + ':' + s.id]) return 'done';
+  if (s.after && s.after.some(x => stepState(g, g.steps.find(y => y.id === x), ticks) !== 'done')) return 'later';
+  return a;
+}
+const TAG = { now: ['t-now', 'Now'], farm: ['t-farm', 'Farm'], later: ['t-later', 'Later'], done: ['t-done', 'Done'] };
+const tag = k => `<span class="tag ${TAG[k][0]}"><i></i>${TAG[k][1]}</span>`;
+function farmBox(k, open) {
+  const f = FARMS[k]; if (!f) return '';
+  const tg = (FARM_ITEMS[k] || []).filter(n => D.farm && D.farm[n]).map(n => `<p class="tgt"><b class="q-Unique">${esc(n)}</b> · ${esc(D.farm[n].join(' · '))}</p>`).join('');
+  return `<details class="how"${open ? ' open' : ''}><summary>Where to get it</summary><div class="box">${tg}<ul>${f[1].map(x => `<li>${esc(val(x))}</li>`).join('')}</ul></div></details>`;
+}
+function stepHTML(g, s, k) {
+  const auto = val(s.st) === 'done';
+  const rwx = s.rw && D.rwdb && D.rwdb[s.rw] && k !== 'done' ? runeChips(s.rw) + (gap(s.rw) ? `<div class="small">${esc(shortText(s.rw))}</div>` : '') : '';
+  return `<li class="step s-${k}" id="st-${g.id}-${s.id}"><input type="checkbox" data-k="${g.id}:${s.id}" ${k === 'done' ? 'checked' : ''} ${auto ? 'disabled title="Confirmed by the save scan"' : ''} aria-label="Done: ${esc(s.t)}">
+    <div><div class="t">${esc(s.t)}</div><div class="h">${esc(val(s.h))}</div>${rwx}${s.farm && (k === 'farm' || k === 'now' && s.id === 'minis') ? farmBox(s.farm, state.mode === 'farm') : ''}</div>${tag(k)}</li>`;
+}
+const goalChars = g => g.ch;
+function renderPlan() {
+  const ticks = store.get('ticks', {});
+  const who0 = [...new Set(GOALS.flatMap(goalChars))], ch = who0.includes(state.ch) ? state.ch : 'all';
+  const vis = GOALS.filter(g => ch === 'all' || goalChars(g).includes(ch));
+  const counts = { now: 0, farm: 0, later: 0 };
+  const rows = vis.map(g => { const S = g.steps.map(s => [s, stepState(g, s, ticks)]); S.forEach(([, k]) => k in counts && counts[k]++); return [g, S]; });
+  // character chips (only characters with goals)
+  const who = [...new Set(GOALS.flatMap(goalChars))];
+  const nowFor = n => GOALS.filter(g => goalChars(g).includes(n)).reduce((a, g) => a + g.steps.filter(s => stepState(g, s, ticks) === 'now').length, 0);
+  $('#chP').innerHTML = [['all', 'Everyone', '']].concat(PLAYERS.filter(c => who.includes(c.n)).map(c => [c.n, c.n, nowFor(c.n)])).map(([k, l, n]) =>
+    `<button class="chip" data-ch="${esc(k)}" aria-pressed="${ch === k}">${esc(l)}${n ? ` <small>${n}</small>` : ''}</button>`).join('');
+  $('#mode').innerHTML = [['now', 'Now', counts.now], ['farm', 'Farm', counts.farm], ['all', 'Everything', '']].map(([k, l, n]) =>
+    `<button data-mode="${k}" aria-pressed="${state.mode === k}">${l}${n !== '' ? ` <b>${n}</b>` : ''}</button>`).join('');
+  $('#tips').innerHTML = state.mode === 'farm' ? `<div class="card tips">Terror Zones: run them offline with <b>/players 8</b>, and use a Worldstone Shard to terrorize a whole act on demand. Heralds spawn as you kill elites in a Terror Zone and climb a tier with each kill until you leave the game.</div>` : '';
+  let html = '', shownLong = false, hidden = 0; const doneGoals = [];
+  for (const [g, S] of rows) {
+    const open = S.filter(([, k]) => k !== 'done'), dn = S.filter(([, k]) => k === 'done');
+    if (!open.length) { doneGoals.push(g); continue; }
+    const shown = state.mode === 'all' ? open : open.filter(([, k]) => k === state.mode);
+    if (!shown.length) { hidden++; continue; }
+    if (g.term && !shownLong) { html += `<h2>Long-term <small>bigger projects; open when you get there</small></h2>`; shownLong = true; }
+    const pct = Math.round(100 * dn.length / S.length), saved = store.get('open:' + g.id, null);
+    const isOpen = saved === null ? !g.term || state.mode !== 'all' : saved;
+    html += `<details class="card goal" data-g="${g.id}" ${isOpen ? 'open' : ''}><summary><h3>${esc(g.title)}</h3><span class="who">${esc(g.who)}</span><span class="prog"><span class="meter"><i style="width:${pct}%"></i></span>${dn.length}/${S.length}</span></summary>
+      ${g.ctx ? `<p class="ctx">${esc(g.ctx)}</p>` : ''}<ol class="steps">${shown.map(([s, k]) => stepHTML(g, s, k)).join('')}</ol>
+      ${dn.length && state.mode === 'all' ? `<details class="donefold"><summary>${tag('done')} ${dn.length} done · show</summary><ol class="steps">${dn.map(([s, k]) => stepHTML(g, s, k)).join('')}</ol></details>` : ''}</details>`;
+  }
+  if (!html) html = `<div class="card empty">Nothing marked ${state.mode === 'now' ? 'Now' : 'Farm'} for ${ch === 'all' ? 'anyone' : esc(ch)}. Try <b>Everything</b>.</div>`;
+  else if (hidden && state.mode !== 'all') html += `<p class="small">${plural(hidden, 'more goal')} ${hidden === 1 ? 'has' : 'have'} nothing marked ${state.mode === 'now' ? 'Now' : 'Farm'}.</p>`;
+  if (doneGoals.length && state.mode === 'all') html += `<details class="card fold"><summary>${tag('done')} Completed goals <span>${doneGoals.map(g => esc(g.title)).join(' · ')}</span></summary></details>`;
+  $('#goals').innerHTML = html;
+  // rail: what you're farming for, and cheap Chronicle wins
+  const farmFor = {};
+  for (const [g, S] of rows) for (const [s, k] of S) if (k === 'farm') { const key = s.farm || s.id, lab = s.farm ? FARMS[s.farm][0] : s.t;
+    (farmFor[key] = farmFor[key] || { lab, who: new Set(), g, s }).who.add(g.ch.join(' / ')); }
+  const ready = RWN.filter(n => rwState(n) === 'ready').length;
+  $('#rail').innerHTML = `<div class="card"><h4>Farming for</h4>${Object.keys(farmFor).length ? `<ul>${Object.entries(farmFor).map(([k, f]) =>
+      `<li><button data-farm="${esc(k)}">${esc(f.lab)}<span>${esc([...f.who].join(', '))}</span></button></li>`).join('')}</ul>` : '<p class="small" style="margin:0">Nothing to farm right now.</p>'}</div>
+    <div class="card"><h4>Chronicle quick wins</h4><div class="big">${ready}</div><p class="small" style="margin:2px 0 8px">runewords you have every rune for</p><a href="#chronicle" data-rwready>See them</a></div>`;
+  RAILMAP = farmFor;
+  const allNow = GOALS.reduce((a, g) => a + g.steps.filter(s => stepState(g, s, ticks) === 'now').length, 0);
+  $('#tc-plan').textContent = allNow ? allNow + ' now' : '';
+}
+function renderNews() {
+  const el = $('#news');
+  if (!DL || store.get('seen', 0) === D.snap) { el.innerHTML = ''; return; }
+  const parts = [];
+  const cu = DL.u.length, cs = DL.s.length, cr = DL.rw.length;
+  if (cu + cs + cr) parts.push(`<div class="row"><b>Chronicle</b> ${[...DL.u.map(n => `<span class="q-Unique nm">${esc(n)}</span>`), ...DL.s.map(n => `<span class="q-Set nm">${esc(n)}</span>`), ...DL.rw.map(n => `<span class="q-RW nm">${esc(n)}</span>`)].join(' · ')}</div>`);
+  const ni = DL.items.map(ix => D.items[ix]).filter(Boolean);
+  if (ni.length) parts.push(`<div class="row"><b>New items</b> ${ni.slice(0, 10).map(i => `<span class="q-${qkey(i)} nm">${esc(i.n)}</span> <span class="small">(${esc(place(i).grp)})</span>`).join(' · ')}${ni.length > 10 ? ` · <a href="#stash" data-shownew>+${ni.length - 10} more</a>` : ''} · <a href="#stash" data-shownew>see in Stash</a></div>`);
+  const rs = Object.entries(DL.runes || {}).sort((a, b) => RUNES.indexOf(b[0]) - RUNES.indexOf(a[0]));
+  if (rs.length) parts.push(`<div class="row"><b>Runes</b> ${rs.map(([r, n]) => `${n > 0 ? '+' : '−'}${Math.abs(n)} ${esc(r)}`).join(' · ')}</div>`);
+  if (!parts.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="card news"><h3><span class="tag t-new"><i></i></span>Since ${esc(fmtTime(DL.since))}</h3>${parts.join('')}<button class="dismiss" id="dismiss">Got it</button></div>`;
+}
+
+/* ---------- chronicle ---------- */
+function renderChron() {
+  const cq = (state.cq || '').toLowerCase().split(/\s+/).filter(Boolean), hit = x => cq.every(w => x.toLowerCase().includes(w));
+  const pct = (a, b) => Math.round(100 * a / b);
+  const up = k => DL && DL[k] && DL[k].length ? ` <span class="up">+${DL[k].length}</span>` : '';
+  $('#meters').innerHTML = [['Uniques', CH.u[0], CH.u[1], 'u'], ['Set items', CH.s[0], CH.s[1], 's'], ['Runewords', CH.rw.length, CH.rwn, 'rw']].map(([k, a, b, d]) =>
+    `<div class="card mt"><div class="k">${k}</div><div class="v">${pct(a, b)}%</div><div class="d">${a} of ${b} recorded${up(d)}</div><span class="meter"><i style="width:${pct(a, b)}%"></i></span></div>`).join('');
+  $('#tc-chron').textContent = pct(CH.u[0] + CH.s[0] + CH.rw.length, CH.u[1] + CH.s[1] + CH.rwn) + '%';
+  const st = Object.fromEntries(RWN.map(n => [n, rwState(n)]));
+  const lists = { ready: RWN.filter(n => st[n] === 'ready'), wanted: RWN.filter(n => WANT[n]), close: RWN.filter(n => st[n] === 'short' && gap(n) <= 2),
+                  missing: RWN.filter(n => st[n] !== 'made'), made: RWN.filter(n => st[n] === 'made') };
+  if (!lists[state.rwmode] || (state.rwmode === 'ready' && !lists.ready.length)) state.rwmode = lists.ready.length ? 'ready' : 'missing';
+  $('#rwmode').innerHTML = [['ready', 'Ready to make'], ['wanted', 'Wanted'], ['close', '1-2 runes short'], ['missing', 'All not recorded'], ['made', 'Recorded']].map(([k, l]) =>
+    `<button data-rw="${k}" aria-pressed="${!cq.length && state.rwmode === k}">${l} <b>${lists[k].length}</b></button>`).join('');
+  $('#rwsub').textContent = `${CH.rw.length} of ${CH.rwn} recorded`;
+  $('#rwlede').textContent = { ready: 'You have every rune for these. Making one records it in the Chronicle; you still need a plain base with the right socket count.',
+    wanted: 'The ones your goals call for, made or not.', close: 'Within two runes. Short runes show the cube step that makes them.',
+    missing: 'Everything not yet in the Chronicle: ready ones first, then fewest runes short.', made: 'Already recorded in your Chronicle.' }[state.rwmode];
+  const L = (cq.length ? RWN.filter(n => hit(n + ' ' + D.rwdb[n].runes + ' ' + D.rwdb[n].mods.join(' ') + ' ' + D.rwdb[n].types.join(' '))) : lists[state.rwmode]).slice().sort((a, b) => (WANT[b] ? 1 : 0) - (WANT[a] ? 1 : 0) || gap(a) - gap(b) || topRune(a) - topRune(b) || a.localeCompare(b));
+  $('#rwlist').innerHTML = L.map(n => { const w = D.rwdb[n], rs = w.runes.split(' '), s = st[n], g = gap(n);
+    const lvl = Math.max(...rs.map(r => LVL[RUNES.indexOf(r)]));
+    const tg = s === 'made' ? tag('done').replace('Done', 'Recorded') : s === 'ready' ? `<span class="tag t-ready"><i></i>Ready</span>` : `<span class="tag t-short"><i></i>${plural(g, 'rune')} short</span>`;
+    return `<details class="card rw" id="rw-${esc(n.replace(/\W/g, ''))}"><summary><span class="nm">${esc(n)}${WANT[n] ? '<span class="star">★ wanted</span>' : ''}</span>${runeChips(n)}${tg}<span class="meta">${rs.length} sockets · ${esc(w.types.map(t => TY[t] || t).join(' / '))} · level ${lvl}${made(n) && s !== 'made' ? ' · you own one (made before it was recorded)' : ''}${s === 'ready' && conflict(n) ? ` · <b class="warn">${esc(conflict(n))}</b>` : ''}</span></summary>
+      <div class="body">${WANT[n] ? `<p><b>Why:</b> ${esc(WANT[n])}</p>` : ''}${g ? `<p>${esc(shortText(n))}</p>` : ''}<p class="mods">${esc(w.mods.join(' · '))}</p></div></details>`; }).join('') || '<div class="card empty">Nothing here.</div>';
+  const grp = (list, keyIx, order) => { const m = {}; list.forEach(x => (m[x[keyIx]] = m[x[keyIx]] || []).push(x)); return Object.entries(m).sort((a, b) => order ? order.indexOf(a[0]) - order.indexOf(b[0]) : a[0].localeCompare(b[0])); };
+  const SLOTS = ['Helms', 'Body armor', 'Shields', 'Gloves', 'Boots', 'Belts', 'Amulets', 'Rings', 'Charms', 'Jewels', 'Weapons', 'Other'];
+  const mug = CH.mug || (CH.mu || []).map(n => [n, 'Other', '']);
+  const mugF = cq.length ? mug.filter(([n, sl, b]) => hit(n + ' ' + sl + ' ' + b + ' unique')) : mug;
+  $('#musub').textContent = cq.length ? `${mugF.length} of ${mug.length} left match` : `${mug.length} left · grouped by slot`;
+  $('#mulist').innerHTML = grp(mugF, 1, SLOTS).map(([k, xs]) => `<details class="card grp"${cq.length ? ' open' : ''}><summary><b>${esc(k)}</b><span class="small">${xs.length}</span></summary><div class="list">${xs.sort((a, b) => a[0].localeCompare(b[0])).map(([n, , b]) => `<span class="mi" id="mu-${esc(n.replace(/\W/g, ''))}">${esc(n)}${b ? ` <span>${esc(b)}</span>` : ''}</span>`).join('')}</div></details>`).join('');
+  const msg = CH.msg || (CH.ms || []).map(n => [n, 'Set items']);
+  const msgF = cq.length ? msg.filter(([n, set]) => hit(n + ' ' + set + ' set')) : msg;
+  $('#mssub').textContent = cq.length ? `${msgF.length} of ${msg.length} left match` : `${msg.length} left · grouped by set`;
+  $('#mslist').innerHTML = grp(msgF, 1).map(([k, xs]) => `<details class="card grp"${cq.length ? ' open' : ''}><summary><b>${esc(k)}</b><span class="small">${xs.length} missing</span></summary><div class="list">${xs.map(([n]) => `<span class="mi" id="mu-${esc(n.replace(/\W/g, ''))}">${esc(n)}</span>`).join('')}</div></details>`).join('');
+  renderRec();
+}
+
+function renderRec() {
+  const cq = (state.cq || '').toLowerCase().split(/\s+/).filter(Boolean), hit = x => cq.every(w => x.toLowerCase().includes(w));
+  const rec = cq.length ? [...(CH.fug || []).filter(([n, sl, b]) => hit(n + ' ' + sl + ' ' + b + ' unique')).map(([n, , b]) => [n, 'Unique' + (b ? ' · ' + b : '')]),
+    ...(CH.fsg || []).filter(([n, set]) => hit(n + ' ' + set + ' set')).map(([n, set]) => [n, 'Set · ' + set])] : [];
+  $('#recwrap').hidden = !rec.length;
+  $('#recsub').textContent = rec.length + (rec.length === 1 ? ' match' : ' matches');
+  $('#reclist').innerHTML = rec.sort((a, b) => a[0].localeCompare(b[0])).map(([n, d]) => `<span class="mi" id="rc-${esc(n.replace(/\W/g, ''))}">${tag('done').replace('Done', 'Recorded')} ${esc(n)} <span>${esc(d)}</span></span>`).join('');
+  if (cq.length) $('#rwlede').textContent = 'Search results across every runeword, recorded or not.';
+}
+/* ---------- stash ---------- */
+const GEMT = [['Amethyst', 'v'], ['Topaz', 'y'], ['Sapphire', 'b'], ['Ruby', 'r'], ['Emerald', 'g'], ['Diamond', 'w']];
+const GRD = [['Chipped', 'gc'], ['Flawed', 'gf'], ['Std', 'gs'], ['Flawless', 'gl'], ['Perfect', 'gp']];
+const MATG = [['Uber keys', [['pk1', 'Terror'], ['pk2', 'Hate'], ['pk3', 'Destruction']]], ['Organs', [['mbr', 'Brain'], ['dhn', 'Horn'], ['bey', 'Eye']]],
+  ['Tokens and essences', [['toa', 'Tokens'], ['tes', 'Suffering'], ['ceh', 'Hatred'], ['bet', 'Terror'], ['fed', 'Destruction']]],
+  ['Colossal statues', [['ua1', 'Talic'], ['ua2', 'Korlic'], ['ua3', 'Madawc'], ['ua4', 'Bul-Kathos'], ['ua5', 'Worusk']]],
+  ['Worldstone shards', [['xa1', 'Western'], ['xa2', 'Eastern'], ['xa3', 'Southern'], ['xa4', 'Deep'], ['xa5', 'Northern']]], ['Potions', [['rvl', 'Full rejuv']]]];
+function renderLedger() {
+  $('#runegrid').innerHTML = RUNES.map(r => `<div class="rn${R(r) ? '' : ' zero'}" title="${r}: ${R(r)}"><b>${r}</b><span>${R(r) || '–'}</span></div>`).join('');
+  const G = D.gems || {}, gc = (t, g) => G[g === 'gl' && t === 'v' ? 'gzv' : g + t] || 0;
+  const perf = GEMT.reduce((s, [, t]) => s + gc(t, 'gp'), 0);
+  $('#matsum').textContent = `${perf} perfect gems · ${M('toa')} tokens · ${Math.min(M('pk1'), M('pk2'), M('pk3'))} key sets`;
+  $('#ledger2').innerHTML = `<div><table><thead><tr><th>Gems</th>${GRD.map(([l]) => `<th>${l}</th>`).join('')}</tr></thead><tbody>${GEMT.map(([n, t]) => `<tr><td>${n}</td>${GRD.map(([, g]) => { const v = gc(t, g); return `<td class="${v ? '' : 'z'}">${v || '–'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="matg">${MATG.map(([h, xs]) => `<div><h4>${h}</h4><div class="ml">${xs.map(([k, l]) => `<span class="${M(k) ? '' : 'faint'}">${l} <b>${M(k)}</b></span>`).join('')}</div></div>`).join('')}</div>`;
+}
+const OPENG = new Set(store.get('openg', []));
+const notable = rs => { const n = rs.filter(([i, ix]) => NEW.has(ix)).length, m = rs.filter(([i]) => ['move', 'ditch'].includes(status(i)[0])).length;
+  return (n ? ` · <span class="tag t-new"><i></i>${n} new</span>` : '') + (m ? ` · ${m} to sort` : ''); };
+const ORDERQ = { Unique: 0, Set: 1, Rare: 2, Magic: 3, Superior: 4, Normal: 5 };
+function itemMatch(i, ix, ignore) {
+  const s = status(i)[0], o = owner(i.l);
+  if (ignore !== 'ch' && state.ch !== 'all' && !(state.ch === 'Mules' ? MULES.includes(o) : o === state.ch)) return false;
+  if (ignore !== 'q' && state.iqual !== 'all' && qkey(i) !== state.iqual) return false;
+  if (ignore !== 'st' && state.ist && !(state.ist === 'new' ? NEW.has(ix) : s === state.ist)) return false;
+  if (state.iq) { const h = (i.n + ' ' + i.b + ' ' + (i.set || '') + ' ' + i.st.join(' ') + ' ' + i.s.join(' ')).toLowerCase(); if (!state.iq.toLowerCase().split(/\s+/).every(w => h.includes(w))) return false; }
+  return true;
+}
+function renderStash() {
+  const all = D.items.map((i, ix) => [i, ix]);
+  const cnt = ig => all.filter(([i, ix]) => itemMatch(i, ix, ig)).length;
+  const chs = [['all', 'Everywhere']].concat(PLAYERS.map(c => [c.n, c.n])).concat(MULES.length ? [['Mules', 'Mules']] : []).concat([['Shared', 'Shared stash']]);
+  if (!chs.some(([k]) => k === state.ch)) state.ch = 'all';
+  $('#chS').innerHTML = chs.map(([k, l]) => { const n = all.filter(([i, ix]) => { const o = owner(i.l); return k === 'all' || (k === 'Mules' ? MULES.includes(o) : o === k); }).length;
+    return `<button class="chip" data-ch="${esc(k)}" aria-pressed="${state.ch === k}">${esc(l)} <small>${n}</small></button>`; }).join('');
+  const hkc = k => all.filter(([i, ix]) => k === 'new' ? NEW.has(ix) : status(i)[0] === k).length;
+  $('#hk').innerHTML = [['new', 't-new', 'New'], ['move', 't-move', 'To move'], ['ditch', 't-ditch', 'To ditch'], ['worn', 't-worn', 'Worn']].filter(([k]) => hkc(k)).map(([k, c, l]) =>
+    `<button class="chip" data-st="${k}" aria-pressed="${state.ist === k}"><span class="tag ${c}"><i></i></span>${l} <small>${hkc(k)}</small></button>`).join('');
+  $('#iqual').innerHTML = [['all', 'All'], ['Unique', 'Unique'], ['Set', 'Set'], ['RW', 'Runeword'], ['Rare', 'Rare'], ['Magic', 'Magic'], ['Normal', 'Base']].map(([k, l]) =>
+    `<button data-q="${k}" aria-pressed="${state.iqual === k}">${l}</button>`).join('');
+  const rows = all.filter(([i, ix]) => itemMatch(i, ix));
+  $('#icount').textContent = rows.length === D.items.length ? `${D.items.length} items` : `${rows.length} of ${D.items.length} shown`;
+  const filtering = state.ch !== 'all' || state.iq || state.ist || state.iqual !== 'all';
+  const gorder = [...PLAYERS.flatMap(c => [c.n, c.n + "'s merc"]), ...MULES, 'Shared stash'];
+  const groups = {}; rows.forEach(r => { const g = place(r[0]).grp; (groups[g] = groups[g] || []).push(r); });
+  $('#items').innerHTML = Object.entries(groups).sort((a, b) => (gorder.indexOf(a[0]) + 1 || 99) - (gorder.indexOf(b[0]) + 1 || 99)).map(([g, rs]) => {
+    rs.sort(([a], [b]) => (b.eq - a.eq) || place(a).where.localeCompare(place(b).where, undefined, { numeric: true }) || (b.rw - a.rw) || ORDERQ[a.q] - ORDERQ[b.q] || a.n.localeCompare(b.n));
+    const c = CHARS.find(x => x.n === g);
+    const op = filtering || OPENG.has(g);
+    return `<details class="card ig" data-grp="${esc(g)}"${op ? ' open' : ''}><summary><b>${esc(g)}</b><span class="small">${c ? `Level ${c.lv} ${esc(c.c)} · ` : ''}${plural(rs.length, 'item')}${notable(rs)}</span></summary>${rs.map(([i, ix]) => {
+      const [sk, sl, sn] = status(i), p = place(i);
+      const meta = [qlabel(i), i.set && i.q === 'Set' ? i.set : '', i.n !== i.b ? i.b : '', TIER[i.t] || '', i.e ? 'ethereal' : '', !i.rw && i.s.length ? 'socketed: ' + i.s.join(', ') : ''].filter(Boolean).join(' · ');
+      const tags = [NEW.has(ix) ? '<span class="tag t-new"><i></i>New</span>' : '', sk === 'move' ? `<span class="tag t-move"><i></i>Move ${esc(sn)}</span>` : '', sk === 'ditch' ? '<span class="tag t-ditch"><i></i>Ditch</span>' : ''].join('');
+      return `<div class="it" id="it-${ix}" tabindex="0" role="button" aria-expanded="false"><div><div class="nm q-${qkey(i)}">${esc(i.n)}</div><div class="meta">${esc(meta)}</div></div><div class="ist">${esc(i.st.join(' · ')) || '<span class="faint">no magic properties</span>'}</div><div class="st"><span class="pl">${esc(p.where)}</span>${tags}</div></div>`; }).join('')}</details>`;
+  }).join('') || '<div class="card empty">No items match. <button class="chip" id="clearf">Clear filters</button></div>';
+  const nn = NEW.size; $('#tc-stash').textContent = nn ? nn + ' new' : '';
+}
+
+/* ---------- cube ---------- */
+function renderCube() {
+  const G = D.gems || {};
+  $('#runeup').innerHTML = RUNES.slice(1).map((r, k) => { const i = k + 1, n = i <= 20 ? 3 : 2, lo = RUNES[i - 1], gm = GEM[i];
+    const can = Math.min(Math.floor(R(lo) / n), gm ? (G[GEMC(gm)] || 0) : Infinity);
+    return `<tr data-find="${esc(`${n} ${lo} ${gm || ''} ${r} rune`)}" id="cu-${r}"><td>${n} ${lo}${gm ? ' + ' + gm : ''}</td><td><b class="rw-runes">${r}</b></td><td class="n">${R(lo)} ${lo}${gm ? ` · ${G[GEMC(gm)] || 0} gem` : ''}</td><td class="n ${can ? '' : 'z'}">${can || '–'}</td></tr>`; }).join('');
+}
+
+function initCubeFolds() {
+  $$('#v-cube details.csec').forEach(d => {
+    const n = $$('tbody tr', d).length, sp = $('summary span', d);
+    sp.textContent = (d.dataset.c === 'runes' ? 'uses your current stock · ' : '') + plural(n, d.dataset.c === 'crafting' ? 'slot' : 'recipe');
+    d.open = store.get('cube:' + d.dataset.c, d.dataset.c === 'runes');
+  });
+}
+const setCube = open => $$('#v-cube details.csec').forEach(d => { d.open = open; store.set('cube:' + d.dataset.c, open); });
+
+/* ---------- freshness ---------- */
+function renderFresh() {
+  const snap = D.snap || D.built, stale = Date.now() - snap > 36e5 * 24;
+  $('#freshbtn').classList.toggle('stale', stale);
+  $('#freshtxt').innerHTML = `Saves from <b>${esc(ago(snap))}</b>`;
+  $('#sub').textContent = `${PLAYERS.length} characters, ${MULES.length} mules and the shared stash`;
+  $('#freshpop').innerHTML = `<p><b>Snapshot:</b> saves as of ${esc(fmtTime(snap))}${D.built ? `, scanned ${esc(fmtTime(D.built))}` : ''}.</p>
+    <p><b>To refresh:</b> in Claude, open your scheduled tasks and hit <b>Run now</b> on <b>Update Armory</b> (or just say <code>update the armory</code>). It backs up your saves, rescans them, and refreshes this page and the copy in your Google Drive folder.</p>
+    <p class="small">Your D2R folder needs to be connected, and the game saves on exit, so quit to the menu first for the freshest read.</p>`;
+  $('#foot').textContent = `Snapshot ${fmtTime(snap)} · ticks and filters are remembered in this browser`;
+}
+
+/* ---------- global find ---------- */
+let RAILMAP = {};
+let IDX = null, sel = 0, hits = [];
+function buildIndex() {
+  IDX = [];
+  D.items.forEach((i, ix) => IDX.push({ k: 'Items', t: i.n, q: qkey(i), s: `${qlabel(i)} · ${i.b} · ${place(i).grp}, ${place(i).where}`, h: (i.n + ' ' + i.b + ' ' + i.st.join(' ')).toLowerCase(), go: () => goItem(ix) }));
+  RWN.forEach(n => { const s = rwState(n); IDX.push({ k: 'Runewords', t: n, q: 'RW', s: `${s === 'made' ? 'Recorded' : s === 'ready' ? 'Ready to make' : plural(gap(n), 'rune') + ' short'} · ${D.rwdb[n].runes}`, h: (n + ' ' + D.rwdb[n].runes + ' runeword').toLowerCase(), go: () => goRW(n) }); });
+  (CH.mug || []).forEach(([n, sl, b]) => IDX.push({ k: 'Not in Chronicle yet', t: n, q: 'Unique', s: `Unique ${sl.toLowerCase().replace(/s$/, '')} · ${b}`, h: (n + ' ' + b + ' unique ' + sl).toLowerCase(), go: () => goMissing(n, 'mulist') }));
+  (CH.msg || []).forEach(([n, set]) => IDX.push({ k: 'Not in Chronicle yet', t: n, q: 'Set', s: `Set item · ${set}`, h: (n + ' ' + set + ' set').toLowerCase(), go: () => goMissing(n, 'mslist') }));
+  (CH.fug || []).forEach(([n, sl, b]) => IDX.push({ k: 'In Chronicle', t: n, q: 'Unique', s: `Recorded · unique ${sl.toLowerCase().replace(/s$/, '')} · ${b}`, h: (n + ' ' + b + ' unique ' + sl).toLowerCase(), go: () => goRec(n) }));
+  (CH.fsg || []).forEach(([n, set]) => IDX.push({ k: 'In Chronicle', t: n, q: 'Set', s: `Recorded · set item · ${set}`, h: (n + ' ' + set + ' set').toLowerCase(), go: () => goRec(n) }));
+  $$('#v-cube tr[data-find]').forEach((tr, j) => { if (!tr.id) tr.id = 'cu-x' + j; const c = tr.cells; IDX.push({ k: 'Cube', t: tr.dataset.t || (c[1] ? c[1].textContent : c[0].textContent), s: c[0].textContent, h: tr.dataset.find.toLowerCase() + ' ' + tr.textContent.toLowerCase(), go: () => goCube(tr.id) }); });
+  GOALS.forEach(g => g.steps.forEach(s => IDX.push({ k: 'Plan', t: s.t, s: g.title, h: (s.t + ' ' + g.title + ' ' + val(s.h)).toLowerCase(), go: () => goStep(g, s) })));
+}
+const KORD = ['Items', 'Runewords', 'Not in Chronicle yet', 'In Chronicle', 'Cube', 'Plan'];
+function runFind() {
+  const q = $('#find').value.trim().toLowerCase(), box = $('#results');
+  if (!q) { box.hidden = true; $('#find').setAttribute('aria-expanded', 'false'); return; }
+  if (!IDX) buildIndex();
+  const ws = q.split(/\s+/);
+  hits = IDX.map(e => { const t = e.t.toLowerCase(); if (!ws.every(w => e.h.includes(w) || t.includes(w))) return null; return [t.startsWith(q) ? 0 : t.includes(q) ? 1 : 2, e]; })
+    .filter(Boolean).sort((a, b) => KORD.indexOf(a[1].k) - KORD.indexOf(b[1].k) || a[0] - b[0] || a[1].t.localeCompare(b[1].t));
+  const per = {}; hits = hits.filter(([, e]) => (per[e.k] = (per[e.k] || 0) + 1) <= 8).map(x => x[1]);
+  sel = 0; let last = '';
+  box.innerHTML = hits.length ? hits.map((e, j) => { const hd = e.k !== last ? `<div class="rg">${esc(e.k)}</div>` : ''; last = e.k;
+    return hd + `<button role="option" data-j="${j}" aria-selected="${j === sel}"><b class="${e.q ? 'q-' + e.q : ''}">${esc(e.t)}</b><span>${esc(e.s)}</span></button>`; }).join('') : `<div class="none">Nothing matches “${esc(q)}”.</div>`;
+  box.hidden = false; $('#find').setAttribute('aria-expanded', 'true');
+}
+function pick(j) { const e = hits[j]; if (!e) return; $('#results').hidden = true; $('#find').value = ''; $('#find').blur(); e.go(); }
+function flash(el) { if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+function go(tab) { if (location.hash !== '#' + tab) { history.pushState(null, '', '#' + tab); } show(); }
+function goItem(ix) { Object.assign(state, { ch: 'all', iqual: 'all', ist: null, iq: D.items[ix].n }); $('#iq').value = D.items[ix].n; renderStash(); go('stash'); const el = $('#it-' + ix); if (el) { el.classList.add('open'); flash(el); } }
+function goRW(n) { const s = rwState(n); state.rwmode = s === 'made' ? 'made' : 'missing'; renderChron(); go('chronicle'); const el = $('#rw-' + n.replace(/\W/g, '')); if (el) { el.open = true; flash(el); } }
+function goMissing(n, list) { go('chronicle'); const el = $('#mu-' + n.replace(/\W/g, ''), $('#' + list)); if (el) { el.closest('details').open = true; flash(el); } }
+function goRec(n) { state.cq = n; $('#cq').value = n; renderChron(); go('chronicle'); flash($('#rc-' + n.replace(/\W/g, ''))); }
+function goCube(id) { go('cube'); const el = $('#' + id); if (el) { el.closest('details').open = true; flash(el); } }
+function goStep(g, s) { state.ch = 'all'; state.mode = 'all'; store.set('open:' + g.id, true); renderPlan(); go('plan'); const el = $(`#st-${g.id}-${s.id}`); if (el) { const d = el.closest('.donefold'); if (d) d.open = true; flash(el); } }
+
+/* ---------- routing ---------- */
+const ALIAS = { goals: 'plan', farm: 'plan', inventory: 'stash', ref: 'chronicle' };
+function show() {
+  let h = location.hash.slice(1).split('-')[0] || 'plan'; h = ALIAS[h] || h;
+  if (!['plan', 'chronicle', 'stash', 'cube'].includes(h)) h = 'plan';
+  if (location.hash.startsWith('#farm') && state.mode !== 'farm') { state.mode = 'farm'; renderPlan(); }
+  state.tab = h;
+  ['plan', 'chronicle', 'stash', 'cube'].forEach(x => $('#v-' + x).hidden = x !== h);
+  $$('#tabs a').forEach(a => a.hash === '#' + h ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  if (h === 'plan' || h === 'stash') (h === 'plan' ? renderPlan : renderStash)();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const sm = e.target.closest('details.goal>summary'); if (sm) store.set('open:' + sm.parentElement.dataset.g, !sm.parentElement.open);
+  const cs = e.target.closest('details.csec>summary'); if (cs) store.set('cube:' + cs.parentElement.dataset.c, !cs.parentElement.open);
+  if (e.target.id === 'cubeall' || e.target.id === 'cubenone') { setCube(e.target.id === 'cubeall'); return; }
+  const gs = e.target.closest('details.ig>summary'); if (gs) { const g = gs.parentElement.dataset.grp; gs.parentElement.open ? OPENG.delete(g) : OPENG.add(g); store.set('openg', [...OPENG]); }
+  const t = e.target.closest('button, a, .it, input');
+  if (!t) return;
+  if (t.matches('#chP .chip')) { state.ch = t.dataset.ch; saveState(); renderPlan(); }
+  else if (t.matches('#chS .chip')) { state.ch = t.dataset.ch; saveState(); renderStash(); }
+  else if (t.matches('#mode button')) { state.mode = t.dataset.mode; saveState(); renderPlan(); }
+  else if (t.matches('#rwmode button')) { state.rwmode = t.dataset.rw; saveState(); renderChron(); }
+  else if (t.matches('#hk .chip')) { state.ist = state.ist === t.dataset.st ? null : t.dataset.st; renderStash(); }
+  else if (t.matches('#iqual button')) { state.iqual = t.dataset.q; renderStash(); }
+  else if (t.id === 'clearf') { Object.assign(state, { ch: 'all', iqual: 'all', ist: null, iq: '' }); $('#iq').value = ''; renderStash(); }
+  else if (t.id === 'dismiss') { store.set('seen', D.snap); renderNews(); }
+  else if (t.matches('[data-shownew]')) { e.preventDefault(); Object.assign(state, { ch: 'all', iqual: 'all', ist: 'new', iq: '' }); $('#iq').value = ''; go('stash'); renderStash(); window.scrollTo({ top: $('#hk').getBoundingClientRect().top + scrollY - 90 }); }
+  else if (t.matches('.results button')) pick(+t.dataset.j);
+  else if (t.matches('[data-farm]')) { const f = RAILMAP[t.dataset.farm]; if (f) { state.mode = 'farm'; saveState(); renderPlan(); const el = $(`#st-${f.g.id}-${f.s.id}`); if (el) { const h = $('details.how', el); if (h) h.open = true; flash(el); } } }
+  else if (t.matches('[data-rwready]')) { state.rwmode = 'ready'; saveState(); renderChron(); }
+  else if (t.id === 'freshbtn') { const p = $('#freshpop'); p.hidden = !p.hidden; t.setAttribute('aria-expanded', String(!p.hidden)); }
+  else if (t.matches('.it') && !getSelection().toString()) { t.classList.toggle('open'); t.setAttribute('aria-expanded', t.classList.contains('open')); }
+});
+document.addEventListener('change', e => {
+  const cb = e.target.closest('.step input[data-k]'); if (!cb) return;
+  const t = store.get('ticks', {}); t[cb.dataset.k] = cb.checked; store.set('ticks', t); renderPlan(); IDX = null;
+});
+
+document.addEventListener('keydown', e => {
+  const f = $('#find');
+  if (e.key === '/' && document.activeElement !== f && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); f.focus(); f.select(); return; }
+  if (document.activeElement === f && !$('#results').hidden) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, Math.min(hits.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
+      $$('#results button').forEach(b => b.setAttribute('aria-selected', String(+b.dataset.j === sel))); const b = $(`#results button[data-j="${sel}"]`); if (b) b.scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'Enter') { e.preventDefault(); pick(sel); }
+  }
+  if (e.key === 'Escape') { $('#results').hidden = true; $('#freshpop').hidden = true; if (document.activeElement === f) { f.value = ''; f.blur(); } }
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement.matches('.it')) { e.preventDefault(); document.activeElement.click(); }
+});
+$('#find').addEventListener('input', runFind);
+$('#find').addEventListener('focus', () => { if ($('#find').value) runFind(); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.find')) $('#results').hidden = true; if (!e.target.closest('.fresh')) { $('#freshpop').hidden = true; $('#freshbtn').setAttribute('aria-expanded', 'false'); } });
+let tc; $('#cq').addEventListener('input', e => { clearTimeout(tc); tc = setTimeout(() => { state.cq = e.target.value.trim(); renderChron(); }, 120); });
+let tq; $('#iq').addEventListener('input', e => { clearTimeout(tq); tq = setTimeout(() => { state.iq = e.target.value.trim(); renderStash(); }, 120); });
+addEventListener('hashchange', show); addEventListener('popstate', show);
+
+renderFresh(); renderNews(); renderLedger(); renderCube(); initCubeFolds(); renderChron(); renderPlan(); renderStash(); show();
+</script>
+</body>
+</html>
