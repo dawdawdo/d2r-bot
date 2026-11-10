@@ -3,22 +3,23 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**Site (2026-11-10 09:45): convergentblue.com/bot/ and /armory/, both live, unlisted (noindex, no sitemap).**
+**Site (2026-11-10 16:15): convergentblue.com/bot/ is one page: armory tabs (Plan, Chronicle, Stash, Cube) + a Bot tab
+(console, loot log; polls only while open). /armory/ is gone (Stephen). Unlisted (noindex, no sitemap).**
 - /bot/: public to watch; Start/Stop greyed out until "Owner sign-in" (DASH_TOKEN). worker/bot.js, Durable Object
   `BotState`. Free plan: DO rows read 5M/day; v1 blew it 2026-11-10 (table scan per check-in), fixed 7c5f5d9 (~4 rows
   per request). DO calls blocked until 00:00 UTC 11-11 (7 pm ET 11-10).
-- /armory/: Stephen's armory_tools (from Drive) are in `armory/`; `bot/armory.py` rebuilds from the newest
+- Armory data: Stephen's armory_tools (from Drive) are in `armory/`; `bot/armory.py` rebuilds from the newest
   `backups/<ts>/` (never the live saves) and uploads gzipped pagedata.json to /api/bot/armory. The supervisor runs it
   every 5 min when a new backup exists, but the running supervisor (pid 34686, started 11-09) predates the hook:
   restart it between sessions. Until then / until the DO reset, a background loop retries `python -m bot.armory` every
-  10 min (logs/armory_retry.log). Page template = convergentblue src/pages/armory/index.astro (ported by
+  10 min (logs/armory_retry.log). Page template = convergentblue src/pages/bot/index.astro (first ported by
   armory/to_site.py); edit goals there.
-- Open checks (11-10 11:00): (1) after 7 pm ET, /armory/ shows data and /bot/ is back (the retry loop lives in the
+- Open checks (11-10 11:00): (1) after 7 pm ET, /bot/ shows live armory data and the Bot tab/owner sign-in work (the retry loop lives in the
   Claude session that started it; if that session is gone, run `python -m bot.armory` once by hand). (2) Next cube
   session saves fixtures/raw/cube_{runes,gems}_last.png: compare reads to armory/pagedata.json (rune 11 fix 6884e2b;
   Flawless Skull read 13 vs plan 3, maybe the same tens-digit miss on gems). (3) 11-10 09:31 the stale-cursor trip
   happened on a fresh D2R; closing D2R (`wmctrl -c "Diablo II: Resurrected"`) and restarting fixed it. Root cause open.
-- 11-10 16:00: /armory/ falls back to public/armory/snapshot.json (saves of 11-10 12:41) when the API is down; it is a
+- 11-10 16:00: the armory tabs fall back to public/bot/snapshot.json (saves of 11-10 12:41) when the API is down; it is a
   hand-copied file in the site repo (refresh: cp armory/work/pagedata.json there, commit, push). Item meta shows ilvl.
 - 11-10: two deaths (02:16 LK fire pack 64%->0 in 1.2 s; 07:45 Meph, belt empty, merc dead, 92%->0 in 3 s) were logged
   "fail: could not open the esc menu"; save_and_exit now clears the death screen first (63f552b). Live-untested.

@@ -30,7 +30,7 @@ To refresh the published artifact: stage the root copy and publish it to the art
 - `cube.py` regenerates cube recipe HTML from cubemain.txt (static tables are baked into armory.html).
 
 ## On GLaDOS (since 2026-11-10)
-The page now lives at https://convergentblue.com/armory/ (convergentblue repo, `src/pages/armory/index.astro`, ported
+The page now lives at https://convergentblue.com/bot/ (convergentblue repo, `src/pages/bot/index.astro`, merged with the bot console 2026-11-10, ported
 once by `to_site.py`; edit GOALS/FARMS/WANT/MOVES/DITCH there, not in `armory.html`). Data comes from
 `/api/bot/armory`. The bot supervisor runs `bot/armory.py` whenever a session start leaves a new save backup in
 `backups/`: same pipeline as `update.sh`, in `armory/work/`, reading only the backup copy; it uploads the gzipped

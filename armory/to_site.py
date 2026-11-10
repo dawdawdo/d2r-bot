@@ -1,4 +1,7 @@
-"""One-time port of armory.html (the claude.ai artifact template) to convergentblue.com/armory/.
+"""DONE, DO NOT RERUN: the page is now convergentblue src/pages/bot/index.astro, merged with the bot console
+(2026-11-10); rerunning would overwrite that. Edit the .astro file directly.
+
+One-time port of armory.html (the claude.ai artifact template) to convergentblue.com/armory/.
 
     python armory/to_site.py ../convergentblue/src/pages/armory/index.astro
 

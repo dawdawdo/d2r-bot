@@ -1,4 +1,4 @@
-"""Rebuild Blizzaga's Armory data from the newest save backup and send it to convergentblue.com/armory/.
+"""Rebuild Blizzaga's Armory data from the newest save backup and send it to convergentblue.com/bot/ (armory tabs).
 
     python -m bot.armory            # build from the newest backup if it's new, upload
     python -m bot.armory --force    # rebuild and upload even if that backup was already done
