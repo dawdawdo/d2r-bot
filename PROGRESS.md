@@ -18,6 +18,10 @@
   session saves fixtures/raw/cube_{runes,gems}_last.png: compare reads to armory/pagedata.json (rune 11 fix 6884e2b;
   Flawless Skull read 13 vs plan 3, maybe the same tens-digit miss on gems). (3) 11-10 09:31 the stale-cursor trip
   happened on a fresh D2R; closing D2R (`wmctrl -c "Diablo II: Resurrected"`) and restarting fixed it. Root cause open.
+- 11-10 16:00: /armory/ falls back to public/armory/snapshot.json (saves of 11-10 12:41) when the API is down; it is a
+  hand-copied file in the site repo (refresh: cp armory/work/pagedata.json there, commit, push). Item meta shows ilvl.
+- 11-10: two deaths (02:16 LK fire pack 64%->0 in 1.2 s; 07:45 Meph, belt empty, merc dead, 92%->0 in 3 s) were logged
+  "fail: could not open the esc menu"; save_and_exit now clears the death screen first (63f552b). Live-untested.
 - Node 22: conda env `node22`. Site pushes: Stephen allowed `git -C /data/AutoDev/convergentblue push origin main`.
   Later: local `bot/web` through desired.json; systemd --user unit (ask).
 
