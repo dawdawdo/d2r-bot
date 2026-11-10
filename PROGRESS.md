@@ -6,13 +6,18 @@
 **Site (2026-11-10 09:45): convergentblue.com/bot/ and /armory/, both live, unlisted (noindex, no sitemap).**
 - /bot/: public to watch; Start/Stop greyed out until "Owner sign-in" (DASH_TOKEN). worker/bot.js, Durable Object
   `BotState`. Free plan: DO rows read 5M/day; v1 blew it 2026-11-10 (table scan per check-in), fixed 7c5f5d9 (~4 rows
-  per request). DO calls blocked until 00:00 UTC 11-10.
+  per request). DO calls blocked until 00:00 UTC 11-11 (7 pm ET 11-10).
 - /armory/: Stephen's armory_tools (from Drive) are in `armory/`; `bot/armory.py` rebuilds from the newest
   `backups/<ts>/` (never the live saves) and uploads gzipped pagedata.json to /api/bot/armory. The supervisor runs it
   every 5 min when a new backup exists, but the running supervisor (pid 34686, started 11-09) predates the hook:
   restart it between sessions. Until then / until the DO reset, a background loop retries `python -m bot.armory` every
   10 min (logs/armory_retry.log). Page template = convergentblue src/pages/armory/index.astro (ported by
   armory/to_site.py); edit goals there.
+- Open checks (11-10 11:00): (1) after 7 pm ET, /armory/ shows data and /bot/ is back (the retry loop lives in the
+  Claude session that started it; if that session is gone, run `python -m bot.armory` once by hand). (2) Next cube
+  session saves fixtures/raw/cube_{runes,gems}_last.png: compare reads to armory/pagedata.json (rune 11 fix 6884e2b;
+  Flawless Skull read 13 vs plan 3, maybe the same tens-digit miss on gems). (3) 11-10 09:31 the stale-cursor trip
+  happened on a fresh D2R; closing D2R (`wmctrl -c "Diablo II: Resurrected"`) and restarting fixed it. Root cause open.
 - Node 22: conda env `node22`. Site pushes: Stephen allowed `git -C /data/AutoDev/convergentblue push origin main`.
   Later: local `bot/web` through desired.json; systemd --user unit (ask).
 
