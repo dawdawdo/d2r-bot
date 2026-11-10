@@ -106,7 +106,9 @@ def refresh(cfg: dict, force: bool = False, send: bool = True) -> str:
     path = build(b)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     msg = f"built from {b.name} in {time.time() - t0:.1f} s"
-    if send and (force or digest != last.get("sent")):
+    if not send:  # a dry run must not mark this backup done, or it would never be uploaded
+        return msg + " (not uploaded)"
+    if force or digest != last.get("sent"):
         msg += f", uploaded {upload(cfg, path) // 1024} KB"
         last["sent"] = digest
     LAST.write_text(json.dumps(last | {"backup": b.name, "at": time.time()}))

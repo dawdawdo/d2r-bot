@@ -3,13 +3,18 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**Web dashboard (2026-11-09 15:10):** done, waiting on Stephen. Site commit 16578fc in /data/AutoDev/convergentblue
-(builds; Worker tested locally with wrangler dev): push to main was refused by the auto-mode classifier
-(production deploy), so Stephen pushes. Then he sets Worker secrets BOT_TOKEN / DASH_TOKEN (values in
-~/.config/d2r-bot/bot_token, dash_password). `worker/bot.js`: Durable Object `BotState`, `/api/bot/checkin|state|control`;
-queued start/stop delivered once. Page `/bot/`. Node 22: conda env `node22`. Supervisor: tasks change restarts the
-session after its run (20df660; loads at the next supervisor restart, the running one predates it).
-Later: local `bot/web` through desired.json; systemd --user unit (ask).
+**Site (2026-11-10 09:45): convergentblue.com/bot/ and /armory/, both live, unlisted (noindex, no sitemap).**
+- /bot/: public to watch; Start/Stop greyed out until "Owner sign-in" (DASH_TOKEN). worker/bot.js, Durable Object
+  `BotState`. Free plan: DO rows read 5M/day; v1 blew it 2026-11-10 (table scan per check-in), fixed 7c5f5d9 (~4 rows
+  per request). DO calls blocked until 00:00 UTC 11-10.
+- /armory/: Stephen's armory_tools (from Drive) are in `armory/`; `bot/armory.py` rebuilds from the newest
+  `backups/<ts>/` (never the live saves) and uploads gzipped pagedata.json to /api/bot/armory. The supervisor runs it
+  every 5 min when a new backup exists, but the running supervisor (pid 34686, started 11-09) predates the hook:
+  restart it between sessions. Until then / until the DO reset, a background loop retries `python -m bot.armory` every
+  10 min (logs/armory_retry.log). Page template = convergentblue src/pages/armory/index.astro (ported by
+  armory/to_site.py); edit goals there.
+- Node 22: conda env `node22`. Site pushes: Stephen allowed `git -C /data/AutoDev/convergentblue push origin main`.
+  Later: local `bot/web` through desired.json; systemd --user unit (ask).
 
 **2026-11-09 15:00: every session stopped at game start ("mouse moved by user", same spot)** after Stephen used
 GLaDOS by hand: D2R's in-game cursor was stale, the weapon-set check's inventory toggle warped from it. Restarting
