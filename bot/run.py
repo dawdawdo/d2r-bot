@@ -227,6 +227,11 @@ def main() -> int:
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
+    rec_cfg = cfg.get("recording") or {}
+    if rec_cfg.get("enabled", True):
+        from .recorder import Recorders
+
+        bot.recorder = Recorders(ROOT / "fixtures" / "raw", rec_cfg)
     from .lifecycle import windowed
 
     if not windowed(backend.window, backend.input, cfg["game"]["resolution"]):  # Stephen resizes it when he plays

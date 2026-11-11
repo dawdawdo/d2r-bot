@@ -69,6 +69,7 @@ class Controller:
         self.scan_jumped = False  # lk.open_chest: the last hover scan ended on a view jump
         self._stop_raised = False
         self._stop_next = 0.0
+        self.recorder = None  # bot.recorder.Recorders: training data while out of town (watch only)
 
     # --- perception -------------------------------------------------------
     def observe(self) -> str:
@@ -95,6 +96,8 @@ class Controller:
 
     def guard(self, on: bool) -> None:
         self.guarding = on
+        if not on and self.recorder is not None:
+            self.recorder.reset()
 
     def _check_vitals(self) -> None:
         from .vision.orbs import orb_pcts
@@ -103,11 +106,21 @@ class Controller:
         self.hp, self.mp = orbs["hp"], orbs["mp"]
         if not self.guarding:
             return
+        rec = self.recorder
+        if rec is not None:
+            try:
+                rec.tick(self.frame, self.hp, self.mp, f"a{getattr(self, 'act', 0)}")
+            except Exception as ex:  # noqa: BLE001 - training data must never stop a run
+                log.debug("recorder: %s", ex)
         s = self.cfg["safety"]
         if self.hp <= 1:
+            if rec is not None:
+                rec.event("died", f"a{getattr(self, 'act', 0)}")
             self.save_failure("died")
             raise Died("HP orb empty")
         if self.hp < s["chicken_hp_pct"]:
+            if rec is not None:
+                rec.event("chicken", f"a{getattr(self, 'act', 0)}")
             self.save_failure(f"chicken_hp{int(self.hp)}")
             # the Esc menu takes seconds, and at 48% of 201 life that was too slow (death, 2026-11-06 20:49)
             key = self.potion_key("hp")

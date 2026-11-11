@@ -55,6 +55,12 @@ hotkeys:
   show_items: alt
   inventory: b
 
+recording:  # training data for the learned-perception plan (fixtures/raw/sampled, fixtures/raw/danger); watch only
+  enabled: true
+  frame_every_s: 10      # one 640x360 frame this often while out of town
+  frame_daily_cap: 3000
+  calm_p: 0.0005         # per guard tick: chance to save a calm 5 s window (contrast for chickens/deaths)
+
 safety:
   chicken_hp_pct: 50
   potion_hp_pct: 70
