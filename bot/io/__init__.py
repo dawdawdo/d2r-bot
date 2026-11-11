@@ -89,6 +89,28 @@ def game_running(exe: str = "D2R.exe") -> bool:
     return subprocess.run(["pgrep", "-f", pattern], capture_output=True).returncode == 0
 
 
+def idle_seconds() -> float | None:
+    """Seconds since the last keyboard/mouse input on this desktop (any device), or None if unknown.
+    The supervisor reads it while no bot runs, so it measures the person, not the bot."""
+    if sys.platform == "win32":
+        import ctypes
+
+        class LASTINPUTINFO(ctypes.Structure):
+            _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+
+        info = LASTINPUTINFO(ctypes.sizeof(LASTINPUTINFO), 0)
+        if not ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info)):
+            return None
+        return ((ctypes.windll.kernel32.GetTickCount() - info.dwTime) & 0xFFFFFFFF) / 1000.0
+    if sys.platform == "linux":
+        try:
+            from .linux import idle_seconds as linux_idle
+        except Exception:
+            return None
+        return linux_idle()
+    return None
+
+
 def open_clicks() -> ClickListener:
     """The user's mouse clicks (screen coords)."""
     if sys.platform in ("win32", "linux"):

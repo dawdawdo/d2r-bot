@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import logging
 import os
+import struct
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -262,6 +264,71 @@ def keycode(key: str) -> int:
         raise ValueError(f"no uinput key code for {key!r}") from None
 
 
+class PhysicalPointerWatch:
+    """Which pointer device moved, from XInput2 raw motion on the root window (no /dev/input access needed).
+
+    The kill switch used to trip on any cursor jump; 2026-11-11 02:05 one tripped with nobody at GLaDOS, left
+    Blizzaga standing in LK, and she died. Raw events carry the source device, so the bot's own uinput pointer
+    (and XTEST) can be told apart from the touchpad and mice."""
+
+    GENERIC_EVENT = 35  # X11 GenericEvent (XI2 events arrive as these)
+    IGNORE = ("d2r-bot", "XTEST")
+
+    def __init__(self) -> None:
+        from Xlib.ext import xinput
+
+        self._xi = xinput
+        self._d = display.Display()  # own connection: Xlib connections aren't thread-safe
+        self._d.screen().root.xinput_select_events([(xinput.AllDevices, xinput.RawMotionMask)])
+        self._d.flush()
+        self._names: dict[int, str] = {}
+        self.last: dict[str, float] = {}  # device name -> time.time() of its last motion
+        self._stop = threading.Event()
+        threading.Thread(target=self._run, name="physical-pointer-watch", daemon=True).start()
+
+    def _name(self, dev: int) -> str:
+        if dev not in self._names:  # hotplug: refresh the map on an unknown id
+            info = self._d.xinput_query_device(self._xi.AllDevices).devices
+            self._names = {i.deviceid: (i.name if isinstance(i.name, str) else i.name.decode("utf-8", "replace"))
+                           for i in info}
+        return self._names.get(dev, f"device {dev}")
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            try:
+                while self._d.pending_events():
+                    ev = self._d.next_event()
+                    if ev.type != self.GENERIC_EVENT or getattr(ev, "evtype", None) != self._xi.RawMotion:
+                        continue
+                    data = ev.data if isinstance(ev.data, (bytes, bytearray)) else b""
+                    if len(data) < 12:
+                        continue
+                    name = self._name(struct.unpack_from("<H", data, 10)[0])  # sourceid
+                    if not any(k in name for k in self.IGNORE):
+                        self.last[name] = time.time()
+            except Exception as ex:  # never take the bot down; the guard falls back to tripping
+                log.warning("physical pointer watch stopped: %s", ex)
+                return
+            self._stop.wait(0.02)
+
+    def mover(self, since: float) -> str | None:
+        hits = [(t, n) for n, t in list(self.last.items()) if t >= since]
+        return max(hits)[1] if hits else None
+
+    def stop(self) -> None:
+        self._stop.set()
+
+
+def idle_seconds() -> float | None:
+    """Seconds since the last keyboard/mouse input X saw (any device), or None if unknown."""
+    try:
+        from Xlib.ext import screensaver
+
+        return _root().screensaver_query_info().idle / 1000.0
+    except Exception:
+        return None
+
+
 class UinputInput(Input):
     """Two virtual devices: a keyboard and an absolute pointer spanning the X screen."""
 
@@ -286,6 +353,19 @@ class UinputInput(Input):
         }, name="d2r-bot pointer")
         self.held: set[str] = set()
         time.sleep(settle)  # give X/libinput time to pick up the new devices
+        self._watch = None
+        if pointer_query is None:  # real X session (tests pass a fake query)
+            try:
+                self._watch = PhysicalPointerWatch()
+            except Exception as ex:
+                log.warning("can't watch physical pointers (%s): any cursor jump trips the kill switch", ex)
+
+    @property
+    def watches_physical(self) -> bool:
+        return self._watch is not None
+
+    def physical_mover(self, since: float) -> str | None:
+        return self._watch.mover(since) if self._watch else None
 
     @staticmethod
     def _xquery() -> tuple[int, int]:
@@ -352,6 +432,8 @@ class UinputInput(Input):
         return px - wx, py - wy
 
     def close(self) -> None:
+        if self._watch:
+            self._watch.stop()
         self.release_all()
         self.kbd.close()
         self.ptr.close()

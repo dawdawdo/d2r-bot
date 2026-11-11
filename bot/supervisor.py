@@ -7,6 +7,9 @@ web page, or the remote hook. The supervisor only ever starts `python -m bot.run
 
 - A session that ends on its own (150 runs done) starts again right away.
 - F12 (or a stop request) sets run=false: a person asked for it, so stay stopped until told otherwise.
+- A mouse trip (the cursor moved by a physical device; the bot saved & exited) is not F12: wait MOUSE_QUIET_S,
+  then start again once the desktop has had no input for MOUSE_QUIET_S (2026-11-11: a 2 am trip stopped the
+  night and left her dead in LK).
 - Failure streaks / quick deaths (D2R won't start: an update or login prompt) back off 5 min, doubling to 1 h.
 - A bot whose status.json hasn't moved for HANG_S is killed; the next session's start recovers the game.
 
@@ -43,6 +46,7 @@ HANG_S = 20 * 60          # a Meph run times out at 7 min; 20 min without a stat
 QUICK_S = 180             # a session shorter than this with no run done counts as "didn't start"
 BACKOFF_S = (300, 600, 1200, 2400, 3600)
 REMOTE_EVERY_S = 30
+MOUSE_QUIET_S = 600       # after a mouse trip: this long since the trip, and this long with no desktop input
 SESSION_RUNS = 150
 DEFAULT = {"run": False, "tasks": "meph", "mode": "chests", "max_fail_streak": 4}
 
@@ -86,6 +90,8 @@ class Supervisor:
         self.out_offset = 0
         self.fails = 0              # sessions in a row that ended badly
         self.backoff_until = 0.0
+        self.mouse_hold_until = 0.0  # set by a mouse trip; then also wait for a quiet desktop
+        self._told_busy = False
         self.state = "idle"
         self.last_end = ""
         self.remote_at = 0.0
@@ -133,10 +139,17 @@ class Supervisor:
         took = time.time() - self.started
         runs_done = len(re.findall(r"run \d+/\d+ (?:ok|fail|chicken)", out))
         self.proc = None
-        if getattr(self, "switching", False) and "stopped by kill switch" not in out:
+        if getattr(self, "switching", False) and "stopped by kill switch" not in out and "mouse trip" not in out:
             self.switching = False
             self.fails, self.last_end, self.state = 0, "stopped to switch tasks", "idle"
             log.info("session stopped to switch tasks after %.0f min", took / 60)
+            return
+        if "stopped by mouse trip" in out:
+            self.fails = 0
+            self.mouse_hold_until = time.time() + MOUSE_QUIET_S
+            self.last_end, self.state = "mouse trip: restarts after the desktop is quiet", "backoff"
+            log.info("session stopped by a mouse trip: restarting after %d min with no desktop input",
+                     MOUSE_QUIET_S // 60)
             return
         if "stopped by kill switch" in out or "stop requested" in out:
             why = "F12" if "stopped by kill switch" in out else "stop request"  # every session logs "kill switch armed"
@@ -226,6 +239,23 @@ class Supervisor:
         return (st.get("state") == "idle" and "kill switch" in (st.get("tally") or {})
                 and upd > float(d.get("updated", 0) or 0))
 
+    def desk_quiet(self, idle_seconds=None) -> bool:
+        """After a mouse trip: wait MOUSE_QUIET_S, then until nobody has touched the desktop for as long."""
+        if not self.mouse_hold_until:
+            return True
+        if time.time() < self.mouse_hold_until:
+            return False
+        if idle_seconds is None:
+            from .io import idle_seconds
+        idle = idle_seconds()
+        if idle is not None and idle < MOUSE_QUIET_S:
+            if not self._told_busy:
+                log.info("desktop in use (input %.0f s ago): waiting for %d quiet min", idle, MOUSE_QUIET_S // 60)
+                self._told_busy = True
+            return False
+        self.mouse_hold_until, self._told_busy = 0.0, False
+        return True
+
     def tick(self) -> None:
         d = read_desired()
         if self.proc is not None and self.proc.poll() is not None:
@@ -238,7 +268,7 @@ class Supervisor:
         if d["run"] and not self.running():
             if self.other_bot():
                 self.state = "busy (another bot is running)"
-            elif time.time() >= self.backoff_until:
+            elif time.time() >= self.backoff_until and self.desk_quiet():
                 self.start(d)
             else:
                 self.state = "backoff"

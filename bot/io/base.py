@@ -6,10 +6,14 @@ Frames are numpy uint8 BGR arrays of shape (h, w, 3).
 """
 from __future__ import annotations
 
+import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Callable
 
 import numpy as np
+
+log = logging.getLogger(__name__)
 
 Region = tuple[int, int, int, int]  # x, y, w, h (client-relative)
 
@@ -71,6 +75,14 @@ class Input(ABC):
         """Current cursor position (client coords), or None if unknown."""
         return None
 
+    # Backends that can see which device moved the pointer set this and implement physical_mover().
+    watches_physical = False
+
+    def physical_mover(self, since: float) -> str | None:
+        """Name of a physical pointer device (not the bot's own) that moved since `since` (time.time()),
+        or None if none did. Only meaningful when `watches_physical` is True."""
+        return None
+
 
 class HotkeyListener(ABC):
     @abstractmethod
@@ -106,14 +118,20 @@ class GuardedInput(Input):
     # horizontally when a side panel (waypoint, inventory, ...) opens or closes.
     GAME_WARPS_DX = (240, -240)
 
-    def __init__(self, inner: Input, kill, user_move_tol: int = 25) -> None:
+    def __init__(self, inner: Input, kill, user_move_tol: int = 25, clock=time.time) -> None:
         self.inner = inner
         self.kill = kill
         self.tol = user_move_tol
+        self.clock = clock
         self.expected: tuple[int, int] | None = None
+        self.expected_at = 0.0
+        self.check_user = True  # off while a mouse-trip exit runs (the person may still be on the mouse)
+        self.phantom_jumps = 0
 
     def _check(self) -> None:
         self.kill.check()
+        if not self.check_user:
+            return
         pos = self.inner.cursor_pos()
         if self.expected is not None and pos is not None:
             dx, dy = pos[0] - self.expected[0], pos[1] - self.expected[1]
@@ -121,18 +139,36 @@ class GuardedInput(Input):
                 return
             if abs(dy) <= 2 and any(abs(dx - w) <= 2 for w in self.GAME_WARPS_DX):
                 return  # panel camera shift, not a human
-            self.kill.trip(f"mouse moved by user (expected {self.expected}, at {pos})")
+            if self.inner.watches_physical:
+                dev = self.inner.physical_mover(self.expected_at - 0.2)
+                if dev is None:  # the watcher thread may not have read a just-made human move yet
+                    time.sleep(0.15)
+                    dev = self.inner.physical_mover(self.expected_at - 0.2)
+                if dev is None:
+                    # Nothing physical moved: a software/game warp. 2026-11-11 02:05 such a trip left her in LK
+                    # and she died; moves are absolute, so carry on from where the cursor is.
+                    self.phantom_jumps += 1
+                    log.warning("cursor jumped with no physical pointer input (expected %s, at %s): ignoring",
+                                self.expected, pos)
+                    self.expected = pos
+                    return
+                why = f"mouse moved by user ({dev}; expected {self.expected}, at {pos})"
+            else:
+                why = f"mouse moved by user (expected {self.expected}, at {pos})"
+            self.kill.trip(why, kind="mouse")
             self.kill.check()
 
     def move(self, x, y):
         self._check()
         self.inner.move(x, y)
         self.expected = (x, y)
+        self.expected_at = self.clock()
 
     def click(self, x, y, button="left", hover=0.08):
         self._check()
         self.inner.click(x, y, button, hover)
         self.expected = (x, y)
+        self.expected_at = self.clock()
 
     def key_down(self, key):
         self._check()

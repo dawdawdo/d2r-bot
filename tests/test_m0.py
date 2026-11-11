@@ -116,3 +116,62 @@ def test_platform_imports_only_in_bot_io():
         if FORBIDDEN.search(text) or "ctypes.windll" in text:
             offenders.append(str(py.relative_to(ROOT)))
     assert offenders == []
+
+
+class WatchingInput(FakeInput):
+    """FakeInput whose backend can tell which physical device moved the pointer."""
+    watches_physical = True
+
+    def __init__(self):
+        super().__init__()
+        self.moved: list[tuple[float, str]] = []
+
+    def physical_mover(self, since):
+        hits = [n for t, n in self.moved if t >= since]
+        return hits[-1] if hits else None
+
+
+def test_cursor_jump_without_physical_input_is_ignored():
+    k = KillSwitch()
+    inner = WatchingInput()
+    now = [1000.0]
+    inp = GuardedInput(inner, k, clock=lambda: now[0])
+    inp.click(486, 199)
+    inner.pos = (370, 405)  # 2026-11-11 02:05: nobody at the desk
+    inp.click(300, 300)
+    assert not k.tripped and inp.phantom_jumps == 1
+    assert ("click", 300, 300, "left") in inner.events
+
+
+def test_physical_move_trips_as_mouse_kind():
+    k = KillSwitch()
+    inner = WatchingInput()
+    now = [1000.0]
+    inp = GuardedInput(inner, k, clock=lambda: now[0])
+    inp.click(486, 199)
+    inner.moved.append((1000.5, "SynPS/2 Synaptics TouchPad"))
+    inner.pos = (370, 405)
+    with pytest.raises(KillSwitchTripped, match="TouchPad"):
+        inp.click(300, 300)
+    assert k.kind == "mouse"
+
+
+def test_trip_kinds_and_rearm():
+    k = KillSwitch()
+    k.trip("F12 pressed")
+    assert k.kind == "f12"
+    k.rearm()
+    k.check()  # cleared
+    k.trip("x", kind="mouse")
+    assert k.tripped and k.kind == "mouse"
+
+
+def test_check_user_off_skips_the_move_check():
+    k = KillSwitch()
+    inner = FakeInput()
+    inp = GuardedInput(inner, k)
+    inp.click(100, 100)
+    inp.check_user = False
+    inner.pos = (700, 50)
+    inp.click(300, 300)
+    assert not k.tripped

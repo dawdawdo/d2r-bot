@@ -162,6 +162,30 @@ def runes_only(cfg: dict) -> bool:
     return True
 
 
+def leave_game_after_trip(bot: Controller, kill) -> None:
+    """Save & exit after a mouse trip, with the moved-cursor check off. F12 during this still stops it."""
+    reason = kill.reason
+    kill.rearm()
+    bot.input.check_user = False
+    try:
+        if bot.observe() in ("in_game", "esc_menu", "loading"):
+            log.info("mouse trip: saving & exiting so she isn't left in the game")
+            ensure_main_menu(bot)
+            log.info("mouse trip: back at the main menu")
+            if getattr(bot, "died_on_exit", False):
+                state.save({**state.load(), "corpse": True})
+    except KillSwitchTripped:
+        log.warning("F12 during the mouse-trip exit: leaving the game as it is")
+        return
+    except Exception as ex:  # noqa: BLE001 - best effort; the trip is still the reason we stop
+        log.error("mouse trip: save & exit failed: %s", ex)
+        state.save({**state.load(), "corpse": True})  # she may die where she stands: look next session
+    finally:
+        bot.input.check_user = True
+    if not kill.tripped:
+        kill.trip(reason, kind="mouse")  # stay tripped so nothing else sends input
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1)
@@ -366,8 +390,15 @@ def main() -> int:
                     log.error("%d failures in a row; stopping", streak)
                     break
     except KillSwitchTripped as e:
-        log.warning("stopped by kill switch: %s", e)
-        tally["kill switch"] = 1
+        if session.kill.kind == "mouse":
+            # Not F12: the supervisor restarts once the desktop is quiet. Never leave her standing in the game
+            # (2026-11-11 02:05: a mouse trip in LK quit on the spot and she died there).
+            log.warning("stopped by mouse trip: %s", e)
+            tally["mouse trip"] = 1
+            leave_game_after_trip(bot, session.kill)
+        else:
+            log.warning("stopped by kill switch: %s", e)
+            tally["kill switch"] = 1
     finally:
         control.write_status(state="idle", tally=tally, started=t_start)
         control.clear()

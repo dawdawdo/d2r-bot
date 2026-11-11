@@ -102,3 +102,18 @@ def test_new_tasks_restart_the_session_after_this_run(sup, monkeypatch):
     assert asked == [False]  # once, after the current run
     end_with(sup, "run 3/150 ok in 90s\nstop requested (web page); not starting run 4\n", 1)
     assert sv.read_desired()["run"] is True and sup.state == "idle"  # not "stopped": the next tick starts lk
+
+
+def test_mouse_trip_waits_for_a_quiet_desktop(sup):
+    end_with(sup, "run 85/150 ok\nstopped by mouse trip: mouse moved by user (TouchPad)\n", 1)
+    assert sv.read_desired()["run"] is True and sup.state == "backoff"
+    assert not sup.desk_quiet(lambda: 9999)          # the hold time hasn't passed
+    sup.mouse_hold_until = sv.time.time() - 1
+    assert not sup.desk_quiet(lambda: 30)            # someone touched it 30 s ago
+    assert sup.desk_quiet(lambda: sv.MOUSE_QUIET_S + 1)
+    assert sup.mouse_hold_until == 0 and sup.desk_quiet(lambda: 0)  # cleared: normal starts again
+
+
+def test_f12_still_stays_stopped_when_a_mouse_trip_is_not_in_the_output(sup):
+    end_with(sup, "stopped by kill switch: F12 pressed\n", 1)
+    assert sv.read_desired()["run"] is False
