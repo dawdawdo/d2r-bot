@@ -119,3 +119,32 @@ def test_unique_label_stacked_against_another_is_still_found(name, box):
     img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / name))
     labels = find_labels(img, {"unique": CFG["vision"]["labels"]["unique"]}, ignore=CFG["vision"]["label_ignore"])
     assert box in [(a.x, a.y, a.w, a.h) for a in labels]
+
+
+def _label_frame(text_bgr):
+    """Lit ground with one label: text in a near-black box, D2R-sized (about 13 px tall)."""
+    import numpy as np
+
+    img = np.full((720, 1280, 3), (60, 90, 110), np.uint8)
+    cv2.rectangle(img, (590, 290), (720, 320), (8, 8, 8), -1)
+    cv2.putText(img, "Archon Plate", (600, 311), cv2.FONT_HERSHEY_SIMPLEX, 0.55, text_bgr, 1, cv2.LINE_AA)
+    return img
+
+
+def test_gray_label_found_white_label_not_gray():
+    """Socketed / ethereal bases have gray labels (2026-11-11: picked so Stephen's runeword bases come home)."""
+    gray = {"gray": CFG["vision"]["labels"]["gray"]}
+    found = find_labels(_label_frame((120, 120, 120)), gray, ignore=CFG["vision"]["label_ignore"])
+    assert [l.kind for l in found] == ["gray"]
+    assert not find_labels(_label_frame((230, 230, 230)), gray, ignore=CFG["vision"]["label_ignore"])
+    assert "gray" in CFG["loot"]["pick"]
+
+
+@pytest.mark.parametrize("name", sorted(p.name for p in (Path(__file__).resolve().parent.parent / "fixtures" / "loot").glob("*.png")))
+def test_no_gray_labels_on_loot_frames(name):
+    """None of the saved loot frames has a gray item, so nothing there may read as one (loot()'s ignore regions)."""
+    img = cv2.imread(str(Path(__file__).resolve().parent.parent / "fixtures" / "loot" / name))
+    if img is None or img.shape[:2] != (720, 1280):
+        pytest.skip("not a full frame")
+    ignore = [*CFG["vision"]["label_ignore"], [300, 0, 680, 60], [0, 0, 110, 90]]
+    assert not find_labels(img, {"gray": CFG["vision"]["labels"]["gray"]}, ignore=ignore)

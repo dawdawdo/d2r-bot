@@ -402,8 +402,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                         bot.frame)
         found = []
         ignore = bot.cfg["vision"]["label_ignore"]
-        if take_all or bot.cfg["loot"].get("pick_white_other"):
-            # white text that isn't an item: a hovered monster's name bar + mods line at the top centre,
+        if take_all or bot.cfg["loot"].get("pick_white_other") or "gray" in kinds:
+            # white or gray text that isn't an item: a hovered monster's name bar + mods line at the top centre,
             # the merc's name under his portrait
             ignore = [*ignore, [300, 0, 680, 60], [0, 0, 110, 90]]
         labs = find_labels(bot.frame, kinds, ignore=ignore)

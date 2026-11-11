@@ -75,10 +75,11 @@ HUNT_GRID = sorted([(x, y) for y in range(60, 520, 70) for x in range(100, 1200,
 
 
 def loot_labels(frame: np.ndarray, cfg: dict) -> list:
-    """Item labels on the ground, except white ones: gold and keys drop from any monster she kills here."""
+    """Item labels on the ground, except white and gray ones: gold and keys drop from any monster she kills here, and
+    gray text also matches name plates. The final loot(take_all=True) still picks gray bases."""
     from .vision.labels import find_labels
 
-    kinds = {k: v for k, v in cfg["vision"]["labels"].items() if k != "white"}
+    kinds = {k: v for k, v in cfg["vision"]["labels"].items() if k not in ("white", "gray")}
     return find_labels(frame, kinds, ignore=cfg["vision"]["label_ignore"])
 
 

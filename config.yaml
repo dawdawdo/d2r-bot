@@ -117,7 +117,7 @@ loot:
   # tools/chronicle_filter.py regenerates it from the Chronicle. No item list to keep in step here.
   filter_name: "LK Bot"
   chronicle_tables: 'D:/Google_Drive/Projects/D2R_Bot_20260314/Codebase/armory_tools/scanbundle.tgz'
-  pick: [rune, unique, set, magic]  # magic = blue labels that say "Charm"
+  pick: [rune, unique, set, magic, gray]  # magic = blue labels that say "Charm"; gray = socketed/eth bases
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
   rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
   pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
@@ -251,6 +251,10 @@ vision:
     set:    {lo: [50, 150, 150], hi: [70, 255, 255]}
     magic:  {lo: [116, 80, 170], hi: [124, 165, 255]}    # blue (255,136,136 BGR) in tooltips 2026-10-31: charms
     white:  {lo: [0, 0, 200], hi: [179, 30, 255]}        # gold, gems, normal items (testing only)
+    # gray = socketed or ethereal items (Stephen's runeword bases, e.g. Archon Plate). Not yet seen live: the range is
+    # a guess around D2R's gray (~105-140), checked to stay off 4939 saved frames' item area. First picks save
+    # fixtures/raw/pick_gray_*.png: check those and narrow the range. Name text (merc, monster bar) is masked in loot().
+    gray:   {lo: [0, 0, 80], hi: [179, 35, 165]}
   label_ignore:                   # HUD (bottom bar + orbs), the clock (top right), life/mana text
     - [0, 595, 1280, 125]
     - [1040, 10, 240, 110]         # clock + zone lines (Durance 3 shows a gold boss-mod line, 2026-11-01)
