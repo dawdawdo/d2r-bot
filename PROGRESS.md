@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-11 18:25: gray labels picked (7ddb635).** Socketed/ethereal runeword bases (Stephen farming an Archon Plate for Enigma; runes are enough via cube: Vex->Ohm->Lo->Sur->Ber->Jah). New `gray` kind in `loot.pick`; range is a guess (no live sample). **Check the first `fixtures/raw/pick_gray_*.png`** and narrow it; watch for clicks on non-items. Session restarted 18:25 to load it.
+
 **2026-11-11 08:15: learned-perception plan started** (Claude Doc "D2R Bot: Learned Perception Plan",
 https://claude.ai/artifact/Jcv2cgA9F1z1cnNH4FDs1V): detector first, danger predictor second, no RL. Stephen OK'd a
 separate training env (`d2r-train`: torch cu126 + ultralytics + onnx) and Claude doing the labeling. Recorders live
