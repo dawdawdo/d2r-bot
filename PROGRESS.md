@@ -3,6 +3,15 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-11 08:15: learned-perception plan started** (Claude Doc "D2R Bot: Learned Perception Plan",
+https://claude.ai/artifact/Jcv2cgA9F1z1cnNH4FDs1V): detector first, danger predictor second, no RL. Stephen OK'd a
+separate training env (`d2r-train`: torch cu126 + ultralytics + onnx) and Claude doing the labeling. Recorders live
+(bot/recorder.py, config `recording:`): fixtures/raw/sampled (640x360 every 10 s out of town) and fixtures/raw/danger
+(5 s windows on chicken/death/30-pt drop/random calm). Next: auto-label from logged successes, hand-label failure
+frames, train detector v1, gate on chest_not_found frames. Meph loot check: 124 empty-loot frames show only gold
+labels: nothing missed; Dracul's Grasp (uvg) is on two show rules; installed filter == repo. Meph paused for the rejuv
+refill (Stephen: keep the rule).
+
 **2026-11-11 07:25: mouse trips fixed (20211e9).** 02:05 a "mouse moved by user" trip with nobody at GLaDOS quit
 mid-LK (no save & exit: she died there) and the supervisor read it as F12, so nothing ran all night. Earlier unexplained
 trips: 11-09 20:44, 11-10 12:28. Now: XInput2 raw motion names the device that moved; a jump with no physical
