@@ -11,6 +11,9 @@ separate training env (`d2r-train`: torch cu126 + ultralytics + onnx) and Claude
 frames, train detector v1, gate on chest_not_found frames. Meph loot check: 124 empty-loot frames show only gold
 labels: nothing missed; Dracul's Grasp (uvg) is on two show rules; installed filter == repo. Meph paused for the rejuv
 refill (Stephen: keep the rule).
+Training env `d2r-train` installed (torch 2.14 cu126 sees the GTX 1050), but D2R holds ~1.9 of its 2 GB: train only
+while the bot is stopped (or on Singularity: RTX 4060 laptop GPU). Site (bdd8c1a): Bot is the first + default tab of
+/bot/, tabs styled as buttons; no hash = Bot, so the console polls for any visitor (~4 DO rows per 15 s each, fine).
 
 **2026-11-11 07:25: mouse trips fixed (20211e9).** 02:05 a "mouse moved by user" trip with nobody at GLaDOS quit
 mid-LK (no save & exit: she died there) and the supervisor read it as F12, so nothing ran all night. Earlier unexplained
