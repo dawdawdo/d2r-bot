@@ -211,8 +211,12 @@ def launch_game(launch: dict, title: str, timeout: float = 180.0) -> X11Window:
         log.info("starting Battle.net via Steam shortcut %d", appid)
         subprocess.Popen(["steam", f"steam://rungameid/{gameid}"], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
-    _wait(_battlenet_ready, 120, "Battle.net main window (login)")
-    time.sleep(3)  # let the client finish loading before asking it to launch a game
+        _wait(_battlenet_ready, 120, "Battle.net main window (login)")
+        time.sleep(3)  # let the client finish loading before asking it to launch a game
+    else:
+        # already signed in: after launching a game it sits in the tray with no window (2026-11-11: waiting for
+        # one failed every start after D2R was closed), and --exec reaches the running client anyway
+        log.info("Battle.net already running%s", "" if _battlenet_ready() else " (in the tray)")
     env = {**os.environ,
            "STEAM_COMPAT_DATA_PATH": str(root / "steamapps/compatdata" / str(appid)),
            "STEAM_COMPAT_CLIENT_INSTALL_PATH": str(root)}

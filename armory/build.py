@@ -25,6 +25,17 @@ if prev and prev.get('snap') and prev.get('snap') != D.get('snap'):
                     rw=sorted(set(nc.get('rw', [])) - set(pc.get('rw', []))))
 elif prev.get('delta') and 'delta' not in D:
   D['delta'] = prev['delta']
+# ---- the bot character's stat totals for the Bot tab's "Current gear" (d2r-bot bot/gear.py) ----
+try:
+  import sys
+  sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')))
+  from pathlib import Path
+  from bot.config import load_config
+  from bot.gear import Tables, summary
+  _ch = load_config()['game']['character']
+  D['gear'] = summary(json.load(open(f'saves/{_ch}.json')), Tables(Path('.'))) | {'char': _ch}
+except Exception as e:  # outside d2r-bot (the artifact pipeline) or a bad save: the page just shows no totals
+  print('gear summary skipped:', e)
 D['built'] = int(time.time() * 1000)
 json.dump(D, open('pagedata.json', 'w'), separators=(',', ':'))
 data = json.dumps(D, separators=(',', ':')).replace('</', '<\\/')

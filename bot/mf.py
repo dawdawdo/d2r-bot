@@ -85,7 +85,14 @@ def read(cfg: dict, backup: Path | None = None) -> dict | None:
             return None
         out = subprocess.run([str(exe), "c", str(backup / f"{char}.d2s")], capture_output=True, check=True,
                              timeout=60).stdout
-        total, parts = magic_find(json.loads(out))
+        d2s = json.loads(out)
+        total, parts = magic_find(d2s)
+        try:  # socketed runes and gems (Ist in the Shako and Oculus: +55) live in the game tables, not the save
+            from .gear import Tables, totals
+
+            total = round(totals(d2s, Tables(WORK)).get("mf", total))
+        except Exception as e:  # noqa: BLE001
+            log.warning("socket MF not counted: %s", e)
     except Exception as e:  # noqa: BLE001  an unreadable save must never stop a session
         log.warning("magic find unknown: %s", e)
         return None

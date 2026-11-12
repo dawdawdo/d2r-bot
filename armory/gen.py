@@ -110,7 +110,8 @@ items = []
 for x in o:
   if x['type'] in ('rune','book','rpot','ques','key','hpot','mpot','spot','apot','wpot','scro','tpot') or (x['code'][:2] in GEMP and x['type'].startswith('gem')) or x['code'] in ('skz','skl','skc','skf','sku') or x['code'] in MATS: continue
   items.append(dict(l=x['loc'], q=x['quality'], n=x['name'], b=x['base'], t=x['tier'], e=x['eth'], s=[sockname(s) for s in x['socketed']], k=x['kind'], ty=x['type'],
-                    il=x['ilvl'], st=lines(x['stats']), rw=bool(x['runeword']), set=x.get('set', ''), eq=x['pos']['mode'] == 'Equipped'))
+                    il=x['ilvl'], st=lines(x['stats']), rw=bool(x['runeword']), set=x.get('set', ''), eq=x['pos']['mode'] == 'Equipped',
+                    **({'sl': x['pos'].get('body_location')} if x['pos']['mode'] == 'Equipped' else {})))
 
 chars = []; snap = 0
 for f in sorted(glob.glob('saves/*.json')):
