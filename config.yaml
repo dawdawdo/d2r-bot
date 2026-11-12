@@ -60,6 +60,7 @@ recording:  # training data for the learned-perception plan (fixtures/raw/sample
   frame_every_s: 10      # one 640x360 frame this often while out of town
   frame_daily_cap: 3000
   calm_p: 0.0005         # per guard tick: chance to save a calm 5 s window (contrast for chickens/deaths)
+  det_daily_cap: 300     # detector auto-labels (fixtures/raw/det) per class per day: chest, chest_open, bonfire, town_wp, lk_wp
 
 safety:
   chicken_hp_pct: 50

@@ -12,6 +12,7 @@ import math
 import cv2
 import numpy as np
 
+from .recorder import det_label
 from .controller import BotError, Controller
 
 log = logging.getLogger(__name__)
@@ -269,6 +270,7 @@ def anchor_bonfire(bot: Controller, odo: Odometer, bonfire_world, max_err: float
     if err > (MAX_LOST_FIX if odo.lost else max_err):
         log.info("anchor: nearest bonfire %d px off prediction; not trusting it", err)
         return False
+    det_label(bot, frame, "bonfire", point=(fx, fy))
     odo.pos += np.array([px - fx, py - fy], float)  # seen further right = we are further left
     log.info("anchor: corrected odometry by (%d, %d)%s", px - fx, py - fy, " [was lost]" if odo.lost else "")
     odo.lost = False

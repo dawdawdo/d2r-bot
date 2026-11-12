@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import yaml
 
+from .recorder import det_label
 from .config import ROOT
 from .controller import BotError, Controller, Danger
 from .vision.labels import find_labels
@@ -128,6 +129,7 @@ def _find_lk_wp(bot: Controller, route: dict) -> tuple[int, int] | None:
     bot.observe()
     score, loc = match_score(bot.frame, tpl, WP_SEARCH)
     if score >= fp["threshold"]:
+        det_label(bot, bot.frame, "lk_wp", box=(loc[0], loc[1], tpl.shape[1], tpl.shape[0]), score=round(float(score), 3))
         return loc
     w = tpl.shape[1]
     (score, (x, y)), dx = max([(match_score(bot.frame, tpl[:, : w // 2], WP_SEARCH), 0),
@@ -284,6 +286,7 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         return None
     from .vision.tooltip import find_tooltip
 
+    before = bot.capture.grab()  # detector label: the view before any hover tooltip
     for i, (px, py) in enumerate(pts):
         bot.check()  # every point: bursts from champion packs kill in about a second
         if odo is not None and i and i % 10 == 0:
@@ -304,12 +307,14 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
             log.debug("chest tooltip %dx%d", box[2], box[3])
+            det_label(bot, before, "chest", point=(px, py), tooltip=list(map(int, box)), scan_i=i)
             if not click:
                 return px, py
             if box[2] > LOCKED_MIN_W:  # "Locked Chest" tooltip: opening it uses a key
                 bot.keys_used = getattr(bot, "keys_used", 0) + 1
             bot.click(px, py)
             bot.wait_still(timeout=2.5, min_wait=0.6)
+            det_label(bot, bot.capture.grab(), "chest_open", point=(px, py))  # she may have walked: the point is a hint only
             return px, py
     bot.save_failure("chest_not_found")
     log.warning("no chest tooltip near (%d, %d)", x, y)

@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 
 from . import supplies
+from .recorder import det_label
 from .config import ROOT
 from .controller import BotError, Controller
 from .vision.screen import ASSETS
@@ -208,6 +209,8 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
         if loc is None:
             bot.save_failure(f"town_wp_not_found_{attempt}")
             raise BotError("town waypoint not visible at end of route")
+        t = bot._templates["town_wp_full"]
+        det_label(bot, view, "town_wp", box=(loc[0], loc[1], t.shape[1], t.shape[0]), template=tcfg["wp_template"])
         ox, oy = tcfg["wp_click_offset"]
         bot.click(loc[0] + ox, loc[1] + oy)
         try:

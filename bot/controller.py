@@ -99,6 +99,16 @@ class Controller:
         if not on and self.recorder is not None:
             self.recorder.reset()
 
+    def det(self, frame, cls: str, box=None, point=None, **extra) -> None:
+        """Detector auto-label (bot.recorder.DetSaver): watch only, never raises."""
+        rec = self.recorder
+        if rec is None or getattr(rec, "det", None) is None:
+            return
+        try:
+            rec.det.save(frame, cls, box, point, act=getattr(self, "act", 0), **extra)
+        except Exception as ex:  # noqa: BLE001
+            log.debug("det label: %s", ex)
+
     def _check_vitals(self) -> None:
         from .vision.orbs import orb_pcts
 

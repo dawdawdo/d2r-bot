@@ -4,12 +4,14 @@ Both only watch; neither changes how she plays. Writes go to fixtures/raw/ (giti
 so a JPEG encode never stalls a guard tick.
 
 - FrameSampler: one 640x360 frame every `frame_every_s` while out of town, capped per day -> object detector data.
+- DetSaver: a full frame + a box/point whenever the bot proves where a chest, bonfire or waypoint is -> detector labels.
 - DangerRecorder: the last `window_s` seconds out of town (vitals every tick, a 320x180 frame every `frame_dt_s`),
   dumped on a chicken, a death, a sharp life drop, or now and then at random (calm examples) -> danger predictor.
 """
 from __future__ import annotations
 
 import csv
+import json
 import logging
 import queue
 import random
@@ -144,8 +146,49 @@ class DangerRecorder:
         self.writer.put(write)
 
 
+class DetSaver:
+    """Detector auto-labels: a full-size frame plus where the bot just *proved* something is (a chest it found by its
+    tooltip, a bonfire it anchored on, a waypoint its template matched). Writes <root>/<day>/<stamp>_<cls>.jpg and a
+    .json beside it: {"cls", "box": [x, y, w, h] or null, "point": [x, y] or null, ...}. A point only (chests: the
+    hover spot, somewhere on the sprite) gets its box later, in tools/det_dataset.py. Capped per class per day."""
+
+    def __init__(self, root: Path, daily_cap: int = 300, writer: _Writer | None = None, clock=time.time) -> None:
+        self.root, self.cap = Path(root), daily_cap
+        self.writer = writer or _Writer()
+        self.clock = clock
+        self._day, self._counts = "", {}
+
+    def save(self, frame: np.ndarray, cls: str, box=None, point=None, **extra) -> bool:
+        if frame is None:
+            return False
+        now = self.clock()
+        day = time.strftime("%Y%m%d", time.localtime(now))
+        if day != self._day:
+            self._day, self._counts = day, {}
+            d = self.root / day
+            for f in d.glob("*.json") if d.exists() else []:
+                c = f.stem.split("_", 1)[-1]
+                self._counts[c] = self._counts.get(c, 0) + 1
+        if self._counts.get(cls, 0) >= self.cap:
+            return False
+        self._counts[cls] = self._counts.get(cls, 0) + 1
+        stamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(now)) + f"{now % 1:.2f}"[1:]
+        base = self.root / day / f"{stamp}_{cls}"
+        meta = {"cls": cls, "box": [int(v) for v in box] if box is not None else None,
+                "point": [int(v) for v in point] if point is not None else None,
+                "size": [int(frame.shape[1]), int(frame.shape[0])], **extra}
+        img = frame.copy()
+
+        def write() -> None:
+            _jpg(base.parent / (base.name + ".jpg"), img, 88)  # not with_suffix: the stamp has a "." in it
+            (base.parent / (base.name + ".json")).write_text(json.dumps(meta))
+
+        self.writer.put(write)
+        return True
+
+
 class Recorders:
-    """What the Controller holds: both recorders, sharing one writer thread."""
+    """What the Controller holds: all recorders, sharing one writer thread."""
 
     def __init__(self, root: Path, cfg: dict | None = None) -> None:
         cfg = cfg or {}
@@ -153,6 +196,7 @@ class Recorders:
         self.frames = FrameSampler(Path(root) / "sampled", cfg.get("frame_every_s", 10.0),
                                    cfg.get("frame_daily_cap", 3000), writer=w)
         self.danger = DangerRecorder(Path(root) / "danger", writer=w, calm_p=cfg.get("calm_p", 0.002))
+        self.det = DetSaver(Path(root) / "det", cfg.get("det_daily_cap", 300), writer=w)
 
     def tick(self, frame: np.ndarray, hp, mp, tag: str = "") -> None:
         self.frames.tick(frame, tag)
@@ -163,3 +207,10 @@ class Recorders:
 
     def reset(self) -> None:
         self.danger.reset()
+
+
+def det_label(bot, frame, cls: str, box=None, point=None, **extra) -> None:
+    """Call sites use this, not bot.det directly: test fakes and tools have no recorder."""
+    fn = getattr(bot, "det", None)
+    if callable(fn):
+        fn(frame, cls, box, point, **extra)
