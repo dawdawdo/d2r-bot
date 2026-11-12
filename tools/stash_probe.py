@@ -29,7 +29,7 @@ def main() -> int:
     cmd, args = sys.argv[1], sys.argv[2:]
     s = start_session(backup=cmd == "enter")
     cfg = s.cfg
-    b = open_backend(cfg["game"]["window_title"])
+    b = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"] if cmd == "enter" else None)
     bot = Controller(b.window, b.capture, b.input, ScreenClassifier.from_config(cfg["vision"]["states"]), s.kill, cfg)
     b.window.focus()
     name = args[-1] if args else cmd
