@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-11 19:00: magic find gate.** Meph ran days at 0 % MF (Shako + Oculus sat in her stash): the reason drops fell off. Stephen has two setups, ~0 % (cows, bases) and ~280 % (Meph). `bot/mf.py` reads MF from the session-start backup via d2dump (equipped minus weapon swap, plus inventory charms); `mf.min: {meph: 200}` swaps Meph for LK when below, Bot page shows MF and a red warning. d2dump is a Linux build: Singularity reads None, so no gate there. Auto gear swapping not built (Stephen chose detect only).
+
 **2026-11-11 18:25: gray labels picked (7ddb635).** Socketed/ethereal runeword bases (Stephen farming an Archon Plate for Enigma; runes are enough via cube: Vex->Ohm->Lo->Sur->Ber->Jah). New `gray` kind in `loot.pick`; range is a guess (no live sample). **Check the first `fixtures/raw/pick_gray_*.png`** and narrow it; watch for clicks on non-items. Session restarted 18:25 to load it.
 
 **2026-11-11 08:15: learned-perception plan started** (Claude Doc "D2R Bot: Learned Perception Plan",

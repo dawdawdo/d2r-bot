@@ -41,10 +41,18 @@ def clear() -> None:
         pass
 
 
+_sticky: dict = {}
+
+
+def set_sticky(**fields) -> None:
+    """Fields every later write_status() of this session carries (e.g. the magic find read at session start)."""
+    _sticky.update(fields)
+
+
 def write_status(**fields) -> None:
     STATUS.parent.mkdir(exist_ok=True)
     tmp = STATUS.with_suffix(".tmp")
-    tmp.write_text(json.dumps({**fields, "pid": os.getpid(), "updated": time.time()}, default=str))
+    tmp.write_text(json.dumps({**_sticky, **fields, "pid": os.getpid(), "updated": time.time()}, default=str))
     os.replace(tmp, STATUS)  # the page never reads a half-written file
 
 

@@ -111,6 +111,11 @@ meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from 
     potion_hp_pct: 60
     potion_mp_pct: 50
 
+mf:
+  # bot/mf.py reads the character's MF from the session-start save backup. A task below its minimum is swapped for
+  # LK (the Bot page says why) until Stephen puts the MF gear on. Setups (2026-11-11): ~0 % cows/bases, ~280 % Meph.
+  min: {meph: 200}
+
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
   # visible labels of these colors. Which uniques and sets show is decided only there, per base code:

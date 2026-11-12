@@ -220,6 +220,21 @@ def main() -> int:
     log.info("route: %s", cfg["game"]["route"])
     tasks = get_tasks(args.tasks.split(","), cfg) if args.mode == "chests" else []
     log.info("tasks: %s", ", ".join(t.name for t in tasks) or "-")
+    from . import mf
+
+    mf_info = mf.read(cfg)
+    if mf_info:
+        log.info("magic find: %d%% (%s)", mf_info["mf"], ", ".join(f"{c} {m}" for c, m in mf_info["parts"]) or "none")
+    tasks, mf_low = mf.gate(tasks, mf_info, cfg)
+    if mf_low:
+        mins = cfg["mf"]["min"]
+        log.warning("magic find %d%% is below %s: running LK instead until the MF gear is on", mf_info["mf"],
+                    ", ".join(f"{n}'s {mins[n]}%" for n in mf_low))
+        if not any(t.name == "lk" for t in tasks):
+            tasks = get_tasks(["lk"], cfg) + tasks
+        log.info("tasks: %s", ", ".join(t.name for t in tasks))
+    control.set_sticky(mf=mf_info and {**mf_info, "low": mf_low,
+                                       "min": {n: cfg["mf"]["min"][n] for n in mf_low}})
     lk_ready = any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
     has_boss = any(t.name != "lk" for t in tasks)
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
