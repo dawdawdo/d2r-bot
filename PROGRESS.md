@@ -3,6 +3,8 @@
 **Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-11 19:15: D2R closed after every normal session end.** After ~12 h it held 3 GB RAM and 1.95 of 2 GB VRAM and play slowed. Supervisor calls `bot.io.close_game()` (Linux: SIGTERM, the close button is ignored; Windows: taskkill, untested) after "ended normally" only, not F12 / Stop / mouse trip; the next session relaunches it. Supervisor restarted 19:16 (pid 39139).
+
 **2026-11-11 19:00: magic find gate.** Meph ran days at 0 % MF (Shako + Oculus sat in her stash): the reason drops fell off. Stephen has two setups, ~0 % (cows, bases) and ~280 % (Meph). `bot/mf.py` reads MF from the session-start backup via d2dump (equipped minus weapon swap, plus inventory charms); `mf.min: {meph: 200}` swaps Meph for LK when below, Bot page shows MF and a red warning. d2dump is a Linux build: Singularity reads None, so no gate there. Auto gear swapping not built (Stephen chose detect only).
 
 **2026-11-11 18:25: gray labels picked (7ddb635).** Socketed/ethereal runeword bases (Stephen farming an Archon Plate for Enigma; runes are enough via cube: Vex->Ohm->Lo->Sur->Ber->Jah). New `gray` kind in `loot.pick`; range is a guess (no live sample). **Check the first `fixtures/raw/pick_gray_*.png`** and narrow it; watch for clicks on non-items. Session restarted 18:25 to load it.

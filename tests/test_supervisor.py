@@ -18,7 +18,12 @@ def sup(tmp_path, monkeypatch):
     monkeypatch.setattr(sv, "DESIRED", tmp_path / "desired.json")
     monkeypatch.setattr(sv, "BOT_OUT", tmp_path / "bot.out")
     monkeypatch.setattr(sv.control, "read_status", lambda: {})
+    import bot.io
+
+    closed = []
+    monkeypatch.setattr(bot.io, "close_game", lambda: closed.append(1) or True)  # never the real game in tests
     s = sv.Supervisor({})
+    s.closed = closed
     s.started = sv.time.time() - 1000
     sv.write_desired(run=True, tasks="meph")
     return s
@@ -38,6 +43,14 @@ def test_f12_stays_stopped(sup):
 def test_normal_end_restarts(sup):
     end_with(sup, "run 150/150 ok\n140/150 runs ok\n", 1)
     assert sv.read_desired()["run"] is True and sup.state == "idle" and sup.fails == 0
+    assert sup.closed == [1]  # D2R closed so the next session starts it fresh (memory growth)
+
+
+def test_game_stays_open_after_stop_f12_or_mouse_trip(sup):
+    end_with(sup, "stopped by kill switch: F12 pressed\n", 1)
+    end_with(sup, "run 3/150 ok\nstop requested (web page); not starting run 4\n", 0)
+    end_with(sup, "stopped by mouse trip: mouse moved by user (TouchPad)\n", 1)
+    assert sup.closed == []
 
 
 def test_fail_streak_backs_off_and_doubles(sup):

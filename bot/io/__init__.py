@@ -89,6 +89,40 @@ def game_running(exe: str = "D2R.exe") -> bool:
     return subprocess.run(["pgrep", "-f", pattern], capture_output=True).returncode == 0
 
 
+def close_game(exe: str = "D2R.exe", timeout: float = 30.0) -> bool:
+    """Close the game (not Battle.net), politely first, then by force. True if it's gone (or wasn't running).
+    The supervisor calls it after a session ends normally: after ~12 h D2R had grown to 3 GB of RAM and filled the
+    2 GB GPU, and play slowed down (2026-11-11). The next session relaunches it (launch_game)."""
+    import subprocess
+    import time
+
+    def wait_gone(t: float) -> bool:
+        end = time.monotonic() + t
+        while time.monotonic() < end:
+            if not game_running(exe):
+                return True
+            time.sleep(1)
+        return not game_running(exe)
+
+    if not game_running(exe):
+        return True
+    if sys.platform == "win32":
+        subprocess.run(["taskkill", "/IM", exe], capture_output=True)
+        if wait_gone(timeout):
+            return True
+        subprocess.run(["taskkill", "/F", "/IM", exe], capture_output=True)
+        return wait_gone(10)
+    # Linux/Proton: the window's close button is ignored (2026-11-11), SIGTERM to the wine process works
+    pattern = "[" + exe[0] + "]" + exe[1:].replace(".", r"\.")
+    for sig in ("TERM", "KILL"):
+        pids = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True).stdout.split()
+        for pid in pids:
+            subprocess.run(["kill", f"-{sig}", pid], capture_output=True)
+        if wait_gone(timeout if sig == "TERM" else 10):
+            return True
+    return False
+
+
 def idle_seconds() -> float | None:
     """Seconds since the last keyboard/mouse input on this desktop (any device), or None if unknown.
     The supervisor reads it while no bot runs, so it measures the person, not the bot."""

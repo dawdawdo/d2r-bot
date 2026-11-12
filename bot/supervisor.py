@@ -171,6 +171,17 @@ class Supervisor:
             self.fails, self.last_end = 0, f"ended normally after {took / 60:.0f} min"
             self.state = "idle"
             log.info("session ended normally after %.0f min", took / 60)
+            self.restart_game()
+
+    def restart_game(self) -> None:
+        """A finished session leaves her at the menu: close D2R so the next session starts it fresh (it grows in
+        RAM and GPU memory over hours). Not after F12 / Stop / a mouse trip: Stephen may be about to play."""
+        from .io import close_game
+
+        try:
+            log.info("closed D2R after the session" if close_game() else "D2R did not close")
+        except Exception as e:  # noqa: BLE001  never let this stop the supervisor
+            log.warning("closing D2R failed: %s", e)
 
     def stop(self, now: bool) -> None:
         if self.running():
