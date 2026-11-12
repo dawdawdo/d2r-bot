@@ -268,6 +268,41 @@ LOCKED_MIN_W = 100  # tooltip box px, measured live: "Chest" 59-65, "Locked Ches
 
 
 SCAN_JUMP = 80  # px the view may move during a chest hover scan before we call it a jump
+CHEST_TPL_DIR = ROOT / "bot" / "assets" / "templates" / "chest"  # 16 hand-labeled closed chests (tools/det_label.py)
+CHEST_TPL_THR = 0.9   # leave-one-out 2026-11-11: visible chests 0.89-1.00, frames without one <= 0.87
+CHEST_TPL_WIN = 150   # px around the expected point; the misses sat about (+19, +29) from it
+CHEST_TPL_STAY = 60   # px: a closed chest this close to the clicked point afterwards = the click did nothing
+_chest_tpls: list | None = None
+
+
+def chest_templates() -> list:
+    global _chest_tpls
+    if _chest_tpls is None:
+        _chest_tpls = [cv2.imread(str(p), cv2.IMREAD_GRAYSCALE) for p in sorted(CHEST_TPL_DIR.glob("*.png"))]
+    return _chest_tpls
+
+
+def find_chest_template(frame: np.ndarray, x: int, y: int, win: int = CHEST_TPL_WIN,
+                        thr: float = CHEST_TPL_THR) -> tuple[int, int, float, tuple] | None:
+    """Closed chest sprite near (x, y) by template: (cx, cy, score, box) of the nearest match >= thr, or None.
+    Fallback for hover scans that pass right over a visible chest without an accepted tooltip (west_nw and
+    east_nw missed 11-12 % of chest visits, 2026-11-11; in 14 of 34 failure frames the chest was in plain view)."""
+    g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if frame.ndim == 3 else frame
+    x0, y0 = max(0, x - win), max(0, y - win)
+    x1, y1 = min(g.shape[1], x + win), min(560, g.shape[0], y + win)  # 560+: the HUD
+    roi = g[y0:y1, x0:x1]
+    best = None
+    for t in chest_templates():
+        if t is None or roi.shape[0] < t.shape[0] or roi.shape[1] < t.shape[1]:
+            continue
+        res = cv2.matchTemplate(roi, t, cv2.TM_CCOEFF_NORMED)
+        ys, xs = np.where(res >= thr)
+        for ty, tx in zip(ys, xs):
+            cx, cy = x0 + tx + t.shape[1] // 2, y0 + ty + t.shape[0] // 2
+            d = abs(cx - x) + abs(cy - y)
+            if best is None or d < best[0]:
+                best = (d, int(cx), int(cy), float(res[ty, tx]), (int(x0 + tx), int(y0 + ty), t.shape[1], t.shape[0]))
+    return None if best is None else best[1:]
 
 
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35,
@@ -316,9 +351,39 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
             bot.wait_still(timeout=2.5, min_wait=0.6)
             det_label(bot, bot.capture.grab(), "chest_open", point=(px, py))  # she may have walked: the point is a hint only
             return px, py
+    hit = _template_fallback(bot, x, y, click)
+    if hit is not None:
+        return hit
     bot.save_failure("chest_not_found")
     log.warning("no chest tooltip near (%d, %d)", x, y)
     return None
+
+
+def _template_fallback(bot: Controller, x: int, y: int, click: bool) -> tuple[int, int] | None:
+    """No tooltip anywhere in the scan: look for the closed chest sprite and click it."""
+    bot.input.move(20, 80)  # cursor and any tooltip off the chest before the clean frame
+    bot.kill.sleep(0.12)
+    f = bot.capture.grab()
+    hit = find_chest_template(f, x, y)
+    if hit is None:
+        return None
+    cx, cy, score, box = hit
+    log.info("chest by template at (%d, %d), score %.2f, %d px from expected", cx, cy, score,
+             abs(cx - x) + abs(cy - y))
+    det_label(bot, f, "chest", box=box, score=round(score, 3), via="template")
+    if not click:
+        return cx, cy
+    bot.click(cx, cy)
+    bot.wait_still(timeout=2.5, min_wait=0.6)
+    after = bot.capture.grab()
+    # she walks to the chest, so the view usually shifts and the old spot shows something else; only a closed
+    # chest still at the clicked point (the view didn't move) proves the click did nothing
+    if find_chest_template(after, cx, cy, win=CHEST_TPL_STAY) is not None:
+        log.warning("template chest at (%d, %d) still closed after the click", cx, cy)
+        bot.save_failure("chest_template_unopened")
+        return None
+    det_label(bot, after, "chest_open", point=(cx, cy), via="template")
+    return cx, cy
 
 
 def _label_text_px(frame: np.ndarray, ignore) -> int:
