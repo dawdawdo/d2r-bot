@@ -281,6 +281,8 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
                 try:
                     evade(bot, odo, e.movers, walker, visited)
                 except BotError as err:
+                    if type(err) is not BotError:
+                        raise  # Chicken, Died, Danger, RunTimeout belong to the safety layer
                     log.warning("tunnels: %s while evading; ending the run here", err)
                     break
                 calm = False
@@ -298,6 +300,8 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
             try:
                 reached = walker.go(target, tol=180, max_hops=8)
             except BotError as e:  # "automap fix lost" (map toggled off, teleport-on-hit): map on, relocate, else stop
+                if type(e) is not BotError or "fix lost" not in str(e):
+                    raise  # Chicken, Died, Danger, RunTimeout: the safety layer's, never ours to swallow
                 before = odo.pos.copy()
                 try:
                     f = ensure_map(bot)
