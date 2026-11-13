@@ -53,13 +53,26 @@ def _outside_light() -> np.ndarray:
     return _LIGHT
 
 
+# Automap look per area: "tan" thin lines (Durance) or "red" tiles (Lost City desert, whose sand is the tan
+# color: 2026-11-13 probe, red px 80k with the map open vs 4k without). Set by the area's tool / task.
+STYLE = {"name": "tan"}
+
+
+def use_style(name: str) -> None:
+    STYLE["name"] = name
+
+
 def automap_pixels(frame: np.ndarray) -> np.ndarray:
-    """Binary mask (full res, uint8 0/1) of automap line pixels: desaturated tan, fairly bright."""
+    """Binary mask (full res, uint8 0/1) of automap line pixels: desaturated tan, fairly bright
+    (or saturated red in the "red" style)."""
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
-    m = ((h >= 15) & (h <= 30) & (s >= 60) & (s <= 170) & (v >= 90)).astype(np.uint8)
-    k = np.ones((BLOB, BLOB), np.uint8)
-    m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, k), np.ones((7, 7), np.uint8))
+    if STYLE["name"] == "red":
+        m = (((h <= 8) | (h >= 170)) & (s >= 130) & (v >= 80)).astype(np.uint8)
+    else:
+        m = ((h >= 15) & (h <= 30) & (s >= 60) & (s <= 170) & (v >= 90)).astype(np.uint8)
+        k = np.ones((BLOB, BLOB), np.uint8)
+        m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, k), np.ones((7, 7), np.uint8))
     for x, y, w, hh in STATIC:
         m[y : y + hh, x : x + w] = 0
     m &= _outside_light()
@@ -428,6 +441,24 @@ def durance_level(frame: np.ndarray) -> int | None:
     return best if scores[best] >= 0.8 else None
 
 
+def _lap(img: np.ndarray) -> np.ndarray:
+    return np.abs(cv2.Laplacian(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32), cv2.CV_32F))
+
+
+def area_score(frame: np.ndarray, name: str) -> float:
+    """Area name (top right, automap open) vs template area_<name>.png, matched on edges: the backdrop
+    there is scenery/automap and changes (Lost City gray-level match 0.62-0.88; edges 0.95 vs 0.45 elsewhere)."""
+    from .vision.screen import ASSETS
+
+    x, y, w, h = AREA_REGION
+    t = _area_tmpl(ASSETS / f"area_{name}.png")
+    return float(cv2.matchTemplate(_lap(frame[y : y + h, x : x + w]), _lap(t), cv2.TM_CCOEFF_NORMED).max())
+
+
+def area_is(frame: np.ndarray, name: str, threshold: float = 0.8) -> bool:
+    return area_score(frame, name) >= threshold
+
+
 def on_level2(bot) -> bool:
     return durance_level(bot.capture.grab()) == 2
 
@@ -546,8 +577,11 @@ class Walker:
         return True
 
 
-def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path) -> bool:
-    """Click a level exit; record where it leads (top-right area name crop). True if we left Level 2."""
+def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, here=None,
+              goal: str = "durance_3") -> bool:
+    """Click a level exit; record where it leads (top-right area name crop). True if we left the area
+    (`here(bot)`: still in it; default Durance Level 2). `goal`: the area template we hope to reach."""
+    here = here or on_level2
     from .nav import world_to_screen
 
     w["tries"] = w.get("tries", 0) + 1
@@ -555,8 +589,8 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path) ->
     x, y = int(np.clip(x, 60, 1220)), int(np.clip(y, 40, 560))
     bot.click(x, y)
     bot.sleep(3.0)
-    if on_level2(bot):
-        log.info("warp %s: still on Level 2 after clicking (%d, %d)", w["crop"], x, y)
+    if here(bot):
+        log.info("warp %s: still here after clicking (%d, %d)", w["crop"], x, y)
         if w["tries"] >= 2:
             w["dest"] = "none"
         return False
@@ -566,15 +600,17 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path) ->
     cv2.imwrite(str(folder / f"warps/dest_{i}.png"), f[y0 : y0 + hh, x0 : x0 + ww])
     cv2.imwrite(str(folder / f"warps/dest_{i}_view.jpg"), cv2.resize(f, None, fx=0.5, fy=0.5))
     w["dest"] = f"warps/dest_{i}.png"
-    tmpl = Path(__file__).parent / "assets" / "templates" / "area_durance_3.png"
-    w["level3"] = (bot.find("area_durance_3.png", region=AREA_REGION, threshold=0.8) is not None
-                   if tmpl.exists() else None)
-    log.info("warp %d leads somewhere else (level 3: %s); saved %s", i, w["level3"], w["dest"])
+    tmpl = Path(__file__).parent / "assets" / "templates" / f"area_{goal}.png"
+    if not automap_shown(f):
+        f = ensure_automap(bot)
+    reached = area_is(f, goal) if tmpl.exists() else None
+    w["level3" if goal == "durance_3" else "goal"] = reached
+    log.info("warp %d leads somewhere else (%s: %s); saved %s", i, goal, reached, w["dest"])
     return True
 
 
 def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops: int = 60,
-                 save=lambda: None) -> str:
+                 save=lambda: None, here=None, goal: str = "durance_3") -> str:
     """One game of stairs hunting from the waypoint. Returns why it stopped: "warp" (took an exit),
     "hops", "done" (no frontier left). BotError (fix lost, safety) propagates."""
     walker = Walker(bot, odo, g, folder, save)
@@ -584,7 +620,7 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
         if todo:
             w = todo[0]
             walker.travel(w["stop"])
-            if take_warp(bot, odo, g, w, folder):
+            if take_warp(bot, odo, g, w, folder, here=here, goal=goal):
                 save()
                 return "warp"
             continue
