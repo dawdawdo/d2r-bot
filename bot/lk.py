@@ -475,7 +475,7 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         if take_all or bot.cfg["loot"].get("pick_white_other") or "gray" in kinds:
             # white or gray text that isn't an item: a hovered monster's name bar + mods line at the top centre,
             # the merc's name under his portrait
-            ignore = [*ignore, [300, 0, 680, 60], [0, 0, 110, 90]]
+            ignore = [*ignore, [300, 0, 680, 95], [0, 0, 110, 90]]  # 95: the immunity line ("Immune to Poison", green = "set") sits at y 67-80
         labs = find_labels(bot.frame, kinds, ignore=ignore)
         # "1550 Gold" shows as two labels: the amount, then the word (51 px); neither is an item to pick here
         golds = [g for g in labs if g.kind == "white" and white_word(bot.frame, g) == "gold"]
