@@ -94,6 +94,8 @@ LEAVE_MP = 15          # % mana with no regen in sight: end the run (save & exit
 EVADE_DROP = 20        # HP points lost during one stop's fight
 EVADE_BELOW = 65       # % HP
 ENTER_MIN_HP = 70      # % HP inside with an empty belt: below this the run ends (the next game heals at Ormus)
+DRY_CHICKEN = 60       # % HP chicken while the belt is empty: bursts took her 53 -> 0 and 40 -> 0 in seconds (3 deaths
+                       # 2026-11-13 afternoon, rejuv stash dry); 10 more points to get out
 
 
 def tunnels_folder(cfg: dict) -> Path:
@@ -243,6 +245,21 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
         # 2026-11-13 14:28: a Lost City pack at the door took her to 52 %, no potions: 4 min of evading, then a chicken
         log.warning("tunnels: HP %.0f%% on arrival and the belt is empty: ending the run (Ormus next game)", bot.hp)
         return {"picked": [], "tunnel_stops": 0}
+    safety = bot.cfg["safety"]
+    chicken0 = safety["chicken_hp_pct"]
+    if not any(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
+        safety["chicken_hp_pct"] = max(chicken0, DRY_CHICKEN)
+    try:
+        return _farm(bot, timeout_s)
+    finally:
+        safety["chicken_hp_pct"] = chicken0
+
+
+def _farm(bot, timeout_s: float) -> dict:
+    import math
+
+    from .durance import AutomapOdometer, StopGraph, Walker, frontier, use_style
+
     use_style("tunnel")
     fold = tunnels_folder(bot.cfg)
     fold.mkdir(parents=True, exist_ok=True)
