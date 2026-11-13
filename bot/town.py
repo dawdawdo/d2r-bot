@@ -1411,9 +1411,20 @@ A5_WALK = [(250, 540), (250, 540), (250, 540), (400, 540), (150, 450)]
 A5_WP_CLICK = (100, 62)
 
 
-def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off) -> None:
-    """Walk `walk` (clicks), looking for `template` after each; click it; waypoint to Kurast Docks ->
-    save & exit -> new game (Act 3)."""
+def free_cells(bot: Controller) -> int:
+    """Empty inventory cells outside Stephen's protected ones (opens and closes the inventory)."""
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.35)
+    inv = _scan_inventory(bot)
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.2)
+    return len(inv["empty"])
+
+
+def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off, then=None) -> None:
+    """Walk `walk` (clicks), looking for `template` after each; click it; then `then` with the panel open
+    (default: waypoint to Kurast Docks -> save & exit -> new game (Act 3))."""
+    then = then or _wp_to_act3
     from .lifecycle import create_game, save_and_exit
 
     log.info("spawned in Act %d: walking to its waypoint", act)
@@ -1428,7 +1439,7 @@ def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off) 
             return (loc[0] + click_off[0], loc[1] + click_off[1]) if loc else None
 
         walk_to_target(bot, ViewMap.load(vroot), "wp", walk=walk, seen=seen)
-        _wp_to_act3(bot)
+        then(bot)
         return
     loc = None
     for x, y in walk:
@@ -1449,7 +1460,7 @@ def _town_wp_by_walk(bot: Controller, act: int, walk, template: str, click_off) 
             loc = bot.find(template, (0, 0, 1280, 600), 0.6) or loc
     else:
         raise BotError(f"Act {act} waypoint menu didn't open")
-    _wp_to_act3(bot)
+    then(bot)
 
 
 def _wp_to_act3(bot: Controller) -> None:
@@ -1464,6 +1475,16 @@ def _wp_to_act3(bot: Controller) -> None:
 
 def leave_act2(bot: Controller) -> None:
     _town_wp_by_walk(bot, 2, A2_WALK, "a2_wp.png", A2_WP_CLICK)
+
+
+def act2_to(bot: Controller, dest: str) -> None:
+    """From the Lut Gholein spawn: buffs, walk to its waypoint, take it to `dest` (an Act II tab point), out of town.
+    The Ancient Tunnels' games end there, so the next one spawns in Act 2 (2026-11-13)."""
+    cast_buffs(bot)
+    _town_wp_by_walk(bot, 2, A2_WALK, "a2_wp.png", A2_WP_CLICK, then=lambda b: wp_travel(b, "wp_tab_act2", dest))
+    bot.guard(True)
+    bot.wait_still(timeout=5)
+    log.info("arrived at %s from Act 2 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
 
 
 def leave_act5(bot: Controller) -> None:

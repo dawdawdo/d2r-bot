@@ -18,6 +18,7 @@ class AncientTunnels(Task):
     name = "tunnels"
     act = 3
     enter_wp = "wp_lost_city"
+    a2_start = True  # games end in the tunnels, so the next spawns in Lut Gholein: its waypoint leads here too
 
     @classmethod
     def ready(cls, cfg: dict) -> bool:
@@ -30,7 +31,11 @@ class AncientTunnels(Task):
         from ..tunnels import to_tunnels
 
         if not chained:
-            if getattr(bot, "act", 3) == 4:
+            if getattr(bot, "act", 3) == 2:
+                from ..town import act2_to
+
+                act2_to(bot, self.enter_wp)
+            elif getattr(bot, "act", 3) == 4:
                 act4_to(bot, self.enter_wp, area=None)
             else:
                 town_to_wp(bot, self.enter_wp, None, stow=stow)
