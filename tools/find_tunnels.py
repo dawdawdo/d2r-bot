@@ -42,11 +42,25 @@ SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3)
 QUIET_HP = 60
 
 
+# Game 6: 28 points lost per scan near (-400, -1000) and a chicken at the next stop. Blizzard what moves near her
+# first (nav.fight, as in LK), and a lower chicken for this tool only (Stephen: deaths are fine here).
+NEAR = 350
+
+
 def safe_to_scan(bot) -> bool:
+    import math
+
+    from bot.nav import CENTER, fight, movers
+
     bot.check()
     if (bot.hp or 100) < QUIET_HP:
         print(f"  no scan: HP {bot.hp:.0f}%", flush=True)
         return False
+    if any(math.dist(m[:2], CENTER) < NEAR for m in movers(bot, min_area=600)):
+        fight(bot, max_casts=4)
+        if (bot.hp or 100) < QUIET_HP:
+            print(f"  no scan after the fight: HP {bot.hp:.0f}%", flush=True)
+            return False
     return True
 
 
@@ -60,6 +74,7 @@ def main() -> int:
     use_style("red")
     s = start_session()  # backs up saves
     cfg = s.cfg
+    cfg["safety"].update(chicken_hp_pct=35, potion_hp_pct=60)
     folder = ROOT / "maps" / cfg["game"]["route"] / "lost_city_auto"
     if args.fresh and folder.exists():
         shutil.move(str(folder), str(folder.with_name(folder.name + "_old")))
@@ -75,7 +90,10 @@ def main() -> int:
             odo = None
             try:
                 to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest="wp_lost_city")
-                bot.sleep(2.0)
+                from bot.town import cast_warcries
+
+                cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it
+                bot.sleep(0.5)
                 odo = AutomapOdometer.load(folder, ensure_automap(bot))
                 print(f"game {n + 1}: arrival fix {odo.pos.round().tolist()} (resp {odo.resp:.2f})", flush=True)
 
