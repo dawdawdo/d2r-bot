@@ -39,7 +39,6 @@ RUNES = [f"r{i:02d}" for i in range(1, 34)]  # all of them, El to Zod: Stephen n
 RUNEWORD_BASES = {
     "7br": "Mancatcher",
     "utp": "Archon Plate",
-    "uit": "Monarch",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
     "ci3": "Diadem",
