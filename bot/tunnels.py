@@ -125,9 +125,9 @@ def engage(bot) -> int:
                 break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
             hp = bot.hp or 100
-            # struck = losing life here: a big drop, or low and still dropping. Low but steady (no potions, 14:28 run:
-            # 52 % all game) evaded at every stop and never fought
-            if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and hp < hp0 - 5 and m):
+            # struck = a big drop here, or low with monsters near. (14:47-16:25 "low AND still dropping" kept her fighting
+            # below 65 %: ~40 % clean runs vs ~75 % before; arriving low is handled by ENTER_MIN_HP instead)
+            if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and m):
                 raise Struck(m)
             if not m:
                 quiet += 1
