@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bot.config import ROOT  # noqa: E402
 from bot.controller import BotError, Controller  # noqa: E402
-from bot.durance import (AutomapOdometer, StopGraph, area_is, ensure_automap, explore_game,  # noqa: E402
+from bot.durance import (SCAN, AutomapOdometer, StopGraph, area_is, ensure_automap, explore_game,  # noqa: E402
                          to_durance2, use_style)
 from bot.io import open_backend  # noqa: E402
 from bot.lifecycle import save_and_exit  # noqa: E402
@@ -28,6 +28,27 @@ from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 def in_lost_city(bot) -> bool:
     return area_is(ensure_automap(bot), "lost_city")
+
+
+# 2026-11-13 game 1: a poison pack took her 100 -> 18 % in ~4 s during a 25 s scan at the 3rd stop. Now:
+# a coarse grid (~6 s), abort on the first few points lost, and no scan at all with monsters moving in view
+# or below 85 % life (teleporting on is what keeps her alive; the stop gets scanned on a later visit).
+SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=110, every=3)
+QUIET_HP = 85
+
+
+def safe_to_scan(bot) -> bool:
+    from bot.nav import movers
+
+    bot.check()
+    if (bot.hp or 100) < QUIET_HP:
+        print(f"  no scan: HP {bot.hp:.0f}%", flush=True)
+        return False
+    m = movers(bot, min_area=400)
+    if m:
+        print(f"  no scan: {len(m)} moving (largest {m[0][2]} px at {m[0][:2]})", flush=True)
+        return False
+    return True
 
 
 def main() -> int:
@@ -65,7 +86,8 @@ def main() -> int:
 
                 bot.deadline = bot.clock() + 300
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save,
-                                      here=in_lost_city, goal="ancient_tunnels")
+                                      here=in_lost_city, goal="ancient_tunnels",
+                                      pre_scan=lambda: safe_to_scan(bot))
             except BotError as e:
                 print(f"game {n + 1}: {e}", flush=True)
             finally:

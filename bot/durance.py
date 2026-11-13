@@ -346,6 +346,8 @@ WARP_MIN_W = 150
 AREA_REGION = (1060, 20, 220, 70)  # area name, top right (shown while the automap is open)
 SCAN_COVER = (430, 200)  # a scan covers about this much (world px) around where she stood
 SCAN_ABORT = (10, 20)  # HP, MP points lost during a scan (Energy Shield drains MP first) -> stop scanning
+# Scan grid and limits; tools tune them per area (Lost City: coarser, quicker abort; packs swarm her there)
+SCAN = {"dx": 80, "dy": 60, "abort_hp": SCAN_ABORT[0], "abort_mp": SCAN_ABORT[1], "min_w": WARP_MIN_W, "every": 6}
 
 
 DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and the belt is often empty
@@ -475,12 +477,12 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
     found = 0
     k = 0
     hp0, mp0 = bot.hp or 100, bot.mp or 100
-    for y in range(70, 560, 60):  # 120 x 90 missed the stairs once (2026-10-29)
-        for x in range(100, 1180, 80):
+    for y in range(70, 560, SCAN["dy"]):  # 120 x 90 missed the stairs once (2026-10-29)
+        for x in range(100, 1180, SCAN["dx"]):
             k += 1
-            if k % 6 == 0:
+            if k % SCAN["every"] == 0:
                 bot.check()
-                if (bot.hp or 100) < hp0 - SCAN_ABORT[0] or (bot.mp or 100) < mp0 - SCAN_ABORT[1]:
+                if (bot.hp or 100) < hp0 - SCAN["abort_hp"] or (bot.mp or 100) < mp0 - SCAN["abort_mp"]:
                     log.info("scan at stop %d stopped: struck (HP %.0f%% MP %.0f%%)", stop, bot.hp, bot.mp)
                     bot.input.move(1270, 590)
                     return found  # standing still is what gets her hurt: move on, scan here another time
@@ -488,7 +490,7 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
             box = find_tooltip(f, x, y, half_w=230, max_w=420)
-            if box is None or box[2] < WARP_MIN_W:
+            if box is None or box[2] < SCAN["min_w"]:
                 continue
             world = [float(odo.pos[0] + x - 640), float(odo.pos[1] + y - 330)]
             if any(math.dist(w["world"], world) < 250 for w in g.warps):
@@ -511,8 +513,9 @@ class Walker:
     thumbnail and, where no scan has covered the view yet, a tooltip scan)."""
 
     def __init__(self, bot, odo: AutomapOdometer, g: StopGraph, folder: Path, save=lambda: None,
-                 scan: bool = True) -> None:
+                 scan: bool = True, pre_scan=None) -> None:
         self.bot, self.odo, self.g, self.folder, self.save, self.scan = bot, odo, g, folder, save, scan
+        self.pre_scan = pre_scan  # () -> bool: safe to stand and scan here? (False: move on, scan another time)
         self.cur = g.nearest(odo.pos, within=300) or 0
         self.hops = 0
 
@@ -531,6 +534,8 @@ class Walker:
                         cv2.resize(self.bot.capture.grab()[:590], None, fx=0.25, fy=0.25,
                                    interpolation=cv2.INTER_AREA))
         if self.scan and scan_due(g, odo.pos):
+            if self.pre_scan is not None and not self.pre_scan():
+                return
             scan_warps(self.bot, odo, g, j, self.folder)
             self.save()
 
@@ -610,10 +615,10 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
 
 
 def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops: int = 60,
-                 save=lambda: None, here=None, goal: str = "durance_3") -> str:
+                 save=lambda: None, here=None, goal: str = "durance_3", pre_scan=None) -> str:
     """One game of stairs hunting from the waypoint. Returns why it stopped: "warp" (took an exit),
     "hops", "done" (no frontier left). BotError (fix lost, safety) propagates."""
-    walker = Walker(bot, odo, g, folder, save)
+    walker = Walker(bot, odo, g, folder, save, pre_scan=pre_scan)
     walker.arrive()
     while walker.hops < max_hops:
         todo = [w for w in g.warps if w.get("dest") is None]
