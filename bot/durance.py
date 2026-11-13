@@ -518,7 +518,7 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
             name = f"warps/tt_{len(g.warps)}.png"
             (folder / "warps").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / name), f[by : by + bh, bx : bx + bw])
-            g.warps.append({"stop": stop, "screen": [x, y], "world": world, "w": int(bw), "crop": name,
+            g.warps.append({"stop": stop, "screen": [x, y], "world": world, "w": int(bw), "crop": name, "precise": SCAN.get("precise", False),
                             "dest": None, "tries": 0})
             log.info("long tooltip (%d px) at stop %d, world %s -> %s", bw, stop, [round(v) for v in world], name)
             found += 1
@@ -601,6 +601,24 @@ class Walker:
         return True
 
 
+def hover_find(bot, around, width: int, radius: int = 200, step: int = 40, tol: int = 8):
+    """Hover a grid around `around` (screen) for a tooltip `width` +- tol px wide: the hovered point, or None."""
+    from .vision.tooltip import find_tooltip
+
+    ax, ay = around
+    pts = sorted(((x, y) for y in range(ay - radius, ay + radius + 1, step) for x in range(ax - radius, ax + radius + 1, step)
+                  if 40 <= x <= 1240 and 40 <= y <= 560), key=lambda p: math.dist(p, around))
+    for i, (x, y) in enumerate(pts):
+        if i % 6 == 0:
+            bot.check()
+        bot.input.move(x, y)
+        bot.kill.sleep(0.08)
+        box = find_tooltip(bot.capture.grab(), x, y, half_w=230, max_w=420)
+        if box is not None and abs(box[2] - width) <= tol:
+            return x, y
+    return None
+
+
 def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, here=None,
               goal: str = "durance_3") -> bool:
     """Click a level exit; record where it leads (top-right area name crop). True if we left the area
@@ -610,6 +628,23 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
 
     w["tries"] = w.get("tries", 0) + 1
     x, y = world_to_screen(odo, *w["world"])
+    if w.get("precise"):  # (Lost City) odometry is off by 100s of px after a long trip: get close, then find the label
+        from .nav import CENTER, hop
+
+        for _ in range(3):
+            dx, dy = x - CENTER[0], y - CENTER[1]
+            if math.hypot(dx, dy) < 220:
+                break
+            k = max(0.0, 1 - 120 / math.hypot(dx, dy))  # land ~120 px short of it
+            hop(bot, odo, dx * k / HOP_GAIN, dy * k / HOP_GAIN)
+            x, y = world_to_screen(odo, *w["world"])
+        hit = hover_find(bot, (x, y), w["w"])
+        if hit is None:
+            log.info("warp %s: no %d px tooltip around (%d, %d)", w["crop"], w["w"], x, y)
+            if w["tries"] >= 3:
+                w["dest"] = "none"
+            return False
+        x, y = hit
     x, y = int(np.clip(x, 60, 1220)), int(np.clip(y, 40, 560))
     bot.click(x, y)
     bot.sleep(3.0)
@@ -646,7 +681,8 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
 
 
 def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops: int = 60,
-                 save=lambda: None, here=None, goal: str = "durance_3", pre_scan=None, rescan: bool = False) -> str:
+                 save=lambda: None, here=None, goal: str = "durance_3", pre_scan=None, rescan: bool = False,
+                 toward=None) -> str:
     """One game of stairs hunting from the waypoint. Returns why it stopped: "warp" (took an exit),
     "hops", "done" (no frontier left). BotError (fix lost, safety) propagates."""
     walker = Walker(bot, odo, g, folder, save, pre_scan=pre_scan)
@@ -667,7 +703,11 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
                         and not any(math.dist(s["pos"], f) < 150 for f in g.failed + skipped)]
         if not targets:
             return "done"
-        target = min(targets, key=lambda t: math.dist(t, odo.pos))
+        if toward is None:
+            target = min(targets, key=lambda t: math.dist(t, odo.pos))
+        else:  # a hint ("northwest of the waypoint"): push out that way, nearest still matters
+            u = np.asarray(toward, float) / max(math.hypot(*toward), 1e-6)
+            target = min(targets, key=lambda t: math.dist(t, odo.pos) - 2.0 * float(np.dot(t, u)))
         log.info("frontier: %d targets; going to %s (%d px)", len(targets), [round(v) for v in target],
                  math.dist(target, odo.pos))
         hops0 = walker.hops

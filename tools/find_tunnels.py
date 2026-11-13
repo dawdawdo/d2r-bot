@@ -38,8 +38,9 @@ def in_lost_city(bot) -> bool:
 # (Stephen): a short tooltip, so min_w is low and take_warp re-hovers after a click that didn't leave.
 # Game 4: the first one was "Guard Corpse" (138 px). ~11.5 px a letter: "Trap Door" ~104 px, so a band, plus
 # durance.is_junk (labels already found to lead nowhere are skipped). "Ancient Tunnels" (~170) once it's open.
-SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3)
+SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3, precise=True)
 QUIET_HP = 60
+DIRS = {"n": (0, -1), "ne": (1, -1), "e": (1, 0), "se": (1, 1), "s": (0, 1), "sw": (-1, 1), "w": (-1, 0), "nw": (-1, -1)}
 
 
 # Game 6-8: fighting first (nav.fight) made it worse: it casts at the biggest moving blob, often her merc, while
@@ -104,6 +105,7 @@ def main() -> int:
     ap.add_argument("--games", type=int, default=3)
     ap.add_argument("--hops", type=int, default=60)
     ap.add_argument("--fresh", action="store_true", help="forget the stored search (map changed)")
+    ap.add_argument("--toward", choices=sorted(DIRS), help="search that way first (a hint, e.g. nw)")
     args = ap.parse_args()
 
     use_style("red")
@@ -140,7 +142,8 @@ def main() -> int:
                 bot.deadline = bot.clock() + 300
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save,
                                       here=in_lost_city, goal="ancient_tunnels",
-                                      pre_scan=lambda: safe_to_scan(bot), rescan=True)
+                                      pre_scan=lambda: safe_to_scan(bot), rescan=True,
+                                      toward=DIRS.get(args.toward))
             except BotError as e:
                 print(f"game {n + 1}: {e}", flush=True)
             finally:
