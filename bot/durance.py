@@ -339,9 +339,9 @@ DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and 
 DURANCE_MANA = 60
 
 
-def to_durance2(bot, say=print, buy_mana: bool = False) -> None:
+def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_2") -> None:
     """New Hell game -> (heal at Ormus if hurt: life carries over between games; with buy_mana also
-    fill the belt with his mana potions, which heals too) -> WP Durance 2."""
+    fill the belt with his mana potions, which heals too) -> WP `dest` (Durance 2; the Lost City for Ancient Tunnels)."""
     from .controller import BotError
     from .lifecycle import create_game, ensure_main_menu, save_and_exit
     from .town import (act4_to, belt_full, buy_mana_at_ormus, heal_at_ormus, merc_alive, needs_heal,
@@ -390,9 +390,9 @@ def to_durance2(bot, say=print, buy_mana: bool = False) -> None:
     if hurt():  # don't go in hurt
         raise BotError(f"still at HP {bot.hp:.0f}% MP {bot.mp:.0f}% after Ormus")
     if act == 4:
-        act4_to(bot, "wp_durance_2", area=None)
+        act4_to(bot, dest, area=None)
     else:
-        town_to_wp(bot, "wp_durance_2", None)
+        town_to_wp(bot, dest, None)
 
 
 def ensure_automap(bot) -> np.ndarray:

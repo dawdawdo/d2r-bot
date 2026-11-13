@@ -1318,6 +1318,9 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
     town_to_wp(bot, "wp_lower_kurast", "area_lower_kurast.png", arrived_check, stow)
 
 
+WP_TAB = {"wp_lost_city": "wp_tab_act2"}  # ui points not on the Act III tab -> the tab to click first
+
+
 def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None, stow: bool = False) -> None:
     """A3 spawn -> waypoint -> `dest` (a ui point on the Act III tab). `arrived_check`: optional quick
     test that we're there (e.g. the LK route's map fingerprint); when it passes, the slower automap
@@ -1338,6 +1341,9 @@ def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None,
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
     open_town_wp(bot, tcfg)
     town_view = bot.capture.grab()
+    if dest in WP_TAB:  # another act's waypoint: switch tabs first (the panel opens on Act III)
+        bot.click_ui(WP_TAB[dest])
+        bot.kill.sleep(0.4)
     bot.click_ui(dest)
     wait_arrival(bot, town_view)
     bot.guard(True)  # out of town from here on
@@ -1513,7 +1519,7 @@ def act4_to(bot: Controller, dest: str, arrived_check=None, area: str | None = "
     bot.wait_for("in_game", 10)
     cast_buffs(bot)
     open_a4_wp(bot)
-    wp_travel(bot, "wp_tab_act3", dest)
+    wp_travel(bot, WP_TAB.get(dest, "wp_tab_act3"), dest)
     bot.guard(True)
     bot.wait_still(timeout=5)
     if not (arrived_check and arrived_check()) and area and not check_area(bot, area):
