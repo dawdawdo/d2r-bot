@@ -141,7 +141,7 @@ def loot_here(bot) -> list[str]:
         bot.press("tab")
         bot.kill.sleep(0.25)
     bot.frame = bot.capture.grab()
-    picked = loot(bot, max_picks=6)
+    picked = loot(bot, max_picks=12)  # gold piles split into amount + word read as white "gem" labels and use picks up (gold is welcome: merc revives)
     ensure_automap(bot)
     return picked
 
