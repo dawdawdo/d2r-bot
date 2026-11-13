@@ -1,7 +1,20 @@
 # Progress
 
-**Current milestone:** Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Ancient Tunnels task in progress (entrance done, clearing next). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-13 10:45: Ancient Tunnels entrance: found by the bot itself, and the learned route works (2/3 live).** Stephen: armors
+(Archon Plate etc.) are next most important; sockets always by cube recipe, never Larzuk (memory). New: `config ui.wp_lost_city`
+(Act II tab, 6th entry, verified) + `town.WP_TAB`; `durance` now area-agnostic: red automap style (`use_style`, Lost City sand is
+the tan color), edge-matched area names (`area_is`, templates area_lost_city / area_ancient_tunnels), scan grid in `SCAN`,
+`pre_scan`/`rescan`/`toward` options, junk labels skipped (`is_junk`), precise warps (hop close, find the label by its text image:
+box widths vary 108-216 px), re-click after a door opens. `tools/find_tunnels.py` found the **Trap Door at world (-4952, -2978)**
+NW of the WP (~15 search games, ~6 deaths/chickens; evading after a struck scan + war cries + merc made it survivable).
+`bot/tunnels.py:to_tunnels` (WP -> door -> inside) and `tools/goto_tunnels.py`. Inside: tan dungeon automap like Durance.
+Gotcha: never kill a live tool with plain `timeout` (left her standing in the Lost City twice): `timeout -s INT` so finally saves & exits.
+**Next:** the tunnels part: explore AT with the stop-graph explorer (tan), Blizzard packs, Alt-scan and pick white/gray bases
+(filter already shows normal + socketed Archon Plate, Monarch, etc.), save & exit; then a `tunnels` Task. Merc revive failed once
+"not enough gold?" (deaths cost gold): watch. Supervisor is stopped (F12 08:34); LK resumes when it restarts.
 
 **2026-11-13: KVM gone; Stephen reaches GLaDOS remotely.** His xrdp login made its own X server (:10) and dropped the seat0 session, so `:0` sat at the greeter: no D2R, uinput ACL went to lightdm. Fix (docs/glados.md "Remote access"): `tools/glados_remote_setup.sh` (sudo, Stephen runs once) = LightDM auto-login + x11vnc on :0; autostart starts the supervisor at login (new single-instance lock). Stephen says Battle.net login worked 11-12, so the 11-12 hang below is presumed over: verify in the first session log. MF swap still pending.
 

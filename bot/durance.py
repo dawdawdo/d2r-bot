@@ -602,10 +602,21 @@ class Walker:
         return True
 
 
-def hover_find(bot, around, width: int, radius: int = 200, step: int = 40, tol: int = 8):
-    """Hover a grid around `around` (screen) for a tooltip `width` +- tol px wide: the hovered point, or None."""
-    from .vision.tooltip import find_tooltip
+def label_near(frame: np.ndarray, x: int, y: int, label: np.ndarray, min_score: float = 0.8) -> bool:
+    """Is this label (a saved tooltip crop) drawn near the cursor at (x, y)? Matched by its text image: the
+    tooltip box width the finder measures varies with what's behind it (the Trap Door read 108, 161, 216 px)."""
+    lh, lw = label.shape[:2]
+    x0, y0 = max(0, x - lw - 60), max(0, y - 110)
+    x1, y1 = min(frame.shape[1], x + lw + 60), min(frame.shape[0], y + 60)
+    if x1 - x0 < lw or y1 - y0 < lh:
+        return False
+    g = cv2.cvtColor(frame[y0:y1, x0:x1], cv2.COLOR_BGR2GRAY)
+    t = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
+    return float(cv2.matchTemplate(g, t, cv2.TM_CCOEFF_NORMED).max()) >= min_score
 
+
+def hover_find(bot, around, label: np.ndarray, radius: int = 200, step: int = 40):
+    """Hover a grid around `around` (screen), nearest first, until `label` shows by the cursor: that point, or None."""
     ax, ay = around
     pts = sorted(((x, y) for y in range(ay - radius, ay + radius + 1, step) for x in range(ax - radius, ax + radius + 1, step)
                   if 40 <= x <= 1240 and 40 <= y <= 560), key=lambda p: math.dist(p, around))
@@ -613,9 +624,8 @@ def hover_find(bot, around, width: int, radius: int = 200, step: int = 40, tol: 
         if i % 6 == 0:
             bot.check()
         bot.input.move(x, y)
-        bot.kill.sleep(0.08)
-        box = find_tooltip(bot.capture.grab(), x, y, half_w=230, max_w=420)
-        if box is not None and abs(box[2] - width) <= tol:
+        bot.kill.sleep(0.1)
+        if label_near(bot.capture.grab(), x, y, label):
             return x, y
     return None
 
@@ -641,12 +651,12 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
             x, y = world_to_screen(odo, *w["world"])
         r = 200 if w["tries"] <= 1 else 320  # odometry after a long trip can be off by more than 200 px
         view = bot.capture.grab()
-        hit = hover_find(bot, (x, y), w["w"], radius=r, step=40 if r == 200 else 50)
+        hit = hover_find(bot, (x, y), cv2.imread(str(folder / w["crop"])), radius=r, step=40 if r == 200 else 50)
         if hit is not None:  # the door's look, for a sprite template (find it by sight, not odometry)
             (folder / "doors").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)
         if hit is None:
-            log.info("warp %s: no %d px tooltip around (%d, %d)", w["crop"], w["w"], x, y)
+            log.info("warp %s: its label doesn't show around (%d, %d)", w["crop"], x, y)
             if w["tries"] >= 3:
                 w["dest"] = "none"
             return False
@@ -690,7 +700,7 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
             bot.kill.sleep(0.5)
             reached = area_is(bot.capture.grab(), goal)
     w["level3" if goal == "durance_3" else "goal"] = reached
-    log.info("warp %d leads somewhere else (%s: %s); saved %s", i, goal, reached, w["dest"])
+    log.info("warp %s leads somewhere else (%s: %s); saved %s", i, goal, reached, w["dest"])
     return True
 
 
