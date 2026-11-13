@@ -184,19 +184,41 @@ def evade(bot, odo, m, walker=None, visited=()) -> None:
              odo.pos.round().tolist(), bot.hp or 0)
 
 
+def map_open(frame) -> bool:
+    """Automap open inside the tunnels? The area name (top right) shows only then: edge match 0.99 vs ~0.4. Line-pixel
+    counts misled here (2026-11-13 15:05: poison effects + lit stone = 11.4k "line" px with the map off)."""
+    from .durance import area_is
+
+    return area_is(frame, "ancient_tunnels")
+
+
+def ensure_map(bot):
+    """Automap on (by the area name); returns the frame showing it. BotError if it won't show."""
+    for _ in range(3):
+        f = bot.capture.grab()
+        if map_open(f):
+            return f
+        bot.press("tab")
+        bot.kill.sleep(0.45)
+    f = bot.capture.grab()
+    if map_open(f):
+        return f
+    bot.save_failure("tunnels_map_wont_show")
+    raise BotError("automap won't show")
+
+
 def loot_here(bot) -> list[str]:
     """Automap off (its lines clutter the labels), Alt-scan and pick, automap back on."""
-    from .durance import automap_shown, ensure_automap
     from .lk import loot
 
-    if automap_shown(bot.capture.grab()):
+    if map_open(bot.capture.grab()):
         bot.press("tab")
         bot.kill.sleep(0.25)
     bot.input.move(1270, 590)  # park the cursor: resting on an urn, its hover name read as a white label (2026-11-13)
     bot.kill.sleep(0.15)
     bot.frame = bot.capture.grab()
     picked = loot(bot, max_picks=12)  # gold piles split into amount + word read as white "gem" labels and use picks up (gold is welcome: merc revives)
-    ensure_automap(bot)
+    ensure_map(bot)
     return picked
 
 
@@ -212,7 +234,7 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
     """Inside the tunnels: explore / tour, fight, loot until the time is up or nothing is left to visit."""
     import math
 
-    from .durance import AutomapOdometer, StopGraph, Walker, ensure_automap, frontier, use_style
+    from .durance import AutomapOdometer, StopGraph, Walker, frontier, use_style
 
     from .vision.orbs import belt_slots
 
@@ -224,7 +246,7 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
     use_style("tunnel")
     fold = tunnels_folder(bot.cfg)
     fold.mkdir(parents=True, exist_ok=True)
-    odo = AutomapOdometer.load(fold, ensure_automap(bot))
+    odo = AutomapOdometer.load(fold, ensure_map(bot))
     g = StopGraph.load(fold / "graph.json")
 
     def save() -> None:
@@ -275,7 +297,18 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
             target = min(targets, key=lambda t: math.dist(t, odo.pos))
             try:
                 reached = walker.go(target, tol=180, max_hops=8)
-            except BotError as e:  # "automap fix lost" (teleport-on-hit, a jump): stop here, the caller saves & exits
+            except BotError as e:  # "automap fix lost" (map toggled off, teleport-on-hit): map on, relocate, else stop
+                before = odo.pos.copy()
+                try:
+                    f = ensure_map(bot)
+                    guesses = [before] + [v for v in reversed(visited)][:12] + [s_["pos"] for s_ in g.stops
+                                                                               if math.dist(s_["pos"], before) < 1500]
+                    if odo.relocate(f, guesses):
+                        odo.lost = False
+                        log.info("tunnels: fix recovered at %s after '%s'", odo.pos.round().tolist(), e)
+                        continue
+                except BotError:
+                    pass
                 log.warning("tunnels: %s; ending the run here", e)
                 break
             if not reached:
