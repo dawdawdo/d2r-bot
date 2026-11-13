@@ -75,3 +75,12 @@ Per machine, not in git: `logs/` (including `state.json` and `loot.csv`), `runs.
 `maps/blizzaga_hell/learned.json` changes during LK runs and is in git: commit it on every switch, so only one machine ever has changes.
 
 Many Mephisto recordings (`maps/blizzaga_hell/durance3_route*/views`, `durance2`, others) are untracked on Singularity. Check what Meph needs before running it here.
+
+## Remote access (2026-11-13: no KVM/monitor any more)
+- The bot must run on the real screen `:0`: /dev/uinput feeds only seat0's Xorg, and its ACL follows the seat0 login.
+  An xrdp login gets its own X server (`:10`) with no uinput and no GPU: D2R can't be botted there.
+- `sudo bash tools/glados_remote_setup.sh` (one time): LightDM auto-login into Cinnamon + x11vnc. Autostart entries
+  in `~/.config/autostart/`: `x11vnc.desktop` (shares `:0` on port 5900, password `~/.vnc/passwd`) and
+  `d2r-supervisor.desktop` (starts `python -m bot.supervisor` 45 s after login; a lock keeps it to one instance).
+- Stephen watches via VNC viewer from Singularity. Don't RDP into GLaDOS as stephen while the auto-login session runs.
+  Moving the mouse in VNC while the bot plays trips the mouse kill switch (expected).

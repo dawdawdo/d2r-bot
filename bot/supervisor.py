@@ -320,6 +320,18 @@ def main(argv=None) -> int:
         return 0
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
                         handlers=[logging.FileHandler(ROOT / "logs" / "supervisor.log"), logging.StreamHandler()])
+    # One supervisor at a time: GLaDOS also starts one from ~/.config/autostart at login (2026-11-13).
+    lock = open(ROOT / "logs" / "supervisor.lock", "w")
+    try:
+        if os.name == "nt":
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log.error("another supervisor is already running (logs/supervisor.lock): exiting")
+        return 1
     Supervisor(load_config()).loop()
     return 0
 
