@@ -89,14 +89,26 @@ TOUR_SPACING = 380     # world px between tour stops (one stop's view + loot rea
 # 2026-11-13 11:20 death: 58 casts emptied her mana (no Energy Shield) and Battle Orders had run out (507 -> 345)
 CAST_MIN_MP = 30       # % mana: below this, no more casting at a stop (teleport and the shield need it)
 LEAVE_MP = 15          # % mana with no regen in sight: end the run (save & exit) rather than die
+# 2026-11-13 chickens: a Plague Bearer's poison (HP down with MP still full) took her from 100 to 43 % in 5 s while
+# she stood casting. Struck that hard -> stop casting, two hops away from the movers, carry on elsewhere.
+EVADE_DROP = 20        # HP points lost during one stop's fight
+EVADE_BELOW = 65       # % HP
 
 
 def tunnels_folder(cfg: dict) -> Path:
     return ROOT / "maps" / cfg["game"]["route"] / "tunnels_auto"
 
 
+class Struck(Exception):
+    """Lost too much life while fighting at a stop: get away (carries the movers seen last)."""
+
+    def __init__(self, movers) -> None:
+        super().__init__("struck")
+        self.movers = movers
+
+
 def engage(bot) -> int:
-    """Cast at moving monsters near her until two quiet looks in a row. Returns casts."""
+    """Cast at moving monsters near her until two quiet looks in a row. Returns casts. Raises Struck."""
     import math
     import time
 
@@ -104,12 +116,16 @@ def engage(bot) -> int:
 
     sk = bot.cfg["hotkeys"]["skills"]
     casts, quiet, last_bliz, sel = 0, 0, 0.0, None
+    hp0 = bot.hp or 100
     try:
         for _ in range(ENGAGE_ROUNDS):
             bot.check()
             if (bot.mp or 100) < CAST_MIN_MP:
                 break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
+            hp = bot.hp or 100
+            if hp < EVADE_BELOW or hp < hp0 - EVADE_DROP:
+                raise Struck(m)
             if not m:
                 quiet += 1
                 if quiet >= 2:
@@ -130,6 +146,24 @@ def engage(bot) -> int:
         if sel is not None:
             bot.press(sk["teleport"])
     return casts
+
+
+def evade(bot, odo, m) -> None:
+    """Two hops away from the movers' centre (or back the way she came, toward the arrival, if none were seen)."""
+    import math
+
+    import numpy as np
+
+    from .nav import CENTER, hop
+
+    c = np.mean([t[:2] for t in m], axis=0) - CENTER if m else odo.pos.copy()
+    d = -c / max(math.hypot(*c), 1e-6) * 320
+    for _ in range(2):
+        before = odo.pos.copy()
+        hop(bot, odo, *d)
+        if odo.lost and not odo.relocate(bot.capture.grab(), [before]):
+            raise BotError("automap fix lost")
+    log.info("tunnels: struck -> evaded %d movers to %s (HP %.0f%%)", len(m), odo.pos.round().tolist(), bot.hp or 0)
 
 
 def loot_here(bot) -> list[str]:
@@ -188,8 +222,16 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
             if (bot.mp or 100) < LEAVE_MP:
                 log.warning("tunnels: MP %.0f%%: ending the run", bot.mp)
                 break
-            casts += engage(bot)
-            picked += loot_here(bot)
+            try:
+                casts += engage(bot)
+                picked += loot_here(bot)
+            except Struck as e:
+                try:
+                    evade(bot, odo, e.movers)
+                except BotError as err:
+                    log.warning("tunnels: %s while evading; ending the run here", err)
+                    break
+                continue  # loot later: the pack is where the drops are
             visited.append(odo.pos.copy())
             stops += 1
             targets = frontier(odo, g)
