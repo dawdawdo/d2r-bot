@@ -3,6 +3,17 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-13 15:40: tunnels running unattended, tuning for smooth runs.** Since 11:40 ~35 runs: ~70 % clean; rest chickens + 1 death.
+Finds: Monarch (11:51, now off the filter: Stephen has enough Spirits; Mancatcher stays), Northern Worldstone Shard, flawed gems,
+rejuvs, gold. **No Archon Plate yet.** Added today after the first version: Act 2 spawn shortcut (`run.a2_start_ok`, 12+ free cells:
+Lut Gholein WP -> Lost City, ~70 s vs ~3 min), 12 picks/stop, cursor parked before Alt scans (urns / "To The Lost City" read as labels),
+monster bar ignored to y 95 (its "Immune to ..." lines read as set/rune labels; the 4 "set"/"rune" picks of 12:3x-12:52 were that),
+evade when struck (to visited ground, 90-degree fallback, no fight right after), end the run on arrival < 70 % with an empty belt,
+automap state by the area name (`tunnels.map_open`; pixel counts misread effects), lost-fix recovery, safety exceptions never swallowed.
+**Open question for Stephen (not blocking):** the belt is empty (rejuv stash dry, tunnels skip the LK refill): buy healing potions
+from Lysander for tunnels, or interleave LK refill runs? Until answered: tunnels as is.
+Next: ThroatCutter BiS steps added to the Plan (site); after the plates a ring task (Andariel); DClone = sell an SoJ in SP.
+
 **2026-11-13 11:40: `tunnels` task live, unattended session started (supervisor, `--start tunnels`).** Stephen: Archon Plates are
 the priority, **4 minimum, probably more** (cube rolls); runs must not stop early (memory). `bot/tasks/tunnels.py` + `bot/tunnels.py`:
 enter = WP Lost City -> Trap Door (two clicks) -> inside (~90 s from game start); farm (`tunnels.farm_s` 240) = explore the tunnels'
