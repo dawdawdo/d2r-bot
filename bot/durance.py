@@ -693,6 +693,11 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
         if todo:
             w = todo[0]
             walker.travel(w["stop"])
+            if w.get("precise") and not walker.go(w["world"], tol=250, max_hops=20):
+                log.info("warp %s: couldn't get near it (at %s)", w["crop"], odo.pos.round().tolist())
+                if walker.hops >= max_hops:
+                    break
+                continue
             if take_warp(bot, odo, g, w, folder, here=here, goal=goal):
                 save()
                 return "warp"
