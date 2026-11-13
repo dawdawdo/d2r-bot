@@ -70,7 +70,7 @@ def to_tunnels(bot) -> None:
             bot.save_failure("tunnels_door_failed")
             raise BotError("Trap Door: not inside after 3 tries")
     finally:
-        use_style("tan")  # inside: a dungeon automap like Durance's
+        use_style("tunnel")  # inside: dungeon automap lines (durance.automap_pixels)
     if not in_tunnels(bot):
         bot.save_failure("tunnels_not_inside")
         raise BotError("left the Lost City but not into the Ancient Tunnels")
@@ -86,6 +86,9 @@ BLIZZARD_CD = 1.9      # s (Blizzard has a 1.8 s cooldown; Glacial Spike fills t
 OWN_RADIUS = 70        # px around her: her own sprite and cast effects, not monsters
 REACH = 520            # px: movers farther than this aren't worth standing for
 TOUR_SPACING = 380     # world px between tour stops (one stop's view + loot reach covers about this)
+# 2026-11-13 11:20 death: 58 casts emptied her mana (no Energy Shield) and Battle Orders had run out (507 -> 345)
+CAST_MIN_MP = 30       # % mana: below this, no more casting at a stop (teleport and the shield need it)
+LEAVE_MP = 15          # % mana with no regen in sight: end the run (save & exit) rather than die
 
 
 def tunnels_folder(cfg: dict) -> Path:
@@ -104,6 +107,8 @@ def engage(bot) -> int:
     try:
         for _ in range(ENGAGE_ROUNDS):
             bot.check()
+            if (bot.mp or 100) < CAST_MIN_MP:
+                break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
             if not m:
                 quiet += 1
@@ -155,7 +160,7 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
 
     from .durance import AutomapOdometer, StopGraph, Walker, ensure_automap, frontier, use_style
 
-    use_style("tan")
+    use_style("tunnel")
     fold = tunnels_folder(bot.cfg)
     fold.mkdir(parents=True, exist_ok=True)
     odo = AutomapOdometer.load(fold, ensure_automap(bot))
@@ -172,7 +177,17 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
     visited: list = []
     casts = stops = 0
     try:
+        from .town import cast_warcries
+
+        refresh = bot.cfg["hotkeys"].get("warcry_refresh_s", 75)
+        last_cries = bot.clock()  # cast on arrival in the Lost City
         while bot.clock() < end:
+            if bot.clock() - last_cries > refresh:
+                cast_warcries(bot)
+                last_cries = bot.clock()
+            if (bot.mp or 100) < LEAVE_MP:
+                log.warning("tunnels: MP %.0f%%: ending the run", bot.mp)
+                break
             casts += engage(bot)
             picked += loot_here(bot)
             visited.append(odo.pos.copy())

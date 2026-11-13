@@ -70,6 +70,10 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
     if STYLE["name"] == "red":
         m = (((h <= 8) | (h >= 170)) & (s >= 130) & (v >= 80)).astype(np.uint8)
+    elif STYLE["name"] == "tunnel":  # Ancient Tunnels: darker, less saturated lines (sampled H 17-21, S 85-118,
+        # V 72-115); the "tan" band caught the torch-lit stone instead (S ~140, V ~121) and odometry jumped 4000 px
+        m = ((h >= 16) & (h <= 23) & (s >= 75) & (s <= 122) & (v >= 65) & (v <= 120)).astype(np.uint8)
+        m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8)), np.ones((7, 7), np.uint8))
     else:
         m = ((h >= 15) & (h <= 30) & (s >= 60) & (s <= 170) & (v >= 90)).astype(np.uint8)
         k = np.ones((BLOB, BLOB), np.uint8)
