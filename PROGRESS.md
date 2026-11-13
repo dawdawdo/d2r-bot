@@ -1,7 +1,19 @@
 # Progress
 
-**Current milestone:** Ancient Tunnels task in progress (entrance done, clearing next). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-13 11:40: `tunnels` task live, unattended session started (supervisor, `--start tunnels`).** Stephen: Archon Plates are
+the priority, **4 minimum, probably more** (cube rolls); runs must not stop early (memory). `bot/tasks/tunnels.py` + `bot/tunnels.py`:
+enter = WP Lost City -> Trap Door (two clicks) -> inside (~90 s from game start); farm (`tunnels.farm_s` 240) = explore the tunnels'
+automap frontier, later tour known stops (`maps/<route>/tunnels_auto/`), at each stop `engage` (Blizzard / Glacial Spike at the
+nearest mover, stops below 30 % MP) then `loot_here` (automap off, `lk.loot`, automap on); war cries every 75 s; MP < 15 % ends the
+run. Fixes on the way: automap style "tunnel" (lines H16-23 S75-122 V65-120; tan caught the lit stone), per-style `automap_shown`
+threshold (arches passed as a shown map), rejuv refill swap now only for `needs_rejuvs` tasks (Meph): it had turned tunnels into LK.
+White non-supply picks now save `fixtures/raw/pick_white_*` frames: **check them for Archon Plate labels.**
+Not done: Act 2 spawn shortcut (games end in AT -> next spawns in Lut Gholein -> A2 WP -> A3 -> A3 WP -> Lost City, ~2 min);
+skipped because gems are picked nearly every run, so stow (Act 3 stash) is due anyway. Option: stow only when the inventory is
+getting full, then A2 WP -> Lost City directly.
 
 **2026-11-13 10:45: Ancient Tunnels entrance: found by the bot itself, and the learned route works (2/3 live).** Stephen: armors
 (Archon Plate etc.) are next most important; sockets always by cube recipe, never Larzuk (memory). New: `config ui.wp_lost_city`
