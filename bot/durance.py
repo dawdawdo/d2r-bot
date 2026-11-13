@@ -87,8 +87,11 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     return out
 
 
+SHOWN_MIN = {"tunnel": 10000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
+
+
 def automap_shown(frame: np.ndarray) -> bool:
-    return int(automap_pixels(frame).sum()) >= MIN_PIXELS
+    return int(automap_pixels(frame).sum()) >= SHOWN_MIN.get(STYLE["name"], MIN_PIXELS)
 
 
 def view_mask(frame: np.ndarray) -> np.ndarray:
