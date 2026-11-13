@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import time
 from collections import deque
 from pathlib import Path
 
@@ -638,7 +639,12 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
             k = max(0.0, 1 - 120 / math.hypot(dx, dy))  # land ~120 px short of it
             hop(bot, odo, dx * k / HOP_GAIN, dy * k / HOP_GAIN)
             x, y = world_to_screen(odo, *w["world"])
-        hit = hover_find(bot, (x, y), w["w"])
+        r = 200 if w["tries"] <= 1 else 320  # odometry after a long trip can be off by more than 200 px
+        view = bot.capture.grab()
+        hit = hover_find(bot, (x, y), w["w"], radius=r, step=40 if r == 200 else 50)
+        if hit is not None:  # the door's look, for a sprite template (find it by sight, not odometry)
+            (folder / "doors").mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)
         if hit is None:
             log.info("warp %s: no %d px tooltip around (%d, %d)", w["crop"], w["w"], x, y)
             if w["tries"] >= 3:
@@ -665,7 +671,7 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
         if w["tries"] >= 2:
             w["dest"] = "none"
         return False
-    i = g.warps.index(w)
+    i = g.warps.index(w) if w in g.warps else "run"  # a copy (the learned route) keeps the graph as it is
     f = bot.capture.grab()
     x0, y0, ww, hh = AREA_REGION
     cv2.imwrite(str(folder / f"warps/dest_{i}.png"), f[y0 : y0 + hh, x0 : x0 + ww])
