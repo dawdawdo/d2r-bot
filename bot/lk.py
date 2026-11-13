@@ -446,6 +446,9 @@ def _sig(lab) -> tuple:
     return lab.kind, lab.w // 4, lab.h // 4
 
 
+GRAY_MIN_W = 45  # px: gray (socketed / ethereal base) labels narrower than this aren't labels
+
+
 def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[str]:
     """Pick up every visible label of the configured kinds, plus keys and rejuvs we need
     (white labels, told apart from gold by their first word). Returns what was picked.
@@ -498,6 +501,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                     what = "gem"
                 elif what not in supplies or not _want_supply(bot, what):
                     continue
+            if lab.kind == "gray" and lab.w < GRAY_MIN_W:
+                continue  # a gray glint on the floor (2026-11-13 17:02: 20 px); the shortest base name is ~60 px
             if lab.kind == "magic":  # take_all too: blue jewels show (the jewel rule has no rarity)
                 if not is_charm(bot.frame, lab):
                     continue
