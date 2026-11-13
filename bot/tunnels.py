@@ -93,6 +93,7 @@ LEAVE_MP = 15          # % mana with no regen in sight: end the run (save & exit
 # she stood casting. Struck that hard -> stop casting, two hops away from the movers, carry on elsewhere.
 EVADE_DROP = 20        # HP points lost during one stop's fight
 EVADE_BELOW = 65       # % HP
+ENTER_MIN_HP = 70      # % HP inside with an empty belt: below this the run ends (the next game heals at Ormus)
 
 
 def tunnels_folder(cfg: dict) -> Path:
@@ -124,7 +125,9 @@ def engage(bot) -> int:
                 break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
             hp = bot.hp or 100
-            if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and m):  # low life alone, nothing near: not struck
+            # struck = losing life here: a big drop, or low and still dropping. Low but steady (no potions, 14:28 run:
+            # 52 % all game) evaded at every stop and never fought
+            if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and hp < hp0 - 5 and m):
                 raise Struck(m)
             if not m:
                 quiet += 1
@@ -211,6 +214,13 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
 
     from .durance import AutomapOdometer, StopGraph, Walker, ensure_automap, frontier, use_style
 
+    from .vision.orbs import belt_slots
+
+    bot.frame = bot.capture.grab()
+    if (bot.hp or 100) < ENTER_MIN_HP and not any(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
+        # 2026-11-13 14:28: a Lost City pack at the door took her to 52 %, no potions: 4 min of evading, then a chicken
+        log.warning("tunnels: HP %.0f%% on arrival and the belt is empty: ending the run (Ormus next game)", bot.hp)
+        return {"picked": [], "tunnel_stops": 0}
     use_style("tunnel")
     fold = tunnels_folder(bot.cfg)
     fold.mkdir(parents=True, exist_ok=True)
