@@ -516,7 +516,7 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
             break
         what, lab = min(found, key=lambda f: abs(f[1].center[0] - CENTER[0]) + abs(f[1].center[1] - CENTER[1]))
         log.info("pick %s label at %s", what, lab.center)
-        if lab.kind != "white":  # keep evidence of every valuable pick for review
+        if lab.kind != "white" or what == "gem":  # evidence of every valuable pick (white "gem" = gems, skulls, bases)
             import time
 
             # clean frame (a drawn box spoils it as a test fixture); the label box is in the name
