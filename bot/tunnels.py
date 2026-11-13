@@ -124,7 +124,7 @@ def engage(bot) -> int:
                 break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
             hp = bot.hp or 100
-            if hp < EVADE_BELOW or hp < hp0 - EVADE_DROP:
+            if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and m):  # low life alone, nothing near: not struck
                 raise Struck(m)
             if not m:
                 quiet += 1
@@ -148,22 +148,37 @@ def engage(bot) -> int:
     return casts
 
 
-def evade(bot, odo, m) -> None:
-    """Two hops away from the movers' centre (or back the way she came, toward the arrival, if none were seen)."""
+def evade(bot, odo, m, walker=None, visited=()) -> None:
+    """Get away from a pack: back to a spot she already stood on (open and cleared; 2026-11-13 12:59 the "away
+    from the movers" hops hit a wall four times and she didn't move), else two hops away from the movers' centre,
+    turning 90 degrees when blocked."""
     import math
 
     import numpy as np
 
     from .nav import CENTER, hop
 
-    c = np.mean([t[:2] for t in m], axis=0) - CENTER if m else odo.pos.copy()
-    d = -c / max(math.hypot(*c), 1e-6) * 320
-    for _ in range(2):
-        before = odo.pos.copy()
-        hop(bot, odo, *d)
-        if odo.lost and not odo.relocate(bot.capture.grab(), [before]):
-            raise BotError("automap fix lost")
-    log.info("tunnels: struck -> evaded %d movers to %s (HP %.0f%%)", len(m), odo.pos.round().tolist(), bot.hp or 0)
+    start = odo.pos.copy()
+    back = [v for v in reversed(list(visited)) if math.dist(v, start) >= 350]
+    if walker is not None and back:
+        walker.go(back[0], tol=150, max_hops=3)
+    if math.dist(odo.pos, start) < 150:
+        c = np.mean([t[:2] for t in m], axis=0) - CENTER if m else odo.pos.copy()
+        d = -c / max(math.hypot(*c), 1e-6) * 320
+        for turn in (0, 90, -90):
+            r = math.radians(turn)
+            step = np.array([d[0] * math.cos(r) - d[1] * math.sin(r), d[0] * math.sin(r) + d[1] * math.cos(r)])
+            before = odo.pos.copy()
+            hop(bot, odo, *step)
+            if odo.lost and not odo.relocate(bot.capture.grab(), [before]):
+                raise BotError("automap fix lost")
+            if math.dist(odo.pos, before) >= 120:
+                hop(bot, odo, *step)
+                if odo.lost and not odo.relocate(bot.capture.grab(), [odo.pos]):
+                    raise BotError("automap fix lost")
+                break
+    log.info("tunnels: struck -> evaded %d movers %s -> %s (HP %.0f%%)", len(m), start.round().tolist(),
+             odo.pos.round().tolist(), bot.hp or 0)
 
 
 def loot_here(bot) -> list[str]:
@@ -217,6 +232,7 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
 
         refresh = bot.cfg["hotkeys"].get("warcry_refresh_s", 75)
         last_cries = bot.clock()  # cast on arrival in the Lost City
+        calm = True
         while bot.clock() < end:
             if bot.clock() - last_cries > refresh:
                 cast_warcries(bot)
@@ -225,14 +241,17 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
                 log.warning("tunnels: MP %.0f%%: ending the run", bot.mp)
                 break
             try:
-                casts += engage(bot)
-                picked += loot_here(bot)
+                if calm:  # right after an evade: keep moving, don't stand and fight where the pack can follow
+                    casts += engage(bot)
+                    picked += loot_here(bot)
+                calm = True
             except Struck as e:
                 try:
-                    evade(bot, odo, e.movers)
+                    evade(bot, odo, e.movers, walker, visited)
                 except BotError as err:
                     log.warning("tunnels: %s while evading; ending the run here", err)
                     break
+                calm = False
                 continue  # loot later: the pack is where the drops are
             visited.append(odo.pos.copy())
             stops += 1
