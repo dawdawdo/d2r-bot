@@ -672,9 +672,17 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
     cv2.imwrite(str(folder / f"warps/dest_{i}_view.jpg"), cv2.resize(f, None, fx=0.5, fy=0.5))
     w["dest"] = f"warps/dest_{i}.png"
     tmpl = Path(__file__).parent / "assets" / "templates" / f"area_{goal}.png"
-    if not automap_shown(f):
-        f = ensure_automap(bot)
-    reached = area_is(f, goal) if tmpl.exists() else None
+    reached = None
+    if tmpl.exists():  # the new area's automap may look different (Lost City red -> tunnels tan): try both
+        for style in (STYLE["name"], "tan", "red"):
+            use_style(style)
+            if automap_shown(f) or automap_shown(f := bot.capture.grab()):
+                break
+        reached = any(area_is(fr, goal) for fr in (f, bot.capture.grab()))
+        if not reached:  # automap maybe off: toggle once and look again
+            bot.press("tab")
+            bot.kill.sleep(0.5)
+            reached = area_is(bot.capture.grab(), goal)
     w["level3" if goal == "durance_3" else "goal"] = reached
     log.info("warp %d leads somewhere else (%s: %s); saved %s", i, goal, reached, w["dest"])
     return True

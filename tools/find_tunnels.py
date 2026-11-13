@@ -27,7 +27,10 @@ from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
 def in_lost_city(bot) -> bool:
-    return area_is(ensure_automap(bot), "lost_city")
+    try:
+        return area_is(ensure_automap(bot), "lost_city")
+    except BotError:  # no red automap: somewhere else (2026-11-13 10:16: inside the tunnels, tan automap)
+        return False
 
 
 # 2026-11-13 game 1: a poison pack took her 100 -> 18 % in ~4 s during a 25 s scan at the 3rd stop. Now:
