@@ -347,7 +347,8 @@ AREA_REGION = (1060, 20, 220, 70)  # area name, top right (shown while the autom
 SCAN_COVER = (430, 200)  # a scan covers about this much (world px) around where she stood
 SCAN_ABORT = (10, 20)  # HP, MP points lost during a scan (Energy Shield drains MP first) -> stop scanning
 # Scan grid and limits; tools tune them per area (Lost City: coarser, quicker abort; packs swarm her there)
-SCAN = {"dx": 80, "dy": 60, "abort_hp": SCAN_ABORT[0], "abort_mp": SCAN_ABORT[1], "min_w": WARP_MIN_W, "every": 6}
+SCAN = {"dx": 80, "dy": 60, "abort_hp": SCAN_ABORT[0], "abort_mp": SCAN_ABORT[1], "min_w": WARP_MIN_W, "max_w": 10_000,
+        "every": 6}
 
 
 DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and the belt is often empty
@@ -470,6 +471,22 @@ def scan_due(g: StopGraph, pos) -> bool:
                    and abs(s["pos"][1] - pos[1]) < SCAN_COVER[1] for s in g.stops)
 
 
+def is_junk(folder: Path, g: StopGraph, crop: np.ndarray) -> bool:
+    """Same label as a tooltip already visited and found to lead nowhere (a "Guard Corpse" in the Lost City)?"""
+    for w in g.warps:
+        if w.get("dest") != "none" or abs(w["w"] - crop.shape[1]) > 3:
+            continue
+        old = cv2.imread(str(folder / w["crop"]))
+        if old is None:
+            continue
+        h, ww = min(old.shape[0], crop.shape[0]), min(old.shape[1], crop.shape[1])
+        a, b = old[:h, :ww], crop[:h, :ww]
+        if cv2.matchTemplate(cv2.cvtColor(a, cv2.COLOR_BGR2GRAY), cv2.cvtColor(b, cv2.COLOR_BGR2GRAY),
+                             cv2.TM_CCOEFF_NORMED).max() > 0.85:
+            return True
+    return False
+
+
 def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path) -> int:
     """Hover a coarse grid; record long tooltips (level exits) with their world position."""
     from .vision.tooltip import find_tooltip
@@ -490,12 +507,14 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
             box = find_tooltip(f, x, y, half_w=230, max_w=420)
-            if box is None or box[2] < SCAN["min_w"]:
+            if box is None or not SCAN["min_w"] <= box[2] <= SCAN["max_w"]:
                 continue
             world = [float(odo.pos[0] + x - 640), float(odo.pos[1] + y - 330)]
             if any(math.dist(w["world"], world) < 250 for w in g.warps):
                 continue
             bx, by, bw, bh = box
+            if is_junk(folder, g, f[by : by + bh, bx : bx + bw]):
+                continue
             name = f"warps/tt_{len(g.warps)}.png"
             (folder / "warps").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / name), f[by : by + bh, bx : bx + bw])
@@ -594,6 +613,18 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
     x, y = int(np.clip(x, 60, 1220)), int(np.clip(y, 40, 560))
     bot.click(x, y)
     bot.sleep(3.0)
+    if here(bot) and w.get("reclick", True):
+        # a closed door (the Lost City Trap Door) opens on the first click and is entered on the next:
+        # hover again; a tooltip there now (it may read differently) gets one more click
+        from .vision.tooltip import find_tooltip
+
+        bot.input.move(x, y)
+        bot.kill.sleep(0.25)
+        box = find_tooltip(bot.capture.grab(), x, y, half_w=230, max_w=420)
+        if box is not None:
+            log.info("warp %s: still here; tooltip %d px wide now -> clicking again", w["crop"], box[2])
+            bot.click(x, y)
+            bot.sleep(3.0)
     if here(bot):
         log.info("warp %s: still here after clicking (%d, %d)", w["crop"], x, y)
         if w["tries"] >= 2:

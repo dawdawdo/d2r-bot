@@ -31,22 +31,21 @@ def in_lost_city(bot) -> bool:
 
 
 # 2026-11-13 game 1: a poison pack took her 100 -> 18 % in ~4 s during a 25 s scan at the 3rd stop. Now:
-# a coarse grid (~6 s), abort on the first few points lost, and no scan at all with monsters moving in view
-# or below 85 % life (teleporting on is what keeps her alive; the stop gets scanned on a later visit).
-SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=110, every=3)
-QUIET_HP = 85
+# a coarse grid (~6 s) that aborts on the first few points lost. Game 2: "anything moving" vetoed all 28
+# stops and HP sat at 71 % with no regen: skip only below 60 % life (Stephen: some deaths are fine).
+# Game 3: movers near her at almost every stop (leapers, beetles, her merc): the Lost City is never quiet, so no
+# movers veto; the scan just aborts on the first points lost. The entrance is a Trap Door that starts closed
+# (Stephen): a short tooltip, so min_w is low and take_warp re-hovers after a click that didn't leave.
+# Game 4: the first one was "Guard Corpse" (138 px). ~11.5 px a letter: "Trap Door" ~104 px, so a band, plus
+# durance.is_junk (labels already found to lead nowhere are skipped). "Ancient Tunnels" (~170) once it's open.
+SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3)
+QUIET_HP = 60
 
 
 def safe_to_scan(bot) -> bool:
-    from bot.nav import movers
-
     bot.check()
     if (bot.hp or 100) < QUIET_HP:
         print(f"  no scan: HP {bot.hp:.0f}%", flush=True)
-        return False
-    m = movers(bot, min_area=400)
-    if m:
-        print(f"  no scan: {len(m)} moving (largest {m[0][2]} px at {m[0][:2]})", flush=True)
         return False
     return True
 
