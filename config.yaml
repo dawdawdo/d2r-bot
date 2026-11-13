@@ -117,6 +117,10 @@ mf:
   # LK (the Bot page says why) until Stephen puts the MF gear on. Setups (2026-11-11): ~0 % cows/bases, ~280 % Meph.
   min: {meph: 200}
 
+tunnels:               # Ancient Tunnels task (bot/tunnels.py)
+  timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline
+  farm_s: 240          # time spent inside the tunnels
+
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
   # visible labels of these colors. Which uniques and sets show is decided only there, per base code:

@@ -59,7 +59,7 @@ def test_status_lists_tasks(web):
     code, body = call(base, "/api/status", pw)
     d = json.loads(body)
     assert code == 200 and d["bot"]["running"] is False
-    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": True}  # Durance 2 graph learned
+    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": True, "tunnels": True}  # Durance 2 graph, Trap Door learned
 
 
 def test_start_validates_and_launches_once(web):
