@@ -21,6 +21,7 @@ class Task:
     name = "task"
     act = 3  # the act new games start in; town routes assume it
     enter_wp: str | None = None  # ui point on the Act III waypoint tab where the task starts, if it does
+    needs_rejuvs = False  # a dry rejuv stash swaps this task for LK refill runs (bot/supplies.py)
 
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg

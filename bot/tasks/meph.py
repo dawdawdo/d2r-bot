@@ -33,6 +33,7 @@ class Mephisto(Task):
     name = "meph"
     act = 3
     enter_wp = "wp_durance_2"
+    needs_rejuvs = True
 
     def __init__(self, cfg: dict) -> None:
         super().__init__(cfg)

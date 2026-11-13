@@ -236,7 +236,7 @@ def main() -> int:
     control.set_sticky(mf=mf_info and {**mf_info, "low": mf_low,
                                        "min": {n: cfg["mf"]["min"][n] for n in mf_low}})
     lk_ready = any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
-    has_boss = any(t.name != "lk" for t in tasks)
+    has_boss = any(t.needs_rejuvs for t in tasks)  # Meph; the tunnels run even with a dry stash (Stephen's priority, 2026-11-13)
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
     supplies.new_session()
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
