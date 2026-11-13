@@ -86,7 +86,7 @@ def main() -> int:
                 bot.deadline = bot.clock() + 300
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save,
                                       here=in_lost_city, goal="ancient_tunnels",
-                                      pre_scan=lambda: safe_to_scan(bot))
+                                      pre_scan=lambda: safe_to_scan(bot), rescan=True)
             except BotError as e:
                 print(f"game {n + 1}: {e}", flush=True)
             finally:

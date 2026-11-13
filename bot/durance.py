@@ -646,10 +646,11 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
 
 
 def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops: int = 60,
-                 save=lambda: None, here=None, goal: str = "durance_3", pre_scan=None) -> str:
+                 save=lambda: None, here=None, goal: str = "durance_3", pre_scan=None, rescan: bool = False) -> str:
     """One game of stairs hunting from the waypoint. Returns why it stopped: "warp" (took an exit),
     "hops", "done" (no frontier left). BotError (fix lost, safety) propagates."""
     walker = Walker(bot, odo, g, folder, save, pre_scan=pre_scan)
+    skipped: list = []
     walker.arrive()
     while walker.hops < max_hops:
         todo = [w for w in g.warps if w.get("dest") is None]
@@ -661,13 +662,19 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
                 return "warp"
             continue
         targets = frontier(odo, g)
+        if rescan:  # stops passed without a scan (struck, low life) are targets too
+            targets += [s["pos"] for s in g.stops if scan_due(g, s["pos"])
+                        and not any(math.dist(s["pos"], f) < 150 for f in g.failed + skipped)]
         if not targets:
             return "done"
         target = min(targets, key=lambda t: math.dist(t, odo.pos))
         log.info("frontier: %d targets; going to %s (%d px)", len(targets), [round(v) for v in target],
                  math.dist(target, odo.pos))
+        hops0 = walker.hops
         if not walker.go(target):
             g.failed.append([float(target[0]), float(target[1])])
+        elif walker.hops == hops0:  # already there and still not scanned (pre_scan said no): not again this game
+            skipped.append([float(target[0]), float(target[1])])
         save()
     return "hops"
 
