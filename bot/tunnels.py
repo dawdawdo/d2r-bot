@@ -174,6 +174,8 @@ def loot_here(bot) -> list[str]:
     if automap_shown(bot.capture.grab()):
         bot.press("tab")
         bot.kill.sleep(0.25)
+    bot.input.move(1270, 590)  # park the cursor: resting on an urn, its hover name read as a white label (2026-11-13)
+    bot.kill.sleep(0.15)
     bot.frame = bot.capture.grab()
     picked = loot(bot, max_picks=12)  # gold piles split into amount + word read as white "gem" labels and use picks up (gold is welcome: merc revives)
     ensure_automap(bot)
