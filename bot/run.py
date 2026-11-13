@@ -142,6 +142,11 @@ def a2_start_ok(bot: Controller, cfg: dict, tasks, vendor: bool) -> bool:
         return False
     if state.load().get("gold_needed") or needs_heal(bot) or not merc_alive(bot):
         return False
+    from .tasks.tunnels import empty_columns
+
+    if empty_columns(bot) >= 2:  # half the belt gone: Act 3 for healing potions at Ormus (bot/tasks/tunnels.py)
+        log.info("Act 2 spawn: %d empty belt columns -> Act 3 for potions", empty_columns(bot))
+        return False
     n = free_cells(bot)
     ok = n >= A2_MIN_FREE
     log.info("Act 2 spawn: %d free inventory cells -> %s", n, "straight to the Lost City" if ok else "Act 3 first (stash)")

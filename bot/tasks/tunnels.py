@@ -14,6 +14,13 @@ from . import Task
 log = logging.getLogger(__name__)
 
 
+def empty_columns(bot: Controller) -> int:
+    """Belt columns with no potion (the visible bottom row reads empty)."""
+    from ..vision.orbs import belt_kinds
+
+    return sum(k is None for k in belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]))
+
+
 class AncientTunnels(Task):
     name = "tunnels"
     act = 3
@@ -30,6 +37,18 @@ class AncientTunnels(Task):
         from ..town import act4_to, cast_warcries, town_to_wp
         from ..tunnels import to_tunnels
 
+        bot.keep_vendor_potions = True  # restock_belt must not drink the healing potions bought for this task
+        if not chained and getattr(bot, "act", 3) == 3 and empty_columns(bot) >= 1:
+            from ..lifecycle import create_game, save_and_exit
+            from ..town import buy_mana_at_ormus
+
+            # healing potions into the empty belt columns (Stephen 2026-11-13; the rejuv stash is dry). The walk
+            # to Ormus leaves her far from the waypoint: fresh game after, as Meph's mana stop does
+            log.info("tunnels: %d empty belt columns -> healing potions at Ormus", empty_columns(bot))
+            buy_mana_at_ormus(bot, fill="healing")
+            save_and_exit(bot)
+            create_game(bot, self.cfg["game"]["difficulty"])
+            bot.wait_for("in_game", 10)
         if not chained:
             if getattr(bot, "act", 3) == 2:
                 from ..town import act2_to

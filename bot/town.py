@@ -420,8 +420,10 @@ def belt_ready(bot: Controller) -> bool:
     return None not in kinds and any(k in ("hp", "rejuv") for k in kinds)
 
 
-def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
+def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") -> bool:
     """Meph runs only (Stephen 2026-10-30: potions may be bought for Meph; LK stays chest rejuvs only).
+    fill="healing": every empty belt column gets healing potions instead (Ancient Tunnels, Stephen 2026-11-13: buy
+    them, but never into the stash: only shift-buys into empty columns, no extra that would land in the inventory).
     Walk to Ormus, Trade (opens on Misc), shift+right-click his best mana potion (bottom of the right
     column) until the 4 visible belt slots hold a potion. Mana = Energy Shield: answers Wyand's Mana Burn.
     Leaves her near Ormus: the caller starts a new game. True if the belt reads full."""
@@ -462,12 +464,18 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8) -> bool:
         # Shift+right-click fills every empty belt column with that potion (live 2026-11-01: 4 x red).
         # So: one red (plain right-click) claims the first empty column, shift-blue fills the rest,
         # shift-red tops up the red column. Belt = 1 column red (life), 3 blue (mana = the shield).
-        if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
-            buy(o["healing_potion"], shift=False)
-        for i in range(3):
-            if None not in kinds():
-                break
-            buy(o["mana_potion"])
+        if fill == "healing":
+            for i in range(3):
+                if None not in kinds():
+                    break
+                buy(o["healing_potion"])
+        else:
+            if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
+                buy(o["healing_potion"], shift=False)
+            for i in range(3):
+                if None not in kinds():
+                    break
+                buy(o["mana_potion"])
         # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
         # 2026-11-02: healing + mana potions piling up on shared page 1)
         ok = None not in kinds()
@@ -897,8 +905,8 @@ def restock_belt(bot: Controller) -> int:
 
     scfg = bot.cfg["stash"]
     belt = bot.cfg["vision"]["belt"]
-    if not bot.cfg.get("meph", {}).get("buy_mana"):
-        drink_vendor_potions(bot)
+    if not bot.cfg.get("meph", {}).get("buy_mana") and not getattr(bot, "keep_vendor_potions", False):
+        drink_vendor_potions(bot)  # the tunnels keep their bought healing potions (Stephen 2026-11-13)
     bot.observe()
     if all(belt_slots(bot.frame, belt)):
         return 0
