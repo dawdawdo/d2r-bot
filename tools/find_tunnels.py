@@ -42,26 +42,61 @@ SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3)
 QUIET_HP = 60
 
 
-# Game 6: 28 points lost per scan near (-400, -1000) and a chicken at the next stop. Blizzard what moves near her
-# first (nav.fight, as in LK), and a lower chicken for this tool only (Stephen: deaths are fine here).
+# Game 6-8: fighting first (nav.fight) made it worse: it casts at the biggest moving blob, often her merc, while
+# she stands in the pack. Now: no fight; struck during a scan -> two hops away from whatever moves near her.
 NEAR = 350
 
 
 def safe_to_scan(bot) -> bool:
-    import math
-
-    from bot.nav import CENTER, fight, movers
-
     bot.check()
     if (bot.hp or 100) < QUIET_HP:
         print(f"  no scan: HP {bot.hp:.0f}%", flush=True)
         return False
-    if any(math.dist(m[:2], CENTER) < NEAR for m in movers(bot, min_area=600)):
-        fight(bot, max_casts=4)
-        if (bot.hp or 100) < QUIET_HP:
-            print(f"  no scan after the fight: HP {bot.hp:.0f}%", flush=True)
-            return False
     return True
+
+
+def evade(bot, odo) -> None:
+    """Two hops away from the movers near her (or straight back toward the waypoint if none are seen)."""
+    import math
+
+    import numpy as np
+
+    from bot.nav import CENTER, hop
+    from bot import durance
+
+    m = [t for t in durance_movers(bot) if math.dist(t[:2], CENTER) < 2 * NEAR]
+    if m:
+        c = np.mean([t[:2] for t in m], axis=0) - CENTER
+    else:
+        c = odo.pos.copy()  # away from the waypoint side = toward it is -pos; "away from threat" unknown: go home
+    d = -c / max(np.hypot(*c), 1e-6) * 300
+    for _ in range(2):
+        before = odo.pos.copy()
+        hop(bot, odo, *d)
+        if odo.lost:
+            odo.relocate(bot.capture.grab(), [before])
+    print(f"  evaded {len(m)} movers -> {odo.pos.round().tolist()} (HP {bot.hp:.0f}%)", flush=True)
+
+
+def durance_movers(bot):
+    from bot.nav import movers
+
+    return movers(bot, min_area=600)
+
+
+def patch_scan(bot) -> None:
+    from bot import durance
+
+    raw = durance.scan_warps
+
+    def scan(bot_, odo, g, stop, folder):
+        hp0 = bot_.hp or 100
+        n = raw(bot_, odo, g, stop, folder)
+        if (bot_.hp or 100) < hp0 - durance.SCAN["abort_hp"]:
+            evade(bot_, odo)
+        return n
+
+    durance.scan_warps = scan
 
 
 def main() -> int:
@@ -75,6 +110,7 @@ def main() -> int:
     s = start_session()  # backs up saves
     cfg = s.cfg
     cfg["safety"].update(chicken_hp_pct=35, potion_hp_pct=60)
+    patch_scan(None)
     folder = ROOT / "maps" / cfg["game"]["route"] / "lost_city_auto"
     if args.fresh and folder.exists():
         shutil.move(str(folder), str(folder.with_name(folder.name + "_old")))
@@ -89,7 +125,7 @@ def main() -> int:
             result = "error"
             odo = None
             try:
-                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest="wp_lost_city")
+                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest="wp_lost_city", merc=True)
                 from bot.town import cast_warcries
 
                 cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it

@@ -355,7 +355,7 @@ DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and 
 DURANCE_MANA = 60
 
 
-def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_2") -> None:
+def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_2", merc: bool = False) -> None:
     """New Hell game -> (heal at Ormus if hurt: life carries over between games; with buy_mana also
     fill the belt with his mana potions, which heals too) -> WP `dest` (Durance 2; the Lost City for Ancient Tunnels)."""
     from .controller import BotError
@@ -379,7 +379,7 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
         act = 3
     # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
     hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
-    if buy_mana and not merc_alive(bot):  # Meph: the merc is a second target for his lightning
+    if (buy_mana or merc) and not merc_alive(bot):  # Meph: a second target for his lightning; AT: his Insight
         say("merc dead -> Asheara, fresh game")
         if act == 4:
             restart_in_act3(bot)
