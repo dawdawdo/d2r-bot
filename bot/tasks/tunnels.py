@@ -67,6 +67,7 @@ class AncientTunnels(Task):
         bot.wait_still(timeout=3)
         bot.deadline = bot.clock() + self.cfg.get("tunnels", {}).get("timeout_s", 420)
         cast_warcries(bot)
+        bot.cries_at = bot.clock()  # the farm loop refreshes from here (the trap door takes ~20 s)
         to_tunnels(bot)
 
     def farm(self, bot: Controller) -> dict:

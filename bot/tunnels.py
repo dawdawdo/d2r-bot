@@ -279,13 +279,15 @@ def _farm(bot, timeout_s: float) -> dict:
     try:
         from .town import cast_warcries
 
-        refresh = bot.cfg["hotkeys"].get("warcry_refresh_s", 75)
-        last_cries = bot.clock()  # cast on arrival in the Lost City
+        # 60 s, from the real cast: 2026-11-13 19:55 BO lapsed (life max 507 -> 345) 95 s after the cast, mid-fight,
+        # because the 75 s count started inside the tunnels, ~20 s after the cast at the Lost City waypoint
+        refresh = min(60, bot.cfg["hotkeys"].get("warcry_refresh_s", 75))
+        last_cries = getattr(bot, "cries_at", None) or bot.clock()
         calm = True
         while bot.clock() < end:
             if bot.clock() - last_cries > refresh:
                 cast_warcries(bot)
-                last_cries = bot.clock()
+                last_cries = bot.cries_at = bot.clock()
             if (bot.mp or 100) < LEAVE_MP:
                 log.warning("tunnels: MP %.0f%%: ending the run", bot.mp)
                 break
