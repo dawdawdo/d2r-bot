@@ -168,6 +168,15 @@ def save_and_exit(bot: Controller) -> None:
         log.warning("died: dismissing the death screen before save & exit")
         bot.press("esc")
         bot.sleep(1.0)
+        if bot.observe() == "esc_menu":
+            # alive after all: a nearly empty orb (27 of 345 life, 2026-11-14 06:57) reads as 0-1 %. That Esc opened the
+            # game menu; the old path then toggled it shut and "Save and Exit" landed on the waypoint she stood on
+            log.info("not dead (the Esc opened the game menu): saving & exiting")
+            bot.died_on_exit = False
+            bot.click_ui("save_and_exit")
+            bot.wait_for("main_menu", T_LOAD)
+            log.info("back at main menu")
+            return
         _wait_out_loading(bot)
     for tries in range(2):
         for attempt in range(3):
