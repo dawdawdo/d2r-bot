@@ -192,11 +192,11 @@ def evade(bot, odo, m, walker=None, visited=()) -> None:
 
 
 def map_open(frame) -> bool:
-    """Automap open inside the tunnels? The area name (top right) shows only then: edge match 0.99 vs ~0.4. Line-pixel
-    counts misled here (2026-11-13 15:05: poison effects + lit stone = 11.4k "line" px with the map off)."""
-    from .durance import area_is
+    """Automap open? The area info block (top right) shows only then (durance.map_text_open: any area). Line-pixel
+    counts misled in the tunnels (2026-11-13 15:05: poison effects + lit stone = 11.4k "line" px with the map off)."""
+    from .durance import map_text_open
 
-    return area_is(frame, "ancient_tunnels")
+    return map_text_open(frame)
 
 
 def ensure_map(bot):
@@ -237,7 +237,10 @@ def tour_targets(g, visited: list, pos) -> list:
             if all(math.dist(s["pos"], v) >= TOUR_SPACING for v in visited)]
 
 
-def farm_tunnels(bot, timeout_s: float = 240) -> dict:
+FARM = {"style": "tunnel", "folder": None}  # per call: the area's automap style and map folder (farm_tunnels args)
+
+
+def farm_tunnels(bot, timeout_s: float = 240, style: str = "tunnel", folder: Path | None = None) -> dict:
     """Inside the tunnels: explore / tour, fight, loot until the time is up or nothing is left to visit."""
     import math
 
@@ -254,6 +257,7 @@ def farm_tunnels(bot, timeout_s: float = 240) -> dict:
     chicken0 = safety["chicken_hp_pct"]
     if not any(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
         safety["chicken_hp_pct"] = max(chicken0, DRY_CHICKEN)
+    FARM.update(style=style, folder=folder)
     try:
         return _farm(bot, timeout_s)
     finally:
@@ -265,8 +269,8 @@ def _farm(bot, timeout_s: float) -> dict:
 
     from .durance import AutomapOdometer, StopGraph, Walker, frontier, use_style
 
-    use_style("tunnel")
-    fold = tunnels_folder(bot.cfg)
+    use_style(FARM["style"])
+    fold = FARM["folder"] or tunnels_folder(bot.cfg)
     fold.mkdir(parents=True, exist_ok=True)
     odo = AutomapOdometer.load(fold, ensure_map(bot))
     g = StopGraph.load(fold / "graph.json")
