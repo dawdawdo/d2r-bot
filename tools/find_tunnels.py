@@ -1,4 +1,6 @@
-"""Find the Ancient Tunnels entrance in the Lost City, by the bot alone (the Durance stairs finder,
+"""Find a level entrance from a waypoint, by the bot alone (first the Ancient Tunnels in the Lost City; the Pit:
+  python tools/find_tunnels.py --dest wp_black_marsh --style gray --areas black_marsh --outdoor-any --folder pit_auto --goal pit_level_1)
+Originally: find the Ancient Tunnels entrance in the Lost City (the Durance stairs finder,
 bot/durance.py, with the red automap style and Lost City area checks).
 
   python tools/find_tunnels.py --games 5 --hops 60 [--fresh]
@@ -26,11 +28,20 @@ from bot.session import start_session  # noqa: E402
 from bot.vision.screen import ScreenClassifier  # noqa: E402
 
 
+AREAS = ["lost_city"]  # area templates that mean "still searching" (--areas)
+OUTDOOR_ANY = [False]  # --outdoor-any: an unknown area name with this style's automap showing counts too (Black Marsh ->
+                       # Tamoe Highland is an open border; the Pit itself is a cave with another automap)
+
+
 def in_lost_city(bot) -> bool:
+    """Still in the searched area(s)? (The name stayed from the Lost City search; now any --areas.)"""
     try:
-        return area_is(ensure_automap(bot), "lost_city")
-    except BotError:  # no red automap: somewhere else (2026-11-13 10:16: inside the tunnels, tan automap)
+        f = ensure_automap(bot)
+    except BotError:  # this style's automap doesn't show: somewhere else (2026-11-13 10:16: inside the tunnels, tan)
         return False
+    if any(area_is(f, a) for a in AREAS):
+        return True
+    return OUTDOOR_ANY[0]
 
 
 # 2026-11-13 game 1: a poison pack took her 100 -> 18 % in ~4 s during a 25 s scan at the 3rd stop. Now:
@@ -109,14 +120,25 @@ def main() -> int:
     ap.add_argument("--hops", type=int, default=60)
     ap.add_argument("--fresh", action="store_true", help="forget the stored search (map changed)")
     ap.add_argument("--toward", choices=sorted(DIRS), help="search that way first (a hint, e.g. nw)")
+    ap.add_argument("--dest", default="wp_lost_city", help="waypoint to start from (config ui point)")
+    ap.add_argument("--style", default="red", help="automap style there (durance.use_style)")
+    ap.add_argument("--areas", default="lost_city", help="comma list of area templates that count as still searching")
+    ap.add_argument("--outdoor-any", action="store_true", help="unknown area names with this automap count as searching")
+    ap.add_argument("--folder", default="lost_city_auto", help="search state folder under maps/<route>/")
+    ap.add_argument("--goal", default="ancient_tunnels", help="area template of the place we're looking for")
+    ap.add_argument("--min-w", type=int, default=88, help="tooltip width band (px) worth visiting; Trap Door ~108")
+    ap.add_argument("--max-w", type=int, default=128)
     args = ap.parse_args()
+    SCAN.update(min_w=args.min_w, max_w=args.max_w)
+    AREAS[:] = args.areas.split(",")
+    OUTDOOR_ANY[0] = args.outdoor_any
 
-    use_style("red")
+    use_style(args.style)
     s = start_session()  # backs up saves
     cfg = s.cfg
     cfg["safety"].update(chicken_hp_pct=35, potion_hp_pct=60)
     patch_scan(None)
-    folder = ROOT / "maps" / cfg["game"]["route"] / "lost_city_auto"
+    folder = ROOT / "maps" / cfg["game"]["route"] / args.folder
     if args.fresh and folder.exists():
         shutil.move(str(folder), str(folder.with_name(folder.name + "_old")))
     (folder / "thumbs").mkdir(parents=True, exist_ok=True)
@@ -130,7 +152,7 @@ def main() -> int:
             result = "error"
             odo = None
             try:
-                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest="wp_lost_city", merc=True)
+                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest=args.dest, merc=True)
                 from bot.town import cast_warcries
 
                 cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it
@@ -144,7 +166,7 @@ def main() -> int:
 
                 bot.deadline = bot.clock() + 300
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save,
-                                      here=in_lost_city, goal="ancient_tunnels",
+                                      here=in_lost_city, goal=args.goal,
                                       pre_scan=lambda: safe_to_scan(bot), rescan=True,
                                       toward=DIRS.get(args.toward))
             except BotError as e:

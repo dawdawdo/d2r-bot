@@ -70,6 +70,10 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
     if STYLE["name"] == "red":
         m = (((h <= 8) | (h >= 170)) & (s >= 130) & (v >= 80)).astype(np.uint8)
+    elif STYLE["name"] == "gray":  # Act 1 outdoors (Black Marsh, Tamoe Highland): gray stone strokes (S 3-21, V 88-108) on
+        # green grass (S 35-48); thick gray blobs are rocks and the waypoint, not map lines (2026-11-14 probe: 9.8k vs <= 3.1k)
+        m = ((s <= 25) & (v >= 75) & (v <= 160)).astype(np.uint8)
+        m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8)), np.ones((7, 7), np.uint8))
     elif STYLE["name"] == "tunnel":  # Ancient Tunnels: darker, less saturated lines (sampled H 17-21, S 85-118,
         # V 72-115); the "tan" band caught the torch-lit stone instead (S ~140, V ~121) and odometry jumped 4000 px
         m = ((h >= 16) & (h <= 23) & (s >= 75) & (s <= 122) & (v >= 65) & (v <= 120)).astype(np.uint8)
@@ -87,7 +91,7 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     return out
 
 
-SHOWN_MIN = {"tunnel": 10000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
+SHOWN_MIN = {"tunnel": 10000, "gray": 6000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
 
 
 def automap_shown(frame: np.ndarray) -> bool:
