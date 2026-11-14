@@ -1,7 +1,14 @@
 # Progress
 
-**Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Pit task running (Archon Plates, 4+); tunnels and LK as fallbacks. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-14 13:35: Pit task runs (entrance found by the bot).** `--tasks pit`: Outer Cloister WP -> lead-in "-340,200,10;0,290,5" (Monastery
+Gate -> Tamoe Highland) -> entrance warp in maps/<route>/pit_tamoe2 ("To The Pit Level 1", 188 px, world (-3018, 1263)) -> Level 1 with
+tunnels.farm_tunnels(style="gray", folder=pit_auto). maps/<route>/pit_auto/route.json makes it ready. ~90 s to inside, 2/2 entries.
+Supervisor on pit since 13:32; LK ran 09:55-13:10 at ~87 % clean (95 ok / 12 chicken / 2 fail). Verdungo's -> ThroatCutter (Plan; Stephen
+moves it). **Next:** measure Pit clean rate (Stephen: < 50 % -> LK; tunnels were ~21 %); Charsi armor-tab check; Act 1 spawn shortcut
+(Pit.a1_start is set but run.py doesn't use it yet: games go via Act 3); Pit Level 2 (stairs not searched).
 
 **2026-11-14 09:50: Pit entrance NOT found yet; LK running as the fallback (Claude's usage limit reached, session stopped here).**
 Tried: probes S, E, W from the Tamoe entry (walls/woods, no cave: maps/<route>/hop_probe/*/sheet.jpg); searches pit_tamoe (72 stops,
