@@ -3,6 +3,15 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-14 07:20: overnight tunnels.** ~60 runs 23:12-07:20, mostly chickens, 8 real deaths (gear always recovered: corpse pickup
+at the next spawn works; a mid-cycle backup shows her naked with a corpse, that's normal). No Archon Plate. Big-pack evasion (21:50) was
+wrong: nav.movers counts effects, it fired at full HP every stop -> OFF (BIG_PACK 999). **Exit bug fixed (stuck 06:17-07:00):** at ~8 %
+life the orb reads as dead, the "dismiss death screen" Esc opened the game menu, the next Esc shut it, and "Save and Exit" clicked the
+Kurast Docks waypoint she stood on (wp_menu loop). Now: that Esc opening the menu = alive -> save & exit; an open WP panel is closed
+first; ensure_main_menu Escs a WP panel. Supervisor restarted 07:01 (pid 117428, same autostart command) to reset its backoff.
+**Decision for Stephen:** AT stays ~45 % clean with ~1 death per 8 runs; Pit route (same per-kill odds, weaker monsters) is the
+remaining lever; vendors measured out.
+
 **2026-11-13 22:50: where white Archon Plates can come from (math on D2R tables, blizzhackers/d2data; scratch calc).**
 Per regular kill at /players 7: AT ~1 in 4,200, Pit ~1 in 4,400. Champions/uniques and Mephisto: never (their TCs force magic+).
 No white->exceptional/elite cube upgrade in D2R (only unique/rare/set). Vendors: no vendor stocks utp; only a Hell elite roll on
