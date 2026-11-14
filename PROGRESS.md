@@ -3,6 +3,15 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-13 22:50: where white Archon Plates can come from (math on D2R tables, blizzhackers/d2data; scratch calc).**
+Per regular kill at /players 7: AT ~1 in 4,200, Pit ~1 in 4,400. Champions/uniques and Mephisto: never (their TCs force magic+).
+No white->exceptional/elite cube upgrade in D2R (only unique/rare/set). Vendors: no vendor stocks utp; only a Hell elite roll on
+Light Plate stock (Elzix, Charsi always 1 Studded Leather -> Light Plate; Jamella/Anya sometimes) could make one. Measured
+(tools/vendor_probe.py, 6 games Hratli): ~30 armor items, all magic + normal tier, 0 elite -> vendors not worth building.
+Estimate: AT ~14-29 h per white plate at the current kill rate, Pit maybe 8-14 h (needs a route). The socket recipe rolls 1-4
+(assumed uniform): ~4 white plates per 4-socket one. Stephen: any socketed Archon Plate is fine to keep.
+Belt: big packs (10+ movers) now evaded instead of fought (21:50).
+
 **2026-11-13 20:50: tunnels potions + evening fixes.** Clean runs fell from ~75 % (12-14 h) to ~20 % (18-19 h): the rejuv belt ran dry
 at 14:28 (main cause), plus my bugs (struck-rule change, reverted; a chicken swallowed as "fix lost"; BO refresh counted from the
 farm start so BO lapsed mid-fight, 507 -> 345 life). runs.csv records picks only for clean runs, so chicken-heavy hours look lootless.
