@@ -70,7 +70,7 @@ def protected_cells(rects) -> set[tuple[int, int]]:
     return {(c + i, r + j) for c, r, w, h in rects for i in range(w) for j in range(h)}
 
 
-POTION_PX = 0.10  # share of strongly red (or blue) pixels: 8 healing potions read 0.12, every other item <= 0.07 (2026-11-13)
+POTION_PX = 0.08  # share of strongly red or blue pixels: healing potions read 0.12-0.13, mana 0.10 (missed at 0.10 on 11-13), other unprotected items <= 0.07
 
 
 def potion_kind(frame: np.ndarray, c: int, r: int) -> str | None:
