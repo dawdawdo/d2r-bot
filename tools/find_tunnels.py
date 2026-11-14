@@ -54,7 +54,7 @@ def in_lost_city(bot) -> bool:
 # durance.is_junk (labels already found to lead nowhere are skipped). "Ancient Tunnels" (~170) once it's open.
 SCAN.update(dx=120, dy=80, abort_hp=4, abort_mp=8, min_w=88, max_w=128, every=3, precise=True)
 QUIET_HP = 60
-DIRS = {"n": (0, -1), "ne": (1, -1), "e": (1, 0), "se": (1, 1), "s": (0, 1), "sw": (-1, 1), "w": (-1, 0), "nw": (-1, -1)}
+DIRS = {"n": (0, -1), "ne": (1, -1), "e": (1, 0), "se": (1, 1), "s": (0, 1), "sw": (-1, 1), "ssw": (-0.6, 1), "w": (-1, 0), "nw": (-1, -1)}  # ssw: the Pit from the Outer Cloister (Stephen 2026-11-14)
 
 
 # Game 6-8: fighting first (nav.fight) made it worse: it casts at the biggest moving blob, often her merc, while
