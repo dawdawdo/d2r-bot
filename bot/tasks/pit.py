@@ -49,6 +49,9 @@ class Pit(Task):
             raise BotError("the Pit route isn't built yet")
         bot.keep_vendor_potions = True
         if not chained:
+            from .tunnels import potion_stop
+
+            potion_stop(bot, self.cfg)  # 2026-11-14: 10 of 13 Pit runs chickened on an empty belt (60 % dry threshold)
             act = getattr(bot, "act", 3)
             if act == 1:
                 act1_to(bot, r["dest"])

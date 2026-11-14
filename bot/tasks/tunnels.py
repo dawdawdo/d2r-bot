@@ -21,6 +21,33 @@ def empty_columns(bot: Controller) -> int:
     return sum(k is None for k in belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]))
 
 
+def potion_stop(bot: Controller, cfg: dict) -> None:
+    """In Act 3 with an empty belt column: healing + mana potions at Ormus into the belt (Stephen 2026-11-13: belt only,
+    never the stash; 2 healing + 2 mana), then a fresh game (the walk to Ormus ends far from the waypoint). Used by the
+    tunnels and the Pit."""
+    if getattr(bot, "act", 3) != 3 or empty_columns(bot) < 1:
+        return
+    from .. import state
+    from ..lifecycle import create_game, save_and_exit
+    from ..town import buy_mana_at_ormus
+
+    log.info("%d empty belt columns -> healing + mana potions at Ormus", empty_columns(bot))
+    for attempt in range(3):  # he wanders: 4 of 5 walks missed him on 2026-11-13 evening; retry in fresh games
+        ok = buy_mana_at_ormus(bot, fill="mixed")
+        missed = getattr(bot, "ormus_missed", False)
+        if not ok and not missed and empty_columns(bot) >= 4:
+            # nothing bought though he was found: no gold on her (2026-11-13 18:59, deaths took it).
+            # town_to_wp withdraws from the shared stash when this is set; the next game's stop buys
+            log.warning("no potions bought (no gold?): withdrawing from the stash this game")
+            state.save({**state.load(), "gold_needed": True})
+        save_and_exit(bot)
+        create_game(bot, cfg["game"]["difficulty"])
+        bot.wait_for("in_game", 10)
+        if not missed:
+            break
+        log.info("Ormus missed (attempt %d)", attempt + 1)
+
+
 class AncientTunnels(Task):
     name = "tunnels"
     act = 3
@@ -38,29 +65,8 @@ class AncientTunnels(Task):
         from ..tunnels import to_tunnels
 
         bot.keep_vendor_potions = True  # restock_belt must not drink the healing potions bought for this task
-        if not chained and getattr(bot, "act", 3) == 3 and empty_columns(bot) >= 1:
-            from ..lifecycle import create_game, save_and_exit
-            from ..town import buy_mana_at_ormus
-
-            # healing potions into the empty belt columns (Stephen 2026-11-13; the rejuv stash is dry). The walk
-            # to Ormus leaves her far from the waypoint: fresh game after, as Meph's mana stop does
-            log.info("tunnels: %d empty belt columns -> healing + mana potions at Ormus", empty_columns(bot))
-            for attempt in range(3):  # he wanders: 4 of 5 walks missed him on 2026-11-13 evening; retry in fresh games
-                ok = buy_mana_at_ormus(bot, fill="mixed")
-                missed = getattr(bot, "ormus_missed", False)
-                if not ok and not missed and empty_columns(bot) >= 4:
-                    from .. import state
-
-                    # nothing bought though he was found: no gold on her (2026-11-13 18:59, deaths took it).
-                    # town_to_wp withdraws from the shared stash when this is set; the next game's stop buys
-                    log.warning("tunnels: no potions bought (no gold?): withdrawing from the stash this game")
-                    state.save({**state.load(), "gold_needed": True})
-                save_and_exit(bot)
-                create_game(bot, self.cfg["game"]["difficulty"])
-                bot.wait_for("in_game", 10)
-                if not missed:
-                    break
-                log.info("tunnels: Ormus missed (attempt %d)", attempt + 1)
+        if not chained:
+            potion_stop(bot, self.cfg)
         if not chained:
             if getattr(bot, "act", 3) == 2:
                 from ..town import act2_to
