@@ -52,8 +52,9 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             recover_corpse(bot)
         ensure_main_weapons(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
-        a2 = bot.act == 2 and tasks and all(getattr(t, "a2_start", False) for t in tasks)
-        if a2 and a2_start_ok(bot, cfg, tasks, repair or buy_keys):
+        flag = {1: "a1_start", 2: "a2_start"}.get(bot.act)  # the Pit's games end in Act 1, the tunnels' in Act 2
+        a2 = bool(flag) and tasks and all(getattr(t, flag, False) for t in tasks)
+        if a2 and a2_start_ok(bot, cfg, tasks, repair or buy_keys, flag):
             stow = False  # room enough: the stash waits for a game that starts in Act 3
         elif leave_other_act(bot, bot.act):  # Stephen's own game ended in Act 1 or 2 (or the tunnels' did)
             bot.act = spawn_act(bot)
@@ -132,13 +133,13 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
 
 
-def a2_start_ok(bot: Controller, cfg: dict, tasks, vendor: bool) -> bool:
+def a2_start_ok(bot: Controller, cfg: dict, tasks, vendor: bool, flag: str = "a2_start") -> bool:
     """Spawned in Lut Gholein: can the game go straight to its tasks from the Act 2 waypoint? Only tasks that start
     there (Task.a2_start: the tunnels), and only with no Act 3 business: room in the inventory, merc up, no heal,
     vendor or gold trip due."""
     from .town import free_cells
 
-    if not tasks or not all(getattr(t, "a2_start", False) for t in tasks) or vendor:
+    if not tasks or not all(getattr(t, flag, False) for t in tasks) or vendor:
         return False
     if state.load().get("gold_needed") or needs_heal(bot) or not merc_alive(bot):
         return False
@@ -149,7 +150,7 @@ def a2_start_ok(bot: Controller, cfg: dict, tasks, vendor: bool) -> bool:
         return False
     n = free_cells(bot)
     ok = n >= A2_MIN_FREE
-    log.info("Act 2 spawn: %d free inventory cells -> %s", n, "straight to the Lost City" if ok else "Act 3 first (stash)")
+    log.info("Act %s spawn: %d free inventory cells -> %s", flag[1], n, "straight to the task" if ok else "Act 3 first (stash)")
     return ok
 
 
