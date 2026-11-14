@@ -1388,7 +1388,7 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
     town_to_wp(bot, "wp_lower_kurast", "area_lower_kurast.png", arrived_check, stow)
 
 
-WP_TAB = {"wp_lost_city": "wp_tab_act2"}  # ui points not on the Act III tab -> the tab to click first
+WP_TAB = {"wp_lost_city": "wp_tab_act2", "wp_black_marsh": "wp_tab_act1", "wp_outer_cloister": "wp_tab_act1"}  # ui points not on the Act III tab -> the tab to click first
 
 
 def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None, stow: bool = False) -> None:

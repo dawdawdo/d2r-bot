@@ -32,10 +32,12 @@ SQUARE = [(300, 0), (0, 200), (-300, 0), (0, -200)]
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--hops", type=int, default=0)
+    ap.add_argument("--dest", default="wp_lost_city", help="config ui waypoint point (e.g. wp_black_marsh)")
+    ap.add_argument("--name", default="lost_city_probe", help="output folder under maps/<route>/")
     args = ap.parse_args()
     s = start_session()  # backs up saves
     cfg = s.cfg
-    out = ROOT / "maps" / cfg["game"]["route"] / "lost_city_probe"
+    out = ROOT / "maps" / cfg["game"]["route"] / args.name
     out.mkdir(parents=True, exist_ok=True)
     b = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(b.window, b.capture, b.input, ScreenClassifier.from_config(cfg["vision"]["states"]),
@@ -44,13 +46,13 @@ def main() -> int:
     click_ui = bot.click_ui
 
     def spy(name: str) -> None:  # the tab as it looks right before we pick the Lost City
-        if name == "wp_lost_city":
-            cv2.imwrite(str(out / "wp_tab_act2.png"), bot.capture.grab())
+        if name == args.dest:
+            cv2.imwrite(str(out / "wp_tab.png"), bot.capture.grab())
         click_ui(name)
 
     bot.click_ui = spy
     try:
-        to_durance2(bot, say=lambda m: print(m, flush=True), dest="wp_lost_city")
+        to_durance2(bot, say=lambda m: print(m, flush=True), dest=args.dest)
         bot.sleep(2.0)
         f = bot.capture.grab()
         cv2.imwrite(str(out / "arrival.png"), f)

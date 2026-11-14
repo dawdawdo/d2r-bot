@@ -145,7 +145,10 @@ ui:
   wp_tab_act3: [224, 90]       # waypoint panel act tabs (live 2026-10-27); the panel opens on the current act
   wp_tab_act4: [292, 90]
   wp_tab_act2: [156, 90]       # tools/visit_act.py TAB_X (68 px apart)
-  wp_lost_city: [190, 362]     # Act II tab, 6th entry; GUESS from the A3 pitch (48.5 px), verify live (tools/at_probe.py)
+  wp_lost_city: [190, 362]     # Act II tab, 6th entry (verified 2026-11-13)
+  wp_tab_act1: [88, 90]
+  wp_black_marsh: [190, 314]   # Act I tab, 5th entry (same pitch as the other tabs): next to Tamoe Highland (the Pit)
+  wp_outer_cloister: [190, 362]  # Act I tab, 6th entry: Monastery Gate -> Tamoe Highland the other way
   wp_town: [240, 128]          # first entry of a tab = its town (Kurast Docks, Pandemonium Fortress)
   wp_durance_2: [240, 508]     # Act III tab, last entry: Durance of Hate Level 2
   exit_game: [165, 430]        # main menu "Exit Diablo II"
