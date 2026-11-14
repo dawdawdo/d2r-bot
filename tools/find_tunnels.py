@@ -162,11 +162,12 @@ def main() -> int:
                 if args.pre:  # a fixed lead-in (same landings every game from the waypoint arrival)
                     from bot.nav import CENTER, TP_SETTLE, frame_lag, in_play
 
-                    pdx, pdy, pn = (int(v) for v in args.pre.split(","))
-                    pdx, pdy = in_play(pdx, pdy)
-                    for _ in range(pn):
-                        bot.click(int(CENTER[0] + pdx), int(CENTER[1] + pdy), "right", hover=0)
-                        bot.sleep(TP_SETTLE + frame_lag(bot) + 0.15)
+                    for seg in args.pre.split(";"):  # "dx,dy,n;dx,dy,n"
+                        pdx, pdy, pn = (int(v) for v in seg.split(","))
+                        pdx, pdy = in_play(pdx, pdy)
+                        for _ in range(pn):
+                            bot.click(int(CENTER[0] + pdx), int(CENTER[1] + pdy), "right", hover=0)
+                            bot.sleep(TP_SETTLE + frame_lag(bot) + 0.15)
                     bot.sleep(0.6)
                 odo = AutomapOdometer.load(folder, ensure_automap(bot))
                 print(f"game {n + 1}: arrival fix {odo.pos.round().tolist()} (resp {odo.resp:.2f})", flush=True)
