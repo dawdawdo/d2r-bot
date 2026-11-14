@@ -3,6 +3,17 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-13 20:50: tunnels potions + evening fixes.** Clean runs fell from ~75 % (12-14 h) to ~20 % (18-19 h): the rejuv belt ran dry
+at 14:28 (main cause), plus my bugs (struck-rule change, reverted; a chicken swallowed as "fix lost"; BO refresh counted from the
+farm start so BO lapsed mid-fight, 507 -> 345 life). runs.csv records picks only for clean runs, so chicken-heavy hours look lootless.
+Stephen OK'd buying potions for tunnels (belt only, **never the stash**) and picked **2 healing + 2 mana**. Two buy spills stashed 11
+potions on shared page 1 (removed by hand and drunk, 20:10). Now: Ormus stop when the belt has an empty column (Act 2 spawns with 2+ empty
+go via Act 3), plain single buys with a delayed inventory check (stops at the first spill), up to 3 fresh-game retries when Ormus is missed
+(not a gold problem), stowaway drinks inventory potions (`vision.inventory.potion_kind`, 0.08), tunnels keep belt potions (no town
+drinking), a buy that finds him but buys nothing sets gold_needed (0 gold after deaths). War cries every 60 s from the real cast. Empty-belt
+chicken 60 %. First full cycle 20:40 worked: belt hp/mp/hp/mp, the 13th potion drunk at the stash.
+Answered: Monarch off the filter; ThroatCutter BiS steps on the Plan; site task buttons single-choice; DClone = sell an SoJ (SP).
+
 **2026-11-13 15:40: tunnels running unattended, tuning for smooth runs.** Since 11:40 ~35 runs: ~70 % clean; rest chickens + 1 death.
 Finds: Monarch (11:51, now off the filter: Stephen has enough Spirits; Mancatcher stays), Northern Worldstone Shard, flawed gems,
 rejuvs, gold. **No Archon Plate yet.** Added today after the first version: Act 2 spawn shortcut (`run.a2_start_ok`, 12+ free cells:
