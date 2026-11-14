@@ -3,6 +3,15 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-14 08:45: Pit in progress (Stephen away ~8 h, said: keep going, cache questions).** Plan: `pit` task + Charsi armor-tab check
+per Pit game (buy socketed or white Archon Plates). Done: Act I WP points (Black Marsh, Outer Cloister verified), open_a1_wp / act1_to,
+"gray" automap style, area templates black_marsh / tamoe_highland, automap_shown also by the "Difficulty: Hell" text
+(automap_difficulty_text.png; NOT difficulty_hell.png = the Hell button), find_tunnels generalized (--dest/--style/--areas/--goal/
+--pre/--min-w), tools/hop_probe.py. Route so far: Outer Cloister WP, 12 teleports (-340, 200) through the Monastery Gate into Tamoe
+Highland (Stephen's hint: Pit is SW of the Outer Cloister, more S than W), then search SSW (maps/<route>/pit_tamoe). Site has a Pit
+button; not-ready tasks run LK. If the Pit stalls: run tunnels or LK meanwhile.
+**Open questions for Stephen (non-blocking):** (1) Verdungo's in shared tab 2: Blizzaga or ThroatCutter?
+
 **2026-11-14 07:20: overnight tunnels.** 67 runs 23:12-07:20: 14 ok, 38 chicken, 11 "died" (~8 real, 3 the exit bug), 4 fail (gear always recovered: corpse pickup
 at the next spawn works; a mid-cycle backup shows her naked with a corpse, that's normal). No Archon Plate. Big-pack evasion (21:50) was
 wrong: nav.movers counts effects, it fired at full HP every stop -> OFF (BIG_PACK 999). **Exit bug fixed (stuck 06:17-07:00):** at ~8 %
