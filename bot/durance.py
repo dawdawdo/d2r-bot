@@ -99,7 +99,7 @@ def map_text_open(frame: np.ndarray) -> bool:
     everywhere: edge match 0.95-1.0 open, 0.12-0.17 closed (Black Marsh, Lost City, tunnels, Outer Cloister, 2026-11-14)."""
     from .vision.screen import ASSETS
 
-    t = _area_tmpl(ASSETS / "difficulty_hell.png")
+    t = _area_tmpl(ASSETS / "automap_difficulty_text.png")  # not difficulty_hell.png: that is the Hell button
     return float(cv2.matchTemplate(_lap(frame[20:110, 1000:1280]), _lap(t), cv2.TM_CCOEFF_NORMED).max()) >= 0.8
 
 
