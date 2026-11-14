@@ -45,17 +45,22 @@ class AncientTunnels(Task):
             # healing potions into the empty belt columns (Stephen 2026-11-13; the rejuv stash is dry). The walk
             # to Ormus leaves her far from the waypoint: fresh game after, as Meph's mana stop does
             log.info("tunnels: %d empty belt columns -> healing + mana potions at Ormus", empty_columns(bot))
-            if (not buy_mana_at_ormus(bot, fill="mixed") and not getattr(bot, "ormus_missed", False)
-                    and empty_columns(bot) >= 4):
-                from .. import state
+            for attempt in range(3):  # he wanders: 4 of 5 walks missed him on 2026-11-13 evening; retry in fresh games
+                ok = buy_mana_at_ormus(bot, fill="mixed")
+                missed = getattr(bot, "ormus_missed", False)
+                if not ok and not missed and empty_columns(bot) >= 4:
+                    from .. import state
 
-                # nothing bought at all: no gold on her (2026-11-13 18:59, deaths took it). town_to_wp withdraws from
-                # the shared stash when this is set; the next game's stop buys
-                log.warning("tunnels: no potions bought (no gold?): withdrawing from the stash this game")
-                state.save({**state.load(), "gold_needed": True})
-            save_and_exit(bot)
-            create_game(bot, self.cfg["game"]["difficulty"])
-            bot.wait_for("in_game", 10)
+                    # nothing bought though he was found: no gold on her (2026-11-13 18:59, deaths took it).
+                    # town_to_wp withdraws from the shared stash when this is set; the next game's stop buys
+                    log.warning("tunnels: no potions bought (no gold?): withdrawing from the stash this game")
+                    state.save({**state.load(), "gold_needed": True})
+                save_and_exit(bot)
+                create_game(bot, self.cfg["game"]["difficulty"])
+                bot.wait_for("in_game", 10)
+                if not missed:
+                    break
+                log.info("tunnels: Ormus missed (attempt %d)", attempt + 1)
         if not chained:
             if getattr(bot, "act", 3) == 2:
                 from ..town import act2_to
