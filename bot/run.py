@@ -247,6 +247,11 @@ def main() -> int:
         cfg["game"]["route"] = args.route
     log.info("route: %s", cfg["game"]["route"])
     tasks = get_tasks(args.tasks.split(","), cfg) if args.mode == "chests" else []
+    if tasks:  # a task without its route (the Pit while it's being built) would fail every run: LK instead, said once
+        not_ready = [t.name for t in tasks if not t.ready(cfg)]
+        if not_ready:
+            log.warning("task(s) %s not ready yet (no route): running the rest, or LK", ", ".join(not_ready))
+            tasks = [t for t in tasks if t.name not in not_ready] or get_tasks(["lk"], cfg)
     log.info("tasks: %s", ", ".join(t.name for t in tasks) or "-")
     from . import mf
 

@@ -52,6 +52,8 @@ CATALOG = [
      "about": "Durance of Hate 3, south bank. Chronicle items, statues, essences. About 2 min a run."},
     {"name": "tunnels", "title": "Ancient Tunnels",
      "about": "Lost City trap door, area level 85: Archon Plates and other elite bases. About 5 min a run."},
+    {"name": "pit", "title": "The Pit",
+     "about": "Tamoe Highland, area level 85: same plate odds as the tunnels, weaker monsters. Route in progress."},
 ]
 ORDER = [t["name"] for t in CATALOG]
 
@@ -59,9 +61,10 @@ ORDER = [t["name"] for t in CATALOG]
 def _classes() -> dict:
     from .lk import LowerKurast
     from .meph import Mephisto
+    from .pit import Pit
     from .tunnels import AncientTunnels
 
-    return {c.name: c for c in (LowerKurast, Mephisto, AncientTunnels)}
+    return {c.name: c for c in (LowerKurast, Mephisto, AncientTunnels, Pit)}
 
 
 def catalog(cfg: dict) -> list[dict]:
