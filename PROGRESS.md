@@ -9,7 +9,7 @@ per Pit game (buy socketed or white Archon Plates). Done: Act I WP points (Black
 (automap_difficulty_text.png; NOT difficulty_hell.png = the Hell button), find_tunnels generalized (--dest/--style/--areas/--goal/
 --pre/--min-w), tools/hop_probe.py. Route so far: Outer Cloister WP, 12 teleports (-340, 200) through the Monastery Gate into Tamoe
 Highland (Stephen's hint: Pit is SW of the Outer Cloister, more S than W), then search SSW (maps/<route>/pit_tamoe). Site has a Pit
-button; not-ready tasks run LK. If the Pit stalls: run tunnels or LK meanwhile.
+button; not-ready tasks run LK. If the Pit stalls (Stephen): tunnels first, but under 50 % clean runs -> LK (runes for the Chronicle).
 **Open questions for Stephen (non-blocking):** (1) Verdungo's in shared tab 2: Blizzaga or ThroatCutter?
 
 **2026-11-14 07:20: overnight tunnels.** 67 runs 23:12-07:20: 14 ok, 38 chicken, 11 "died" (~8 real, 3 the exit bug), 4 fail (gear always recovered: corpse pickup
