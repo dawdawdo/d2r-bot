@@ -153,6 +153,11 @@ def save_and_exit(bot: Controller) -> None:
     out (a chicken that came too late: 2026-11-01 22:00 "You have died" behind a chicken; the corpse
     must be picked up next game)."""
     bot.guard(False)  # we're leaving; don't raise Chicken while trying to exit
+    for _ in range(2):  # an open waypoint panel covers the life orb: it read 0 % and this took her for dead
+        if bot.observe() != "wp_menu":  # (2026-11-13 09:40, 2026-11-14 06:17: then timed out on the main menu)
+            break
+        bot.press("esc")
+        bot.kill.sleep(0.6)
     bot.died_on_exit = bot.hp is not None and bot.hp <= 1
     if bot.died_on_exit:
         # "You have died / Press ESC to continue": that Esc respawns her in town through a load, and the
