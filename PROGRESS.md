@@ -3,6 +3,15 @@
 **Current milestone:** Ancient Tunnels task running (Archon Plates, 4+). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-14 09:50: Pit entrance NOT found yet; LK running as the fallback (Claude's usage limit reached, session stopped here).**
+Tried: probes S, E, W from the Tamoe entry (walls/woods, no cave: maps/<route>/hop_probe/*/sheet.jpg); searches pit_tamoe (72 stops,
+drifted W, only a shrine) and pit_tamoe2 (8 games, 74 stops, lead-in "-340,200,10;0,290,5", no tooltip 150-420 px). Most games ended
+in chickens (Tamoe packs), so coverage is thin. Next: draw pit_tamoe2/automap.png with stops to see what's unexplored; try min-w 100
+(the cave label may be short); ask Stephen for a closer landmark. Still to build: Pit clear loop (copy tunnels.farm_tunnels), Charsi
+armor-tab check (tools/vendor_probe.py logic, Act 1), route.json so `pit` is ready. Supervisor: `--start lk` at 09:50.
+**Open questions for Stephen:** (1) Verdungo's in shared tab 2: Blizzaga or ThroatCutter? (2) Pit: what does the entrance sit next to in
+Tamoe Highland on your map (how many teleports from the Monastery Gate, which way)?
+
 **2026-11-14 08:45: Pit in progress (Stephen away ~8 h, said: keep going, cache questions).** Plan: `pit` task + Charsi armor-tab check
 per Pit game (buy socketed or white Archon Plates). Done: Act I WP points (Black Marsh, Outer Cloister verified), open_a1_wp / act1_to,
 "gray" automap style, area templates black_marsh / tamoe_highland, automap_shown also by the "Difficulty: Hell" text
