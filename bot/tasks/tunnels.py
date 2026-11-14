@@ -44,8 +44,8 @@ class AncientTunnels(Task):
 
             # healing potions into the empty belt columns (Stephen 2026-11-13; the rejuv stash is dry). The walk
             # to Ormus leaves her far from the waypoint: fresh game after, as Meph's mana stop does
-            log.info("tunnels: %d empty belt columns -> healing potions at Ormus", empty_columns(bot))
-            if not buy_mana_at_ormus(bot, fill="healing") and empty_columns(bot) >= 4:
+            log.info("tunnels: %d empty belt columns -> healing + mana potions at Ormus", empty_columns(bot))
+            if not buy_mana_at_ormus(bot, fill="mixed") and empty_columns(bot) >= 4:
                 from .. import state
 
                 # nothing bought at all: no gold on her (2026-11-13 18:59, deaths took it). town_to_wp withdraws from

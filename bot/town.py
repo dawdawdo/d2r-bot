@@ -451,7 +451,24 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
         def kinds():
             return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
 
+        from .vision.inventory import protected_cells, scan as inv_scan
+
+        tpl = bot._templates.get("inv_key.png")
+        if tpl is None:
+            tpl = bot._templates["inv_key.png"] = cv2.imread(str(ASSETS / "inv_key.png"))
+        prot = protected_cells(bot.cfg["inventory"]["protected"])
+
+        def free() -> int:  # the trade screen shows the inventory where it always is
+            bot.input.move(640, 600)
+            bot.kill.sleep(0.1)
+            return len(inv_scan(bot.capture.grab(), tpl, prot)["empty"])
+
+        free0 = free()
+        spilled = [False]
+
         def buy(pt, shift: bool = True):
+            if spilled[0]:
+                return
             if shift:
                 bot.input.key_down("shift")
                 bot.kill.sleep(0.05)
@@ -460,6 +477,10 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
             if shift:
                 bot.input.key_up("shift")
             bot.kill.sleep(0.5)
+            if free() < free0:  # it went to the inventory, not the belt: stop (2026-11-13 19:17: 8 potions, then stashed)
+                spilled[0] = True
+                bot.save_failure("potion_buy_spilled")
+                log.warning("Ormus: a potion buy landed in the inventory; no more buys this stop")
 
         # Shift+right-click fills every empty belt column with that potion (live 2026-11-01: 4 x red).
         # So: one red (plain right-click) claims the first empty column, shift-blue fills the rest,
@@ -469,6 +490,18 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
                 if None not in kinds():
                     break
                 buy(o["healing_potion"])
+        elif fill == "mixed":  # tunnels (Stephen 2026-11-13): 2 columns healing, 2 mana (mana = Energy Shield)
+            claimed = 0
+            for i in range(2):
+                k = kinds()
+                if sum(x == "hp" for x in k) >= 2 or None not in k:
+                    break
+                buy(o["healing_potion"], shift=False)  # one potion claims the next empty column
+                claimed += 1
+            if None in kinds():
+                buy(o["mana_potion"])  # shift: fills every empty column
+            if claimed:  # only a just-claimed column has room: a full one spills into the inventory
+                buy(o["healing_potion"])  # shift: tops up the healing columns (live 2026-11-01)
         else:
             if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
                 buy(o["healing_potion"], shift=False)
@@ -962,6 +995,20 @@ def _ctrl_click(bot: Controller, x: int, y: int) -> None:
     bot.kill.sleep(0.3)
 
 
+def _drink_potions(bot: Controller, cells) -> int:
+    """Inventory open: right-click (drink) every healing / mana potion among `cells`. Returns how many."""
+    from .vision.inventory import cell_center, potion_kind
+
+    f = bot.capture.grab()
+    pots = [c for c in cells if potion_kind(f, *c)]
+    for c in pots:
+        bot.click(*cell_center(*c), "right")
+        bot.kill.sleep(0.4)
+    if pots:
+        log.warning("drank %d potion(s) found in the inventory instead of stashing them: %s", len(pots), pots)
+    return len(pots)
+
+
 def _scan_inventory(bot: Controller) -> dict:
     from .vision.inventory import protected_cells, scan
 
@@ -1127,6 +1174,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
     inv = _scan_inventory(bot)
+    if _drink_potions(bot, inv["other"]):  # never stash a bought potion (Stephen 2026-11-13: 8 went to shared page 1)
+        inv = _scan_inventory(bot)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
     if inv["other"] and not stash:

@@ -70,6 +70,23 @@ def protected_cells(rects) -> set[tuple[int, int]]:
     return {(c + i, r + j) for c, r, w, h in rects for i in range(w) for j in range(h)}
 
 
+POTION_PX = 0.10  # share of strongly red (or blue) pixels: 8 healing potions read 0.12, every other item <= 0.07 (2026-11-13)
+
+
+def potion_kind(frame: np.ndarray, c: int, r: int) -> str | None:
+    """'hp' / 'mp' for a healing / mana potion in this cell, else None (rejuvs, purple, are left alone)."""
+    import cv2
+
+    x, y = cell_xy(c, r)
+    p = cv2.cvtColor(frame[y + 3 : y + SIZE - 3, x + 3 : x + SIZE - 3], cv2.COLOR_BGR2HSV)
+    h, s, v = p[..., 0], p[..., 1], p[..., 2]
+    if (((h <= 6) | (h >= 172)) & (s >= 150) & (v >= 110)).mean() >= POTION_PX:
+        return "hp"
+    if ((h >= 100) & (h <= 125) & (s >= 150) & (v >= 120)).mean() >= POTION_PX:
+        return "mp"
+    return None
+
+
 def scan(frame: np.ndarray, key_template: np.ndarray, protected=()) -> dict[str, list[tuple[int, int]]]:
     """Classify unprotected cells, column by column: empty, key, or other (loot to stash)."""
     prot = set(protected)
