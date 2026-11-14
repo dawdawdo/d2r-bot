@@ -121,6 +121,10 @@ tunnels:               # Ancient Tunnels task (bot/tunnels.py)
   timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline
   farm_s: 240          # time spent inside the tunnels
 
+pit:                   # The Pit task (bot/tasks/pit.py)
+  timeout_s: 480       # waypoint -> Tamoe -> entrance -> farm; the run's deadline
+  farm_s: 240          # time spent inside
+
 loot:
   # The in-game filter (filters/LK Bot.fltr) hides everything except what docs/loot.md lists; the bot then picks up
   # visible labels of these colors. Which uniques and sets show is decided only there, per base code:
