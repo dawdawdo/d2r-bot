@@ -59,6 +59,13 @@ def probe(bot, out: Path) -> int:
             if box is None:
                 continue
             bx, by, bw, bh = box
+            # find_tooltip boxes the footer ("Right Click to Buy / Hold Shift to Compare"); the item's lines sit above
+            # it on the same dark box: walk up while the row stays mostly dark
+            g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+            top = by
+            while top > 2 and (g[top - 1, bx + 4 : bx + bw - 4] < 45).mean() > 0.55:
+                top -= 1
+            by, bh = top, by + bh - top
             crop = f[by : by + min(bh, 40), bx : bx + bw]  # the name line(s) at the top
             if any(s.shape == crop.shape and float(np.abs(s.astype(int) - crop.astype(int)).mean()) < 6 for s in seen):
                 continue  # same item, another of its cells
