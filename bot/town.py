@@ -490,18 +490,20 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
                 if None not in kinds():
                     break
                 buy(o["healing_potion"])
-        elif fill == "mixed":  # tunnels (Stephen 2026-11-13): 2 columns healing, 2 mana (mana = Energy Shield)
-            claimed = 0
-            for i in range(2):
+        elif fill == "mixed":  # tunnels (Stephen 2026-11-13): healing + mana, about half each (mana = Energy Shield)
+            # Plain buys only, one potion a click: shift-buys with a part-full belt put the rest in the inventory
+            # (19:17 healing x8, 19:46 mana x8; the guard's check came before the items showed). Each potion goes
+            # to the first belt slot with room; the first one that lands in the inventory ends the stop.
+            for i in range(16):
                 k = kinds()
-                if sum(x == "hp" for x in k) >= 2 or None not in k:
+                want = "healing_potion" if sum(x == "hp" for x in k) <= sum(x == "mp" for x in k) else "mana_potion"
+                before = free()
+                buy(o[want], shift=False)
+                bot.kill.sleep(0.6)  # Proton: the inventory shows a new item late
+                if spilled[0] or free() < before:
+                    spilled[0] = True
+                    log.info("Ormus: belt full after %d potion(s) (the last one went to the inventory)", i)
                     break
-                buy(o["healing_potion"], shift=False)  # one potion claims the next empty column
-                claimed += 1
-            if None in kinds():
-                buy(o["mana_potion"])  # shift: fills every empty column
-            if claimed:  # only a just-claimed column has room: a full one spills into the inventory
-                buy(o["healing_potion"])  # shift: tops up the healing columns (live 2026-11-01)
         else:
             if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
                 buy(o["healing_potion"], shift=False)
@@ -511,7 +513,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
                 buy(o["mana_potion"])
         # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
         # 2026-11-02: healing + mana potions piling up on shared page 1)
-        ok = None not in kinds()
+        ok = None not in kinds() or (fill == "mixed" and spilled[0])
         bot.press("esc")
         bot.kill.sleep(0.5)
         log.info("Ormus: potions bought, belt %s %s", kinds(), "full" if ok else "NOT full")
