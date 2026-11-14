@@ -126,6 +126,8 @@ def main() -> int:
     ap.add_argument("--outdoor-any", action="store_true", help="unknown area names with this automap count as searching")
     ap.add_argument("--folder", default="lost_city_auto", help="search state folder under maps/<route>/")
     ap.add_argument("--goal", default="ancient_tunnels", help="area template of the place we're looking for")
+    ap.add_argument("--pre", default="", help="dx,dy,n: n blind teleports first, then search from there (the Pit: -340,200,9 "
+                                              "from the Outer Cloister through the Monastery Gate into Tamoe Highland)")
     ap.add_argument("--min-w", type=int, default=88, help="tooltip width band (px) worth visiting; Trap Door ~108")
     ap.add_argument("--max-w", type=int, default=128)
     args = ap.parse_args()
@@ -157,6 +159,15 @@ def main() -> int:
 
                 cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it
                 bot.sleep(0.5)
+                if args.pre:  # a fixed lead-in (same landings every game from the waypoint arrival)
+                    from bot.nav import CENTER, TP_SETTLE, frame_lag, in_play
+
+                    pdx, pdy, pn = (int(v) for v in args.pre.split(","))
+                    pdx, pdy = in_play(pdx, pdy)
+                    for _ in range(pn):
+                        bot.click(int(CENTER[0] + pdx), int(CENTER[1] + pdy), "right", hover=0)
+                        bot.sleep(TP_SETTLE + frame_lag(bot) + 0.15)
+                    bot.sleep(0.6)
                 odo = AutomapOdometer.load(folder, ensure_automap(bot))
                 print(f"game {n + 1}: arrival fix {odo.pos.round().tolist()} (resp {odo.resp:.2f})", flush=True)
 
