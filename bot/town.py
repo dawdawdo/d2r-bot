@@ -599,10 +599,10 @@ def buy_keys(bot: Controller, h: dict) -> int | None:
     return n
 
 
-def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
-    """From spawn: walk past Ormus, SE over the bridge, NE at the landing to Hratli's forge
-    (route from Stephen, recorded 2026-10-26), open Trade/Repair, Repair All. Like the Ormus detour,
-    this leaves us far from the WP, so the caller should start a new game."""
+def open_hratli(bot: Controller) -> bool | None:
+    """From spawn: walk past Ormus, SE over the bridge, NE at the landing to Hratli's forge (route from Stephen,
+    recorded 2026-10-26) and open Trade/Repair. True: trade open; False: opened his dialog but not the trade (Esc
+    pressed); None: not found."""
     tcfg = bot.cfg["town"]
     h = tcfg["hratli"]
     walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]] + h["route"])
@@ -620,11 +620,19 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
         for _ in range(10):
             bot.kill.sleep(0.3)
             if bot.find("trade_repair_all.png", region=(300, 460, 120, 100), threshold=0.8) is not None:
-                break
-        else:
-            bot.save_failure("hratli_trade_not_opened")
-            bot.press("esc")
-            return False
+                return True
+        bot.save_failure("hratli_trade_not_opened")
+        bot.press("esc")
+        return False
+    return None
+
+
+def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
+    """Open Hratli's trade (open_hratli), Repair All, keys. Like the Ormus detour, this leaves us far from the WP,
+    so the caller should start a new game."""
+    h = bot.cfg["town"]["hratli"]
+    opened = open_hratli(bot)
+    if opened:
         bot.click(*h["repair_all"])
         bot.kill.sleep(1.0)
         if keys:
@@ -633,8 +641,9 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
         bot.kill.sleep(0.5)
         log.info("repaired at Hratli")
         return True
-    bot.save_failure("hratli_not_found")
-    log.warning("Hratli not found; no repair")
+    if opened is None:
+        bot.save_failure("hratli_not_found")
+        log.warning("Hratli not found; no repair")
     return False
 
 
