@@ -429,6 +429,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
     Leaves her near Ormus: the caller starts a new game. True if the belt reads full."""
     tcfg = bot.cfg["town"]
     o = tcfg["ormus"]
+    bot.ormus_missed = False
     walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]])
     for attempt, (x, y) in enumerate(_ormus_points(bot, tcfg["ormus_region"])):
         if attempt >= 5:
@@ -521,6 +522,7 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
             bot.save_failure("belt_not_full_after_buying")
         return ok
     bot.save_failure("ormus_not_found")
+    bot.ormus_missed = True  # he wanders: not a gold problem (the tunnels must not withdraw for this)
     return False
 
 
