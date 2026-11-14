@@ -126,6 +126,8 @@ def ensure_main_menu(bot: Controller) -> None:
             raise BotError(f"stuck in state {state!r} trying to reach the main menu")
         if state == "unknown":
             bot.press("space")
+        elif state == "wp_menu":  # a waypoint panel left open (2026-11-14 06:20: 90 s waiting, then a failed run)
+            bot.press("esc")
         bot.kill.sleep(2.0)
     if state == "title":
         to_main_menu(bot)
