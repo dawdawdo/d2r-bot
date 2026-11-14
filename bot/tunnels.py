@@ -93,6 +93,8 @@ LEAVE_MP = 15          # % mana with no regen in sight: end the run (save & exit
 # she stood casting. Struck that hard -> stop casting, two hops away from the movers, carry on elsewhere.
 EVADE_DROP = 20        # HP points lost during one stop's fight
 EVADE_BELOW = 65       # % HP
+BIG_PACK = 10          # movers near her at a stop: don't stand and fight, evade (2026-11-13 21:39: a 16-mover pack took her
+                       # 96 -> 0 % in ~3 s once the shield's mana ran out, with potions)
 ENTER_MIN_HP = 70      # % HP inside with an empty belt: below this the run ends (the next game heals at Ormus)
 DRY_CHICKEN = 60       # % HP chicken while the belt is empty: bursts took her 53 -> 0 and 40 -> 0 in seconds (3 deaths
                        # 2026-11-13 afternoon, rejuv stash dry); 10 more points to get out
@@ -127,6 +129,9 @@ def engage(bot) -> int:
                 break
             m = [t for t in movers(bot, min_area=350) if OWN_RADIUS < math.dist(t[:2], CENTER) < REACH]
             hp = bot.hp or 100
+            if len(m) >= BIG_PACK:
+                log.info("tunnels: %d movers near her: too big a pack, evading", len(m))
+                raise Struck(m)
             # struck = a big drop here, or low with monsters near. (14:47-16:25 "low AND still dropping" kept her fighting
             # below 65 %: ~40 % clean runs vs ~75 % before; arriving low is handled by ENTER_MIN_HP instead)
             if hp < hp0 - EVADE_DROP or (hp < EVADE_BELOW and m):
