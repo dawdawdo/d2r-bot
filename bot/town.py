@@ -1447,23 +1447,46 @@ def spawn_act(bot: Controller) -> int:
 A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into view (fixed map, live 2026-10-31)
 
 
+def open_a1_wp(bot: Controller) -> None:
+    """Rogue Encampment spawn -> open its waypoint. The waypoint is ~560 px away at the end: walking there takes longer
+    than the 5 s first allowed (2026-11-14 08:00), so wait 8 s and click again if the menu didn't open."""
+    bot.click(*A1_WALK)
+    bot.kill.sleep(2.5)
+    for attempt in range(3):
+        loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
+        if loc is None:
+            bot.save_failure("a1_wp_not_found")
+            raise BotError("Act 1 waypoint not visible")
+        bot.click(loc[0] + 62, loc[1] + 32)
+        try:
+            bot.wait_for("wp_menu", 8)
+            return
+        except BotError:
+            log.info("Act 1 waypoint: menu not open after click %d", attempt + 1)
+    raise BotError("Act 1 waypoint menu didn't open")
+
+
 def leave_act1(bot: Controller) -> None:
     """A1 spawn -> waypoint to Kurast Docks -> save & exit -> new game (spawns in Act 3)."""
     from .lifecycle import create_game, save_and_exit
 
     log.info("spawned in Act 1: waypoint to Act 3")
-    bot.click(*A1_WALK)
-    bot.kill.sleep(2.5)
-    loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
-    if loc is None:
-        bot.save_failure("a1_wp_not_found")
-        raise BotError("Act 1 waypoint not visible")
-    bot.click(loc[0] + 62, loc[1] + 32)
-    bot.wait_for("wp_menu", 5)
+    open_a1_wp(bot)
     wp_travel(bot, "wp_tab_act3", "wp_town")
     save_and_exit(bot)
     create_game(bot, bot.cfg["game"]["difficulty"])
     bot.wait_for("in_game", 10)
+
+
+def act1_to(bot: Controller, dest: str) -> None:
+    """From the Rogue Encampment spawn: buffs, its waypoint, `dest` (an Act I tab point), out of town. Pit games end in
+    Act 1, so the next one spawns there."""
+    cast_buffs(bot)
+    open_a1_wp(bot)
+    wp_travel(bot, "wp_tab_act1", dest)
+    bot.guard(True)
+    bot.wait_still(timeout=5)
+    log.info("arrived at %s from Act 1 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
 
 
 # Lut Gholein spawn -> waypoint: walk clicks found by tools/town_probe.py (2026-11-02): north through the palm
