@@ -103,7 +103,7 @@ def map_text_open(frame: np.ndarray) -> bool:
     from .vision.screen import ASSETS
 
     t = _area_tmpl(ASSETS / "automap_difficulty_text.png")  # not difficulty_hell.png: that is the Hell button
-    return float(cv2.matchTemplate(_lap(frame[20:110, 1000:1280]), _lap(t), cv2.TM_CCOEFF_NORMED).max()) >= 0.8
+    return float(cv2.matchTemplate(_lap(frame[20:110, 1000:1280]), _lap(t), cv2.TM_CCOEFF_NORMED).max()) >= 0.5  # 0.67-0.79 with map lines drawn through the text (Pit, 6 failed runs 2026-11-14)
 
 
 def automap_shown(frame: np.ndarray) -> bool:
