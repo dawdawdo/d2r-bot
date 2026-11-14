@@ -6,6 +6,7 @@ so we walk a recorded route (config town.route) and then locate the waypoint by 
 from __future__ import annotations
 
 import logging
+import math
 from pathlib import Path
 
 import cv2
@@ -1457,7 +1458,15 @@ def open_a1_wp(bot: Controller) -> None:
         if loc is None:
             bot.save_failure("a1_wp_not_found")
             raise BotError("Act 1 waypoint not visible")
-        bot.click(loc[0] + 62, loc[1] + 32)
+        wx, wy = loc[0] + 62, loc[1] + 32
+        dx, dy = wx - 640, wy - 330
+        if math.hypot(dx, dy) > 350:  # far: one long click got her stuck by the tent and torches (2026-11-14 08:02);
+            # walk part of the way over open ground first, then click the waypoint from closer
+            bot.click(int(640 + dx * 0.6), int(min(560, 330 + dy * 0.6)))
+            bot.kill.sleep(1.8)
+            loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6) or loc
+            wx, wy = loc[0] + 62, loc[1] + 32
+        bot.click(wx, wy)
         try:
             bot.wait_for("wp_menu", 8)
             return
