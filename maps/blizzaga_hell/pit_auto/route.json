@@ -3,6 +3,6 @@
  "pre": "-340,200,10;0,290,5",
  "search": "pit_tamoe2",
  "style": "gray",
- "inside_style": "cave",
+ "inside_style": "gray",
  "goal": "pit_level_1"
 }
