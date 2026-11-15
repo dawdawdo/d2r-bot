@@ -3,6 +3,13 @@
 **Current milestone:** Pit task running (Archon Plates, 4+); tunnels and LK as fallbacks. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-14 21:10: Pit results + vendor idea closed.** Pit with the potion stop (db1e679), Act 1 shortcut (d4b0a28) and map_text_open
+0.5 (65a506e): 14:21-20:48 = 16 ok / 41 chicken / 2 died / 8 fail (24 % clean; tunnels 21 % with ~1 death in 8). Finds: gems, rejuvs,
+two white Mancatchers, no Archon Plate yet. Stephen: Pit "going kind of ok" -> it stays the plate farm. **Charsi check dropped:**
+Arreat Summit + the diablo2.io shopping guide say Act 1/2 Hell vendors never sell exceptional/elite, and above ilvl 25 (clvl 20) vendors
+sell magic items only (no white/socketed) -> no vendor can sell a runeword Archon Plate to Blizzaga. Matches the Hratli probe (all magic).
+**Next:** fewer Pit chickens; Pit Level 2 (stairs not searched); then Andariel (rings).
+
 **2026-11-14 13:35: Pit task runs (entrance found by the bot).** `--tasks pit`: Outer Cloister WP -> lead-in "-340,200,10;0,290,5" (Monastery
 Gate -> Tamoe Highland) -> entrance warp in maps/<route>/pit_tamoe2 ("To The Pit Level 1", 188 px, world (-3018, 1263)) -> Level 1 with
 tunnels.farm_tunnels(style="gray", folder=pit_auto). maps/<route>/pit_auto/route.json makes it ready. ~90 s to inside, 2/2 entries.
