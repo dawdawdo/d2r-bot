@@ -3,6 +3,11 @@
 **Current milestone:** Pit task running (Archon Plates, 4+); tunnels and LK as fallbacks. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-15 09:50: LK picks chest gold; Stephen farms the plates himself.** loot.pick_gold (lk._pick_gold: up to gold_max_picks=8
+piles per chest after the items, biggest first, not in the picked list; live: 1-5 clicks per chest). town.revive_merc: a failed revive
+right after a withdrawal sets state stash_gold_empty -> no more stash trips (cleared by a successful revive). Stephen: keep LK running,
+he farms Archon Plates by hand; don't restart Pit/tunnels unless asked. **Next:** watch that the merc gets revived once she holds 50k.
+
 **2026-11-15 08:05: Pit stopped, LK running. GOLD IS GONE.** Shared stash gold 3.86M (11-14 04:40) -> 0 (11-15 07:57); Blizzaga holds 16.
 Pit 14:21 -> 07:49: 188 runs = 38 ok / 119 chicken / 11 died / 20 fail (20 % clean, 17.5 h), no Archon Plate. ~30 withdrawals of 200k:
 each death drops the carried gold. Since ~05:50 the merc stayed dead (no 50k), so no Insight and almost every run chickened.

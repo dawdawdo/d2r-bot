@@ -135,6 +135,8 @@ loot:
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
   rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
   pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
+  pick_gold: true                # chest gold piles after the item picks (2026-11-15: stash gold spent; pays merc revives)
+  gold_max_picks: 8
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:

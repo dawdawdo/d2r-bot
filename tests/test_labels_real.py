@@ -55,8 +55,9 @@ def test_white_words(name, word, count):
     assert len([w for w in words if w is None]) >= 8  # gold
 
 
-def test_loot_picks_key_not_gold():
-    """loot() clicks the key (keys below a full stack) and none of the gold labels around it."""
+def test_loot_picks_key_then_gold():
+    """loot() clicks the key first (keys below a full stack); gold piles come after the items (loot.pick_gold,
+    2026-11-15), up to gold_max_picks, and aren't in the picked list."""
     from types import SimpleNamespace
 
     from bot.lk import loot
@@ -72,10 +73,13 @@ def test_loot_picks_key_not_gold():
                           click=click, wait_still=lambda **k: True, sleep=lambda s: None,
                           capture=SimpleNamespace(grab=lambda: frame.copy()))  # an empty scan looks once more
     assert loot(bot) == ["key"]
-    assert clicks == [(717 + 37 // 2, 474 + 13 // 2)]
+    assert clicks[0] == (717 + 37 // 2, 474 + 13 // 2)
+    assert 1 < len(clicks) <= 1 + CFG["loot"]["gold_max_picks"] and len(set(clicks)) == len(clicks)
+    assert bot.gold_picks == len(clicks) - 1
     assert bot.keys_left == 3
     bot.frame, bot.keys_left, clicks[:] = frame.copy(), 12, []
     assert loot(bot) == []  # full stack: leave it
+    assert (717 + 37 // 2, 474 + 13 // 2) not in clicks  # gold only
 
 
 def test_gap_between_gold_labels_is_not_unique():

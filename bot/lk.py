@@ -538,7 +538,41 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         if what == "key" and getattr(bot, "keys_left", None) is not None:
             bot.keys_left += 1
         picked.append(what)
+    if bot.cfg["loot"].get("pick_gold") and not take_all:
+        _pick_gold(bot, bot.cfg["loot"].get("gold_max_picks", 8))
     return picked
+
+
+def _pick_gold(bot: Controller, max_picks: int) -> int:
+    """Chest gold (Stephen 2026-11-15: the Pit spent the stash's gold; LK chests pay the merc revive). A pile shows
+    as two white labels, the amount then the word "Gold"; biggest amounts (widest number) first. Not in the picked
+    list (runs.csv / the site show items); counted in bot.gold_picks."""
+    from .vision.labels import white_word
+
+    kinds = {"white": bot.cfg["vision"]["labels"]["white"]}
+    tried: dict[tuple[int, int], int] = {}
+    n = 0
+    for _ in range(max_picks):
+        bot.check()
+        labs = find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"])
+        piles = []
+        for g in labs:
+            if white_word(bot.frame, g) != "gold" or tried.get((g.center[0] // 10, g.center[1] // 10), 0) >= 2:
+                continue
+            amt = [a for a in labs if a is not g and abs(a.y - g.y) <= 3 and 0 <= g.x - (a.x + a.w) <= 12]
+            piles.append((amt[0].w if amt else 0, g))
+        if not piles:
+            break
+        _, g = max(piles, key=lambda p: (p[0] // 6, -abs(p[1].center[0] - CENTER[0]) - abs(p[1].center[1] - CENTER[1])))
+        cell = (g.center[0] // 10, g.center[1] // 10)
+        tried[cell] = tried.get(cell, 0) + 1
+        bot.click(*g.center)
+        bot.wait_still(timeout=3, min_wait=0.4)
+        n += 1
+    if n:
+        bot.gold_picks = getattr(bot, "gold_picks", 0) + n
+        log.info("gold: %d pile(s) clicked (%d this session)", n, bot.gold_picks)
+    return n
 
 
 REANCHOR_AFTER = 1500  # px of travel before odometry drift is worth a landmark fix

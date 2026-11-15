@@ -679,14 +679,23 @@ def revive_merc(bot: Controller) -> bool:
         bot.kill.sleep(1.5)
         bot.press("esc")
         bot.kill.sleep(0.5)
-        if merc_alive(bot):
-            log.info("merc resurrected at Asheara")
-            return True
-        bot.save_failure("merc_not_resurrected")
-        log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
         from . import state
 
-        state.save({**state.load(), "gold_needed": True})
+        if merc_alive(bot):
+            log.info("merc resurrected at Asheara")
+            state.save({**state.load(), "withdrew_unspent": False, "stash_gold_empty": False})
+            return True
+        bot.save_failure("merc_not_resurrected")
+        st = state.load()
+        if st.get("withdrew_unspent") or st.get("stash_gold_empty"):
+            # the withdrawal just before this try bought nothing: the shared stash has no gold (2026-11-15: 3.86M
+            # spent in a day; she walked to Asheara and the stash every run). No more stash trips: chest gold
+            # (loot.pick_gold) pays the next revive
+            log.warning("merc still dead after Resurrect and the last withdrawal didn't help: stash gold is empty")
+            state.save({**st, "withdrew_unspent": False, "stash_gold_empty": True, "gold_needed": False})
+            return False
+        log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
+        state.save({**st, "gold_needed": True})
         return False
     bot.observe()  # the failure frame should show where the search ended, not the game's first frame
     bot.save_failure("asheara_not_found")
@@ -896,7 +905,7 @@ def withdraw_gold(bot: Controller) -> bool:
     bot.kill.sleep(0.6)
     bot.press("esc")
     bot.kill.sleep(0.4)
-    state.save({**state.load(), "gold_needed": False})
+    state.save({**state.load(), "gold_needed": False, "withdrew_unspent": True})  # unverified: revive_merc finds out
     log.info("withdrew %d gold from the shared stash", scfg["withdraw_gold"])
     return True
 
