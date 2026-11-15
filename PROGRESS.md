@@ -3,6 +3,13 @@
 **Current milestone:** Pit task running (Archon Plates, 4+); tunnels and LK as fallbacks. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-15 08:05: Pit stopped, LK running. GOLD IS GONE.** Shared stash gold 3.86M (11-14 04:40) -> 0 (11-15 07:57); Blizzaga holds 16.
+Pit 14:21 -> 07:49: 188 runs = 38 ok / 119 chicken / 11 died / 20 fail (20 % clean, 17.5 h), no Archon Plate. ~30 withdrawals of 200k:
+each death drops the carried gold. Since ~05:50 the merc stayed dead (no 50k), so no Insight and almost every run chickened.
+Bug: town.withdraw_gold never checks that gold arrived (empty stash -> walks to Asheara + stash every run). Per Stephen's rule
+(< 50 % clean -> LK) the supervisor is on `lk` since 08:01. **Open question for Stephen:** plates plan (Pit at /players 1-3 once
+gold is back? carry less gold per withdrawal?).
+
 **2026-11-14 21:10: Pit results + vendor idea closed.** Pit with the potion stop (db1e679), Act 1 shortcut (d4b0a28) and map_text_open
 0.5 (65a506e): 14:21-20:48 = 16 ok / 41 chicken / 2 died / 8 fail (24 % clean; tunnels 21 % with ~1 death in 8). Finds: gems, rejuvs,
 two white Mancatchers, no Archon Plate yet. Stephen: Pit "going kind of ok" -> it stays the plate farm. **Charsi check dropped:**
