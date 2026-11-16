@@ -10,9 +10,10 @@ from the 20:52 save: [[5,0,5,4],[4,1,1,1],[4,3,1,1]] (charms, tomes, cube, his s
 Topaz 85 / Amethyst 69 = rune-recipe gems (Ko/Io/Lum), never cubed. Now 30 kept (cube.rune_gem_reserve), rest cubed.
 (3) Shift+right-click (3 into the cube) added but moved nothing live (21:17, GLaDOS): falls back to single clicks; first
 cube after the fix: 146 transmutes in 708 s, all counts as planned. (4) Mancatcher off
-chronicle.RUNEWORD_BASES. Cube triples now try ctrl+right-click, then shift (21:48 session). **Open question for Stephen:** go-ahead for a Chaos
-seal-pop task (plan in the chat 11-15 ~21:50: route to the 5 seals, kill 3 seal bosses, activate mobs, pop the last
-seal, save & exit before Diablo; pop deaths use normal monster drops, so white Archon Plates can drop).
+chronicle.RUNEWORD_BASES. Cube triples now try ctrl+right-click, then shift (21:48 session). **Planned, NOT now (Stephen 11-15: "I'd like to try it, but definitely not right now"):** Chaos seal-pop task:
+River of Flame WP -> 5 seals by template, kill 3 seal bosses, wake mobs, pop the last seal, loot, save & exit before
+Diablo; pop deaths use normal monster drops (white Archon Plates possible); LK fallback, < 50 % clean -> LK.
+Start only when Stephen says so. LK keeps running.
 
 **2026-11-15 09:50: LK picks chest gold; Stephen farms the plates himself.** loot.pick_gold (lk._pick_gold: up to gold_max_picks=8
 piles per chest after the items, biggest first, not in the picked list; live: 1-5 clicks per chest). town.revive_merc: a failed revive
