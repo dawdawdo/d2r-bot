@@ -8,7 +8,8 @@ layout. Stephen's col 3 is empty now, so key stacks there were invisible -> keys
 keys reached shared page 1 (08:00-15:36; he cleared them). Loot in col 4 (rune, diamond) was never stashed either. New box
 from the 20:52 save: [[5,0,5,4],[4,1,1,1],[4,3,1,1]] (charms, tomes, cube, his skull). (2) Gems: Flawed Sapphire 99 /
 Topaz 85 / Amethyst 69 = rune-recipe gems (Ko/Io/Lum), never cubed. Now 30 kept (cube.rune_gem_reserve), rest cubed.
-(3) Cubing puts 3 in at once with shift+right-click (counts the cube, falls back to single clicks). (4) Mancatcher off
+(3) Shift+right-click (3 into the cube) added but moved nothing live (21:17, GLaDOS): falls back to single clicks; first
+cube after the fix: 146 transmutes in 708 s, all counts as planned. (4) Mancatcher off
 chronicle.RUNEWORD_BASES. **Open question for Stephen:** Chaos "portal popping": what exactly (seal bosses only, or Diablo
 too)? See the reply in the chat; plates odds per kill are like the Pit's, but the monsters are much harder.
 
