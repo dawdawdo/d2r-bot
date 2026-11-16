@@ -36,8 +36,8 @@ ITEM_RULE_CODES = {"jew", "cm1", "cm2", "cm3"}
 
 RUNES = [f"r{i:02d}" for i in range(1, 34)]  # all of them, El to Zod: Stephen needs low ones for cube recipes
 # Stephen's runeword bases (2026-11-06). Temporary: delete a line when he has enough, then regenerate.
+# 2026-11-15: Mancatcher off (Insight needs a polearm; Mancatcher is a spear).
 RUNEWORD_BASES = {
-    "7br": "Mancatcher",
     "utp": "Archon Plate",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",

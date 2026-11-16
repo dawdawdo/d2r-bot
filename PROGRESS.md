@@ -1,7 +1,16 @@
 # Progress
 
-**Current milestone:** Pit task running (Archon Plates, 4+); tunnels and LK as fallbacks. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-15 21:05: Stephen's notes fixed; LK running.** (1) Keys: the inventory `protected` box was still the 11-03
+layout. Stephen's col 3 is empty now, so key stacks there were invisible -> keys_left 0 -> keys bought every visit; 199
+keys reached shared page 1 (08:00-15:36; he cleared them). Loot in col 4 (rune, diamond) was never stashed either. New box
+from the 20:52 save: [[5,0,5,4],[4,1,1,1],[4,3,1,1]] (charms, tomes, cube, his skull). (2) Gems: Flawed Sapphire 99 /
+Topaz 85 / Amethyst 69 = rune-recipe gems (Ko/Io/Lum), never cubed. Now 30 kept (cube.rune_gem_reserve), rest cubed.
+(3) Cubing puts 3 in at once with shift+right-click (counts the cube, falls back to single clicks). (4) Mancatcher off
+chronicle.RUNEWORD_BASES. **Open question for Stephen:** Chaos "portal popping": what exactly (seal bosses only, or Diablo
+too)? See the reply in the chat; plates odds per kill are like the Pit's, but the monsters are much harder.
 
 **2026-11-15 09:50: LK picks chest gold; Stephen farms the plates himself.** loot.pick_gold (lk._pick_gold: up to gold_max_picks=8
 piles per chest after the items, biggest first, not in the picked list; live: 1-5 clicks per chest). town.revive_merc: a failed revive
