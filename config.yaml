@@ -226,16 +226,19 @@ cube:
   every_hours: 6                # on the way through town, once this long after the last time
   keep: 5
   gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)
+  rune_gem_reserve: 30          # Chipped/Flawed gems that rune recipes take: keep this many, cube the rest (2026-11-15: Flawed Sapphire hit 99)
   top_rune: Fal
   top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200
 
 # Inventory (bot/vision/inventory.py). Stephen's own items stay put: [col, row, w, h] rectangles.
 # Recorded 2026-11-03 (after the respec): charms/tomes/cube fill cols 4-9, the skull and 2 small charms col 3 rows 1-3.
-# The key stack sits at col 3 row 0: keep it out of these rectangles or it can't be counted.
+# [col, row, w, h] of Stephen's own items: grand charms cols 5-7 rows 0-2, small charms row 3 cols 4-7, skull (4,1), tomes +
+# cube cols 8-9 (from the 2026-11-15 20:52 save). Keys and loot must land OUTSIDE these or they can't be seen:
+# the old box (col 3 rows 1-3 + col 4) hid 3 key stacks, so the bot kept buying keys (199 went to shared page 1).
 # Update this if he rearranges the inventory (anything outside it that isn't a key gets stashed).
 inventory:
-  protected: [[4, 0, 6, 4], [3, 1, 1, 3]]
+  protected: [[5, 0, 5, 4], [4, 1, 1, 1], [4, 3, 1, 1]]
   equipment:                     # hover points of equipped items (inventory open)
     helm: [1055, 105]
     armor: [1055, 225]

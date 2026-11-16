@@ -26,9 +26,10 @@ RUNE_GEM = {  # rune -> the gem its upgrade also takes
     "Shael": gem("Chipped", "Ruby"), "Dol": gem("Chipped", "Emerald"), "Hel": gem("Chipped", "Diamond"),
     "Io": gem("Flawed", "Topaz"), "Lum": gem("Flawed", "Amethyst"), "Ko": gem("Flawed", "Sapphire"),
 }
-# the gems rune recipes take: saved for them, never cubed up (the filter hides chipped and flawed gems now, so
-# the stash can't get more)
+# the gems rune recipes take: up to RUNE_GEM_RESERVE saved for them, the rest cubed up like any gem (2026-11-15
+# Stephen: Flawed Sapphire sat at 99 because these were never cubed; Ko/Io/Lum barely use them)
 FOR_RUNES = set(RUNE_GEM.values())
+RUNE_GEM_RESERVE = 30
 KEEP = 5
 GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-09: "runes first, then gems"; at 5,
               # Amn piled up waiting on a 6th Chipped Amethyst)
@@ -38,10 +39,12 @@ TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flaw
 
 
 def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
-         top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX, gem_keep: int = GEM_KEEP) -> list[tuple[dict[str, int], str]]:
+         top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX, gem_keep: int = GEM_KEEP,
+         reserve: int = RUNE_GEM_RESERVE) -> list[tuple[dict[str, int], str]]:
     """Transmutes in order, each ({input: n}, output). `counts` names runes and gems as in RUNES / gem();
     missing names count 0. Runes first, bottom up, so what one step makes feeds the next; gems after, with
-    whatever the runes left, except gems saved for runes (FOR_RUNES); repeated until nothing changes."""
+    whatever the runes left; gems rune recipes take (FOR_RUNES) keep `reserve` instead of `keep`; repeated until
+    nothing changes."""
     have = dict(counts)
     steps: list[tuple[dict[str, int], str]] = []
 
@@ -65,7 +68,8 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
                 do({rune: 3, g: 1} if g else {rune: 3}, nxt)
         for ladder in GEM_LADDERS:
             for low, high in zip(ladder[:grades], ladder[1:grades]):
-                while low not in FOR_RUNES and n(low) - 3 >= keep and n(high) < stack_max:
+                floor = max(keep, reserve) if low in FOR_RUNES else keep
+                while n(low) - 3 >= floor and n(high) < stack_max:
                     do({low: 3}, high)
         if len(steps) == before:
             return steps

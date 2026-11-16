@@ -71,6 +71,16 @@ class Cuber:
         bot.input.key_up("ctrl")
         bot.kill.sleep(0.2)
 
+    def shift_right_click(self, x: int, y: int) -> None:
+        """Shift+right-click on a stack slot: moves 3 into the cube (Stephen 2026-11-15; checked by counting)."""
+        bot = self.bot
+        bot.input.key_down("shift")
+        bot.kill.sleep(0.05)
+        bot.click(x, y, "right")
+        bot.kill.sleep(0.05)
+        bot.input.key_up("shift")
+        bot.kill.sleep(0.25)
+
     def counts(self) -> dict[str, int]:
         self.open_tab("runes")
         runes = self.look()
@@ -97,11 +107,26 @@ class Cuber:
         return not cube_items(self.look())
 
     def transmute(self, inputs: dict[str, int], out: str) -> bool:
+        placed = 0
         for name, n in inputs.items():
             tab, pt = slot_of(name)
             self.open_tab(tab)
-            for _ in range(n):
+            k = 0
+            if n == 3 and not getattr(self.bot, "cube_no_triple", False):
+                self.shift_right_click(*pt)
+                k = len(cube_items(self.look())) - placed
+                if k not in (0, 3):  # took some other number: fall back to one at a time for the session
+                    log.warning("cube: shift+right-click on %s moved %d, not 3: single clicks from now on", name, k)
+                    self.bot.cube_no_triple = True
+                elif k == 0:
+                    self.bot.cube_triple_misses = getattr(self.bot, "cube_triple_misses", 0) + 1
+                    if self.bot.cube_triple_misses >= 2:
+                        log.warning("cube: shift+right-click moved nothing twice: single clicks from now on")
+                        self.bot.cube_no_triple = True
+                k = max(0, min(k, n))
+            for _ in range(n - k):
                 self.ctrl_shift_click(*pt)
+            placed += n
         got = len(cube_items(self.look()))
         if got != sum(inputs.values()):
             log.warning("cube: %s -> %s: %d item(s) in the cube, wanted %d", inputs, out, got,
@@ -134,7 +159,8 @@ def cube_stash(bot: Controller) -> int:
     bot.cube_blocked, bot.cube_blocked_n = False, 0
     before = c.counts()
     steps = cube.plan(before, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
-                      top_grade=ccfg.get("top_grade", cube.TOP_GRADE), gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP))
+                      top_grade=ccfg.get("top_grade", cube.TOP_GRADE), gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP),
+                      reserve=ccfg.get("rune_gem_reserve", cube.RUNE_GEM_RESERVE))
     steps = steps[:ccfg.get("max_transmutes", 200)]
     log.info("cube: %d transmute(s) planned: %s", len(steps), dict(Counter(o for _, o in steps)))
     log.info("cube: counts read: %s", {k: v for k, v in before.items() if v})

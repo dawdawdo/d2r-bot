@@ -9,6 +9,7 @@ FIX = Path(__file__).resolve().parent.parent / "fixtures" / "inventory"
 KEY = cv2.imread(str(Path(__file__).resolve().parent.parent / "bot" / "assets" / "templates" / "inv_key.png"))
 PROT = protected_cells(load_config()["inventory"]["protected"])
 OLD_PROT = protected_cells([[3, 0, 7, 4], [2, 2, 1, 2]])  # Stephen's layout when the older fixtures were taken
+PROT_1103 = protected_cells([[4, 0, 6, 4], [3, 1, 1, 3]])  # 2026-11-03 respec layout
 
 
 def test_eight_key_stacks_and_a_rune():
@@ -26,12 +27,21 @@ def test_helm_rune_key_and_empties():
 
 
 def test_protected_cells():
-    assert len(PROT) == 27 and (3, 1) in PROT and (3, 0) not in PROT and (9, 3) in PROT
+    assert len(PROT) == 22 and (4, 1) in PROT and (4, 3) in PROT and (9, 3) in PROT
+    assert (4, 0) not in PROT and (4, 2) not in PROT and not any(c == 3 for c, _ in PROT)
+
+
+def test_layout_20261115_sees_keys_and_loot_in_cols_3_4():
+    """2026-11-15: the 11-03 box hid key stacks in col 3 (the bot kept buying keys, 199 went to shared page 1) and
+    loot in col 4 (rune, diamond never stashed). Stephen's own items there: skull (4,1), small charm (4,3)."""
+    inv = scan(cv2.imread(str(FIX / "layout_20261115.png")), KEY, PROT)
+    assert inv["key"] == [(3, 0), (3, 1)]
+    assert sorted(inv["other"]) == [(2, 3), (3, 2), (3, 3), (4, 0), (4, 2)]
 
 
 def test_current_layout_touches_none_of_stephens_items():
     """2026-11-03 after the respec: every charm, tome, the skull and the cube are protected; the key is the key."""
-    inv = scan(cv2.imread(str(FIX / "respec_20261103.png")), KEY, PROT)
+    inv = scan(cv2.imread(str(FIX / "respec_20261103.png")), KEY, PROT_1103)
     assert inv["key"] == [(3, 0)]
     assert inv["other"] == []
     assert sorted(inv["empty"]) == [(c, r) for c in range(3) for r in range(4)]
