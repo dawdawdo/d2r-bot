@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 CUBE_CELLS = [(x, y) for y in (324, 362, 400, 439) for x in (186, 224, 263)]
 TRANSMUTE = (224, 500)
+TRIPLE_MODS = ("ctrl", "shift")  # modifier + right-click on a stack slot = 3 into the cube; first that works
 AWAY = (640, 650)  # mouse parked off the stash: tooltips cover the cube
 
 
@@ -71,14 +72,15 @@ class Cuber:
         bot.input.key_up("ctrl")
         bot.kill.sleep(0.2)
 
-    def shift_right_click(self, x: int, y: int) -> None:
-        """Shift+right-click on a stack slot: moves 3 into the cube (Stephen 2026-11-15; checked by counting)."""
+    def mod_right_click(self, mod: str, x: int, y: int) -> None:
+        """<mod>+right-click on a stack slot: should move 3 into the cube (Stephen 2026-11-15: shift or ctrl; shift
+        moved nothing live on GLaDOS, so ctrl is tried first). Callers check by counting the cube."""
         bot = self.bot
-        bot.input.key_down("shift")
+        bot.input.key_down(mod)
         bot.kill.sleep(0.05)
         bot.click(x, y, "right")
         bot.kill.sleep(0.05)
-        bot.input.key_up("shift")
+        bot.input.key_up(mod)
         bot.kill.sleep(0.25)
 
     def counts(self) -> dict[str, int]:
@@ -112,17 +114,25 @@ class Cuber:
             tab, pt = slot_of(name)
             self.open_tab(tab)
             k = 0
-            if n == 3 and not getattr(self.bot, "cube_no_triple", False):
-                self.shift_right_click(*pt)
+            mods = [m for m in TRIPLE_MODS if m not in getattr(self.bot, "cube_bad_mods", set())]
+            if n == 3 and mods:
+                mod = mods[0]
+                self.mod_right_click(mod, *pt)
                 k = len(cube_items(self.look())) - placed
-                if k not in (0, 3):  # took some other number: fall back to one at a time for the session
-                    log.warning("cube: shift+right-click on %s moved %d, not 3: single clicks from now on", name, k)
-                    self.bot.cube_no_triple = True
+                bad = self.bot.__dict__.setdefault("cube_bad_mods", set())
+                misses = self.bot.__dict__.setdefault("cube_triple_misses", {})
+                if k == 3:
+                    if not getattr(self.bot, "cube_triple_logged", False):
+                        self.bot.cube_triple_logged = True
+                        log.info("cube: %s+right-click moves 3", mod)
                 elif k == 0:
-                    self.bot.cube_triple_misses = getattr(self.bot, "cube_triple_misses", 0) + 1
-                    if self.bot.cube_triple_misses >= 2:
-                        log.warning("cube: shift+right-click moved nothing twice: single clicks from now on")
-                        self.bot.cube_no_triple = True
+                    misses[mod] = misses.get(mod, 0) + 1
+                    if misses[mod] >= 2:
+                        log.warning("cube: %s+right-click moved nothing twice: not using it", mod)
+                        bad.add(mod)
+                else:  # some other number: don't trust it
+                    log.warning("cube: %s+right-click on %s moved %d, not 3: not using it", mod, name, k)
+                    bad.add(mod)
                 k = max(0, min(k, n))
             for _ in range(n - k):
                 self.ctrl_shift_click(*pt)
