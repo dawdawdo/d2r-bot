@@ -3,6 +3,13 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-17 09:25: cube up through Ist; Ist+ never inputs.** cube.top_rune Ist, NEVER_FROM Ist (hard floor), Fal..Mal
+recipes added (Flawed Ruby/Emerald/Diamond, Topaz, Amethyst; 2 runes from Pul up). Rune recipes may use any gem down to 0
+(gem_keep 0, Stephen 11-17: "they will be replaced"); rune_gem_reserve 30 only stops gem-to-gem upgrades. Ctrl/shift+right-
+click triples OFF: each try moved 3 runes to the inventory (stowaway put them back, nothing lost; the "3 short" diffs).
+Amn ~32 / Thul ~27 wait on Chipped Amethyst / Chipped Topaz (0: only from drops, used as soon as one arrives). Never cubed above
+Fal before today; Ohm has been 2 since 11-09; Sur 8 (bot picks 11-10, 11-11, 11-16, 11-17).
+
 **2026-11-15 21:05: Stephen's notes fixed; LK running.** (1) Keys: the inventory `protected` box was still the 11-03
 layout. Stephen's col 3 is empty now, so key stacks there were invisible -> keys_left 0 -> keys bought every visit; 199
 keys reached shared page 1 (08:00-15:36; he cleared them). Loot in col 4 (rune, diamond) was never stashed either. New box
