@@ -35,6 +35,7 @@ GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-0
               # Amn piled up waiting on a 6th Chipped Amethyst)
 STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
 TOP_RUNE = "Fal"  # the highest rune cubing makes
+NEVER_FROM = "Ist"  # runes from here up are never cube inputs, whatever `top` says (Stephen 2026-11-17)
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
 
@@ -57,7 +58,7 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
         have[out] = n(out) + 1
         steps.append((inputs, out))
 
-    last = RUNES.index(top)
+    last = min(RUNES.index(top), RUNES.index(NEVER_FROM))
     grades = GRADES.index("" if top_grade == "Normal" else top_grade) + 1
     while True:
         before = len(steps)

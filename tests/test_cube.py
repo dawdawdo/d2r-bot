@@ -88,3 +88,10 @@ def test_gem_short_names_runes_held_back_by_their_gem():
     steps = cube.plan(counts)
     assert len([s for s in steps if s[1] == "Sol"]) == 2
     assert cube.gem_short(counts, steps) == {"Amn": (24, "Chipped Amethyst", 0)}
+
+
+def test_ist_and_up_are_never_cubed():
+    counts = {r: 50 for r in cube.RUNES}
+    steps = cube.plan(counts, top="Zod")
+    used = {k for inputs, _ in steps for k in inputs}
+    assert not used & set(cube.RUNES[cube.RUNES.index("Ist"):])
