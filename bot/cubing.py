@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 CUBE_CELLS = [(x, y) for y in (324, 362, 400, 439) for x in (186, 224, 263)]
 TRANSMUTE = (224, 500)
-TRIPLE_MODS = ("ctrl", "shift")  # modifier + right-click on a stack slot = 3 into the cube; first that works
+TRIPLE_MODS = ()  # OFF: in the stash, ctrl/shift+right-click on a stack slot moves 3 to the INVENTORY, not the cube (live 11-16)
 AWAY = (640, 650)  # mouse parked off the stash: tooltips cover the cube
 
 

@@ -40,15 +40,15 @@ def test_runes_take_gems_before_gem_upgrades():
 
 def test_never_past_fal():
     counts = {"Fal": 20, "Flawed Ruby": 20, "Ko": 8, "Flawed Sapphire": 6}
-    have = final(counts, cube.plan(counts))
+    have = final(counts, cube.plan(counts, top="Fal"))
     assert have["Lem"] == 0 and have["Fal"] == 21
 
 
 def test_gems_for_runes_keep_a_reserve_only():
-    counts = {"Chipped Topaz": 30, "Flawed Sapphire": 30, "Chipped Skull": 30, "Flawed Emerald": 30}
+    counts = {"Chipped Topaz": 30, "Flawed Sapphire": 30, "Chipped Skull": 30, "Emerald": 30}
     have = final(counts, cube.plan(counts))
     assert have["Chipped Topaz"] == 30 and have["Flawed Sapphire"] == 30
-    assert have["Chipped Skull"] < 30 and have["Flawed Emerald"] < 30  # nothing needs these
+    assert have["Chipped Skull"] < 30 and have["Emerald"] < 30  # nothing needs these
 
 
 def test_full_rune_gem_stack_gets_cubed_down_to_the_reserve():
@@ -95,3 +95,18 @@ def test_ist_and_up_are_never_cubed():
     steps = cube.plan(counts, top="Zod")
     used = {k for inputs, _ in steps for k in inputs}
     assert not used & set(cube.RUNES[cube.RUNES.index("Ist"):])
+
+
+def test_cubes_up_through_ist_with_two_rune_recipes_from_pul():
+    counts = {"Fal": 20, "Lem": 10, "Pul": 14, "Um": 3, "Mal": 11, "Ist": 1, "Gul": 15,
+              "Flawed Ruby": 40, "Flawed Emerald": 40, "Flawed Diamond": 40, "Topaz": 40, "Amethyst": 40}
+    steps = cube.plan(counts, top="Ist")
+    for inputs, out in steps:
+        rune = next((k for k in inputs if k in cube.RUNES), None)
+        if rune is None:
+            continue  # a gem upgrade
+        assert inputs[rune] == (2 if rune in ("Pul", "Um", "Mal") else 3)
+        assert inputs[cube.RUNE_GEM[rune]] == 1
+    have = final(counts, steps)
+    assert have["Ist"] > 1 and have["Gul"] == 15 and have["Mal"] in (5, 6)
+    assert all(have[r] >= 5 for r in ("Fal", "Lem", "Pul", "Um", "Mal"))

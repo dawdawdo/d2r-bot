@@ -1,8 +1,9 @@
 ﻿"""Cube planning: which upgrades to transmute, given stash counts. Pure: no game, no pixels.
 
 Stephen 2026-11-07: cube gems and runes, keep 5 of each lower gem and rune for odds and ends, runes up through
-Fal; rune recipes take gems, so those come first. Recipes (offline D2R, all of them available):
-  3 runes -> next rune, El..Ort; from Thul to Ko each also takes a gem (RUNE_GEM)
+Fal (2026-11-17: through Ist; Ist and up never go in); rune recipes take gems, so those come first. Recipes
+(offline D2R, all of them available):
+  3 runes -> next rune, El..Ort; from Thul each also takes a gem (RUNE_GEM); from Pul up 2 runes (RUNES_IN)
   3 gems -> next grade, chipped..flawless -> perfect, skulls too; up to TOP_GRADE
 """
 from __future__ import annotations
@@ -25,7 +26,10 @@ RUNE_GEM = {  # rune -> the gem its upgrade also takes
     "Thul": gem("Chipped", "Topaz"), "Amn": gem("Chipped", "Amethyst"), "Sol": gem("Chipped", "Sapphire"),
     "Shael": gem("Chipped", "Ruby"), "Dol": gem("Chipped", "Emerald"), "Hel": gem("Chipped", "Diamond"),
     "Io": gem("Flawed", "Topaz"), "Lum": gem("Flawed", "Amethyst"), "Ko": gem("Flawed", "Sapphire"),
+    "Fal": gem("Flawed", "Ruby"), "Lem": gem("Flawed", "Emerald"), "Pul": gem("Flawed", "Diamond"),
+    "Um": gem("", "Topaz"), "Mal": gem("", "Amethyst"),
 }
+RUNES_IN = {"Pul": 2, "Um": 2, "Mal": 2}  # runes per upgrade: 3 up to Lem, 2 from Pul up (D2R recipes)
 # the gems rune recipes take: up to RUNE_GEM_RESERVE saved for them, the rest cubed up like any gem (2026-11-15
 # Stephen: Flawed Sapphire sat at 99 because these were never cubed; Ko/Io/Lum barely use them)
 FOR_RUNES = set(RUNE_GEM.values())
@@ -34,7 +38,7 @@ KEEP = 5
 GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-09: "runes first, then gems"; at 5,
               # Amn piled up waiting on a 6th Chipped Amethyst)
 STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
-TOP_RUNE = "Fal"  # the highest rune cubing makes
+TOP_RUNE = "Ist"  # the highest rune cubing makes (Stephen 2026-11-17: up through Ist; was Fal)
 NEVER_FROM = "Ist"  # runes from here up are never cube inputs, whatever `top` says (Stephen 2026-11-17)
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
@@ -65,8 +69,9 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
         for i in range(last):
             rune, nxt = RUNES[i], RUNES[i + 1]
             g = RUNE_GEM.get(rune)
-            while n(rune) - 3 >= keep and (g is None or n(g) - 1 >= gem_keep) and n(nxt) < stack_max:
-                do({rune: 3, g: 1} if g else {rune: 3}, nxt)
+            k = RUNES_IN.get(rune, 3)
+            while n(rune) - k >= keep and (g is None or n(g) - 1 >= gem_keep) and n(nxt) < stack_max:
+                do({rune: k, g: 1} if g else {rune: k}, nxt)
         for ladder in GEM_LADDERS:
             for low, high in zip(ladder[:grades], ladder[1:grades]):
                 floor = max(keep, reserve) if low in FOR_RUNES else keep
@@ -87,6 +92,6 @@ def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RU
     out = {}
     for rune in RUNES[:RUNES.index(top)]:
         g = RUNE_GEM.get(rune)
-        if g and have[rune] - 3 >= keep and have[g] - 1 < gem_keep:
+        if g and have[rune] - RUNES_IN.get(rune, 3) >= keep and have[g] - 1 < gem_keep:
             out[rune] = (have[rune], g, have[g])
     return out
