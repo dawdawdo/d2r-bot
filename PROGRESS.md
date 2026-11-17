@@ -5,7 +5,7 @@
 
 **2026-11-17 09:25: cube up through Ist; Ist+ never inputs.** cube.top_rune Ist, NEVER_FROM Ist (hard floor), Fal..Mal
 recipes added (Flawed Ruby/Emerald/Diamond, Topaz, Amethyst; 2 runes from Pul up). Rune recipes may use any gem down to 0
-(gem_keep 0, Stephen 11-17: "they will be replaced"); rune_gem_reserve 30 only stops gem-to-gem upgrades. Ctrl/shift+right-
+(gem_keep 0, Stephen 11-17: "they will be replaced"); gem upgrades keep 10 of every gem (cube.gem_reserve, Stephen 11-17). Ctrl/shift+right-
 click triples OFF: each try moved 3 runes to the inventory (stowaway put them back, nothing lost; the "3 short" diffs).
 Amn ~32 / Thul ~27 wait on Chipped Amethyst / Chipped Topaz (0: only from drops, used as soon as one arrives). Never cubed above
 Fal before today; Ohm has been 2 since 11-09; Sur 8 (bot picks 11-10, 11-11, 11-16, 11-17).

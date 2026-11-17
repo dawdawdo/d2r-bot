@@ -226,7 +226,7 @@ cube:
   every_hours: 6                # on the way through town, once this long after the last time
   keep: 5
   gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)
-  rune_gem_reserve: 30          # Chipped/Flawed gems that rune recipes take: keep this many, cube the rest (2026-11-15: Flawed Sapphire hit 99)
+  gem_reserve: 10               # gem -> next grade keeps 10 of every gem (color + grade); rune recipes may still use them to 0 (Stephen 2026-11-17)
   top_rune: Ist                 # Stephen 2026-11-17: cube up through Ist; Ist and up are never inputs (cube.NEVER_FROM)
   top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200

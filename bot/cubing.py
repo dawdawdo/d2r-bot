@@ -170,7 +170,7 @@ def cube_stash(bot: Controller) -> int:
     before = c.counts()
     steps = cube.plan(before, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
                       top_grade=ccfg.get("top_grade", cube.TOP_GRADE), gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP),
-                      reserve=ccfg.get("rune_gem_reserve", cube.RUNE_GEM_RESERVE))
+                      reserve=ccfg.get("gem_reserve", cube.GEM_RESERVE))
     steps = steps[:ccfg.get("max_transmutes", 200)]
     log.info("cube: %d transmute(s) planned: %s", len(steps), dict(Counter(o for _, o in steps)))
     log.info("cube: counts read: %s", {k: v for k, v in before.items() if v})

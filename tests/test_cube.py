@@ -44,29 +44,37 @@ def test_never_past_fal():
     assert have["Lem"] == 0 and have["Fal"] == 21
 
 
-def test_gems_for_runes_keep_a_reserve_only():
-    counts = {"Chipped Topaz": 30, "Flawed Sapphire": 30, "Chipped Skull": 30, "Emerald": 30}
+def test_every_gem_keeps_ten():
+    """Stephen 2026-11-17: reserve 10 of each gem type + quality when cubing gems up."""
+    counts = {"Chipped Topaz": 30, "Flawed Sapphire": 30, "Chipped Skull": 30, "Emerald": 30, "Ruby": 12}
     have = final(counts, cube.plan(counts))
-    assert have["Chipped Topaz"] == 30 and have["Flawed Sapphire"] == 30
-    assert have["Chipped Skull"] < 30 and have["Emerald"] < 30  # nothing needs these
+    for g in ("Chipped Topaz", "Flawed Sapphire", "Chipped Skull", "Emerald"):
+        assert 10 <= have[g] <= 12
+    assert have["Ruby"] == 12  # 12 - 3 < 10: not cubed
+
+
+def test_rune_recipes_still_use_gems_below_the_reserve():
+    counts = {"Amn": 20, "Chipped Amethyst": 3}
+    have = final(counts, cube.plan(counts))
+    assert have["Chipped Amethyst"] == 0 and have["Sol"] == 3
 
 
 def test_full_rune_gem_stack_gets_cubed_down_to_the_reserve():
     counts = {"Flawed Sapphire": 99, "Flawed Topaz": 85}  # 2026-11-15 stash
-    have = final(counts, cube.plan(counts, reserve=30))
-    assert 30 <= have["Flawed Sapphire"] <= 32 and have["Sapphire"] + have["Flawless Sapphire"] > 0
-    assert 30 <= have["Flawed Topaz"] <= 32
+    have = final(counts, cube.plan(counts))
+    assert 10 <= have["Flawed Sapphire"] <= 12 and have["Sapphire"] + have["Flawless Sapphire"] > 0
+    assert 10 <= have["Flawed Topaz"] <= 12
 
 
 def test_gems_climb_to_perfect_and_skulls_too():
-    counts = {"Flawless Ruby": 99, "Skull": 8}
+    counts = {"Flawless Ruby": 99, "Skull": 13}
     have = final(counts, cube.plan(counts, top_grade="Perfect"))
-    assert have["Flawless Ruby"] in (5, 6, 7) and have["Perfect Ruby"] == (99 - have["Flawless Ruby"]) // 3
+    assert have["Flawless Ruby"] in (10, 11, 12) and have["Perfect Ruby"] == (99 - have["Flawless Ruby"]) // 3
     assert have["Flawless Skull"] == 1
 
 
 def test_default_stops_at_flawless():
-    counts = {"Flawless Ruby": 90, "Ruby": 8}
+    counts = {"Flawless Ruby": 90, "Ruby": 13}
     have = final(counts, cube.plan(counts))
     assert have["Perfect Ruby"] == 0 and have["Flawless Ruby"] == 91
 
