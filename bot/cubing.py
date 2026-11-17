@@ -152,6 +152,31 @@ class Cuber:
         return True
 
 
+GEM_GRADE_CODE = {"Chipped": "c", "Flawed": "f", "": "s", "Flawless": "l", "Perfect": "p"}
+GEM_COLOR_CODE = {"Amethyst": "v", "Topaz": "y", "Sapphire": "b", "Emerald": "g", "Ruby": "r", "Diamond": "w"}
+
+
+def save_counts(since: float) -> dict[str, int]:
+    """Rune and gem counts from the save file (armory/pagedata.json, built from the session-start backup), if that
+    save is newer than `since` (the last cube): nothing but cubing lowers them, so they're a floor for what the
+    tabs hold. {} if older or unreadable. (2026-11-17: the tab read Lem 12 as 2, the leading 1 lost on the icon.)"""
+    import json
+    try:
+        d = json.loads((ROOT / "armory" / "pagedata.json").read_text())
+        if d["snap"] / 1000 <= since:
+            return {}
+        out = {r: n for r, n in d["runes"].items() if r in cube.RUNES}
+        for grade, g in GEM_GRADE_CODE.items():
+            for color, c in GEM_COLOR_CODE.items():
+                code = "gzv" if (grade, color) == ("Flawless", "Amethyst") else f"g{g}{c}"  # the game's odd one
+                if code in d["gems"]:
+                    out[cube.gem(grade, color)] = int(d["gems"][code])
+        return out
+    except Exception as e:
+        log.info("cube: no save counts (%s)", e)
+        return {}
+
+
 def cube_stash(bot: Controller) -> int:
     """With the stash open: plan from the tab counts and transmute. Returns transmutes done."""
     ccfg = bot.cfg.get("cube", {})
@@ -168,6 +193,11 @@ def cube_stash(bot: Controller) -> int:
         return 0
     bot.cube_blocked, bot.cube_blocked_n = False, 0
     before = c.counts()
+    floor = save_counts(state.load().get("cubed_at", 0))
+    if fixed := {k: (before.get(k, 0), n) for k, n in floor.items() if n > before.get(k, 0)}:
+        log.warning("cube: tab read below the save file, using the save (read, save): %s", fixed)
+        for k, (_, n) in fixed.items():
+            before[k] = n
     steps = cube.plan(before, keep=ccfg.get("keep", cube.KEEP), top=ccfg.get("top_rune", cube.TOP_RUNE),
                       top_grade=ccfg.get("top_grade", cube.TOP_GRADE), gem_keep=ccfg.get("gem_keep", cube.GEM_KEEP),
                       reserve=ccfg.get("gem_reserve", cube.GEM_RESERVE))

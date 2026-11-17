@@ -118,3 +118,16 @@ def test_cubes_up_through_ist_with_two_rune_recipes_from_pul():
     have = final(counts, steps)
     assert have["Ist"] > 1 and have["Gul"] == 15 and have["Mal"] in (5, 6)
     assert all(have[r] >= 5 for r in ("Fal", "Lem", "Pul", "Um", "Mal"))
+
+
+def test_save_counts_floor(tmp_path, monkeypatch):
+    import json
+    from bot import cubing
+    (tmp_path / "armory").mkdir()
+    (tmp_path / "armory" / "pagedata.json").write_text(json.dumps(
+        {"snap": 2000_000, "runes": {"Lem": 12, "Ist": 1}, "gems": {"gzv": 17, "gfr": 8, "gpv": 42}}))
+    monkeypatch.setattr(cubing, "ROOT", tmp_path)
+    got = cubing.save_counts(1000)
+    assert got["Lem"] == 12 and got["Flawless Amethyst"] == 17 and got["Flawed Ruby"] == 8
+    assert got["Perfect Amethyst"] == 42
+    assert cubing.save_counts(3000) == {}  # the save is older than the last cube

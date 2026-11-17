@@ -8,7 +8,9 @@ recipes added (Flawed Ruby/Emerald/Diamond, Topaz, Amethyst; 2 runes from Pul up
 (gem_keep 0, Stephen 11-17: "they will be replaced"); gem upgrades keep 10 of every gem (cube.gem_reserve, Stephen 11-17). Ctrl/shift+right-
 click triples OFF: each try moved 3 runes to the inventory (stowaway put them back, nothing lost; the "3 short" diffs).
 Amn ~32 / Thul ~27 wait on Chipped Amethyst / Chipped Topaz (0: only from drops, used as soon as one arrives). Never cubed above
-Fal before today; Ohm has been 2 since 11-09; Sur 8 (bot picks 11-10, 11-11, 11-16, 11-17).
+Fal before today; first cube with these rules 10:11 (4 Ist, 5 Lem, 5 Um, 2 Mal). The tab read Lem 12 as 2 (leading 1 lost on
+the icon): the cube now floors its tab read with the save-file counts (armory/pagedata.json) when that save is newer than
+the last cube. Ohm has been 2 since 11-09; Sur 8 (bot picks 11-10, 11-11, 11-16, 11-17).
 
 **2026-11-15 21:05: Stephen's notes fixed; LK running.** (1) Keys: the inventory `protected` box was still the 11-03
 layout. Stephen's col 3 is empty now, so key stacks there were invisible -> keys_left 0 -> keys bought every visit; 199
