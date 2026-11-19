@@ -538,9 +538,20 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         if what == "key" and getattr(bot, "keys_left", None) is not None:
             bot.keys_left += 1
         picked.append(what)
-    if bot.cfg["loot"].get("pick_gold") and not take_all and not getattr(bot, "gold_full", False):
+    if (bot.cfg["loot"].get("pick_gold") and not take_all and not getattr(bot, "gold_full", False)
+            and not getattr(bot, "gold_maxed", False)):
         _pick_gold(bot, bot.cfg["loot"].get("gold_max_picks", 8))
     return picked
+
+
+def _gold_at_feet(bot: Controller, kinds: dict) -> bool:
+    """A "Gold" label within ~50 px of where she stands after walking to a pile: the pickup didn't take."""
+    from .vision.labels import white_word
+
+    for g in find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"]):
+        if abs(g.center[0] - CENTER[0]) <= 50 and abs(g.center[1] - CENTER[1]) <= 50 and white_word(bot.frame, g) == "gold":
+            return True
+    return False
 
 
 def _pick_gold(bot: Controller, max_picks: int) -> int:
@@ -569,6 +580,15 @@ def _pick_gold(bot: Controller, max_picks: int) -> int:
         bot.click(*g.center)
         bot.wait_still(timeout=3, min_wait=0.4)
         n += 1
+        bot.check()
+        if _gold_at_feet(bot, kinds):  # walked onto it and it's still there: she can't carry more
+            bot.gold_misses = getattr(bot, "gold_misses", 0) + 1
+            if bot.gold_misses >= 2 and not getattr(bot, "gold_maxed", False):
+                bot.gold_maxed = True
+                log.info("gold: piles stay under her: carrying the max (deposit at the next stash stop)")
+                break
+        else:
+            bot.gold_misses = 0
     if n:
         bot.gold_picks = getattr(bot, "gold_picks", 0) + n
         bot.gold_since_deposit = getattr(bot, "gold_since_deposit", 0) + n  # town.deposit_gold

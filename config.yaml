@@ -216,7 +216,8 @@ stash:
   gold_button: [167, 533]       # shared tab: the gold amount under the grid opens "Withdraw" (live 2026-11-01)
   withdraw_ok: [577, 387]
   withdraw_gold: 200000         # Blizzaga carries ~0 and her own stash ~18k; a merc revive costs 50k
-  deposit_after_picks: 25       # carried gold -> shared stash, then personal, after this many chest gold piles (Stephen 2026-11-19: she carried 910k)
+  keep_gold: 200000             # deposit = everything in, this much back out (Stephen 2026-11-19: stash at the max, keep 200k)
+  deposit_after_picks: 200      # backstop; the deposit is due once gold piles stay under her (carrying the max, lk._gold_at_feet)
   deposit_retry_hours: 6        # both stashes full: no gold picking; try depositing again after this long
   personal_tab: [70, 70]        # stowaway: charms (blue tooltip name) go to Blizzaga's own page
   gems_tab: [190, 70]

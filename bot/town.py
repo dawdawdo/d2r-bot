@@ -924,6 +924,49 @@ def drop_cells(bot: Controller, cells, what: str) -> int:
     return len(cells)
 
 
+def _wait_for(bot: Controller, test, timeout: float = 5.0) -> bool:
+    """Poll a frame test: on GLaDOS the captured frame can lag the game by a second or more (2026-11-19: a frame
+    1.5 s after Deposit's OK still showed the box)."""
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < timeout:
+        if test(bot.capture.grab()):
+            return True
+        bot.kill.sleep(0.25)
+    return False
+
+
+def stash_gold_shown(frame: np.ndarray) -> bool:
+    """The stash tab's gold box under the grid holds 3+ digits (0 and 19 end left of x 200; 681654 doesn't)."""
+    g = cv2.cvtColor(frame[520:542, 200:295], cv2.COLOR_BGR2GRAY)
+    return int((g > 150).sum()) > 0
+
+
+def _dialog(bot: Controller, name: str) -> bool:
+    return bot.find(name, region=(560, 250, 160, 80), threshold=0.8) is not None
+
+
+def _withdraw_typed(bot: Controller, amount: int) -> bool:
+    """Stash open on a tab with gold: the gold amount under the grid opens "Withdraw", prefilled with the most she
+    can take; type `amount` instead and OK (live 2026-11-01, 2026-11-19). True if her carried gold shows after."""
+    scfg = bot.cfg["stash"]
+    if not _wait_for(bot, stash_gold_shown, 3):
+        log.warning("withdraw: the stash tab shows no gold")
+        return False
+    bot.click(*scfg["gold_button"])
+    if not _wait_for(bot, lambda f: _dialog(bot, "withdraw_dialog.png"), 3):
+        log.warning("withdraw: no Withdraw box")
+        return False
+    for _ in range(8):  # clear the prefilled number
+        bot.press("backspace")
+        bot.kill.sleep(0.05)
+    for ch in str(amount):
+        bot.press(ch)
+        bot.kill.sleep(0.05)
+    bot.kill.sleep(0.3)
+    bot.click(*scfg["withdraw_ok"])
+    return _wait_for(bot, lambda f: not carried_gold_empty(f), 5)
+
+
 def withdraw_gold(bot: Controller) -> bool:
     """After a revive failed for gold (logs/state.json gold_needed): take `stash.withdraw_gold` from the shared
     stash's gold (Stephen keeps it there, 2026-11-01). True if done."""
@@ -934,17 +977,7 @@ def withdraw_gold(bot: Controller) -> bool:
     scfg = bot.cfg["stash"]
     bot.click(*scfg["shared_tab"])
     bot.kill.sleep(0.4)
-    bot.click(*scfg["gold_button"])
-    bot.kill.sleep(0.8)
-    for _ in range(8):  # the box opens with the most she can carry; clear it
-        bot.press("backspace")
-        bot.kill.sleep(0.05)
-    for ch in str(scfg["withdraw_gold"]):
-        bot.press(ch)
-        bot.kill.sleep(0.05)
-    bot.kill.sleep(0.3)
-    bot.click(*scfg["withdraw_ok"])
-    bot.kill.sleep(0.6)
+    _withdraw_typed(bot, scfg["withdraw_gold"])
     bot.press("esc")
     bot.kill.sleep(0.4)
     state.save({**state.load(), "gold_needed": False, "withdrew_unspent": True})  # unverified: revive_merc finds out
@@ -964,9 +997,11 @@ def carried_gold_empty(frame: np.ndarray) -> bool:
 
 
 def deposit_gold(bot: Controller, force: bool = False) -> str | None:
-    """Stephen 2026-11-19: Blizzaga carried 910k (her max). Deposit to the shared stash, then her own stash; if gold
-    is still left, both are full: stop picking gold (bot.gold_full; logs/state.json) and retry every
-    `stash.deposit_retry_hours`. Runs at the stash stop once `stash.deposit_after_picks` piles were picked.
+    """Stephen 2026-11-19: once she carries the max (lk: gold piles stay under her, bot.gold_maxed), deposit to the
+    shared stash, else her own stash, then take `stash.keep_gold` (200k) back out of the same stash. The Deposit box
+    is prefilled with everything she carries and the bot can't read the number, hence all in, 200k out. Gold still
+    carried after both deposits: both stashes are full: stop picking gold (bot.gold_full; logs/state.json) and retry
+    every `stash.deposit_retry_hours`. Backstop: also due after `stash.deposit_after_picks` piles.
     Returns "shared", "personal", "full" or None (not due / stash didn't open)."""
     from . import state
 
@@ -978,7 +1013,7 @@ def deposit_gold(bot: Controller, force: bool = False) -> str | None:
     if not force:
         if full and time.time() - st.get("gold_full_at", 0) < scfg.get("deposit_retry_hours", 6) * 3600:
             return None
-        if not full and picked < scfg.get("deposit_after_picks", 25):
+        if not full and not getattr(bot, "gold_maxed", False) and picked < scfg.get("deposit_after_picks", 200):
             return None
     if not (stash_shown(bot) or open_stash(bot)):
         return None
@@ -989,17 +1024,23 @@ def deposit_gold(bot: Controller, force: bool = False) -> str | None:
         if carried_gold_empty(bot.capture.grab()):
             break
         bot.click(*DEPOSIT_COIN)
-        bot.kill.sleep(0.8)
-        if bot.find("deposit_dialog.png", region=(560, 250, 160, 80), threshold=0.8) is None:
+        if not _wait_for(bot, lambda f: _dialog(bot, "deposit_dialog.png"), 3):
             log.info("deposit: no Deposit box on the %s (stash gold full?)", tab.split("_")[0])
             continue  # no box: nothing to click OK on (that spot is the town: she'd walk)
         bot.click(*DEPOSIT_OK)
-        bot.kill.sleep(1.5)  # the inventory number lags ~1 s
-        where = tab.split("_")[0]
-        log.info("deposit: gold into the %s stash", where)
+        if _wait_for(bot, carried_gold_empty, 5):
+            where = tab.split("_")[0]
+            break
     left = not carried_gold_empty(bot.capture.grab())
+    if where and scfg.get("keep_gold", 0):
+        if not _withdraw_typed(bot, scfg["keep_gold"]):  # same tab is still up
+            log.warning("deposit: the %d gold withdrawal didn't arrive", scfg["keep_gold"])
+            bot.save_failure("keep_gold_withdraw")
+    log.info("deposit: everything into the %s stash, %d taken back", where, scfg.get("keep_gold", 0) if where else 0)
     close_stash(bot)
     bot.gold_since_deposit = 0
+    bot.gold_maxed = False
+    bot.gold_misses = 0
     bot.gold_full = left
     if left:
         log.warning("deposit: shared and personal stash gold are full; not picking gold (retry in %s h)",
