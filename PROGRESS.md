@@ -3,6 +3,14 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-19 12:00: gold deposit; key leak #2 fixed.** Blizzaga carried 910k (her max). town.deposit_gold at the stash stop
+after `stash.deposit_after_picks` (25) chest gold piles: shared tab -> coin left of the inventory gold box (the number is
+only a tooltip) -> Deposit box (prefilled with all; template deposit_dialog.png) -> OK; still carrying -> personal tab, same;
+still carrying -> both full: bot.gold_full / state gold_full, no gold picking, retry every 6 h. All live-tested (shared,
+personal; gold moved back: shared 910k, personal 19). Keys: 170 more on shared page 1 since 11-16: about 1 drop in 10 went
+into the stash (a lost Esc left it open; Ctrl+click with the stash open = stash). town.drop_cells now checks the stash is
+closed before and after opening the inventory. Cleared the 21 stacks live (moved out, dropped).
+
 **2026-11-17 09:25: cube up through Ist; Ist+ never inputs.** cube.top_rune Ist, NEVER_FROM Ist (hard floor), Fal..Mal
 recipes added (Flawed Ruby/Emerald/Diamond, Topaz, Amethyst; 2 runes from Pul up). Rune recipes may use any gem down to 0
 (gem_keep 0, Stephen 11-17: "they will be replaced"); gem upgrades keep 10 of every gem (cube.gem_reserve, Stephen 11-17). Ctrl/shift+right-

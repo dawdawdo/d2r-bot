@@ -538,7 +538,7 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         if what == "key" and getattr(bot, "keys_left", None) is not None:
             bot.keys_left += 1
         picked.append(what)
-    if bot.cfg["loot"].get("pick_gold") and not take_all:
+    if bot.cfg["loot"].get("pick_gold") and not take_all and not getattr(bot, "gold_full", False):
         _pick_gold(bot, bot.cfg["loot"].get("gold_max_picks", 8))
     return picked
 
@@ -571,6 +571,7 @@ def _pick_gold(bot: Controller, max_picks: int) -> int:
         n += 1
     if n:
         bot.gold_picks = getattr(bot, "gold_picks", 0) + n
+        bot.gold_since_deposit = getattr(bot, "gold_since_deposit", 0) + n  # town.deposit_gold
         log.info("gold: %d pile(s) clicked (%d this session)", n, bot.gold_picks)
     return n
 

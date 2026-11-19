@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from pathlib import Path
 
 import cv2
@@ -882,6 +883,47 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
     return False
 
 
+def stash_shown(bot: Controller) -> bool:
+    return bot.find("stash_open.png", region=(165, 16, 110, 42), threshold=0.8) is not None
+
+
+def close_stash(bot: Controller) -> bool:
+    """Esc until the stash panel is gone (a lost Esc left it open). True when it's closed."""
+    for _ in range(3):
+        if not stash_shown(bot):
+            return True
+        bot.press("esc")
+        bot.kill.sleep(0.4)
+    return not stash_shown(bot)
+
+
+def drop_cells(bot: Controller, cells, what: str) -> int:
+    """Ctrl+click inventory cells with ONLY the inventory open = drop them. With the stash open the same click moves
+    them into the stash: 2026-11-16..19 about 1 key drop in 10 went to shared page 1 (170 keys) because a lost Esc
+    left the stash up. So: stash closed (checked), inventory opened, stash checked again. Returns cells dropped."""
+    from .vision.inventory import cell_center
+
+    if not cells:
+        return 0
+    if not close_stash(bot):
+        log.warning("drop %s: the stash won't close; not dropping", what)
+        bot.save_failure("drop_stash_open")
+        return 0
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.35)
+    if stash_shown(bot):
+        log.warning("drop %s: the stash is showing with the inventory; not dropping", what)
+        bot.save_failure("drop_stash_open")
+        bot.press("esc")
+        bot.kill.sleep(0.4)
+        return 0
+    for cell in cells:
+        _ctrl_click(bot, *cell_center(*cell))
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.2)
+    return len(cells)
+
+
 def withdraw_gold(bot: Controller) -> bool:
     """After a revive failed for gold (logs/state.json gold_needed): take `stash.withdraw_gold` from the shared
     stash's gold (Stephen keeps it there, 2026-11-01). True if done."""
@@ -908,6 +950,66 @@ def withdraw_gold(bot: Controller) -> bool:
     state.save({**state.load(), "gold_needed": False, "withdrew_unspent": True})  # unverified: revive_merc finds out
     log.info("withdrew %d gold from the shared stash", scfg["withdraw_gold"])
     return True
+
+
+DEPOSIT_COIN = (1002, 530)  # the coin at the left of the inventory gold box (not the number: that's a tooltip)
+DEPOSIT_OK = (545, 385)
+
+
+def carried_gold_empty(frame: np.ndarray) -> bool:
+    """The inventory gold box shows 0 (or one digit): nothing bright right of the first digit (live 2026-11-19:
+    "0" ends at x 1032, "910000" at 1096)."""
+    g = cv2.cvtColor(frame[520:542, 1040:1125], cv2.COLOR_BGR2GRAY)
+    return int((g > 150).sum()) == 0
+
+
+def deposit_gold(bot: Controller, force: bool = False) -> str | None:
+    """Stephen 2026-11-19: Blizzaga carried 910k (her max). Deposit to the shared stash, then her own stash; if gold
+    is still left, both are full: stop picking gold (bot.gold_full; logs/state.json) and retry every
+    `stash.deposit_retry_hours`. Runs at the stash stop once `stash.deposit_after_picks` piles were picked.
+    Returns "shared", "personal", "full" or None (not due / stash didn't open)."""
+    from . import state
+
+    scfg = bot.cfg["stash"]
+    st = state.load()
+    full = st.get("gold_full", False)
+    bot.gold_full = full
+    picked = getattr(bot, "gold_since_deposit", 0)
+    if not force:
+        if full and time.time() - st.get("gold_full_at", 0) < scfg.get("deposit_retry_hours", 6) * 3600:
+            return None
+        if not full and picked < scfg.get("deposit_after_picks", 25):
+            return None
+    if not (stash_shown(bot) or open_stash(bot)):
+        return None
+    where = None
+    for tab in ("shared_tab", "personal_tab"):
+        bot.click(*scfg[tab])
+        bot.kill.sleep(0.4)
+        if carried_gold_empty(bot.capture.grab()):
+            break
+        bot.click(*DEPOSIT_COIN)
+        bot.kill.sleep(0.8)
+        if bot.find("deposit_dialog.png", region=(560, 250, 160, 80), threshold=0.8) is None:
+            log.info("deposit: no Deposit box on the %s (stash gold full?)", tab.split("_")[0])
+            continue  # no box: nothing to click OK on (that spot is the town: she'd walk)
+        bot.click(*DEPOSIT_OK)
+        bot.kill.sleep(1.5)  # the inventory number lags ~1 s
+        where = tab.split("_")[0]
+        log.info("deposit: gold into the %s stash", where)
+    left = not carried_gold_empty(bot.capture.grab())
+    close_stash(bot)
+    bot.gold_since_deposit = 0
+    bot.gold_full = left
+    if left:
+        log.warning("deposit: shared and personal stash gold are full; not picking gold (retry in %s h)",
+                    scfg.get("deposit_retry_hours", 6))
+        bot.save_failure("gold_full")
+    st = {**state.load(), "gold_full": left, "gold_full_at": time.time() if left else 0}
+    if where == "shared":
+        st["stash_gold_empty"] = False  # withdrawals for merc revives work again
+    state.save(st)
+    return "full" if left else where
 
 
 def belt_needs_restock(bot: Controller) -> bool:
@@ -1311,34 +1413,22 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             if stuck:
                 log.info("stowaway: rejuv stack full (99); dropping %d spare rejuv(s), no spares until a restock",
                          len(stuck))
-                bot.press(bot.cfg["hotkeys"]["inventory"])
-                bot.kill.sleep(0.35)
-                for cell in stuck:
-                    _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
-                bot.press(bot.cfg["hotkeys"]["inventory"])
+                drop_cells(bot, stuck, "spare rejuvs")
                 bot.kill.sleep(0.2)
             if full_stacks:
                 if not getattr(bot, "full_stack_seen", False):  # one frame a session: shows what the game did
                     bot.full_stack_seen = True
                     bot.save_failure("stack_full_dropping")
                 log.warning("stowaway: stack full, dropping %d item(s); tooltips in logs/loot", len(full_stacks))
-                bot.press(bot.cfg["hotkeys"]["inventory"])
-                bot.kill.sleep(0.35)
-                for cell in full_stacks:
-                    _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
-                bot.press(bot.cfg["hotkeys"]["inventory"])
-                bot.kill.sleep(0.2)
+                drop_cells(bot, full_stacks, "full-stack items")
     keys = inv["key"]
     st = state.load()
     if len(keys) > 1:
         kept = tuple(st.get("key_cell") or ())
         kept = kept if kept in keys else keys[0]
+        done["dropped"] += drop_cells(bot, [cell for cell in keys if cell != kept], "spare key stacks")
         bot.press(bot.cfg["hotkeys"]["inventory"])
         bot.kill.sleep(0.35)
-        for cell in keys:
-            if cell != kept:
-                _ctrl_click(bot, *cell_center(*cell))  # Ctrl+click with only the inventory open = drop
-                done["dropped"] += 1
         still = _scan_inventory(bot)["key"]
         bot.press(bot.cfg["hotkeys"]["inventory"])
         bot.kill.sleep(0.2)
@@ -1416,6 +1506,7 @@ def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None,
         bot.merc_wait, bot.merc_fails = 0, 0  # revive on the next run
     if stow:
         stowaway(bot)
+    deposit_gold(bot)
     from .cubing import cube_if_due
     cube_if_due(bot)
     fix_route_end(bot)  # after the restock: opening the stash walks us ~(160, 110) px to it
