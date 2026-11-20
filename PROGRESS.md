@@ -3,6 +3,12 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 09:00: gold picking + racks off (speed).** Last 343 runs: 80% ok, 18% chickens, mostly with an empty belt
+("belt is empty" ~140x a night: LK is chest-rejuvs-only, stash out of rejuvs). Typical run 122 s = menu 17 + town 33 +
+war cries 4 + LK 55 + exit 13. `loot.pick_gold: false` (stash gold full: 2.5M shared + 1.77M; ~10 s/run, and a false
+"carrying the max" sent her to deposit every other run); `lk.racks: false` (489 clicks, 481 nothing). **Asked Stephen:**
+buy healing potions for LK (Ormus) or chicken at 40% instead of 50%? Until he answers: unchanged.
+
 **2026-11-20 07:40: keys in the stash again: fixed (2nd cause).** 4 key stacks reached shared page 1 overnight
 (save diff 21:17 -> 02:46: only those 4 keys were new there). Not the 11-19 drop-with-stash-open bug: the stowaway's
 inventory scan used a frame from before the panel was drawn (GLaDOS lag) -> 0 empty cells, everything "loot", so the

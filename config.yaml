@@ -98,6 +98,9 @@ risk_levels:
       refill_no_potions: true    # LK refill runs flee or chicken instead of drinking. About 20 rejuvs an hour, not 16,
                                  # but she died once in 90 of those runs (2026-11-06 20:49, 48% life, dead within 3 s)
 
+lk:
+  racks: false           # 2026-11-20: 489 Weapon Rack clicks, 481 'nothing wanted' (6 gems, 1 rune, rejuv, key): ~4 s/run for nothing
+
 meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
   spot: south           # south = the bottom bank (Stephen's spot, no Council hunt); dock = the north-east dock
   buy_mana: false       # NEVER (Stephen 2026-11-08: red/blue potions aren't useful; don't buy, the belt's are drunk in town)
@@ -135,7 +138,7 @@ loot:
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
   rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
   pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
-  pick_gold: true                # chest gold piles after the item picks (2026-11-15: stash gold spent; pays merc revives)
+  pick_gold: false               # 2026-11-20 off: stash gold full (2.5M shared + 1.77M), ~10 s/run. On again below ~1M (11-15: spent; pays merc revives)
   gold_max_picks: 8
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.

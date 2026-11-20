@@ -69,7 +69,8 @@ def test_loot_picks_key_then_gold():
         clicks.append((x, y))
         cv2.rectangle(bot.frame, (x - 25, y - 10), (x + 25, y + 10), (60, 60, 60), -1)
 
-    bot = SimpleNamespace(cfg=CFG, frame=frame.copy(), keys_left=2, _labels_known=True, check=lambda: None,
+    cfg = {**CFG, "loot": {**CFG["loot"], "pick_gold": True}}  # on for this test whatever config.yaml says
+    bot = SimpleNamespace(cfg=cfg, frame=frame.copy(), keys_left=2, _labels_known=True, check=lambda: None,
                           click=click, wait_still=lambda **k: True, sleep=lambda s: None,
                           capture=SimpleNamespace(grab=lambda: frame.copy()))  # an empty scan looks once more
     assert loot(bot) == ["key"]
