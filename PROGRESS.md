@@ -3,6 +3,8 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 18:10: drink at 60% (was 70%).** Gold off didn't fix chickens (22% today): the cause is an empty belt (stash rejuvs dry since 11-14; 'belt is empty' before nearly every chicken). Today ~62 rejuvs drunk vs 28 found; finds are steady at ~4 per 100 chests, but chickens cut chests/run 5.5 -> 3.9. Next if still short: refill mode (no drinking) until 20 in stash. Bases: Act 3 (H) Chest C includes Equip B -> armo/weap TCs, so super chests can drop bases (rare); racks probed so far are Weapon Racks (weapons only), no Armor Stands found. Stash has no white armor bases yet.
+
 **2026-11-20 11:40: `features:` block in config.yaml (Stephen: make the extras toggleable).** One switch each:
 gold_pickup (OFF: rebuild rejuvs; stash rejuvs went 21 -> 83 on 11-12/13 with LK alone, empty since the 11-14 Pit tests
 and the gold-era chickens), gold_deposit, weapon_racks (off), gems_and_bases, charms, spare_rejuvs, war_cries, cube,
