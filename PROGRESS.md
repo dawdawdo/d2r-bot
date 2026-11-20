@@ -3,6 +3,14 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 07:40: keys in the stash again: fixed (2nd cause).** 4 key stacks reached shared page 1 overnight
+(save diff 21:17 -> 02:46: only those 4 keys were new there). Not the 11-19 drop-with-stash-open bug: the stowaway's
+inventory scan used a frame from before the panel was drawn (GLaDOS lag) -> 0 empty cells, everything "loot", so the
+key stack was Ctrl+clicked in with the loot (logs/loot tooltips show "Key" at (3,2)/(3,0)). Fix: `_scan_inventory(wait_open=True)`
+polls `inventory_open` first; the per-item hover frame skips any key stack (log "is a key stack, not loot").
+Night 11-19 21:17 -> 11-20 07:20: 240 runs, 193 ok, 40 chickens, 1 death; Ohm, Sur x2, Hel x2, Lem, Lum x2, Dol (Ohm/Sur/Hel/Lem/Lum/Dol
+verified in the save). No bases yet. Racks: ~45/47 "nothing wanted" in the first hour (keep watching).
+
 **2026-11-19 21:15: Weapon Racks in LK (Stephen OK'd).** Probe (`tools/rack_probe.py`, scratch/racks*): both NE huts
 have a Weapon Rack at the same offset from the bonfire (BONFIRE_LAYOUT ne.rack = (558, -512)). **No Armor Stand** on
 this map (maxroll puts one in the 2-chest hut; the long hut here has only "Stash" objects). After the NE chest,

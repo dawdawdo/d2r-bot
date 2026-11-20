@@ -1175,15 +1175,32 @@ def _drink_potions(bot: Controller, cells) -> int:
     return len(pots)
 
 
-def _scan_inventory(bot: Controller) -> dict:
-    from .vision.inventory import protected_cells, scan
-
-    bot.input.move(640, 600)  # no tooltip over the grid
-    bot.kill.sleep(0.15)
+def _key_template(bot: Controller) -> np.ndarray:
     tpl = bot._templates.get("inv_key.png")
     if tpl is None:
         tpl = bot._templates["inv_key.png"] = cv2.imread(str(ASSETS / "inv_key.png"))
-    return scan(bot.capture.grab(), tpl, protected_cells(bot.cfg["inventory"]["protected"]))
+    return tpl
+
+
+def _scan_inventory(bot: Controller, wait_open: bool = False) -> dict:
+    """`wait_open`: the inventory was just opened, so poll until its panel shows. 2026-11-19/20: a frame from before
+    the panel was drawn (GLaDOS frames lag) read every cell as loot, 0 empty, and the stowaway Ctrl+clicked the key
+    stack into shared page 1 with the real loot (4 stacks in one night)."""
+    from .vision.inventory import inventory_open, protected_cells, scan
+
+    bot.input.move(640, 600)  # no tooltip over the grid
+    bot.kill.sleep(0.15)
+    frame = bot.capture.grab()
+    if wait_open:
+        t0 = time.monotonic()
+        while not inventory_open(frame) and time.monotonic() - t0 < 3.0:
+            bot.kill.sleep(0.25)
+            frame = bot.capture.grab()
+        if not inventory_open(frame):
+            log.warning("inventory scan: the inventory panel isn't showing")
+        bot.kill.sleep(0.15)  # the header draws first: one more frame for the grid
+        frame = bot.capture.grab()
+    return scan(frame, _key_template(bot), protected_cells(bot.cfg["inventory"]["protected"]))
 
 
 LOOT_CSV = ROOT / "logs" / "loot.csv"
@@ -1260,7 +1277,7 @@ def count_keys(bot: Controller) -> int | None:
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
     try:
-        keys = _scan_inventory(bot)["key"]
+        keys = _scan_inventory(bot, wait_open=True)["key"]
         total = None
         for cell in keys:
             bot.input.move(*cell_center(*cell))
@@ -1335,13 +1352,13 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
     goes to shared page 1. An extra key stack means the kept one is full, so keys_left becomes 12.
     `stash=False` (no stash nearby, e.g. the A4 spawn): keys only; None if there's loot for the stash."""
     from . import state
-    from .vision.inventory import cell_center, is_empty, runes_added
+    from .vision.inventory import cell_center, is_empty, is_key, runes_added
 
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
-    inv = _scan_inventory(bot)
+    inv = _scan_inventory(bot, wait_open=True)
     if _drink_potions(bot, inv["other"]):  # never stash a bought potion (Stephen 2026-11-13: 8 went to shared page 1)
-        inv = _scan_inventory(bot)
+        inv = _scan_inventory(bot, wait_open=True)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
     if inv["other"] and not stash:
@@ -1373,6 +1390,11 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                     if is_empty(bot.capture.grab(), c, r):
                         continue
                 tip = _save_tooltip(bot, *cell_center(c, r))
+                if is_key(tip, c, r, _key_template(bot)):  # the scan's frame was wrong: never stash keys
+                    log.warning("stowaway: (%d, %d) is a key stack, not loot; leaving it", c, r)
+                    inv["key"].append((c, r))
+                    loot_cells.discard((c, r))
+                    continue
                 charm = _is_charm(tip, *cell_center(c, r))
                 if _is_rejuv(bot, tip, *cell_center(c, r)):
                     rejuv_cells.add((c, r))
@@ -1470,7 +1492,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         done["dropped"] += drop_cells(bot, [cell for cell in keys if cell != kept], "spare key stacks")
         bot.press(bot.cfg["hotkeys"]["inventory"])
         bot.kill.sleep(0.35)
-        still = _scan_inventory(bot)["key"]
+        still = _scan_inventory(bot, wait_open=True)["key"]
         bot.press(bot.cfg["hotkeys"]["inventory"])
         bot.kill.sleep(0.2)
         if len(still) > 1:
@@ -1658,7 +1680,7 @@ def free_cells(bot: Controller) -> int:
     """Empty inventory cells outside Stephen's protected ones (opens and closes the inventory)."""
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
-    inv = _scan_inventory(bot)
+    inv = _scan_inventory(bot, wait_open=True)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
     return len(inv["empty"])
