@@ -3,6 +3,13 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-19 21:15: Weapon Racks in LK (Stephen OK'd).** Probe (`tools/rack_probe.py`, scratch/racks*): both NE huts
+have a Weapon Rack at the same offset from the bonfire (BONFIRE_LAYOUT ne.rack = (558, -512)). **No Armor Stand** on
+this map (maxroll puts one in the 2-chest hut; the long hut here has only "Stash" objects). After the NE chest,
+`_visit` hover-scans 105 px for the rack tooltip (`tt_weapon_rack.png`), clicks it, loots (log "rack: ..."). Toggle
+`lk.racks: false`. A probe click on the west rack showed a "...Scythe" label (filter shows only Grim Scythe): racks may
+feed the Insight bases. **Check:** "rack:" lines, `rack_not_found` frames, run time (+~5 s).
+
 **2026-11-19 20:35: all elite body armors added to RUNEWORD_BASES (Stephen), filter installed, LK running.** Note: the session-start "unprotected items" warning also lists loot left in the inventory at exit (gems): expected.
 
 **2026-11-19 20:15: Stephen's layout changed again; charm + skull stashed and put back.** He played on Singularity

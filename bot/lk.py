@@ -56,7 +56,8 @@ class MapChanged(BotError):
 BONFIRE_LAYOUT = {
     "nw":      {"stand": (-421, -191), "chest": (-582, -281)},  # hut NW of the fire, near its door
     "nw_deep": {"stand": (-784, -373), "chest": (-957, -376)},  # same hut, far end
-    "ne":      {"stand": (711, -281),  "chest": (850, -333)},   # hut NE of the fire
+    "ne":      {"stand": (711, -281),  "chest": (850, -333),    # hut NE of the fire
+                "rack": (558, -512)},  # its Weapon Rack, back wall (2026-11-19 probe: east (554,-505), west (563,-517))
 }
 
 
@@ -66,9 +67,12 @@ def bonfire_targets(camp: dict) -> list[dict]:
     out = []
     for slot in camp.get("order", list(BONFIRE_LAYOUT)):
         lay = BONFIRE_LAYOUT[slot]
-        out.append({"name": f"{camp['name']}_{slot}", "bonfire": [bx, by],
-                    "world": [bx + lay["stand"][0], by + lay["stand"][1]],
-                    "chests_world": [[bx + lay["chest"][0], by + lay["chest"][1]]]})
+        t = {"name": f"{camp['name']}_{slot}", "bonfire": [bx, by],
+             "world": [bx + lay["stand"][0], by + lay["stand"][1]],
+             "chests_world": [[bx + lay["chest"][0], by + lay["chest"][1]]]}
+        if "rack" in lay:
+            t["racks_world"] = [[bx + lay["rack"][0], by + lay["rack"][1]]]
+        out.append(t)
     return out
 
 
@@ -247,6 +251,23 @@ def _is_chest(frame: np.ndarray, box) -> bool:
     return False
 
 
+_RACK_TMPLS: list | None = None
+
+
+def _is_rack(frame: np.ndarray, box) -> bool:
+    """Tooltip text says Weapon Rack (bot/assets/templates/tt_weapon_rack.png). A rack drops one item, once a game:
+    a random weapon of the area's level, mostly white, so runeword bases (Stephen, 2026-11-19)."""
+    global _RACK_TMPLS
+    from .vision.screen import ASSETS
+
+    if _RACK_TMPLS is None:
+        _RACK_TMPLS = [cv2.imread(str(p)) for p in sorted(ASSETS.glob("tt_*_rack*.png"))]
+    bx, by, bw, bh = box
+    c = cv2.copyMakeBorder(frame[by : by + bh, bx : bx + bw], 2, 2, 2, 2, cv2.BORDER_REPLICATE)
+    return any(t.shape[0] <= c.shape[0] and t.shape[1] <= c.shape[1]
+               and cv2.minMaxLoc(cv2.matchTemplate(c, t, cv2.TM_CCOEFF_NORMED))[1] > 0.8 for t in _RACK_TMPLS)
+
+
 _DEBUG_TT = bool(os.environ.get("D2R_DEBUG_TOOLTIPS"))
 
 
@@ -306,7 +327,7 @@ def find_chest_template(frame: np.ndarray, x: int, y: int, win: int = CHEST_TPL_
 
 
 def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 35,
-               click: bool = True, odo=None) -> tuple[int, int] | None:
+               click: bool = True, odo=None, kind: str = "chest") -> tuple[int, int] | None:
     """Open the chest at about (x, y). Teleport landings jitter, so if the exact point shows no
     tooltip, hover-scan outward in rings (nearest first) up to `radius`. Returns where it was found.
     `click=False` only looks (map learning: is there a chest here?). With `odo`, the scan stops early
@@ -321,6 +342,7 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         return None
     from .vision.tooltip import find_tooltip
 
+    match = _is_rack if kind == "rack" else _is_chest
     before = bot.capture.grab()  # detector label: the view before any hover tooltip
     for i, (px, py) in enumerate(pts):
         bot.check()  # every point: bursts from champion packs kill in about a second
@@ -334,10 +356,17 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
         bot.kill.sleep(0.09)
         f = bot.capture.grab()
         box = find_tooltip(f, px, py)
-        if _DEBUG_TT and (i == 0 or (box is not None and not _is_chest(f, box))):
+        if _DEBUG_TT and kind == "chest" and (i == 0 or (box is not None and not _is_chest(f, box))):
             _debug_tooltip(f, px, py, box, i)
-        if box is not None and not _is_chest(f, box):
+        if box is not None and not match(f, box):
             continue
+        if box is not None and kind != "chest":
+            if not click:
+                return px, py
+            log.info("%s at (%d, %d), %d px from expected", kind, px, py, abs(px - x) + abs(py - y))
+            bot.click(px, py)
+            bot.wait_still(timeout=2.5, min_wait=0.6)
+            return px, py
         if box is not None:
             if i:
                 log.info("chest found at (%d, %d), %d px from expected", px, py, abs(px - x) + abs(py - y))
@@ -351,6 +380,10 @@ def open_chest(bot: Controller, x: int, y: int, radius: int = 220, step: int = 3
             bot.wait_still(timeout=2.5, min_wait=0.6)
             det_label(bot, bot.capture.grab(), "chest_open", point=(px, py))  # she may have walked: the point is a hint only
             return px, py
+    if kind != "chest":
+        bot.save_failure(f"{kind}_not_found")
+        log.warning("no %s tooltip near (%d, %d)", kind, x, y)
+        return None
     hit = _template_fallback(bot, x, y, click)
     if hit is not None:
         return hit
@@ -772,3 +805,12 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
             stats["chests"] += 1
             stats["picked"] += loot(bot)
             odo.update(bot.capture.grab())  # picking items walks us around
+    if t.get("racks_world") and (bot.cfg.get("lk") or {}).get("racks", True) and not odo.lost:
+        for rw in t["racks_world"]:  # after the chest: its labels are picked, the rack's drop is the only new one
+            rx, ry = world_to_screen(odo, *rw)
+            if open_chest(bot, int(rx), int(ry), odo=odo, radius=105, kind="rack"):
+                stats["racks"] = stats.get("racks", 0) + 1
+                got = loot(bot)
+                stats["picked"] += got
+                log.info("rack: %s", ", ".join(got) if got else "nothing wanted")
+            odo.update(bot.capture.grab())
