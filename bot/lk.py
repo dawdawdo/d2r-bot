@@ -587,6 +587,18 @@ def _gold_at_feet(bot: Controller, kinds: dict) -> bool:
     return False
 
 
+def under_attack(bot: Controller, hp0: float | None, mp0: float | None) -> bool:
+    """Taking damage since `hp0`/`mp0` (energy shield takes it from mana first). 2026-11-15..20: with chest gold on,
+    potions/chickens during the loot phase went from 0.03 to 0.25 a run and chickens from ~4 % to ~25 %."""
+    lcfg = bot.cfg["loot"]
+    hp, mp = getattr(bot, "hp", None), getattr(bot, "mp", None)
+    if hp is None or hp0 is None:
+        return False
+    if hp < lcfg.get("gold_min_hp", 90) or hp < hp0 - lcfg.get("gold_hp_drop", 5):
+        return True
+    return mp is not None and mp0 is not None and mp < mp0 - lcfg.get("gold_mp_drop", 10)
+
+
 def _pick_gold(bot: Controller, max_picks: int) -> int:
     """Chest gold (Stephen 2026-11-15: the Pit spent the stash's gold; LK chests pay the merc revive). A pile shows
     as two white labels, the amount then the word "Gold"; biggest amounts (widest number) first. Not in the picked
@@ -594,15 +606,25 @@ def _pick_gold(bot: Controller, max_picks: int) -> int:
     from .vision.labels import white_word
 
     kinds = {"white": bot.cfg["vision"]["labels"]["white"]}
+    lcfg = bot.cfg["loot"]
+    max_dist = lcfg.get("gold_max_dist", 0)
     tried: dict[tuple[int, int], int] = {}
     n = 0
+    bot.check()
+    hp0, mp0 = getattr(bot, "hp", None), getattr(bot, "mp", None)
     for _ in range(max_picks):
         bot.check()
+        if under_attack(bot, hp0, mp0):
+            log.info("gold: under attack (HP %.0f%% MP %.0f%%, was %.0f%% / %.0f%%); leaving the rest", bot.hp, bot.mp,
+                     hp0 or 0, mp0 or 0)
+            break
         labs = find_labels(bot.frame, kinds, ignore=bot.cfg["vision"]["label_ignore"])
         piles = []
         for g in labs:
             if white_word(bot.frame, g) != "gold" or tried.get((g.center[0] // 10, g.center[1] // 10), 0) >= 2:
                 continue
+            if max_dist and abs(g.center[0] - CENTER[0]) + abs(g.center[1] - CENTER[1]) > max_dist:
+                continue  # a walk that far drags her into the pack
             amt = [a for a in labs if a is not g and abs(a.y - g.y) <= 3 and 0 <= g.x - (a.x + a.w) <= 12]
             piles.append((amt[0].w if amt else 0, g))
         if not piles:

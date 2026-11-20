@@ -3,6 +3,13 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 10:40: chickens traced to chest gold; gold picks now careful.** Stephen: no potion buying; get back to
+rejuvs > use. Chickens were 3-5 % through 11-12 and 22-32 % from 11-15, the day `loot.pick_gold` went in. Potion/
+chicken/empty-belt events right after looting: 0.03/run (11-09..11) -> 0.25/run (11-17..19); others ~2x. Gold stays
+(Stephen wants every tab full) but `lk.under_attack` stops the gold picks when life < 90, life -5 or mana -10 (energy
+shield) since they started, and piles > 260 px away are left (`loot.gold_max_dist`). **Check:** chicken % and
+rejuv picks vs drinks per day (runs.csv + "-> potion" log lines) over the next day; target back near 5 %.
+
 **2026-11-20 09:00: racks off (speed).** Last 343 runs: 80% ok, 18% chickens, mostly with an empty belt
 ("belt is empty" ~140x a night: LK is chest-rejuvs-only, stash out of rejuvs). Typical run 122 s = menu 17 + town 33 +
 war cries 4 + LK 55 + exit 13. Gold picking stays ON (briefly off; Stephen: fill every tab, shared + personal. 11-20 10:05 save: shared pages

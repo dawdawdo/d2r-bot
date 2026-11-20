@@ -140,6 +140,10 @@ loot:
   pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
   pick_gold: true                # Stephen 2026-11-20: wants every stash tab full of gold (5 shared pages x 2.5M + personal 2.5M); deposits overflow page to page
   gold_max_picks: 8
+  gold_max_dist: 260             # px (|dx|+|dy|) from her: farther piles are left (walks into the pack)
+  gold_min_hp: 90                # stop picking gold below this life, or when life drops 5 / mana (energy shield) 10
+  gold_hp_drop: 5                #   points during the gold picks (2026-11-20: gold made chickens ~4% -> ~25%)
+  gold_mp_drop: 10
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
