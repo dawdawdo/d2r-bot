@@ -62,7 +62,7 @@ recording:  # training data for the learned-perception plan (fixtures/raw/sample
 
 safety:
   chicken_hp_pct: 50
-  potion_hp_pct: 70
+  potion_hp_pct: 60   # was 70 (2026-11-20 Stephen: drink later; belt dry, ~62 drunk vs 28 found)
   potion_mp_pct: 25    # was 45 (2026-10-26 morning): burned all 98 stash rejuvs in a few hours
   potion_cooldown_s: 1.5
   es_broken_mp_pct: 8  # chicken if mana < 8% AND life < 75% (shield gone under attack)
