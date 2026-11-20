@@ -716,7 +716,10 @@ def run_route(bot: Controller, route: dict, end=None) -> dict:
     unfound = set()  # bonfires a lost-odometry search couldn't find this run
     bot.flee_ok = True
     try:
+        skip = set((bot.cfg.get("lk") or {}).get("skip_targets") or ())  # features.skip_huts
         for t in route["targets"]:
+            if t["name"] in skip:
+                continue
             bf = t.get("bonfire")
             if bf is not None and tuple(bf) in unfound:
                 stats.setdefault("skipped", []).append(t["name"])

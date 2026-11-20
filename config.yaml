@@ -25,8 +25,6 @@ game:
   route: blizzaga_hell                      # maps/<route>/route.yaml
   players: 7                                # /players N once per session (monsters weaker, chest loot same)
   meph_players: 1                           # /players before Level 3 (Stephen 2026-11-01); LK stays at players
-  act4_exit: true                           # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
-  skip_terror: false                        # true = wait out a terrorized LK at the menu. Off 2026-11-03 (Stephen: she should handle it)
 
 paths:
   save_dir:   # per platform (sys.platform)
@@ -98,9 +96,6 @@ risk_levels:
       refill_no_potions: true    # LK refill runs flee or chicken instead of drinking. About 20 rejuvs an hour, not 16,
                                  # but she died once in 90 of those runs (2026-11-06 20:49, 48% life, dead within 3 s)
 
-lk:
-  racks: false           # 2026-11-20: 489 Weapon Rack clicks, 481 'nothing wanted' (6 gems, 1 rune, rejuv, key): ~4 s/run for nothing
-
 meph:                   # the Mephisto task (bot/tasks/meph.py, moat trick from the dock)
   spot: south           # south = the bottom bank (Stephen's spot, no Council hunt); dock = the north-east dock
   buy_mana: false       # NEVER (Stephen 2026-11-08: red/blue potions aren't useful; don't buy, the belt's are drunk in town)
@@ -134,16 +129,30 @@ loot:
   # tools/chronicle_filter.py regenerates it from the Chronicle. No item list to keep in step here.
   filter_name: "LK Bot"
   chronicle_tables: 'D:/Google_Drive/Projects/D2R_Bot_20260314/Codebase/armory_tools/scanbundle.tgz'
-  pick: [rune, unique, set, magic, gray]  # magic = blue labels that say "Charm"; gray = socketed/eth bases
+  pick: [rune, unique, set, gray]  # gray = socketed/eth bases; charms ("magic"): features.charms
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
-  rejuv_spares: true             # also pick rejuvs with the belt full, for the stash (Stephen 2026-11-02: fine)
-  pick_white_other: true         # white labels that aren't keys/rejuvs = gems, skulls, runeword bases (filter rules)
-  pick_gold: true                # Stephen 2026-11-20: wants every stash tab full of gold (5 shared pages x 2.5M + personal 2.5M); deposits overflow page to page
   gold_max_picks: 8
   gold_max_dist: 260             # px (|dx|+|dy|) from her: farther piles are left (walks into the pack)
   gold_min_hp: 90                # stop picking gold below this life, or when life drops 5 / mana (energy shield) 10
   gold_hp_drop: 5                #   points during the gold picks (2026-11-20: gold made chickens ~4% -> ~25%)
   gold_mp_drop: 10
+
+# Run extras, one switch each (Stephen 2026-11-20: find the balance of loot vs time and safety). bot/config.py
+# FEATURES maps each onto the setting the code reads. Restart the bot (site stop/start) after a change.
+features:
+  gold_pickup: false     # chest gold piles after the items. Off 11-20 to rebuild rejuvs: chickens ~4% -> ~25% with it on
+                         #   (loot.gold_*: distance / under-attack limits when on). Stephen wants every tab full eventually
+  gold_deposit: true     # carrying the max -> deposit at the stash (fills shared pages, then personal), keep 200k
+  weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted;
+                         #   revisit if the chests give no runeword base by ~8,000 chests
+  gems_and_bases: true   # white labels that aren't keys/rejuvs: gems, skulls, runeword bases (the filter picks which)
+  charms: true           # blue labels that say "Charm"
+  spare_rejuvs: true     # rejuvs with the belt full go to the stash (Materials tab)
+  war_cries: true        # BO/BC on arrival in LK (~4 s; more life and mana)
+  cube: true             # cube runes/gems up on the way through town (cube.every_hours)
+  act4_exit: true        # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
+  wait_out_terror: false # true = wait out a terrorized LK at the menu (off 11-03: she handles it)
+  skip_huts: []          # LK chest targets to leave out: east_ne east_nw east_nw_deep west_ne west_nw west_nw_deep
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:
@@ -232,7 +241,6 @@ stash:
 # Cubing at the stash (bot/cubing.py, bot/cube.py; Stephen 2026-11-07): keep 5 of each lower gem and rune,
 # runes up through Fal; gems that rune recipes take are saved for them
 cube:
-  enabled: true
   every_hours: 6                # on the way through town, once this long after the last time
   keep: 5
   gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)

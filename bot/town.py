@@ -1006,6 +1006,8 @@ def deposit_gold(bot: Controller, force: bool = False) -> str | None:
     from . import state
 
     scfg = bot.cfg["stash"]
+    if not scfg.get("deposit", True) and not force:  # features.gold_deposit
+        return None
     st = state.load()
     full = st.get("gold_full", False)
     bot.gold_full = full

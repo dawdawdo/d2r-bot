@@ -36,7 +36,8 @@ class LowerKurast(Task):
         if self.cfg["game"].get("skip_terror", True) and terrorized(bot.capture.grab()):
             raise TerrorZone("Lower Kurast is terrorized this hour")
         bot.deadline = bot.clock() + self.cfg["safety"]["run_timeout_s"]  # the farming part only
-        cast_warcries(bot)
+        if (self.cfg.get("lk") or {}).get("war_cries", True):  # features.war_cries
+            cast_warcries(bot)
         return run_route(bot, self.route, end=lambda odo, stats: self._end(bot, odo, stats))
 
     def _end(self, bot: Controller, odo, stats: dict) -> None:

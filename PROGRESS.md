@@ -3,6 +3,13 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 11:40: `features:` block in config.yaml (Stephen: make the extras toggleable).** One switch each:
+gold_pickup (OFF: rebuild rejuvs; stash rejuvs went 21 -> 83 on 11-12/13 with LK alone, empty since the 11-14 Pit tests
+and the gold-era chickens), gold_deposit, weapon_racks (off), gems_and_bases, charms, spare_rejuvs, war_cries, cube,
+act4_exit, wait_out_terror, skip_huts (list of LK targets). `bot/config.py` FEATURES maps them onto the old keys
+(loot.pick_gold, lk.racks, ...); those were removed from config.yaml; a typo'd feature name is an error at load.
+New code switches: gold_deposit, war_cries, skip_huts. Restart the bot after a change.
+
 **2026-11-20 10:40: chickens traced to chest gold; gold picks now careful.** Stephen: no potion buying; get back to
 rejuvs > use. Chickens were 3-5 % through 11-12 and 22-32 % from 11-15, the day `loot.pick_gold` went in. Potion/
 chicken/empty-belt events right after looting: 0.03/run (11-09..11) -> 0.25/run (11-17..19); others ~2x. Gold stays

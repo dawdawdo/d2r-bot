@@ -31,6 +31,35 @@ def _expand(value: str) -> str:
     return os.path.expandvars(os.path.expanduser(value))
 
 
+# config.yaml `features:` (Stephen 2026-11-20: every extra that trades run time / safety for loot is one switch) -> the
+# keys the code reads. A feature left out of the block keeps whatever its own section says.
+FEATURES = {
+    "gold_pickup": ("loot", "pick_gold"),
+    "gold_deposit": ("stash", "deposit"),
+    "weapon_racks": ("lk", "racks"),
+    "gems_and_bases": ("loot", "pick_white_other"),
+    "spare_rejuvs": ("loot", "rejuv_spares"),
+    "war_cries": ("lk", "war_cries"),
+    "cube": ("cube", "enabled"),
+    "act4_exit": ("game", "act4_exit"),
+    "wait_out_terror": ("game", "skip_terror"),
+    "skip_huts": ("lk", "skip_targets"),
+}
+
+
+def apply_features(cfg: dict) -> None:
+    feats = cfg.get("features") or {}
+    unknown = set(feats) - set(FEATURES) - {"charms"}
+    if unknown:
+        raise ValueError(f"config features: unknown {sorted(unknown)} (known: {sorted(FEATURES)}, charms)")
+    for name, (section, key) in FEATURES.items():
+        if name in feats:
+            cfg.setdefault(section, {})[key] = feats[name]
+    if "charms" in feats:  # blue labels that say "Charm" (loot.pick "magic")
+        pick = [k for k in cfg.setdefault("loot", {}).get("pick", []) if k != "magic"]
+        cfg["loot"]["pick"] = pick + ["magic"] if feats["charms"] else pick
+
+
 def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
     """config.local.yaml sits beside `path` and isn't in git: what differs per machine (game and save paths)."""
     path = Path(path)
@@ -41,6 +70,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
         _merge(cfg, yaml.safe_load(local.read_text(encoding="utf-8")) or {})
     if "risk" in cfg:  # one switch for what trades her safety for speed (config.yaml risk_levels)
         _merge(cfg, cfg["risk_levels"][cfg["risk"]])
+    apply_features(cfg)
     paths = cfg.setdefault("paths", {})
     for key, value in paths.items():
         if isinstance(value, dict):  # per-platform value, keyed by sys.platform ("win32", "linux")
