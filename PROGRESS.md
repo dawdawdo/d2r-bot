@@ -3,6 +3,8 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-19 20:35: all elite body armors added to RUNEWORD_BASES (Stephen), filter installed, LK running.** Note: the session-start "unprotected items" warning also lists loot left in the inventory at exit (gems): expected.
+
 **2026-11-19 20:15: Stephen's layout changed again; charm + skull stashed and put back.** He played on Singularity
 18:54-19:36. The first stash stop (20:00) stashed Gheed's Fortune (col 4, outside the 11-15 box) to the personal tab
 and his Flawless Skull ((3,3)) onto the Gems tab. Both put back by hand (stash_probe). `inventory.protected` now
