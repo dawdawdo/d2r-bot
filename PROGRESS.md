@@ -6,7 +6,7 @@
 **2026-11-20 09:00: racks off (speed).** Last 343 runs: 80% ok, 18% chickens, mostly with an empty belt
 ("belt is empty" ~140x a night: LK is chest-rejuvs-only, stash out of rejuvs). Typical run 122 s = menu 17 + town 33 +
 war cries 4 + LK 55 + exit 13. Gold picking stays ON (briefly off; Stephen: fill every tab, shared + personal. 11-20 10:05 save: shared pages
-2.5M, 2.5M, 1.47M, 0, 0 (a deposit overflows to the next page), personal 87k, carried 200k); `lk.racks: false` (489 clicks, 481 nothing). **Asked Stephen:**
+2.5M, 2.5M, 1.47M, 0, 0 (a deposit overflows to the next page), personal 87k, carried 200k); `lk.racks: false` (489 clicks, 481 nothing). **Revisit racks** (Stephen 11-20) if LK chests still give no base by ~8,000 chests. **Asked Stephen:**
 buy healing potions for LK (Ormus) or chicken at 40% instead of 50%? Until he answers: unchanged.
 
 **2026-11-20 07:40: keys in the stash again: fixed (2nd cause).** 4 key stacks reached shared page 1 overnight
