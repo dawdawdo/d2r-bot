@@ -70,6 +70,26 @@ def _d2dump() -> Path | None:
     return exe
 
 
+# Stephen's own inventory items, by size [w, h]: charms, tomes, cube. Wherever they sit in the save, the stowaway
+# must leave them alone (2026-11-15 and 11-19: he rearranged, the config box went stale, charms/skull got stashed).
+OWN_SIZES = {"cm1": (1, 1), "cm2": (1, 2), "cm3": (1, 3), "tbk": (1, 2), "ibk": (1, 2), "box": (2, 2)}
+
+
+def inventory_items(d2s: dict) -> list[tuple[str, int, int]]:
+    """(code, col, row) of every item in the inventory grid."""
+    out = []
+    for it in d2s.get("items") or []:
+        p = it.get("position") or {}
+        if p.get("mode") == "Stored" and p.get("store_page") == "Inventory":
+            out.append((struct.pack("<I", it["code"]).decode("latin-1").strip(), p["inv_x"], p["inv_y"]))
+    return out
+
+
+def own_rects(items: list[tuple[str, int, int]]) -> list[list[int]]:
+    """[c, r, w, h] of Stephen's charms, tomes and cube."""
+    return [[c, r, *OWN_SIZES[code]] for code, c, r in items if code in OWN_SIZES]
+
+
 def read(cfg: dict, backup: Path | None = None) -> dict | None:
     """{"mf": total, "parts": [[code, mf], ...], "backup": name} from the newest backup, or None if it can't be read
     (no backup, or d2dump doesn't run here: it's a Linux build, so Singularity gets None and no MF gate)."""
@@ -96,7 +116,7 @@ def read(cfg: dict, backup: Path | None = None) -> dict | None:
     except Exception as e:  # noqa: BLE001  an unreadable save must never stop a session
         log.warning("magic find unknown: %s", e)
         return None
-    return {"mf": total, "parts": [list(p) for p in parts], "backup": backup.name}
+    return {"mf": total, "parts": [list(p) for p in parts], "backup": backup.name, "inv": inventory_items(d2s)}
 
 
 def gate(tasks: list, info: dict | None, cfg: dict) -> tuple[list, list[str]]:

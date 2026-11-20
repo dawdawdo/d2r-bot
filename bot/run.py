@@ -130,6 +130,25 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     return stats
 
 
+def protect_own_items(cfg: dict, items: list) -> None:
+    """Add Stephen's charms/tomes/cube from the session-start save to `inventory.protected` where the config box
+    misses them, and warn about anything else outside it (it would be stashed)."""
+    from .mf import own_rects
+    from .vision.inventory import protected_cells
+
+    prot = cfg["inventory"]["protected"]
+    cells = protected_cells(prot)
+    added = [r for r in own_rects(items) if not protected_cells([r]) <= cells]
+    if added:
+        log.warning("inventory: Stephen's items outside inventory.protected, protecting them this session: %s "
+                    "(update config.yaml)", added)
+        prot.extend(added)
+        cells = protected_cells(prot)
+    stray = [(code, c, r) for code, c, r in items if (c, r) not in cells and code != "key"]
+    if stray:
+        log.warning("inventory: unprotected items in the save (the stowaway will stash them): %s", stray)
+
+
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
 
 
@@ -259,6 +278,8 @@ def main() -> int:
     mf_info = mf.read(cfg)
     if mf_info:
         log.info("magic find: %d%% (%s)", mf_info["mf"], ", ".join(f"{c} {m}" for c, m in mf_info["parts"]) or "none")
+    if mf_info and mf_info.get("inv"):
+        protect_own_items(cfg, mf_info.pop("inv"))
     tasks, mf_low = mf.gate(tasks, mf_info, cfg)
     if mf_low:
         mins = cfg["mf"]["min"]

@@ -3,6 +3,13 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-19 20:15: Stephen's layout changed again; charm + skull stashed and put back.** He played on Singularity
+18:54-19:36. The first stash stop (20:00) stashed Gheed's Fortune (col 4, outside the 11-15 box) to the personal tab
+and his Flawless Skull ((3,3)) onto the Gems tab. Both put back by hand (stash_probe). `inventory.protected` now
+[[4,0,6,4],[3,3,1,1]] (fixture `layout_20261119.png`). **Guard:** at session start `run.protect_own_items` reads the
+backed-up save (d2dump, same read as MF) and adds any charm/tome/cube outside the box to `protected` for that session,
+with a warning; other non-key items outside it are logged ("the stowaway will stash them"). Linux only (d2dump).
+
 **2026-11-19 19:50: Mage Plate + Dusk Shroud bases; screensaver wake.** Stephen wants Enigma (3 os) and CoH /
 Fortitude (4 os). From the game tables (scratchpad d2data, 2.x): LK chests are `Act 3 (H) Chest C` -> Equip B, top
 armo75, so Archon Plate (qlvl 84) can't drop there; Mephisto (H) has Magic 1024 in his TC, so he never drops white
