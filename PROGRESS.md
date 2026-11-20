@@ -10,6 +10,12 @@ key stack was Ctrl+clicked in with the loot (logs/loot tooltips show "Key" at (3
 polls `inventory_open` first; the per-item hover frame skips any key stack (log "is a key stack, not loot").
 Night 11-19 21:17 -> 11-20 07:20: 240 runs, 193 ok, 40 chickens, 1 death; Ohm, Sur x2, Hel x2, Lem, Lum x2, Dol (Ohm/Sur/Hel/Lem/Lum/Dol
 verified in the save). No bases yet. Racks: ~45/47 "nothing wanted" in the first hour (keep watching).
+**Base odds corrected (11-20):** the 11-19 figures (Mage Plate 1/1384, any 4os armor 1/173) were ~5x too high. Redone
+with NoDrop 100 / Picks 4 / quality rolls at /players 1 (scratchpad chest_odds.py on the d2data tables): the 9 droppable
+filtered body bases together ~1/1800 chests (~1.4/day); Mage Plate 1/6600, Dusk Shroud 1/26500, Boneweave 1/10100.
+Cross-check: model says ~4 white Grim Scythes in the 22,636 chests since 11-06; ~2 found. (Runes run ~10x the model,
+0.06/chest: D2R rune tables differ; bases don't follow.) Pipeline verified: filter installed + selected, white bases
+picked and stashed before (9wc 11-15, ci3 11-14). **Check:** no base after ~8,000 chests (P ~1%) = look again.
 
 **2026-11-19 21:15: Weapon Racks in LK (Stephen OK'd).** Probe (`tools/rack_probe.py`, scratch/racks*): both NE huts
 have a Weapon Rack at the same offset from the bonfire (BONFIRE_LAYOUT ne.rack = (558, -512)). **No Armor Stand** on
