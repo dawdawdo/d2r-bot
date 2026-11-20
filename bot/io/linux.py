@@ -194,12 +194,26 @@ def _wait(pred, timeout: float, what: str, poll: float = 1.0) -> None:
         time.sleep(poll)
 
 
+def wake_screen() -> None:
+    """End the screensaver (lock is off on GLaDOS). 2026-11-19: idle 45 min after a remote stop, the screensaver
+    came on, and the remote start then failed twice: Battle.net sat on its Login window until the screen woke."""
+    try:
+        q = subprocess.run(["cinnamon-screensaver-command", "-q"], capture_output=True, text=True, timeout=5)
+        if "is active" in q.stdout:
+            log.info("screensaver on: waking the screen")
+            subprocess.run(["cinnamon-screensaver-command", "-d"], capture_output=True, timeout=5)
+            time.sleep(2)
+    except (OSError, subprocess.SubprocessError):
+        pass  # not Cinnamon
+
+
 def launch_game(launch: dict, title: str, timeout: float = 180.0) -> X11Window:
     """Start D2R if its window isn't up: Steam shortcut -> Battle.net (saved login) ->
     `Battle.net.exe --exec="launch <product>"` run inside the same Proton prefix.
 
     `launch` (config game.exe on Linux): {steam_appid, proton, product, steam_root?}.
     """
+    wake_screen()
     if find_window(title):
         win = X11Window(title)
         win.unmaximize()

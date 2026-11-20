@@ -37,8 +37,12 @@ ITEM_RULE_CODES = {"jew", "cm1", "cm2", "cm3"}
 RUNES = [f"r{i:02d}" for i in range(1, 34)]  # all of them, El to Zod: Stephen needs low ones for cube recipes
 # Stephen's runeword bases (2026-11-06). Temporary: delete a line when he has enough, then regenerate.
 # 2026-11-15: Mancatcher off (Insight needs a polearm; Mancatcher is a spear).
+# 2026-11-19: Mage Plate (Enigma, max 3 os) and Dusk Shroud (CoH / Fortitude, 4 os) added: both drop from LK
+# chests (chest C tops out at armo75; Archon Plate, qlvl 84, can't drop there).
 RUNEWORD_BASES = {
     "utp": "Archon Plate",
+    "xtp": "Mage Plate",
+    "uui": "Dusk Shroud",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
     "ci3": "Diadem",

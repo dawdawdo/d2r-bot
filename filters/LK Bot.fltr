@@ -9,9 +9,9 @@
             "equipmentRarity": [
                 "rare",
                 "lowQuality",
-                "magic",
-                "set",
                 "unique",
+                "set",
+                "magic",
                 "hiQuality",
                 "normal"
             ]
@@ -38,11 +38,11 @@
                 "r07",
                 "vps",
                 "r02",
-                "r18",
                 "r13",
+                "r18",
                 "r11",
-                "hp4",
                 "r01",
+                "hp4",
                 "r03",
                 "r09",
                 "r20",
@@ -81,12 +81,12 @@
                 "glg",
                 "gfy",
                 "gpg",
-                "gzv",
                 "skl",
-                "gpr",
-                "gly",
-                "gpy",
+                "gzv",
                 "gfb",
+                "gpy",
+                "gly",
+                "gpr",
                 "gsv",
                 "gcg",
                 "gfg",
@@ -153,8 +153,8 @@
             "filterEtherealSocketed": false,
             "itemCode": [
                 "cm1",
-                "cm2",
-                "cm3"
+                "cm3",
+                "cm2"
             ]
         },
         {
@@ -173,10 +173,10 @@
                 "gpy",
                 "glw",
                 "glg",
-                "gpv",
                 "gpg",
-                "glr",
-                "skz"
+                "gpv",
+                "skz",
+                "glr"
             ]
         },
         {
@@ -190,8 +190,8 @@
                 "gsb",
                 "gfv",
                 "gfw",
-                "skf",
                 "gfr",
+                "skf",
                 "gfy",
                 "gcb",
                 "gcv",
@@ -341,7 +341,6 @@
                 "uar",
                 "uh9",
                 "uhb",
-                "uhg",
                 "uhm",
                 "uit",
                 "uld",
@@ -452,11 +451,12 @@
                 "normal"
             ],
             "equipmentItemCode": [
-                "7br",
                 "7wc",
                 "9wc",
                 "ci3",
-                "utp"
+                "utp",
+                "uui",
+                "xtp"
             ]
         },
         {
@@ -468,11 +468,12 @@
                 "normal"
             ],
             "equipmentItemCode": [
-                "7br",
                 "7wc",
                 "9wc",
                 "ci3",
-                "utp"
+                "utp",
+                "uui",
+                "xtp"
             ]
         },
         {

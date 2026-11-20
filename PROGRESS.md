@@ -3,6 +3,15 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-19 19:50: Mage Plate + Dusk Shroud bases; screensaver wake.** Stephen wants Enigma (3 os) and CoH /
+Fortitude (4 os). From the game tables (scratchpad d2data, 2.x): LK chests are `Act 3 (H) Chest C` -> Equip B, top
+armo75, so Archon Plate (qlvl 84) can't drop there; Mephisto (H) has Magic 1024 in his TC, so he never drops white
+items. White-base odds per LK chest (0 MF, ilvl 80): Light Plate 1/843, Mage Plate 1/1384, Dusk Shroud 1/5472, any
+white 4-socket body armor 1/173. At ~2,600 chests/day that's about 2 Mage Plates and one Dusk Shroud every 2 days.
+`xtp` + `uui` added to RUNEWORD_BASES, filter installed. **Also:** a remote stop at 18:54, the screensaver came on
+after 15 min idle, and the 19:38 remote start failed twice (Battle.net stuck on its Login window until the screen woke).
+`bot.io.linux.wake_screen()` now runs before every launch (`cinnamon-screensaver-command -d`; lock is off).
+
 **2026-11-19 12:00: gold deposit; key leak #2 fixed.** Blizzaga carried 910k (her max). town.deposit_gold at the stash stop
 after `stash.deposit_after_picks` (25) chest gold piles: shared tab -> coin left of the inventory gold box (the number is
 only a tooltip) -> Deposit box (prefilled with all; template deposit_dialog.png) -> OK; still carrying -> personal tab, same;
