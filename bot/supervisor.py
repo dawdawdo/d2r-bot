@@ -167,6 +167,8 @@ class Supervisor:
             self.last_end = f"failed ({self.fails} in a row): {last[0][-160:]}"
             self.state = "backoff"
             log.warning("session ended badly after %.0f s (%s); next try in %d min", took, self.last_end, wait // 60)
+            # 2026-11-21 03:25: D2R hung on a loading screen and every retry for 5 h met the same hung game
+            self.restart_game()
         else:
             self.fails, self.last_end = 0, f"ended normally after {took / 60:.0f} min"
             self.state = "idle"

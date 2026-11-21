@@ -130,3 +130,9 @@ def test_mouse_trip_waits_for_a_quiet_desktop(sup):
 def test_f12_still_stays_stopped_when_a_mouse_trip_is_not_in_the_output(sup):
     end_with(sup, "stopped by kill switch: F12 pressed\n", 1)
     assert sv.read_desired()["run"] is False
+
+
+def test_failed_session_restarts_the_game(sup):
+    """2026-11-21: a hung D2R (stuck 'loading') failed every session for 5 h; a fresh game is the fix."""
+    end_with(sup, "run 1/150 fail\nERROR 4 failures in a row; stopping\n", 1)
+    assert sup.closed == [1]
