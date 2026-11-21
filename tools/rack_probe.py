@@ -25,7 +25,10 @@ from bot.vision.screen import ScreenClassifier  # noqa: E402
 from bot.vision.tooltip import find_tooltip  # noqa: E402
 
 OUT = Path(__file__).resolve().parent.parent / "scratch" / "racks"
-RADIUS, RADIUS_Y, STEP = 330, 330, 30
+import os
+
+RADIUS, RADIUS_Y, STEP = int(os.environ.get("PROBE_R", 330)), int(os.environ.get("PROBE_RY", 330)), int(os.environ.get("PROBE_STEP", 30))
+ONLY = os.environ.get("PROBE_ONLY", "")  # e.g. "nw": scan only targets whose name contains it (2026-11-21 Armor Rack hunt)
 RACK_TPL = cv2.imread(str(Path(__file__).resolve().parent.parent / "bot/assets/templates/tt_weapon_rack.png"))
 
 
@@ -41,7 +44,7 @@ def main() -> int:
     state = {"target": "?"}
 
     def scan_then_open(bot, x, y, radius=220, step=35, click=True, odo=None):
-        if odo is not None and not odo.lost and click:
+        if odo is not None and not odo.lost and click and ONLY in state['target']:
             seen = []
             cv2.imwrite(str(OUT / f"view_{state['target']}.jpg"), bot.capture.grab())
             rack = None

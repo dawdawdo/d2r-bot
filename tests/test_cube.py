@@ -131,3 +131,11 @@ def test_save_counts_floor(tmp_path, monkeypatch):
     assert got["Lem"] == 12 and got["Flawless Amethyst"] == 17 and got["Flawed Ruby"] == 8
     assert got["Perfect Amethyst"] == 42
     assert cubing.save_counts(3000) == {}  # the save is older than the last cube
+
+
+def test_nothing_below_the_bottom_rune_is_cubed():
+    """Stephen 2026-11-21: stop cubing El-Thul (Thul and Amn filling to 99)."""
+    steps = cube.plan({"Thul": 99, "Chipped Topaz": 40, "Amn": 20, "Chipped Amethyst": 10}, bottom="Amn")
+    used = {k for inputs, _ in steps for k in inputs if k in cube.RUNES}
+    assert used == {"Amn"} or used == {"Amn", "Sol"}
+    assert cube.RUNES.index(min(used, key=cube.RUNES.index)) >= cube.RUNES.index("Amn")

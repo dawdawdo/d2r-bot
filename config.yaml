@@ -142,7 +142,7 @@ loot:
 features:
   gold_pickup: false     # chest gold piles after the items. Off 11-20 to rebuild rejuvs: chickens ~4% -> ~25% with it on
                          #   (loot.gold_*: distance / under-attack limits when on). Stephen wants every tab full eventually
-  gold_deposit: true     # carrying the max -> deposit at the stash (fills shared pages, then personal), keep 200k
+  gold_deposit: true     # carrying the max -> deposit at the stash: the shared pile, then personal (one pile each), keep 200k
   weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted
                          #   (weapons only; 11,840 chests gave no white bases either). No Armor Stands in the huts
   gems_and_bases: true   # white labels that aren't keys/rejuvs: gems, skulls, runeword bases (the filter picks which)
@@ -247,6 +247,7 @@ cube:
   keep: 5
   gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)
   gem_reserve: 10               # gem -> next grade keeps 10 of every gem (color + grade); rune recipes may still use them to 0 (Stephen 2026-11-17)
+  bottom_rune: Amn              # Stephen 2026-11-21: nothing below Amn is cubed (or shown by the filter: chronicle.RUNES)
   top_rune: Ist                 # Stephen 2026-11-17: cube up through Ist; Ist and up are never inputs (cube.NEVER_FROM)
   top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200

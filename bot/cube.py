@@ -38,13 +38,14 @@ GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-0
               # Amn piled up waiting on a 6th Chipped Amethyst)
 STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
 TOP_RUNE = "Ist"  # the highest rune cubing makes (Stephen 2026-11-17: up through Ist; was Fal)
+BOTTOM_RUNE = "Amn"  # the lowest rune cubed (Stephen 2026-11-21: El-Thul aren't picked or cubed any more; Thul/Amn hit 99)
 NEVER_FROM = "Ist"  # runes from here up are never cube inputs, whatever `top` says (Stephen 2026-11-17)
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
 
 def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
          top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX, gem_keep: int = GEM_KEEP,
-         reserve: int = GEM_RESERVE) -> list[tuple[dict[str, int], str]]:
+         reserve: int = GEM_RESERVE, bottom: str = "El") -> list[tuple[dict[str, int], str]]:
     """Transmutes in order, each ({input: n}, output). `counts` names runes and gems as in RUNES / gem();
     missing names count 0. Runes first, bottom up, so what one step makes feeds the next; gems after, with
     whatever the runes left, each keeping `reserve` (runes keep `keep`); repeated until nothing changes."""
@@ -64,7 +65,7 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
     grades = GRADES.index("" if top_grade == "Normal" else top_grade) + 1
     while True:
         before = len(steps)
-        for i in range(last):
+        for i in range(RUNES.index(bottom), last):
             rune, nxt = RUNES[i], RUNES[i + 1]
             g = RUNE_GEM.get(rune)
             k = RUNES_IN.get(rune, 3)
