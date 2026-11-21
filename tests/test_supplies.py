@@ -106,3 +106,17 @@ def test_only_refill_runs_save_rejuvs():
     assert not supplies.saving_rejuvs(meph, lk, cfg)  # a boss run drinks
     assert not supplies.saving_rejuvs(lk, [], cfg)  # an LK-only session has no refill
     assert not supplies.saving_rejuvs(lk, lk, {"town": {"refill_no_potions": False}})
+
+
+def test_lk_only_session_saves_rejuvs_while_the_stash_is_dry():
+    """features.save_rejuvs (2026-11-20): LK alone drank twice what it found; with the stash dry, no drinking."""
+    lk, meph = [T("lk")], [T("meph")]
+    cfg = {"town": {"lk_save_rejuvs": 20}}
+    assert not supplies.saving_rejuvs(lk, [], cfg)  # the stash isn't known to be dry yet
+    supplies.restocked(0, slots_gone=True)
+    assert supplies.saving_rejuvs(lk, [], cfg)
+    assert state.load()["refill_left"] == 20
+    assert not supplies.saving_rejuvs(meph, [], cfg)
+    assert not supplies.saving_rejuvs(lk, [], {"town": {"lk_save_rejuvs": 0}})
+    state.save(supplies.after_stowing(state.load(), 20, stack_full=False))
+    assert not supplies.saving_rejuvs(lk, [], cfg)  # 20 stashed: she drinks again

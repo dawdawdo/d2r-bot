@@ -44,6 +44,7 @@ FEATURES = {
     "act4_exit": ("game", "act4_exit"),
     "wait_out_terror": ("game", "skip_terror"),
     "skip_huts": ("lk", "skip_targets"),
+    "save_rejuvs": ("town", "lk_save_rejuvs"),
 }
 
 

@@ -157,7 +157,7 @@ def test_guardian_es_broken_empty_belt(cfg):
         bot.observe()
 
 
-@pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (60, None, 1), (40, "Chicken", 1), (0, "Died", 0)])
+@pytest.mark.parametrize("pct,exc,potions", [(90, None, 0), (55, None, 1), (40, "Chicken", 1), (0, "Died", 0)])
 def test_guardian(cfg, pct, exc, potions):
     from bot import controller as C
 

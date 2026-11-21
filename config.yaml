@@ -143,8 +143,8 @@ features:
   gold_pickup: false     # chest gold piles after the items. Off 11-20 to rebuild rejuvs: chickens ~4% -> ~25% with it on
                          #   (loot.gold_*: distance / under-attack limits when on). Stephen wants every tab full eventually
   gold_deposit: true     # carrying the max -> deposit at the stash (fills shared pages, then personal), keep 200k
-  weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted;
-                         #   revisit if the chests give no runeword base by ~8,000 chests
+  weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted
+                         #   (weapons only; 11,840 chests gave no white bases either). No Armor Stands in the huts
   gems_and_bases: true   # white labels that aren't keys/rejuvs: gems, skulls, runeword bases (the filter picks which)
   charms: true           # blue labels that say "Charm"
   spare_rejuvs: true     # rejuvs with the belt full go to the stash (Materials tab)
@@ -153,6 +153,8 @@ features:
   act4_exit: true        # end clean runs in Act 4: next game spawns 1.6 s from the WP (A3: ~12 s)
   wait_out_terror: false # true = wait out a terrorized LK at the menu (off 11-03: she handles it)
   skip_huts: []          # LK chest targets to leave out: east_ne east_nw east_nw_deep west_ne west_nw west_nw_deep
+  save_rejuvs: 20        # LK-only sessions with the stash out of rejuvs: no drinking in runs (flee/chicken instead) until
+                         #   this many more are stashed (0 = off). 11-20: ~4 rejuvs per 100 chests, she drank ~2x that
 
 # Named click points, client coords at 1280x720. Verified live 2026-10-25.
 ui:

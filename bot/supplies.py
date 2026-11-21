@@ -90,7 +90,13 @@ def tasks_for_run(tasks: list, refill_tasks: list, cfg: dict) -> list:
 def saving_rejuvs(active: list, refill_tasks: list, cfg: dict) -> bool:
     """A refill run doesn't drink. A rejuv takes about 3.75 min of LK to replace and a chicken costs under a minute;
     LK drank about half of what it picked up (42 of 78, 2026-11-05/06)."""
-    return bool(refill_tasks) and active is refill_tasks and cfg["town"].get("refill_no_potions", True)
+    if refill_tasks:
+        return active is refill_tasks and cfg["town"].get("refill_no_potions", True)
+    # An LK-only session (features.save_rejuvs, Stephen 2026-11-20 "she used to get more rejuvs than she used"): with
+    # the stash dry, no drinking until that many more are stashed. LK found ~4 per 100 chests and drank about twice that.
+    n = cfg["town"].get("lk_save_rejuvs", 0)
+    return bool(n) and bool(active) and all(t.name == "lk" for t in active) and \
+        refilling({**cfg, "town": {**cfg["town"], "refill_rejuvs": n}})
 
 
 def players_for(tasks: list, cfg: dict) -> int | None:
