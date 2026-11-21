@@ -90,6 +90,40 @@ def own_rects(items: list[tuple[str, int, int]]) -> list[list[int]]:
     return [[c, r, *OWN_SIZES[code]] for code, c, r in items if code in OWN_SIZES]
 
 
+_SIZES: dict[str, tuple[int, int]] | None = None
+
+
+def item_size(code: str) -> tuple[int, int]:
+    """(w, h) in inventory cells, from the game tables in armory/work/txt105 (GLaDOS: built by the armory). Unknown
+    codes, or no tables: 1x1, so at least the item's top-left cell is protected."""
+    global _SIZES
+    if code in OWN_SIZES:
+        return OWN_SIZES[code]
+    if _SIZES is None:
+        _SIZES = {}
+        for name in ("armor", "weapons", "misc"):
+            path = WORK / "txt105" / f"{name}.txt"
+            if not path.exists():
+                continue
+            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+            head = lines[0].split("\t")
+            ic, iw, ih = head.index("code"), head.index("invwidth"), head.index("invheight")
+            for ln in lines[1:]:
+                f = ln.split("\t")
+                if len(f) > max(ic, iw, ih) and f[ic] and f[iw].isdigit() and f[ih].isdigit():
+                    _SIZES[f[ic]] = (int(f[iw]), int(f[ih]))
+    return _SIZES.get(code, (1, 1))
+
+
+def session_rects(items: list[tuple[str, int, int]], key_cell=None) -> list[list[int]]:
+    """[c, r, w, h] of everything in the inventory at session start except her one working key stack (the one at
+    `key_cell`, else the first): whatever is there then is Stephen's (Stephen 2026-11-21: he rearranges when he plays
+    and forgets to tell; the stowaway drops spare key stacks and full-stack items, and stashes the rest)."""
+    keys = sorted((c, r) for code, c, r in items if code == "key")
+    work = tuple(key_cell) if key_cell and tuple(key_cell) in keys else (keys[0] if keys else None)
+    return [[c, r, *item_size(code)] for code, c, r in items if not (code == "key" and (c, r) == work)]
+
+
 def read(cfg: dict, backup: Path | None = None) -> dict | None:
     """{"mf": total, "parts": [[code, mf], ...], "backup": name} from the newest backup, or None if it can't be read
     (no backup, or d2dump doesn't run here: it's a Linux build, so Singularity gets None and no MF gate)."""

@@ -81,4 +81,23 @@ def test_session_start_protects_charms_found_in_the_save():
     items = [("cm3", 4, 0), ("cm3", 5, 0), ("cm1", 4, 3), ("skl", 3, 3), ("key", 3, 2), ("box", 8, 2), ("tbk", 9, 0)]
     protect_own_items(cfg, items)
     cells = protected_cells(cfg["inventory"]["protected"])
-    assert {(4, 0), (4, 1), (4, 2)} <= cells and (3, 3) not in cells and (3, 2) not in cells
+    assert {(4, 0), (4, 1), (4, 2)} <= cells and (3, 2) not in cells
+    assert (3, 3) in cells  # the skull too, since 2026-11-21: everything in the save but the working key stack
+
+
+def test_session_start_protects_everything_but_the_working_key_stack(monkeypatch, tmp_path):
+    """Stephen 2026-11-21: his skull and extra key stacks moved while he played; nothing of his may be stashed or
+    dropped. The working key stack (state key_cell) stays the bot's."""
+    from bot import state
+    from bot.run import protect_own_items
+    from bot.vision.inventory import protected_cells
+    monkeypatch.setattr(state, "PATH", tmp_path / "state.json", raising=False)
+    monkeypatch.setattr(state, "load", lambda: {"key_cell": [3, 2]})
+    cfg = {"inventory": {"protected": [[4, 0, 6, 4], [3, 3, 1, 1]]}}
+    items = [("key", 4, 0), ("key", 4, 1), ("skl", 4, 2), ("key", 3, 3), ("key", 3, 2), ("cm3", 5, 0),
+             ("box", 8, 2), ("rin", 0, 0), ("uap", 1, 0)]
+    protect_own_items(cfg, items)
+    cells = protected_cells(cfg["inventory"]["protected"])
+    assert (3, 2) not in cells  # her working key stack
+    assert {(4, 0), (4, 1), (4, 2), (3, 3), (0, 0)} <= cells
+    assert (1, 0) in cells  # a helm in col 1: 2x2 when the tables are there, its corner at least

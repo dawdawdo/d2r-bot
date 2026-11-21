@@ -131,22 +131,21 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
 
 
 def protect_own_items(cfg: dict, items: list) -> None:
-    """Add Stephen's charms/tomes/cube from the session-start save to `inventory.protected` where the config box
-    misses them, and warn about anything else outside it (it would be stashed)."""
-    from .mf import own_rects
+    """Protect everything in the session-start save's inventory (but her working key stack) where `inventory.protected`
+    misses it: Stephen rearranges when he plays (2026-11-21). Logged so he can see what the session protects."""
+    from . import state
+    from .mf import session_rects
     from .vision.inventory import protected_cells
 
     prot = cfg["inventory"]["protected"]
     cells = protected_cells(prot)
-    added = [r for r in own_rects(items) if not protected_cells([r]) <= cells]
+    rects = session_rects(items, state.load().get("key_cell"))
+    added = [r for r in rects if not protected_cells([r]) <= cells]
     if added:
-        log.warning("inventory: Stephen's items outside inventory.protected, protecting them this session: %s "
-                    "(update config.yaml)", added)
+        names = {(c, r): code for code, c, r in items}
+        log.warning("inventory: protecting items outside inventory.protected this session (from the save): %s",
+                    [(names.get((r[0], r[1]), "?"), *r) for r in added])
         prot.extend(added)
-        cells = protected_cells(prot)
-    stray = [(code, c, r) for code, c, r in items if (c, r) not in cells and code != "key"]
-    if stray:
-        log.warning("inventory: unprotected items in the save (the stowaway will stash them): %s", stray)
 
 
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
