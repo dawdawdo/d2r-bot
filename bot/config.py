@@ -37,6 +37,7 @@ FEATURES = {
     "gold_pickup": ("loot", "pick_gold"),
     "gold_deposit": ("stash", "deposit"),
     "weapon_racks": ("lk", "racks"),
+    "armor_stands": ("lk", "armor_stands"),
     "gems_and_bases": ("loot", "pick_white_other"),
     "spare_rejuvs": ("loot", "rejuv_spares"),
     "war_cries": ("lk", "war_cries"),

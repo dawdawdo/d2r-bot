@@ -87,9 +87,39 @@ def main() -> int:
 
     orig_visit = lk._visit
 
-    def visit(bot, t, *a, **k):
+    # 2026-11-21: a post on a square base north-east of the west hut, ~(497, -282) from the nw_deep stand: Armor Rack?
+    EXTRA = {"nw_deep": (-784 + 497, -373 - 282)}  # bonfire-relative world offset of the object
+
+    def visit(bot, t, odo, *a, **k):
         state["target"] = t["name"]
-        return orig_visit(bot, t, *a, **k)
+        out = orig_visit(bot, t, odo, *a, **k)
+        slot = t["name"].split("_", 1)[1]
+        if slot in EXTRA and t.get("bonfire") and not odo.lost:
+            from bot.nav import teleport_to
+            import numpy as np
+            obj = np.asarray(t["bonfire"], float) + EXTRA[slot]
+            teleport_to(bot, odo, obj + (0, 110), tol=40)
+            ox, oy = (lk.CENTER[0] + obj[0] - odo.pos[0], lk.CENTER[1] + obj[1] - odo.pos[1])
+            cv2.imwrite(str(OUT / f"view_obj_{t['name']}.jpg"), bot.capture.grab())
+            for dy in range(-120, 121, 12):
+                for dx in range(-120, 121, 12):
+                    px, py = int(ox + dx), int(oy + dy)
+                    if not (20 < px < 1260 and 70 < py < 560):
+                        continue
+                    bot.check()
+                    bot.input.move(px, py)
+                    bot.kill.sleep(0.09)
+                    f = bot.capture.grab()
+                    box = find_tooltip(f, px, py)
+                    if box is None:
+                        continue
+                    bx, by, bw, bh = box
+                    name = f"obj_{t['name']}_{px}_{py}"
+                    cv2.imwrite(str(OUT / f"{name}.png"), f[by:by + bh, bx:bx + bw])
+                    found.append({"target": t["name"], "screen": [px, py], "box": list(map(int, box)), "crop": name})
+                    print("tooltip", name, box, flush=True)
+            (OUT / "found.json").write_text(json.dumps(found, indent=1))
+        return out
 
     lk.open_chest = scan_then_open
     lk._visit = visit
@@ -100,6 +130,8 @@ def main() -> int:
         task = LowerKurast(cfg)
         task.enter(bot)
         bot.deadline = bot.clock() + 900
+        from bot.town import cast_warcries
+        cast_warcries(bot)  # BO: ~512 life, not ~348 (two probes chickened without it, 2026-11-21)
         stats = lk.run_route(bot, task.route)
         print("stats", stats.get("chests"), stats.get("picked"), flush=True)
     finally:

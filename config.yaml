@@ -144,7 +144,8 @@ features:
                          #   (loot.gold_*: distance / under-attack limits when on). Stephen wants every tab full eventually
   gold_deposit: true     # carrying the max -> deposit at the stash: the shared pile, then personal (one pile each), keep 200k
   weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted
-                         #   (weapons only; 11,840 chests gave no white bases either). No Armor Stands in the huts
+                         #   (weapons only; 11,840 chests gave no white bases either)
+  armor_stands: true     # the Armor Stand NE of each west hut (found 2026-11-21): teleport below it after nw_deep, click
   gems_and_bases: true   # white labels that aren't keys/rejuvs: gems, skulls, runeword bases (the filter picks which)
   charms: true           # blue labels that say "Charm"
   spare_rejuvs: true     # rejuvs with the belt full go to the stash (Materials tab)

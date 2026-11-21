@@ -55,7 +55,9 @@ class MapChanged(BotError):
 # and matching the west camp within ~25 px): where to stand, and where the chest is.
 BONFIRE_LAYOUT = {
     "nw":      {"stand": (-421, -191), "chest": (-582, -281)},  # hut NW of the fire, near its door
-    "nw_deep": {"stand": (-784, -373), "chest": (-957, -376)},  # same hut, far end
+    "nw_deep": {"stand": (-784, -373), "chest": (-957, -376),   # same hut, far end
+                "armor_stand": (-305, -677), "armor_stand_from": (-305, -567)},  # outside, NE of the hut (2026-11-21
+                # probe: same spot at both camps); off screen from the chest spot, so she teleports below it first
     "ne":      {"stand": (711, -281),  "chest": (850, -333),    # hut NE of the fire
                 "rack": (558, -512)},  # its Weapon Rack, back wall (2026-11-19 probe: east (554,-505), west (563,-517))
 }
@@ -72,6 +74,9 @@ def bonfire_targets(camp: dict) -> list[dict]:
              "chests_world": [[bx + lay["chest"][0], by + lay["chest"][1]]]}
         if "rack" in lay:
             t["racks_world"] = [[bx + lay["rack"][0], by + lay["rack"][1]]]
+        if "armor_stand" in lay:
+            t["stands_world"] = [{"at": [bx + lay["armor_stand"][0], by + lay["armor_stand"][1]],
+                                  "from": [bx + lay["armor_stand_from"][0], by + lay["armor_stand_from"][1]]}]
         out.append(t)
     return out
 
@@ -255,13 +260,14 @@ _RACK_TMPLS: list | None = None
 
 
 def _is_rack(frame: np.ndarray, box) -> bool:
-    """Tooltip text says Weapon Rack (bot/assets/templates/tt_weapon_rack.png). A rack drops one item, once a game:
-    a random weapon of the area's level, mostly white, so runeword bases (Stephen, 2026-11-19)."""
+    """Tooltip text says Weapon Rack or Armor Stand (bot/assets/templates/tt_weapon_rack.png, tt_armor_stand.png). A
+    rack drops one item, once a game: a random weapon (stand: armor) of the area's level, mostly white, so runeword
+    bases (Stephen, 2026-11-19 / 11-21)."""
     global _RACK_TMPLS
     from .vision.screen import ASSETS
 
     if _RACK_TMPLS is None:
-        _RACK_TMPLS = [cv2.imread(str(p)) for p in sorted(ASSETS.glob("tt_*_rack*.png"))]
+        _RACK_TMPLS = [cv2.imread(str(p)) for p in sorted([*ASSETS.glob("tt_*_rack*.png"), *ASSETS.glob("tt_armor_stand*.png")])]
     bx, by, bw, bh = box
     c = cv2.copyMakeBorder(frame[by : by + bh, bx : bx + bw], 2, 2, 2, 2, cv2.BORDER_REPLICATE)
     return any(t.shape[0] <= c.shape[0] and t.shape[1] <= c.shape[1]
@@ -838,4 +844,18 @@ def _visit(bot: Controller, t: dict, odo, learned: dict, route: dict, stats: dic
                 got = loot(bot)
                 stats["picked"] += got
                 log.info("rack: %s", ", ".join(got) if got else "nothing wanted")
+            odo.update(bot.capture.grab())
+    if t.get("stands_world") and (bot.cfg.get("lk") or {}).get("armor_stands", True) and not odo.lost:
+        for st in t["stands_world"]:  # features.armor_stands: teleport below it, then click it like a rack
+            if not teleport_to(bot, odo, st["from"], tol=40) or odo.lost:
+                log.info("armor stand: couldn't get below it")
+                continue
+            sx, sy = world_to_screen(odo, *st["at"])
+            if open_chest(bot, int(sx), int(sy), odo=odo, radius=105, kind="rack"):
+                stats["stands"] = stats.get("stands", 0) + 1
+                got = loot(bot)
+                stats["picked"] += got
+                log.info("armor stand: %s", ", ".join(got) if got else "nothing wanted")
+            else:
+                log.info("armor stand: not found at (%d, %d)", sx, sy)
             odo.update(bot.capture.grab())
