@@ -3,6 +3,8 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-20 19:00: LK chests apparently don't drop white bases (Stephen: chests drop magic items only).** Since 11-16: 11,840 LK chests, filter shows 19 white elite bases + Diadem, and every stashed item's tooltip (logs/loot/) was checked: no stashed item without the stack-tab line except keys. The one white Diadem (ilvl 85) came from the 11-13/14 tunnels runs. Classic tables say ~6 expected; seeing 0 is ~0.25% luck. Racks: rack_probe found only Weapon Racks (weapons only) in the 6 hut spots, no Armor Stands. Check script idea: template-match 'Move to Stack Tab' in logs/loot tooltips; misses = gear.
+
 **2026-11-20 18:10: drink at 60% (was 70%).** Gold off didn't fix chickens (22% today): the cause is an empty belt (stash rejuvs dry since 11-14; 'belt is empty' before nearly every chicken). Today ~62 rejuvs drunk vs 28 found; finds are steady at ~4 per 100 chests, but chickens cut chests/run 5.5 -> 3.9. Next if still short: refill mode (no drinking) until 20 in stash. Bases: Act 3 (H) Chest C includes Equip B -> armo/weap TCs, so super chests can drop bases (rare); racks probed so far are Weapon Racks (weapons only), no Armor Stands found. Stash has no white armor bases yet.
 
 **2026-11-20 11:40: `features:` block in config.yaml (Stephen: make the extras toggleable).** One switch each:
