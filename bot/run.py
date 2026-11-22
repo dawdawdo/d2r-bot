@@ -279,6 +279,9 @@ def main() -> int:
         log.info("magic find: %d%% (%s)", mf_info["mf"], ", ".join(f"{c} {m}" for c, m in mf_info["parts"]) or "none")
     if mf_info and mf_info.get("inv"):
         protect_own_items(cfg, mf_info.pop("inv"))
+    from . import bases
+
+    bases.report(cfg)  # "new base: ..." for every armor / weapon base since the last backup (logs/bases.csv)
     tasks, mf_low = mf.gate(tasks, mf_info, cfg)
     if mf_low:
         mins = cfg["mf"]["min"]
