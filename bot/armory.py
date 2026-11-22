@@ -5,7 +5,8 @@
     python -m bot.armory --no-upload
 
 Reads only backups/<ts>/ (the copy bot/session.py makes at every session start), never the live save folder. The
-pipeline is the armory project's (armory/README.md): d2dump each .d2s and the shared stash -> inv.py -> gen.py ->
+pipeline is the armory project's (armory/README.md): dump each .d2s and the shared stash (bot/d2save.py, same JSON
+as the old Linux-only d2dump) -> inv.py -> gen.py ->
 chron.py -> build.py, in armory/work/. armory/pagedata.json is both the result and the next build's "previous
 snapshot" (build.py works out what changed from it). The supervisor calls maybe_refresh() each tick; it builds in a
 thread, at most once per new backup.
@@ -27,6 +28,7 @@ import time
 import urllib.request
 from pathlib import Path
 
+from . import d2save
 from .config import ROOT, load_config
 
 log = logging.getLogger("bot.armory")
@@ -53,13 +55,16 @@ def _run(args: list[str], out: Path | None = None) -> None:
         subprocess.run(args, cwd=WORK, stdout=fh, stderr=subprocess.PIPE, check=True, timeout=300)
 
 
+def _dump(obj, out: Path) -> None:
+    out.write_text(json.dumps(obj, separators=(",", ":")), encoding="ascii")  # inv.py opens with the platform default
+
+
 def build(backup: Path) -> Path:
     """Run the pipeline on one backup folder; returns armory/pagedata.json."""
-    if not (WORK / "d2dump").exists():
+    if not (WORK / "xl").exists() or not (WORK / "txt105").exists():  # game tables (the bundle's d2dump is unused)
         WORK.mkdir(parents=True, exist_ok=True)
         with tarfile.open(A / "scanbundle.tgz") as t:
             t.extractall(WORK, filter="data")
-        (WORK / "d2dump").chmod(0o755)
     saves = WORK / "saves"
     shutil.rmtree(saves, ignore_errors=True)
     saves.mkdir()
@@ -68,8 +73,8 @@ def build(backup: Path) -> Path:
     shutil.copy2(A / "pagedata.json", WORK / "pagedata.json")
     shutil.copy2(A / "pagedata.json", WORK / "prev.json")
     for d2s in sorted(backup.glob("*.d2s")):
-        _run(["./d2dump", "c", str(d2s)], saves / f"{d2s.stem}.json")
-    _run(["./d2dump", "s", str(backup / STASH)], saves / "stash.json")
+        _dump(d2save.read_d2s(d2s), saves / f"{d2s.stem}.json")
+    _dump(d2save.read_d2i(backup / STASH), saves / "stash.json")
     py = sys.executable
     _run([py, "inv.py", "."])
     _run([py, "gen.py"])

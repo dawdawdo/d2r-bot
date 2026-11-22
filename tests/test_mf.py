@@ -1,4 +1,4 @@
-"""Magic find from a d2dump character JSON, and the per-task MF gate (bot/mf.py)."""
+"""Magic find from a character save JSON (bot/d2save.py, d2dump-shaped), and the per-task MF gate (bot/mf.py)."""
 import struct
 from types import SimpleNamespace
 
@@ -35,5 +35,5 @@ def test_gate_swaps_low_mf_boss_for_nothing_when_unknown():
     assert [t.name for t in kept] == ["lk"] and low == ["meph"]
     kept, low = gate(tasks, {"mf": 280}, cfg)
     assert len(kept) == 2 and low == []
-    kept, low = gate(tasks, None, cfg)  # unreadable save (Windows: no d2dump): no gate
+    kept, low = gate(tasks, None, cfg)  # unreadable save: no gate
     assert len(kept) == 2 and low == []

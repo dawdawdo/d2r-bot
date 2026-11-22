@@ -3,7 +3,7 @@
 Stephen keeps two setups on Blizzaga: about 0 % MF (cows, for bases) and about 280 % (Mephisto, for uniques).
 Meph ran for days in the 0 % setup (2026-11-11), so a boss task below its `mf.min` is swapped for LK and the
 Bot page says why. Reads only backups/<ts>/<character>.d2s (bot/session.py copies the saves at every session
-start) through the armory's d2dump; never the live save folder, never the game.
+start) through bot/d2save.py (pure Python, both machines); never the live save folder, never the game.
 
 Counted: stat 80 ("% better chance of getting magic items") on equipped items (not the weapon-swap slots, where
 Call to Arms sits), their runeword stats and socketed jewels, and charms in the inventory. Not counted: set bonuses
@@ -11,13 +11,11 @@ Call to Arms sits), their runeword stats and socketed jewels, and charms in the 
 """
 from __future__ import annotations
 
-import json
 import logging
 import struct
-import subprocess
-import tarfile
 from pathlib import Path
 
+from . import d2save
 from .config import ROOT
 
 log = logging.getLogger(__name__)
@@ -57,19 +55,6 @@ def magic_find(d2s: dict) -> tuple[int, list[tuple[str, int]]]:
     return sum(m for _, m in parts), parts
 
 
-def _d2dump() -> Path | None:
-    exe = WORK / "d2dump"
-    if not exe.exists():
-        bundle = ROOT / "armory" / "scanbundle.tgz"
-        if not bundle.exists():
-            return None
-        WORK.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(bundle) as t:
-            t.extractall(WORK, filter="data")
-        exe.chmod(0o755)
-    return exe
-
-
 # Stephen's own inventory items, by size [w, h]: charms, tomes, cube. Wherever they sit in the save, the stowaway
 # must leave them alone (2026-11-15 and 11-19: he rearranged, the config box went stale, charms/skull got stashed).
 OWN_SIZES = {"cm1": (1, 1), "cm2": (1, 2), "cm3": (1, 3), "tbk": (1, 2), "ibk": (1, 2), "box": (2, 2)}
@@ -90,29 +75,16 @@ def own_rects(items: list[tuple[str, int, int]]) -> list[list[int]]:
     return [[c, r, *OWN_SIZES[code]] for code, c, r in items if code in OWN_SIZES]
 
 
-_SIZES: dict[str, tuple[int, int]] | None = None
-
-
 def item_size(code: str) -> tuple[int, int]:
-    """(w, h) in inventory cells, from the game tables in armory/work/txt105 (GLaDOS: built by the armory). Unknown
-    codes, or no tables: 1x1, so at least the item's top-left cell is protected."""
-    global _SIZES
+    """(w, h) in inventory cells, from the game tables (txt105 in the armory bundle). Unknown codes, or no tables:
+    1x1, so at least the item's top-left cell is protected."""
     if code in OWN_SIZES:
         return OWN_SIZES[code]
-    if _SIZES is None:
-        _SIZES = {}
-        for name in ("armor", "weapons", "misc"):
-            path = WORK / "txt105" / f"{name}.txt"
-            if not path.exists():
-                continue
-            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-            head = lines[0].split("\t")
-            ic, iw, ih = head.index("code"), head.index("invwidth"), head.index("invheight")
-            for ln in lines[1:]:
-                f = ln.split("\t")
-                if len(f) > max(ic, iw, ih) and f[ic] and f[iw].isdigit() and f[ih].isdigit():
-                    _SIZES[f[ic]] = (int(f[iw]), int(f[ih]))
-    return _SIZES.get(code, (1, 1))
+    try:
+        info = d2save.tables().items.get(d2save.code_int(code))
+    except Exception:  # noqa: BLE001
+        info = None
+    return (info["w"] or 1, info["h"] or 1) if info else (1, 1)
 
 
 def session_rects(items: list[tuple[str, int, int]], key_cell=None) -> list[list[int]]:
@@ -126,7 +98,7 @@ def session_rects(items: list[tuple[str, int, int]], key_cell=None) -> list[list
 
 def read(cfg: dict, backup: Path | None = None) -> dict | None:
     """{"mf": total, "parts": [[code, mf], ...], "backup": name} from the newest backup, or None if it can't be read
-    (no backup, or d2dump doesn't run here: it's a Linux build, so Singularity gets None and no MF gate)."""
+    (no backup, or the save doesn't parse)."""
     from .armory import latest_backup
 
     backup = backup or latest_backup(cfg)
@@ -134,12 +106,7 @@ def read(cfg: dict, backup: Path | None = None) -> dict | None:
     if backup is None or not char or not (backup / f"{char}.d2s").exists():
         return None
     try:
-        exe = _d2dump()
-        if exe is None:
-            return None
-        out = subprocess.run([str(exe), "c", str(backup / f"{char}.d2s")], capture_output=True, check=True,
-                             timeout=60).stdout
-        d2s = json.loads(out)
+        d2s = d2save.read_d2s(backup / f"{char}.d2s")
         total, parts = magic_find(d2s)
         try:  # socketed runes and gems (Ist in the Shako and Oculus: +55) live in the game tables, not the save
             from .gear import Tables, totals

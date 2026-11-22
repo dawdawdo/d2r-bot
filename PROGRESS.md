@@ -3,6 +3,8 @@
 **Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-22 10:40: save reader is pure Python now (bot/d2save.py); MF gate and session protection work on Singularity too.** d2dump was a Linux-only Rust binary (crate d2s 0.1.1). Ported its read side line by line; same JSON shape. Checked against d2dump on every backup: 608 unique .d2s/.d2i files (15,910 copies), all identical field for field; armory rebuild from 20261122-093230 identical (saves, inventory.json, pagedata except 'built'), 0.4 s vs 1.1 s. Read-only: it never opens a file for writing and reads only backups/. Game tables: txt105/ + xl/ from the tracked armory bundle, extracted on demand (no binary). Bot stopped 10:07 on GLaDOS: Stephen plays on Singularity.
+
 **2026-11-21 09:20: Armor Stands live; runes below Amn dropped; gold is one shared pile.** rack_probe found an Armor Stand outside, NE of each camp's west hut (bonfire + (-305,-677)); after nw_deep she teleports to (-305,-567) and clicks it (features.armor_stands, tt_armor_stand.png). First run: both stands clicked. Runes El-Thul: hidden by the filter (installed) and never cubed (cube.bottom_rune Amn). Keys: none stashed since the 11-20 fix (the 48 were older; Stephen cleared them); 3 key stacks now sit in his protected inventory cells, ignored by the bot. Shared stash gold is one pile (Stephen), not per page. Probe runs have no BO unless cast (fixed in the probe).
 
 **2026-11-21 08:50: hung D2R cost 5 h; supervisor now restarts the game after a failed session.** 03:25 D2R stuck on a loading screen; every session until 08:43 failed against the same hung game (no restart after bad sessions). Fixed (35c6a60), supervisor restarted 08:45 with the new code. Overnight 23:15-03:25: drained the ~36 rejuvs in the stash (Stephen's play?), found 15; 18 chickens, 2 deaths (00:06 real, max life 346 = no Battle Orders though 'war cries cast' was logged; 03:15 champion Doom Apes 58% -> 12 life). save_rejuvs mode started 03:25 (refill_left 20) but no runs since. Next: verify BO actually landed (max life in the 'Life: x / y' text, recast if missing); cast_warcries only checks the weapon swap. Armor Stands: Stephen doesn't know where; none in LK huts.
@@ -61,7 +63,7 @@ feed the Insight bases. **Check:** "rack:" lines, `rack_not_found` frames, run t
 and his Flawless Skull ((3,3)) onto the Gems tab. Both put back by hand (stash_probe). `inventory.protected` now
 [[4,0,6,4],[3,3,1,1]] (fixture `layout_20261119.png`). **Guard:** at session start `run.protect_own_items` reads the
 backed-up save (d2dump, same read as MF) and adds any charm/tome/cube outside the box to `protected` for that session,
-with a warning; other non-key items outside it are logged ("the stowaway will stash them"). Linux only (d2dump).
+with a warning; other non-key items outside it are logged ("the stowaway will stash them"). (Both machines since 11-22.)
 
 **2026-11-19 19:50: Mage Plate + Dusk Shroud bases; screensaver wake.** Stephen wants Enigma (3 os) and CoH /
 Fortitude (4 os). From the game tables (scratchpad d2data, 2.x): LK chests are `Act 3 (H) Chest C` -> Equip B, top

@@ -16,7 +16,9 @@ To refresh the published artifact: stage the root copy and publish it to the art
 
 ## Pieces
 - `scanbundle.tgz`: Linux `d2dump` (Rust, crate d2s 0.1.1, save v105) + `txt105/` base tables + `xl/` 3.0 game
-  tables (github.com/pinkufairy/D2R-Excel). Source for d2dump is in `d2dump/`.
+  tables (github.com/pinkufairy/D2R-Excel). Source for d2dump is in `d2dump/`. Since 2026-11-22 the bot uses
+  `bot/d2save.py` instead (pure-Python port of d2s, same JSON, both platforms: `python -m bot.d2save c|s <file>`);
+  the bundle is still where the tables come from.
 - `inv.py` saves -> inventory.json (every `saves/<Name>.json`, so new characters are picked up automatically).
 - `gen.py` -> pagedata.json: items with readable stat lines, runes, gems, materials, characters, `snap`
   (latest in-game save time). Keeps `rwdb` and `farm` text from the previous pagedata.json.
