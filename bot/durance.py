@@ -39,6 +39,7 @@ BLOB = 4  # px: a BLOB x BLOB square fits inside firelight and lit floors, never
 MIN_PIXELS = 1500  # mask pixels (full res) for "the automap is showing"; live: 7000-11000 in Durance 2
 GOOD_RESP = 0.08   # phase-correlation peak for a trusted fix (live hops: 0.20-0.30)
 HOP_GAIN = 1.17    # landing / commanded offset (nav.HOP_GAIN)
+MAX_JUMP = 700     # world px a fix may move her beyond the hops commanded since the last trusted fix
 
 
 _LIGHT: np.ndarray | None = None
@@ -146,6 +147,7 @@ class AutomapOdometer:
         self.lost = False
         self.resp = 1.0
         self.since_anchor = 0.0
+        self.untracked = 0.0  # world px of commanded hops since the last trusted fix (bounds how far a fix may jump)
         self.hits = hits if hits is not None else np.zeros((0, 0), np.float32)
         self.seen = seen if seen is not None else np.zeros((0, 0), np.float32)
         self.canvas = self._average(self.hits, self.seen)
@@ -216,12 +218,21 @@ class AutomapOdometer:
             guesses.insert(0, self.pos + np.asarray(expect, float) * HOP_GAIN)
         best = max((self.localize(mask, g) for g in guesses), key=lambda r: r[1])
         new, self.resp = best
+        self.untracked += math.hypot(*expect) * HOP_GAIN if expect is not None else 0.0
+        jump = math.dist(new, self.pos)
+        if self.resp >= GOOD_RESP and jump > MAX_JUMP + self.untracked:
+            # a maze of same-looking corridors (Catacombs, with the whole level already on the automap from earlier
+            # visits) can match a corridor over: 2026-11-22 one ~400 px hop from the waypoint "moved" her 3,047 px
+            log.warning("automap fix rejected: %.0f px jump, at most %.0f expected (resp %.3f)", jump,
+                        MAX_JUMP + self.untracked, self.resp)
+            self.resp = 0.0
         if self.resp < GOOD_RESP:
             if not self.lost:
                 log.warning("automap fix weak (resp %.3f)", self.resp)
             self.lost = True
             return 0.0, 0.0
         self.lost = False
+        self.untracked = 0.0
         moved = new - self.pos
         self.pos = new
         self.since_anchor += math.hypot(*moved)
@@ -234,7 +245,7 @@ class AutomapOdometer:
         new, resp = max((self.localize(mask, g) for g in guesses), key=lambda r: r[1])
         if resp < GOOD_RESP:
             return False
-        self.pos, self.resp, self.lost = new, resp, False
+        self.pos, self.resp, self.lost, self.untracked = new, resp, False, 0.0
         self._add(mask, self.pos)
         return True
 
@@ -279,6 +290,7 @@ class StopGraph:
         self.edges: dict[int, set[int]] = {0: set()}
         self.warps: list[dict] = []   # long tooltips: {"stop", "screen", "world", "w", "crop", "dest", "tries"}
         self.failed: list[list[float]] = []  # frontier targets we couldn't reach
+        self.marks: list[dict] = []   # automap exit marks seen once: {"world", "stops"}; a 2nd stop's sighting makes a warp
 
     def nearest(self, pos, within: float = SAME_STOP) -> int | None:
         best, bd = None, within
@@ -319,7 +331,7 @@ class StopGraph:
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"stops": self.stops, "edges": {k: sorted(v) for k, v in self.edges.items()},
-                                    "warps": self.warps, "failed": self.failed}, indent=1))
+                                    "warps": self.warps, "failed": self.failed, "marks": self.marks}, indent=1))
 
     @classmethod
     def load(cls, path: Path) -> "StopGraph":
@@ -330,6 +342,7 @@ class StopGraph:
             g.edges = {int(k): set(v) for k, v in d["edges"].items()}
             g.warps = d.get("warps", [])
             g.failed = d.get("failed", [])
+            g.marks = d.get("marks", [])
         return g
 
 
@@ -343,6 +356,7 @@ def canvas_to_world(odo: AutomapOdometer, cx: float, cy: float) -> tuple[float, 
 FRONTIER_CELL = 16     # canvas px (256 world px)
 FRONTIER_AWAY = 600    # world px from every stop
 FRONTIER_FAILED = 400  # world px around a target we couldn't reach
+FRONTIER_WALL = 0.3    # canvas average that counts as a wall (Catacombs: 0.15, its thick walls fade in and out of her light)
 
 
 def frontier(odo: AutomapOdometer, g: StopGraph) -> list[tuple[float, float]]:
@@ -351,7 +365,7 @@ def frontier(odo: AutomapOdometer, g: StopGraph) -> list[tuple[float, float]]:
         return []
     c = FRONTIER_CELL
     H, W = odo.canvas.shape
-    walls = (odo.canvas[: H // c * c, : W // c * c] > 0.3).astype(np.float32)  # seen as a line most times
+    walls = (odo.canvas[: H // c * c, : W // c * c] > FRONTIER_WALL).astype(np.float32)  # seen as a line most times
     dens = walls.reshape(H // c, c, W // c, c).mean(axis=(1, 3))
     stops = np.array([s["pos"] for s in g.stops])
     out = []
@@ -362,6 +376,26 @@ def frontier(odo: AutomapOdometer, g: StopGraph) -> list[tuple[float, float]]:
         if any(math.dist(f, w) < FRONTIER_FAILED for f in g.failed):
             continue
         out.append(w)
+    return out
+
+
+# Catacombs: big rooms (the waypoint room, crypts at the level's edge) have no automap walls at all, so frontier()
+# never sends her there or past them (2026-11-22: 200 stops, every drawn corridor visited, no stairs down). VOID adds
+# teleport targets into open space next to known stops; unreachable ones (walls, the void) end up in g.failed.
+VOID = {"on": False, "step": 450.0}
+
+
+def void_targets(g: "StopGraph") -> list[np.ndarray]:
+    stops = np.array([s["pos"] for s in g.stops])
+    out: list[np.ndarray] = []
+    for st in g.stops:
+        for a in range(0, 360, 45):
+            t = np.asarray(st["pos"], float) + VOID["step"] * np.array([math.cos(math.radians(a)), 0.6 * math.sin(math.radians(a))])
+            if np.min(np.hypot(*(stops - t).T)) < 0.65 * VOID["step"]:
+                continue
+            if any(math.dist(f, t) < FRONTIER_FAILED for f in g.failed) or any(math.dist(o, t) < 200 for o in out):
+                continue
+            out.append(t)
     return out
 
 
@@ -386,7 +420,7 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
     fill the belt with his mana potions, which heals too) -> WP `dest` (Durance 2; the Lost City for Ancient Tunnels)."""
     from .controller import BotError
     from .lifecycle import create_game, ensure_main_menu, save_and_exit
-    from .town import (act4_to, belt_full, buy_mana_at_ormus, heal_at_ormus, merc_alive, needs_heal,
+    from .town import (WP_TAB, act1_to, act4_to, belt_full, buy_mana_at_ormus, heal_at_ormus, merc_alive, needs_heal,
                        leave_other_act, recover_corpse, restart_in_act3, revive_merc, spawn_act,
                        town_to_wp)
 
@@ -401,10 +435,14 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
     bot.wait_for("in_game", 10)
     recover_corpse(bot)
     act = spawn_act(bot)
-    if leave_other_act(bot, act):  # Stephen's game ended in A1/A2 (2026-11-01: walked the Rogue camp for Ormus)
-        act = 3
     # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
     hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
+    if (act == 1 and WP_TAB.get(dest) == "wp_tab_act1" and not hurt() and not buy_mana
+            and (not merc or merc_alive(bot))):  # an Act I destination (Catacombs) from the Rogue Encampment spawn
+        act1_to(bot, dest)
+        return
+    if leave_other_act(bot, act):  # Stephen's game ended in A1/A2 (2026-11-01: walked the Rogue camp for Ormus)
+        act = 3
     if (buy_mana or merc) and not merc_alive(bot):  # Meph: a second target for his lightning; AT: his Insight
         say("merc dead -> Asheara, fresh game")
         if act == 4:
@@ -439,11 +477,16 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
 
 def ensure_automap(bot) -> np.ndarray:
     from .controller import BotError
+    from .vision.inventory import inventory_open
 
     for i in range(3):
         f = bot.capture.grab()
         if automap_shown(f):
             return f
+        if inventory_open(f):  # left open (2026-11-22 after war cries at the Catacombs waypoint): it hides the automap
+            bot.press("escape")
+            bot.kill.sleep(0.4)
+            continue
         bot.press("tab")
         bot.kill.sleep(0.4)
         for _ in range(3):  # Proton shows the map late: look again before toggling once more (2026-11-14 Outer Cloister)
@@ -489,8 +532,28 @@ def area_score(frame: np.ndarray, name: str) -> float:
     return float(cv2.matchTemplate(_lap(frame[y : y + h, x : x + w]), _lap(t), cv2.TM_CCOEFF_NORMED).max())
 
 
+DIGIT_W = 14  # px: the last glyph of a right-aligned area name plus margin ("Level 2" -> the "2")
+
+
 def area_is(frame: np.ndarray, name: str, threshold: float = 0.8) -> bool:
-    return area_score(frame, name) >= threshold
+    """Area name matches `name`. Names ending in a digit (catacombs_2) must match on that digit too: "Catacombs Level 2"
+    and "Level 3" differ in one glyph, so the whole name matches both at >= 0.95 (durance_level, 2026-10-29)."""
+    from .vision.screen import ASSETS
+
+    x, y, w, h = AREA_REGION
+    t = _area_tmpl(ASSETS / f"area_{name}.png")
+    r = cv2.matchTemplate(_lap(frame[y : y + h, x : x + w]), _lap(t), cv2.TM_CCOEFF_NORMED)
+    _, best, _, (lx, ly) = cv2.minMaxLoc(r)
+    if best < threshold:
+        return False
+    if not name[-1].isdigit():
+        return True
+    th, tw = t.shape[:2]
+    gx, gy = x + lx + tw - DIGIT_W, y + ly  # the digit's spot in the frame, from the full-name match
+    win = frame[max(gy - 2, 0) : gy + th + 2, max(gx - 2, 0) : gx + DIGIT_W + 2]
+    if win.shape[0] < th or win.shape[1] < DIGIT_W:
+        return False
+    return float(cv2.matchTemplate(_lap(win), _lap(t[:, -DIGIT_W:]), cv2.TM_CCOEFF_NORMED).max()) >= threshold
 
 
 def on_level2(bot) -> bool:
@@ -518,8 +581,104 @@ def is_junk(folder: Path, g: StopGraph, crop: np.ndarray) -> bool:
     return False
 
 
+# Level exits are purple marks on the automap (2026-11-22, Catacombs Level 2: the one mark in view was "To The Catacombs
+# Level 1"; 62 views of it agreed within ~20 px). A mark's world spot = her position + (mark - EXIT_C) * AUTOMAP_SCALE.
+EXIT_C = (628, 337)     # automap px (full-res screen) of her own spot: the mark sat there while she stood on the stairs
+AUTOMAP_SCALE = 8.0     # world px per automap px (a 287 px hop moved the automap 36 px)
+
+
+def exit_marks(frame: np.ndarray) -> list[tuple[float, float]]:
+    """Screen points of purple exit marks on the automap (automap open). Purple belt potions, the area text's purple
+    lines and small specks are left out."""
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lines = automap_pixels(frame)
+    m = ((hsv[..., 0] >= 130) & (hsv[..., 0] <= 168) & (hsv[..., 1] >= 60) & (hsv[..., 2] >= 90)).astype(np.uint8)
+    m[:140, 1000:] = 0  # area name + terror zone lines
+    m[590:] = 0  # HUD, belt
+    for x, y, w, h in STATIC:
+        m[y : y + h, x : x + w] = 0
+    n, lab, st, cen = cv2.connectedComponentsWithStats(m)
+    out = []
+    for i in range(1, n):
+        if not (15 <= st[i, 4] <= 150 and st[i, 2] <= 18 and st[i, 3] <= 20):
+            continue
+        x, y, w, h = st[i, :4]
+        px = hsv[y : y + h, x : x + w][lab[y : y + h, x : x + w] == i]
+        # the mark is bright magenta (median H ~144, V ~178); the waypoint's glow is dimmer and bluer (H ~132, V ~100)
+        if not (np.median(px[:, 0]) >= 138 and np.median(px[:, 2]) >= 135):
+            continue
+        # and it sits in an automap wall: line pixels right around it (the real mark 17; purple spells, spiders 0)
+        y0, x0 = max(y - 4, 0), max(x - 4, 0)
+        blob = (lab[y0 : y + h + 4, x0 : x + w + 4] == i).astype(np.uint8)
+        ring = cv2.dilate(blob, np.ones((9, 9), np.uint8)) - blob
+        if int((ring & lines[y0 : y + h + 4, x0 : x + w + 4]).sum()) >= 8:
+            out.append((float(cen[i][0]), float(cen[i][1])))
+    return out
+
+
+def note_exit_marks(odo: AutomapOdometer, g: "StopGraph", stop: int, frame: np.ndarray) -> int:
+    """Record purple exit marks not seen before as warps to try (SCAN["marks"]: the label file to hover for), once two
+    different stops have seen one in the same spot (scenery that slipped past exit_marks moves or doesn't repeat)."""
+    if odo.lost or not automap_shown(frame):
+        return 0
+    found = 0
+    for mx, my in exit_marks(frame):
+        world = [float(odo.pos[0] + (mx - EXIT_C[0]) * AUTOMAP_SCALE), float(odo.pos[1] + (my - EXIT_C[1]) * AUTOMAP_SCALE)]
+        if any(math.dist(w["world"], world) < 300 for w in g.warps):
+            continue
+        cand = next((c for c in g.marks if math.dist(c["world"], world) < 150), None)
+        if cand is None:
+            g.marks.append({"world": world, "stops": [stop]})
+            continue
+        if stop not in cand["stops"]:
+            cand["stops"].append(stop)
+        if len(cand["stops"]) < 2:
+            continue
+        world = cand["world"]
+        g.warps.append({"stop": stop, "screen": [round(mx), round(my)], "world": world, "w": 0, "crop": SCAN["marks"],
+                        "precise": True, "dest": None, "tries": 0, "mark": True})
+        log.info("exit mark on the automap at world %s (stop %d)", [round(v) for v in world], stop)
+        found += 1
+    return found
+
+
+def _has_label(frame: np.ndarray, box, label: np.ndarray, min_score: float = 0.8) -> bool:
+    """The tooltip in `box` contains the text `label` (a crop of the same font, e.g. "Catacombs Level")."""
+    bx, by, bw, bh = box
+    crop = frame[max(by - 2, 0) : by + bh + 2, max(bx - 2, 0) : bx + bw + 2]
+    if crop.shape[0] < label.shape[0] or crop.shape[1] < label.shape[1]:
+        return False
+    return float(cv2.matchTemplate(crop, label, cv2.TM_CCOEFF_NORMED).max()) >= min_score
+
+
+class _MapHidden:
+    """With SCAN["map_off"]: the automap is hidden while hovering for labels and shown again after. Automap lines drawn
+    across a label break its black box, so find_tooltip misses it: in the Catacombs the scans (map on) found the stairs
+    up only in the waypoint room, which has no automap walls; with the map off the first dense scan found them."""
+
+    def __init__(self, bot) -> None:
+        self.bot, self.hid = bot, False
+
+    def __enter__(self):
+        if SCAN.get("map_off") and automap_shown(self.bot.capture.grab()):
+            self.bot.press("tab")
+            self.bot.kill.sleep(0.35)
+            self.hid = True
+        return self
+
+    def __exit__(self, *exc) -> None:
+        if self.hid:
+            self.bot.press("tab")
+            self.bot.kill.sleep(0.35)
+
+
 def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path) -> int:
     """Hover a coarse grid; record long tooltips (level exits) with their world position."""
+    with _MapHidden(bot):
+        return _scan_warps(bot, odo, g, stop, folder)
+
+
+def _scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path) -> int:
     from .vision.tooltip import find_tooltip
 
     found = 0
@@ -538,8 +697,14 @@ def scan_warps(bot, odo: AutomapOdometer, g: StopGraph, stop: int, folder: Path)
             bot.kill.sleep(0.08)
             f = bot.capture.grab()
             box = find_tooltip(f, x, y, half_w=230, max_w=420)
-            if box is None or not SCAN["min_w"] <= box[2] <= SCAN["max_w"]:
+            if box is not None and SCAN.get("debug_dir") and box[2] >= 90:  # every tooltip seen, to tune the filters
+                bx, by, bw, bh = box
+                d = Path(SCAN["debug_dir"]); d.mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(d / f"s{stop}_{x}_{y}_w{bw}_h{bh}.png"), f[by : by + bh, bx : bx + bw])
+            if box is None or not SCAN["min_w"] <= box[2] <= SCAN["max_w"] or box[3] > SCAN.get("max_h", 10_000):
                 continue
+            if SCAN.get("label") is not None and not _has_label(f, box, SCAN["label"]):
+                continue  # Catacombs: the waypoint's own two-line label and potions on the floor are as wide as the stairs'
             world = [float(odo.pos[0] + x - 640), float(odo.pos[1] + y - 330)]
             if any(math.dist(w["world"], world) < 250 for w in g.warps):
                 continue
@@ -583,6 +748,8 @@ class Walker:
             cv2.imwrite(str(self.folder / "thumbs" / f"{j}.jpg"),
                         cv2.resize(self.bot.capture.grab()[:590], None, fx=0.25, fy=0.25,
                                    interpolation=cv2.INTER_AREA))
+        if self.scan and SCAN.get("marks"):
+            note_exit_marks(odo, g, j, self.bot.capture.grab())
         if self.scan and scan_due(g, odo.pos):
             if self.pre_scan is not None and not self.pre_scan():
                 return
@@ -681,7 +848,8 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
             x, y = world_to_screen(odo, *w["world"])
         r = 200 if w["tries"] <= 1 else 320  # odometry after a long trip can be off by more than 200 px
         view = bot.capture.grab()
-        hit = hover_find(bot, (x, y), cv2.imread(str(folder / w["crop"])), radius=r, step=40 if r == 200 else 50)
+        with _MapHidden(bot):
+            hit = hover_find(bot, (x, y), cv2.imread(str(folder / w["crop"])), radius=r, step=40 if r == 200 else 50)
         if hit is not None:  # the door's look, for a sprite template (find it by sight, not odometry)
             (folder / "doors").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)
@@ -757,6 +925,8 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
                 return "warp"
             continue
         targets = frontier(odo, g)
+        if VOID["on"]:
+            targets += [tuple(t) for t in void_targets(g)]
         if rescan:  # stops passed without a scan (struck, low life) are targets too
             targets += [s["pos"] for s in g.stops if scan_due(g, s["pos"])
                         and not any(math.dist(s["pos"], f) < 150 for f in g.failed + skipped)]
@@ -770,10 +940,15 @@ def explore_game(bot, odo: AutomapOdometer, g: StopGraph, folder: Path, max_hops
         log.info("frontier: %d targets; going to %s (%d px)", len(targets), [round(v) for v in target],
                  math.dist(target, odo.pos))
         hops0 = walker.hops
+        near = g.nearest(target, within=1e9)
+        if near is not None and math.dist(g.stops[near]["pos"], target) + 400 < math.dist(odo.pos, target):
+            walker.travel(near)  # far target: along known stops first (straight teleports across a maze get stuck on walls)
         if not walker.go(target):
             g.failed.append([float(target[0]), float(target[1])])
         elif walker.hops == hops0:  # already there and still not scanned (pre_scan said no): not again this game
             skipped.append([float(target[0]), float(target[1])])
+            if VOID["on"]:  # a void target in reach that never becomes a stop would be picked forever (2026-11-22)
+                g.failed.append([float(target[0]), float(target[1])])
         save()
     return "hops"
 

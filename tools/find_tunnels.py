@@ -62,11 +62,22 @@ DIRS = {"n": (0, -1), "ne": (1, -1), "e": (1, 0), "se": (1, 1), "s": (0, 1), "sw
 NEAR = 350
 
 
+BUFFED = [0.0]  # bot.clock() of the last war cries + armor/shield cast
+
+
 def safe_to_scan(bot) -> bool:
     bot.check()
     if (bot.hp or 100) < QUIET_HP:
         print(f"  no scan: HP {bot.hp:.0f}%", flush=True)
         return False
+    # Battle Orders lasts ~90 s and Energy Shield not much longer: every Catacombs chicken frame (2026-11-22) had max
+    # life 348 (no BO) and a full mana orb (no shield). Standing still to scan is when she needs them: refresh first.
+    if bot.clock() - BUFFED[0] > bot.cfg["hotkeys"].get("warcry_refresh_s", 75):
+        from bot.town import cast_buffs, cast_warcries
+
+        cast_warcries(bot)
+        cast_buffs(bot)
+        BUFFED[0] = bot.clock()
     return True
 
 
@@ -130,8 +141,36 @@ def main() -> int:
                                               "from the Outer Cloister through the Monastery Gate into Tamoe Highland)")
     ap.add_argument("--min-w", type=int, default=88, help="tooltip width band (px) worth visiting; Trap Door ~108")
     ap.add_argument("--max-w", type=int, default=128)
+    ap.add_argument("--max-h", type=int, default=10_000, help="tooltip height limit (px): one-line labels only (~24)")
+    ap.add_argument("--label", default="", help="template (bot/assets/templates) the tooltip must contain, e.g. "
+                                               "tt_catacombs_level.png")
+    ap.add_argument("--debug-dir", default="", help="save every tooltip the scan sees here (scratch/...)")
+    ap.add_argument("--marks", action="store_true", help="also take purple exit marks on the automap (Catacombs); "
+                                                       "needs --label, hovered for near the mark")
+    ap.add_argument("--dx", type=int, default=120, help="hover grid step (px); Durance used 80 x 60")
+    ap.add_argument("--dy", type=int, default=80)
+    ap.add_argument("--abort-hp", type=int, default=4, help="HP points lost during a scan that stop it")
+    ap.add_argument("--seconds", type=int, default=300, help="exploration time per game")
+    ap.add_argument("--frontier-wall", type=float, default=0.3, help="canvas average that counts as a wall")
+    ap.add_argument("--map-off", action="store_true", help="hide the automap while hovering for labels (Catacombs)")
+    ap.add_argument("--void", action="store_true", help="also teleport into open space next to stops (rooms without automap walls)")
+    ap.add_argument("--no-scan", action="store_true", help="marks only: no tooltip grid scans at stops")
+    ap.add_argument("--rescan-all", action="store_true", help="forget which stops were scanned (after a filter change)")
     args = ap.parse_args()
-    SCAN.update(min_w=args.min_w, max_w=args.max_w)
+    SCAN.update(min_w=args.min_w, max_w=args.max_w, max_h=args.max_h, debug_dir=args.debug_dir, dx=args.dx, dy=args.dy,
+                abort_hp=args.abort_hp)
+    if args.label:
+        import cv2
+
+        SCAN["label"] = cv2.imread(str(ROOT / "bot" / "assets" / "templates" / args.label))
+    from bot import durance as _d
+
+    _d.FRONTIER_WALL = args.frontier_wall
+    _d.VOID["on"] = args.void
+    SCAN["map_off"] = args.map_off
+    _d.DURANCE_HEAL = 60  # exploring: go in at 60 % (Ormus heals missed twice in a row, 2026-11-22 17:14)
+    if args.no_scan:
+        SCAN.update(dx=10_000, dy=10_000)  # one hover point per stop: effectively no scan
     AREAS[:] = args.areas.split(",")
     OUTDOOR_ANY[0] = args.outdoor_any
 
@@ -144,11 +183,18 @@ def main() -> int:
     if args.fresh and folder.exists():
         shutil.move(str(folder), str(folder.with_name(folder.name + "_old")))
     (folder / "thumbs").mkdir(parents=True, exist_ok=True)
+    if args.marks:  # the hover label for marks lives in the folder (take_warp reads folder / crop)
+        (folder / "warps").mkdir(parents=True, exist_ok=True)
+        shutil.copy(ROOT / "bot" / "assets" / "templates" / args.label, folder / "warps" / "mark_label.png")
+        SCAN["marks"] = "warps/mark_label.png"
     b = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(b.window, b.capture, b.input, ScreenClassifier.from_config(cfg["vision"]["states"]),
                      s.kill, cfg)
     b.window.focus()
     g = StopGraph.load(folder / "graph.json")
+    if args.rescan_all:
+        for st in g.stops:
+            st["scanned"] = False
     try:
         for n in range(args.games):
             result = "error"
@@ -158,6 +204,7 @@ def main() -> int:
                 from bot.town import cast_warcries
 
                 cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it
+                BUFFED[0] = bot.clock()
                 bot.sleep(0.5)
                 if args.pre:  # a fixed lead-in (same landings every game from the waypoint arrival)
                     from bot.nav import CENTER, TP_SETTLE, frame_lag, in_play
@@ -176,7 +223,7 @@ def main() -> int:
                     odo.save(folder)
                     g.save(folder / "graph.json")
 
-                bot.deadline = bot.clock() + 300
+                bot.deadline = bot.clock() + args.seconds
                 result = explore_game(bot, odo, g, folder, max_hops=args.hops, save=save,
                                       here=in_lost_city, goal=args.goal,
                                       pre_scan=lambda: safe_to_scan(bot), rescan=True,

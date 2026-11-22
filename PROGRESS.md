@@ -1,7 +1,30 @@
 # Progress
 
-**Current milestone:** LK running (Stephen farms the Archon Plates himself; Pit/tunnels stopped). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** LK running; Andariel task (SoJs) in progress, blocked on the Catacombs Level 2 stairs (see 18:00). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-22 18:00: Andariel task started (Blizzaga, MF gear, players 3); Catacombs Level 2 stairs down NOT found yet. LK running.**
+Why Andariel: D2R gives her the quest drop on every kill (monstats: all her Hell TCs = `Andarielq (H)`), so she drops 2-3x
+the rings of Mephisto. SoJ per kill (d2data 2.x TCs, xl uniqueitems; scratchpad soj_odds.py): 280 % MF players 1/3/7 =
+1 in 3,500 / 2,500 / 2,200; 0 % MF p3 1 in 5,700; Meph 280 % p1 1 in 7,800. Plan agreed with Stephen's lean: Blizzaga (MF
+280 %, FCR 136 = 8-frame teleports) not ThroatCutter (60 % MF, 13 frames, melee = new combat code). Gate on MF like Meph.
+Done: `wp_catacombs_2` (Act I tab, 9th row) + Act 1 spawn shortcut in `to_durance2`; `area_catacombs_2.png` and `area_is`
+checks the last digit (Level 2 vs 3 match 0.96 on the whole name); tools/cata_probe.py, tools/cata_goto.py (go to a world
+point of a learned map, dense label scan). Finder (tools/find_tunnels.py) fixes, all opt-in flags: `--label` (tooltip
+must contain "Catacombs Level"; the waypoint label and floor potions are as wide), `--max-h`, `--map-off` (automap lines
+across a label break find_tooltip's black box: with the map on, only the waypoint room, which has no automap walls, gave
+labels), `--marks` (level exits are purple wall segments on the automap; 62 views agreed on the Catacombs Level 1 stairs),
+`--void`, `--frontier-wall`, `--seconds`, `--dx/--dy/--abort-hp`, BO + armor/shield refresh before scans (BO lasts ~90 s:
+every chicken frame had max life 348). AutomapOdometer rejects fixes that jump > 700 px beyond the commanded hops (same-
+looking corridors aliased 3,045 px). ensure_automap closes a stray inventory panel.
+Cata 2 result: 269 stops, the whole automap maze visited, teleports outside it all fail; only one exit mark (Cata 1 up
+stairs at world (-3538, 1037) from the waypoint). Map-hidden rescan 2/3 done (87 stops left, in the south where every game
+chickened). Cost: Blizzaga's rejuvs 14 -> 0 (belt + personal stash; shared stash still 1 + 1), armor icon red (repair due).
+**Asked Stephen:** walk Blizzaga once from the Cata 2 waypoint down to Cata 4 (or say where the stairs are). The exits he
+takes should then show as purple marks, and `--marks` goes straight to them. Until then: LK (rebuilds rejuvs).
+Resume: `python tools/find_tunnels.py --map-off --marks --games 1 --hops 400 --seconds 400 --dx 100 --dy 60 --abort-hp 8
+--dest wp_catacombs_2 --style tunnel --areas catacombs_2 --folder cata2_auto --goal catacombs_3 --min-w 150 --max-w 360
+--max-h 34 --label tt_catacombs_level.png --frontier-wall 0.15`
 
 **2026-11-22 11:30: Armor Stands are the base source; bases now flagged from the saves.** 9 white armor bases (Balrog Skin x4 incl. eth + 4os, Boneweave x4, Loricated Mail), all ilvl 79, came in the first day of stands vs 0 in 11,840 chests. The screen log calls any white non-key/rejuv pick a "gem". New `bot/bases.py`: each session start diffs the new backup against the previous one and logs "new base: <name> (eth, N os, ilvl, def) in <tab>" + appends logs/bases.csv (includes Stephen's own finds between backups). History: `python -m bot.bases --all`. Next after Stephen's plan: Andariel (his SoJs); bot stopped while he plays.
 
