@@ -74,25 +74,23 @@ def _step(dx: float, dy: float) -> tuple[int, int]:
 
 def town_automap(bot: Controller) -> np.ndarray:
     """The automap up, judged by its info text (top right) only: in town the line-pixel test of
-    durance.automap_shown fires on the campfire stones (2026-11-23: 'shown' with no map up)."""
+    durance.automap_shown fires on the campfire stones (2026-11-23: 'shown' with no map up). Closes only what is
+    really up first (the game menu, an NPC menu, a trade/stash panel): a blind Esc opened the game menu and the
+    retries left it up (17:35)."""
     from .controller import BotError
     from .durance import map_text_open
-
-    from .town import close_dialog
     from .vision.inventory import inventory_open
 
-    for attempt in range(3):
+    for attempt in range(4):
         f = bot.capture.grab()
         if map_text_open(f):
             return f
-        close_npc(bot)
-        if attempt:  # still no map: something unrecognized is up; Esc that also closes the game menu it may open
-            close_dialog(bot)
-        if inventory_open(f):  # a trade window or the stash still up (a lost Esc, 2026-11-23 11:52): Tab does nothing
+        if bot.observe() == "esc_menu" or menu_up(bot, f) or inventory_open(f):
             bot.press("esc")
-            bot.kill.sleep(0.4)
+            bot.kill.sleep(0.5)
+            continue
         bot.press("tab")
-        for _ in range(6):  # Proton shows the map late
+        for _ in range(10):  # Proton shows the map late (up to ~2 s on GLaDOS)
             bot.kill.sleep(0.25)
             f = bot.capture.grab()
             if map_text_open(f):
