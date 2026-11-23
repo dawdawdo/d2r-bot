@@ -28,6 +28,7 @@ TOO_CLOSE = 520    # iso px (screen dy counts double): one hop back. Blizzard la
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
 STATICS = 2
+LOST_DEAD = 0.35   # her life when last seen, below which "gone for 3 sweeps" counts as dead
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
 
 
@@ -64,6 +65,7 @@ class AndyFight:
         self.threat: tuple[int, int] | None = None  # the last monster seen (retreat from it when hurt)
         self.wide = False  # add the whole-view grid to the sweep
         self.statics = 0  # Static Fields cast on her so far
+        self.since_her = 0  # sweeps since her bar last showed
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -155,6 +157,13 @@ class AndyFight:
                     continue
                 hit = self.find()
                 self.say(f"find: {hit} HP {bot.hp} MP {bot.mp}")
+                self.since_her = 0 if (hit and hit[2]) else self.since_her + 1
+                if self.life <= LOST_DEAD and self.since_her >= 3:
+                    # a dead Andariel has no bar to hover: last seen low and gone for 3 sweeps = dead (2026-11-22
+                    # 23:38: 1.00 -> 0.21 in 4 s, then never seen again; the fight ran out its clock without looting)
+                    self.seen_dead = True
+                    self.say(f"her bar last read {self.life:.2f} and is gone for 3 sweeps: dead")
+                    return True
                 if hit is None:
                     misses += 1
                     self.wide = misses >= 2  # two empty sweeps: next one covers the whole view
@@ -261,5 +270,7 @@ def fight(bot) -> dict:
     log.info("Andariel %s (HP %.0f%% MP %.0f%%)", "dead" if dead else "NOT killed", bot.hp or 0, bot.mp or 0)
     if not dead:
         bot.save_failure("andy_not_killed")
+        if f.last is not None and f.life < 0.6:  # hurt and then lost: she may have died out of sight. Look anyway
+            return {"andy": 0, "picked": f.loot()}
         return {"andy": 0, "picked": []}
     return {"andy": 1, "picked": f.loot()}
