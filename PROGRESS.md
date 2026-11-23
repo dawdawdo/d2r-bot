@@ -1,7 +1,17 @@
 # Progress
 
-**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; next: Act 1 town services so she never goes to Act 3 (see 09:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1 now (see 09:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 09:50: Andariel games stay in Act 1 (bot/a1town.py).** Act 1 spawns of a1_town tasks (andy) never
+take the waypoint to Act 3: run.one_run calls a1town.town_stop (heal: belt, then Akara; stash when < min_free or
+gold_needed: stowaway/withdraw/deposit through open_stash's Act 1 branch; Kashya revive; Akara potions when a belt
+column is empty; Charsi repair), then a fresh game. Navigation: the town automap labels NPCs (map_<name>.png, 0.94-1.00
+vs <= 0.53); the automap is 1/8 scale centred on her marker (642, 353), label +23 px = the NPC's spot; walk_to
+re-reads it every step, detours +-60 deg when stuck (stone wall between the stash and Charsi), and walks toward the
+stash/Kashya until a far label shows (~1,200 px range). Line clicks only after npc_<name>.png confirms the dialog
+(Warriv's line 1 is Go East). Live via tools/a1_probe.py: stash opened, Akara healed, Charsi repaired. Not yet seen
+live: Kashya's Resurrect (picks the widest menu line), Akara's potion buy. Fixtures: fixtures/a1town.
 
 **2026-11-23 09:15: Andariel runs ~2.5 min (were ~4.5), button on the bot page, filter cut to Archon Plate.**
 Every run had gone Act 1 -> Act 3 stash -> Catacombs because A2_MIN_FREE (12, sized for the tunnels' plates) > the 10-11
