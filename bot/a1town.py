@@ -374,7 +374,6 @@ def revive_merc_a1(bot: Controller) -> bool:
 
 def akara_stop(bot: Controller, buy: bool) -> bool:
     """Akara: talking heals; with `buy`, Trade and potions into the belt (healing + mana, like the Ormus stop)."""
-    from .town import buy_potions_in_trade
 
     off = walk_to(bot, "akara", near=NEAR)
     if off is None or talk(bot, "akara", off) is None:
@@ -391,14 +390,7 @@ def akara_stop(bot: Controller, buy: bool) -> bool:
     for _ in range(8):
         bot.kill.sleep(0.3)
         if bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is not None:
-            buy_antidotes(bot)
-            from .vision.orbs import belt_kinds
-
-            if None not in belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]):  # the antidotes took the last
-                bot.press("esc")  # empty column: a healing/mana buy would only land in the inventory (2026-11-23)
-                bot.kill.sleep(0.5)
-                return True
-            return buy_potions_in_trade(bot, AKARA, "mixed", "Akara")
+            return restock_at_akara(bot)
     bot.save_failure("a1_akara_trade_not_opened")
     bot.press("esc")
     bot.kill.sleep(0.4)
@@ -462,6 +454,79 @@ def buy_antidotes(bot: Controller) -> int:
     log.info("Akara: %d antidote(s) bought, %d into the belt, belt %s", len(bought), len(bought) - len(left),
              belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]))
     return len(bought) - len(left)
+
+
+def _inv_cells(bot: Controller) -> set:
+    """Empty inventory cells (the trade window shows the inventory where it always is)."""
+    from .vision.inventory import protected_cells, scan as inv_scan
+
+    t = _tpl.get("inv_key")
+    if t is None:
+        t = _tpl["inv_key"] = cv2.imread(str(TEMPLATES / "inv_key.png"))
+    bot.input.move(640, 600)
+    bot.kill.sleep(0.6)  # Proton shows a new item late
+    return set(inv_scan(bot.capture.grab(), t, protected_cells(bot.cfg["inventory"]["protected"]))["empty"])
+
+
+def _inv_point(c: int, r: int) -> tuple[int, int]:
+    return int(INV0[0] + INV_P * c + INV_P / 2), int(INV0[1] + INV_P * r + INV_P / 2)
+
+
+def _buy(bot: Controller, kind: str, n: int, until_spill: bool = False) -> int:
+    """Plain right-click buys of Akara's healing/mana potion: they go to the belt column of that kind with room, else
+    the leftmost empty one. until_spill: stop (and drink it) when one lands in the inventory. Returns buys made."""
+    before = _inv_cells(bot) if until_spill else set()
+    for i in range(n):
+        bot.click(*AKARA[kind], "right")
+        bot.kill.sleep(0.5)
+        if until_spill:
+            spilled = before - _inv_cells(bot)
+            if spilled:
+                for c, r in spilled:  # drink it: never stashed (Stephen 2026-11-13)
+                    bot.click(*_inv_point(c, r), "right")
+                    bot.kill.sleep(0.6)
+                left = before - _inv_cells(bot)
+                log.info("Akara: %s topped up with %d, the next one spilled (drunk%s)", kind, i, "" if not left else
+                         f", NOT: {sorted(left)}")
+                return i
+    if until_spill:
+        log.info("Akara: %s topped up with %d, no spill", kind, n)
+    return n
+
+
+def restock_at_akara(bot: Controller) -> bool:
+    """With Akara's trade open: the belt as 1+ healing, 1+ mana and up to ANTIDOTE_COLS antidote columns.
+    Empty columns get exactly 4 of their kind (healing first, then mana, then antidotes), so nothing overflows into
+    a column meant for another kind; with no empty column left, healing then mana are topped up until one spills
+    (drunk). 2026-11-23 14:13: the antidotes took the only empty column, the half-used healing column was never
+    topped up, and it ran dry in the fight (chicken, "belt is empty")."""
+    from .vision.orbs import belt_kinds
+
+    def kinds():
+        return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+
+    k = kinds()
+    if not any(x in ("hp", "rejuv") for x in k) and None in k:
+        _buy(bot, "healing_potion", 4)
+        k = kinds()
+    if "mp" not in k and None in k:
+        _buy(bot, "mana_potion", 4)
+        k = kinds()
+    buy_antidotes(bot)
+    k = kinds()
+    while None in k:  # still empty ones (antidotes at their max): healing and mana alternately
+        _buy(bot, "healing_potion" if sum(x == "hp" for x in k) <= sum(x == "mp" for x in k) else "mana_potion", 4)
+        k2 = kinds()
+        if k2 == k:
+            break  # nothing changed (no gold?)
+        k = k2
+    if None not in k:
+        _buy(bot, "healing_potion", 4, until_spill=True)
+        _buy(bot, "mana_potion", 4, until_spill=True)
+    log.info("Akara: belt %s", kinds())
+    bot.press("esc")
+    bot.kill.sleep(0.5)
+    return True
 
 
 def charsi_repair(bot: Controller) -> bool:
