@@ -372,8 +372,33 @@ def revive_merc_a1(bot: Controller) -> bool:
     return resurrect_result(bot, "Kashya")
 
 
+def _spare_mana_to_antidotes(bot: Controller) -> None:
+    """A second antidote column from a spare mana column (the shield seldom needs them): drink it empty before the
+    trade (belt keys do nothing with the trade window up). 14:36: one column (4) ran out after the stairs dose and two
+    cures, and the poison took her to a chicken. Mana potions cost little; success first (Stephen 2026-11-23)."""
+    from .vision.orbs import belt_kinds
+
+    keys = bot.cfg["hotkeys"]["potions"]
+
+    def kinds():
+        return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+
+    k = kinds()
+    if not (k.count("antidote") < ANTIDOTE_COLS and k.count("mp") >= 2 and None not in k):
+        return
+    i = len(k) - 1 - k[::-1].index("mp")  # the rightmost mana column
+    for _ in range(6):
+        if kinds()[i] is None:
+            break
+        bot.press(keys[i])
+        bot.kill.sleep(0.5)
+    log.info("emptied a spare mana column for antidotes: belt %s", kinds())
+
+
 def akara_stop(bot: Controller, buy: bool) -> bool:
     """Akara: talking heals; with `buy`, Trade and potions into the belt (healing + mana, like the Ormus stop)."""
+    if buy:
+        _spare_mana_to_antidotes(bot)
 
     off = walk_to(bot, "akara", near=NEAR)
     if off is None or talk(bot, "akara", off) is None:
@@ -588,7 +613,12 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
     if getattr(bot, "merc_revive", True) and not merc_alive(bot):
         log.info("merc is dead -> Kashya")
         walked = True
-        if revive_merc_a1(bot):
+        ok = revive_merc_a1(bot)
+        if not ok and state.load().get("gold_needed") and withdraw_gold(bot):
+            # not enough gold: take it from the stash now and try again, rather than losing a run (14:38)
+            close_stash(bot)
+            ok = revive_merc_a1(bot)
+        if ok:
             bot.merc_fails = 0
         else:
             from .run import MERC_MAX_FAILS, MERC_PAUSE_RUNS, MERC_RETRY_RUNS
