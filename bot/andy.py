@@ -401,7 +401,8 @@ class AndyFight:
 
 
 DEATH_HOPS = 3         # hops away from her body when she dies (her death burst: poison clouds round the body)
-DEATH_WAIT = 5.0       # s to wait out there before going back for the loot
+DEATH_WAIT = 9.0       # s to wait out there before going back for the loot (5 s: back into the clouds 7 s after
+                       # her death, 91 -> 52 % and a chicken with the loot on the floor, 16:37)
 MINION_STREAK = 6      # finds in a row that aren't her ...
 HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
 ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
