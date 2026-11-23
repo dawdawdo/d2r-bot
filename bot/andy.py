@@ -241,6 +241,7 @@ class AndyFight:
                 if her:
                     self.last, self.life = (x, y), life
                     self.her_at = time.time()
+                    self.her_world = self.offset + np.array([x - CENTER[0], y - CENTER[1]], float)  # from the spot
                     if life <= 0.0:
                         self.seen_dead = True
                         self.say("Andariel's bar is empty: dead")
@@ -301,6 +302,16 @@ class AndyFight:
         mostly comes from straight above (every early kill had her bar at (639, 78)), so the pattern starts there; then
         up-left, up-right and a row deeper. 2026-11-23 15:45-17:20: 4 of 27 fights never saw her when the search only
         went straight up and back."""
+        hw = getattr(self, "her_world", None)
+        if hw is not None and time.time() - self.her_at < 30:
+            # lost her after a keep-away hop: back toward where she was, before the pattern (17:42: found at point 1,
+            # hit to 62 %, one hop away, then the pattern went to points 2 and 3 and never saw her again)
+            d = hw - self.offset
+            n = float(np.hypot(*d))
+            if n > 200:
+                self.say(f"toward where she was {time.time() - self.her_at:.0f} s ago ({hw.round().tolist()})")
+                self.hop(*(d / n * min(n, 380)))
+                return
         i = getattr(self, "search_i", 0)
         for _ in range(len(SEARCH)):
             target = np.array(SEARCH[i % len(SEARCH)], float)
