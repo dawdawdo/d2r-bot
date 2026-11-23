@@ -1697,6 +1697,12 @@ def open_a1_wp(bot: Controller) -> None:
         bot.kill.sleep(2.5)
     for attempt in range(3):
         loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
+        for step in ((1220, 300), (640, 560)) if loc is None else ():  # cut off at an edge from some spawn spots
+            bot.click(*step)                                            # (2026-11-23 07:54: its blue flame at the
+            bot.kill.sleep(2.0)                                         # right edge): walk that way, look again
+            loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
+            if loc is not None:
+                break
         if loc is None:
             bot.save_failure("a1_wp_not_found")
             raise BotError("Act 1 waypoint not visible")
