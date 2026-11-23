@@ -67,6 +67,7 @@ class AndyFight:
         self.statics = 0  # Static Fields cast on her so far
         self.since_her = 0  # sweeps since her bar last showed
         self.come_back: tuple[float, float] | None = None  # unit vector back toward her after a life retreat
+        self.offset = np.zeros(2)  # rough screen-px displacement from the fight spot (where the route ends)
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -108,15 +109,20 @@ class AndyFight:
         return other
 
     # -- moving -----------------------------------------------------------------------------------
+    def hop(self, dx: float, dy: float) -> None:
+        """One teleport by screen offset (dx, dy); `offset` keeps a rough count of where she is from the fight spot."""
+        dx, dy = in_play(dx, dy)
+        self.bot.press(self.sk["teleport"])
+        self.bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
+        self.bot.sleep(TP_SETTLE + frame_lag(self.bot) + 0.1)
+        self.offset += np.array([dx, dy]) * 1.17  # landings ~1.17x the click offset (nav.HOP_GAIN); blocked hops overcount
+
     def away_from(self, x: float, y: float, dist: float = 380) -> None:
         """One hop directly away from screen point (x, y)."""
         self.say(f"away from ({x}, {y})")
         v = np.array([CENTER[0] - x, CENTER[1] - y], float)
         n = float(np.hypot(*v)) or 1.0
-        dx, dy = in_play(*(v / n * dist))
-        self.bot.press(self.sk["teleport"])
-        self.bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
-        self.bot.sleep(TP_SETTLE + frame_lag(self.bot) + 0.1)
+        self.hop(*(v / n * dist))
 
     def refresh_cries(self) -> None:
         from .town import cast_warcries
@@ -150,8 +156,9 @@ class AndyFight:
                 threat = self.last or self.threat
                 if (bot.hp or 100) < RETREAT_HP and threat and time.time() - self.retreat_at > 2.5:
                     self.say(f"HP {bot.hp:.0f}%: away from {threat}")
-                    if self.last:  # remember the way back to her (00:56: retreated at her 37 % and never found her again)
-                        v = np.array([self.last[0] - CENTER[0], self.last[1] - CENTER[1]], float)
+                    if self.last or threat:  # the way back (00:56: retreated at her 37 % and never found her again)
+                        tx, ty = self.last or threat
+                        v = np.array([tx - CENTER[0], ty - CENTER[1]], float)
                         n = float(np.hypot(*v)) or 1.0
                         self.come_back = (v[0] / n, v[1] / n)
                     self.away_from(*threat)
@@ -173,10 +180,7 @@ class AndyFight:
                     # life is back after a retreat from her: one hop back the way we came
                     ux, uy = self.come_back
                     self.come_back = None
-                    dx, dy = in_play(ux * 380, uy * 380)
-                    bot.press(sk["teleport"])
-                    bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
-                    bot.sleep(TP_SETTLE + frame_lag(bot) + 0.1)
+                    self.hop(ux * 380, uy * 380)
                     self.say("back toward her after the retreat")
                     continue
                 if hit is None:
@@ -188,7 +192,13 @@ class AndyFight:
                     if misses % 3 == 0:  # nothing in view: one hop toward her throne. From the fight spot (by the
                         # barrels) she comes from straight above: every kill so far had her bar at (639, 78); up-right
                         # runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min, never seen)
-                        hops(bot, "0,-210,1")
+                        far = float(np.hypot(*self.offset))
+                        if far > 300:  # drifted off (retreats, minions): back toward the fight spot first
+                            v = -self.offset / far * min(far, 380)
+                            self.say(f"back toward the fight spot ({self.offset.round().tolist()} off)")
+                            self.hop(*v)
+                        else:
+                            self.hop(0, -210)
                     continue
                 misses = 0
                 (x, y), life, her = hit
