@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1, antidotes for her only, ~80 % kills (see 13:35). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 15:15: QUESTION for Stephen: stash rejuvs for Andariel?** Her resists are fine (poison 73 %, cap 75);
+the problem is ~528 life and Energy Shield not taking poison. Long fights empty the belt (4 healing + 8 antidotes:
+15:08 used 6 antidotes + 4 healing in 20 s, killed her at 83 %, then the death burst chickened her with an empty belt:
+loot lost). Since 14:42: 7 runs, 7 kills, 2 lost to a chicken after the kill. Options: (1) a column of stash rejuvs
+like Meph (instant heals; LK refills when dry, as for Meph) - my pick; (2) a lower chicken for Andariel (OK'd for Meph,
+deaths acceptable) - only if the numbers say so; (3) gear with more life (Stephen's call). Also: runs.csv now records
+"miss" (fight ran out, no kill); the bot page has a Miss column (Stephen read 155 "ok" as kills; 108 were).
+
 **2026-11-23 14:25: poison cure + Akara restock.** Stephen: priorities are success rate, then speed, then resources.
 Every chicken frame today had a green (poisoned) life orb: orbs.poisoned + controller guard drink a belt antidote
 when bot.cure_poison (Andariel's fight and loot); the stairs antidote stays, the timed 30 s round is gone. 14:13
