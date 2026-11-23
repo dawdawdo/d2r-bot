@@ -59,7 +59,7 @@ def test_status_lists_tasks(web):
     code, body = call(base, "/api/status", pw)
     d = json.loads(body)
     assert code == 200 and d["bot"]["running"] is False
-    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": True, "tunnels": True, "pit": True}  # Pit entrance found 2026-11-14
+    assert {t["name"]: t["ready"] for t in d["tasks"]} == {"lk": True, "meph": True, "tunnels": True, "andy": True, "pit": True}  # Pit entrance found 2026-11-14; Catacombs stairs 2026-11-22
 
 
 def test_start_validates_and_launches_once(web):

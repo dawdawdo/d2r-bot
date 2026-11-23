@@ -34,7 +34,9 @@ def name_bar(frame: np.ndarray) -> dict | None:
     red = _red(strip)
     if red.mean() < 0.05:
         if is_mephisto(frame):
-            return {"life": 0.0, "mephisto": True}
+            return {"life": 0.0, "mephisto": True, "andariel": False}
+        if is_named(frame, "andariel"):
+            return {"life": 0.0, "mephisto": False, "andariel": True}
         return None  # no box (or another monster at 0 life)
     cols = np.nonzero(red.mean(axis=0) > 0.3)[0]
     if not len(cols):
@@ -42,7 +44,19 @@ def name_bar(frame: np.ndarray) -> dict | None:
     left, right = x + cols[0], x + cols[-1]
     width = max(2 * (CENTER_X - left), 1)
     life = float(np.clip((right - left + 1) / width, 0, 1))
-    return {"life": life, "mephisto": is_mephisto(frame)}
+    return {"life": life, "mephisto": is_mephisto(frame), "andariel": is_named(frame, "andariel")}
+
+
+def is_named(frame: np.ndarray, key: str, thresh: float = 0.6) -> bool:
+    """The bar's name is templates/name_<key>.png (name_andariel.png: cut from a live bar, 2026-11-22)."""
+    if key not in _T:
+        _T[key] = _text(cv2.imread(str(TEMPLATES / f"name_{key}.png")))
+    x, y, w, h = BAR
+    txt = _text(frame[y : y + h, x : x + w])
+    t = _T[key]
+    if txt.sum() < 0.5 * t.sum():
+        return False
+    return float(cv2.matchTemplate(txt, t, cv2.TM_CCORR_NORMED).max()) >= thresh
 
 
 def is_mephisto(frame: np.ndarray, thresh: float = 0.6) -> bool:

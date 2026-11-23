@@ -37,6 +37,32 @@ def level_exit(cfg: dict, folder: str) -> dict | None:
     return next((w for w in g.get("warps", []) if w.get("goal") and w.get("dest") not in (None, "none")), None)
 
 
+def short_path(g, a: int, b: int, max_edge: float = 800.0) -> list[int]:
+    """Shortest stop path a -> b by distance over edges no longer than one long teleport (an edge recorded across a bad
+    fix spans thousands of px). Falls back to [a, b]."""
+    import heapq
+    import math
+
+    dist, prev, q = {a: 0.0}, {a: None}, [(0.0, a)]
+    while q:
+        d, u = heapq.heappop(q)
+        if u == b:
+            out = []
+            while u is not None:
+                out.append(u)
+                u = prev[u]
+            return out[::-1]
+        if d > dist.get(u, 1e18):
+            continue
+        for v in g.edges.get(u, ()):
+            e = math.dist(g.stops[u]["pos"], g.stops[v]["pos"])
+            if e > max_edge or d + e >= dist.get(v, 1e18):
+                continue
+            dist[v], prev[v] = d + e, u
+            heapq.heappush(q, (d + e, v))
+    return [a, b]
+
+
 def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) -> None:
     """From the arrival spot of a learned level, along the stop graph to its exit, and through it."""
     from ..durance import AutomapOdometer, StopGraph, Walker, area_is, ensure_automap, take_warp, use_style
@@ -49,12 +75,22 @@ def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) 
         raise BotError(f"no {goal} exit learned in {folder}")
     odo = AutomapOdometer.load(fold, ensure_automap(bot))
     walker = Walker(bot, odo, g, fold, scan=False)
-    walker.travel(w["stop"])
-    if not walker.go(w["world"], tol=250, max_hops=8):  # take_warp makes its own last hops: try it anyway
+    start = g.nearest(odo.pos, within=1e9)
+    for j in short_path(g, start, w["stop"])[1:]:
+        # a leg that falls short isn't the end: the next stop is usually still reachable from where she landed
+        # (2026-11-22: travel() gave up on the first missed leg 2,600 px from the exit)
+        walker.go(g.stops[j]["pos"], tol=150, max_hops=5)
+    if not walker.go(w["world"], tol=250, max_hops=10):  # take_warp makes its own last hops: try it anyway
         log.info("%s: not within 250 px of the exit (at %s)", folder, odo.pos.round().tolist())
     for attempt in range(3):
         door = {**w, "dest": None, "tries": attempt, "precise": True}
         if take_warp(bot, odo, g, door, fold, here=lambda b: area_is(ensure_automap(b), here), goal=goal):
+            from ..lk import TerrorZone, terrorized
+
+            # "Entering The Catacombs Level 4 / Terrorized" (the banner LK reads): level 93 monsters took her from
+            # 100 to 48 % in 3 s (2026-11-22 21:43). The run loop waits at the menu for the zone to rotate.
+            if cfg["game"].get("skip_terror", True) and terrorized(bot.capture.grab()):
+                raise TerrorZone(f"{goal} is terrorized this hour")
             return
     bot.save_failure(f"{folder}_exit_failed")
     raise BotError(f"{folder}: still on {here} after 3 tries at the exit")
@@ -65,7 +101,9 @@ class Andariel(Task):
     act = 3
     enter_wp = "wp_catacombs_2"
     a1_start = True  # games end in Catacombs Level 4: the next one spawns in the Rogue Encampment
-    needs_rejuvs = True
+    # Blizzaga's rejuvs ran out building this (2026-11-22); like the tunnels it runs on Ormus healing + mana potions
+    # (potion_stop, Act 3 games) instead of being swapped for LK while the stash is dry
+    needs_rejuvs = False
 
     @classmethod
     def ready(cls, cfg: dict) -> bool:
@@ -74,7 +112,12 @@ class Andariel(Task):
     def enter(self, bot: Controller, stow: bool = False, chained: bool = False) -> None:
         from ..town import act1_to, act4_to, town_to_wp
 
+        bot.keep_vendor_potions = True  # drink the bought healing/mana potions in the fight (the tunnels/Pit do too;
+        # 2026-11-22 21:11: "belt is empty" with 4 bought potions in the belt, chicken at Andariel's 47 %)
         if not chained:
+            from .tunnels import potion_stop
+
+            potion_stop(bot, self.cfg)  # Act 3 games with an empty belt column: Ormus potions first
             act = getattr(bot, "act", 3)
             if act == 1:
                 act1_to(bot, self.enter_wp)
@@ -85,12 +128,36 @@ class Andariel(Task):
         bot.wait_still(timeout=3)
 
     def farm(self, bot: Controller) -> dict:
-        from ..town import cast_warcries
+        import time
 
-        bot.deadline = bot.clock() + self.cfg.get("andy", {}).get("timeout_s", 360)
+        from ..andy import fight
+        from ..town import cast_buffs, cast_warcries, set_players
+
+        acfg = self.cfg.get("andy", {})
+        bot.deadline = bot.clock() + acfg.get("timeout_s", 360)
+        n = acfg.get("players")
+        if n and getattr(bot, "players_now", None) != n and set_players(bot, n):
+            bot.players_now = n  # the run loop sets LK's back next game
+            from .. import state
+
+            st = state.load()
+            st.pop("players_window", None)  # as Meph: the next session must set its own again
+            st["players_n"] = n
+            state.save(st)
         cast_warcries(bot)
-        bot.cries_at = bot.clock()
-        for folder, here, goal in LEVELS:
+        for k, (folder, here, goal) in enumerate(LEVELS):
+            if k == len(LEVELS) - 1:  # fresh for the fight (BO ~90 s), cast on Level 3: standing still at the Level 4
+                cast_warcries(bot)    # stairs for them cost ~45 % life to her minions (2026-11-22 21:37)
+                cast_buffs(bot)
+                bot.cries_at = time.time()
             down_a_level(bot, self.cfg, folder, here, goal)
             log.info("on %s (HP %.0f%% MP %.0f%%)", goal, bot.hp or 0, bot.mp or 0)
-        raise BotError("Andariel's chamber: not built yet")  # Level 4 route + fight come once Level 4 is reached
+        safety = self.cfg["safety"]
+        saved = dict(safety)
+        safety.update(acfg.get("safety", {}))
+        try:
+            out = fight(bot)
+        finally:
+            safety.clear()
+            safety.update(saved)
+        return out

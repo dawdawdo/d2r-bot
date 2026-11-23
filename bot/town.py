@@ -749,7 +749,9 @@ def inventory_panel(bot: Controller, want_open: bool) -> bool:
         if inventory_open(bot.capture.grab()) == want_open:
             return True
         bot.press(bot.cfg["hotkeys"]["inventory"])
-        bot.sleep(WARCRY_PANEL_S if want_open else 0.15)
+        # closing: 0.15 s was shorter than GLaDOS's frame lag (up to ~0.22 s), so a second press reopened the panel
+        # and it stayed up over the Catacombs (2026-11-22: "automap won't show" with the inventory open, 3 times)
+        bot.sleep(WARCRY_PANEL_S if want_open else 0.35)
     return inventory_open(bot.capture.grab()) == want_open
 
 
@@ -832,6 +834,8 @@ def ensure_main_weapons(bot: Controller) -> None:
         now = weapon_set(bot.capture.grab())
     inventory_panel(bot, False)
     if now != hk["main_weapon_set"]:
+        bot.kill.sleep(0.4)  # a panel that opened after the read (lag) would stay up: look again
+        inventory_panel(bot, False)
         bot.save_failure("weapon_set_unknown")
         log.warning("weapon set reads %s, wanted %s", now, hk["main_weapon_set"])
         return
@@ -1617,6 +1621,7 @@ A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into vi
 def open_a1_wp(bot: Controller) -> None:
     """Rogue Encampment spawn -> open its waypoint. The waypoint is ~560 px away at the end: walking there takes longer
     than the 5 s first allowed (2026-11-14 08:00), so wait 8 s and click again if the menu didn't open."""
+    inventory_panel(bot, False)  # a weapon-set check that read None left it open over the waypoint (2026-11-22 20:56)
     bot.click(*A1_WALK)
     bot.kill.sleep(2.5)
     for attempt in range(3):

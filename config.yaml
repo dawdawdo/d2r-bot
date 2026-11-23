@@ -115,6 +115,11 @@ mf:
   # LK (the Bot page says why) until Stephen puts the MF gear on. Setups (2026-11-11): ~0 % cows/bases, ~280 % Meph.
   min: {meph: 200}
 
+andy:                  # Andariel task (bot/tasks/andariel.py, bot/andy.py)
+  timeout_s: 360       # waypoint -> Level 4 -> kill -> loot: the run's deadline
+  players: 1           # /players for her: 1 while testing; 3 planned (most of p7's drop gain, half her p7 life)
+  safety: {chicken_hp_pct: 35}  # the fight backs off at 55 %
+
 tunnels:               # Ancient Tunnels task (bot/tunnels.py)
   timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline
   farm_s: 240          # time spent inside the tunnels

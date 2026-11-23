@@ -485,8 +485,9 @@ def ensure_automap(bot) -> np.ndarray:
         if automap_shown(f):
             return f
         if inventory_open(f):  # left open (2026-11-22 after war cries at the Catacombs waypoint): it hides the automap
-            bot.press("escape")
-            bot.kill.sleep(0.4)
+            from .town import inventory_panel
+
+            inventory_panel(bot, False)
             continue
         bot.press("tab")
         bot.kill.sleep(0.4)
