@@ -1,7 +1,15 @@
 # Progress
 
-**Current milestone:** LK overnight; Andariel task (SoJs): route done, fight not safe yet (see 22:45). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel task running (first kill 22:54); tuning for reliability overnight (see 22:55). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-22 22:55: FIRST ANDARIEL KILL; supervisor on `andy` (Stephen: keep pushing overnight, LK only if truly stuck).**
+The merc had been dead all evening for want of gold on her (Asheara's dialog showed "Resurrect Waheed: 50000" with 0
+carried; deaths drop it, and the run loop tries the revive before its stash withdrawal): tools/revive_now.py withdrew
+200k and revived him. Next run: found her at ~(800, 97), Blizzard + merc took her 1.00 -> 0 in ~11 s, HP retreat once
+(58 %), ended at 90 %, looted key + a white item. Stephen's plan in bot/andy.py: Static Field x2 when she walks within
+300 iso px, then two hops so the merc tanks (didn't trigger: she stayed ~400 away). Players 1 (Stephen: forget 3).
+Andariel fight chicken 50 %.
 
 **2026-11-22 22:45: Andariel runs paused (LK back on for the night): 7 runs = 1 timeout with her at 22 %, 4 chickens
 (life fell to 17-18 % before the check), 1 died (86 % -> 0 in ~7 s), 1 town fail.** Blizzaga kept all 12 items (save:
