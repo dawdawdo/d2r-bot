@@ -144,8 +144,11 @@ class AndyFight:
             out.mkdir(parents=True, exist_ok=True)
         except OSError:
             pass
+        end = t0 + limit
+        self.her_at = 0.0
         try:
-            while time.time() - t0 < limit:
+            while time.time() < end or (time.time() < t0 + limit + 60 and time.time() - self.her_at < 12):
+                # past the limit only while she's in the fight (05:19: first seen as the 150 s ran out)
                 bot.check()
                 if out is not None and time.time() - snap_at > 4:  # for review: what the fight looked like
                     import cv2
@@ -206,6 +209,7 @@ class AndyFight:
                 self.threat = (x, y)
                 if her:
                     self.last, self.life = (x, y), life
+                    self.her_at = time.time()
                     if life <= 0.0:
                         self.seen_dead = True
                         self.say("Andariel's bar is empty: dead")
