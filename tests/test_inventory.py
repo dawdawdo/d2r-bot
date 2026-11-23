@@ -101,3 +101,30 @@ def test_session_start_protects_everything_but_the_working_key_stack(monkeypatch
     assert (3, 2) not in cells  # her working key stack
     assert {(4, 0), (4, 1), (4, 2), (3, 3), (0, 0)} <= cells
     assert (1, 0) in cells  # a helm in col 1: 2x2 when the tables are there, its corner at least
+
+
+def test_bot_loot_since_stephen_last_played_is_not_protected(monkeypatch, tmp_path):
+    """2026-11-23: back-to-back sessions carry the inventory baseline (Stephen's layout); what the bot picked up since
+    then goes to the stowaway instead of being protected at each restart."""
+    import time
+
+    from bot import state
+    from bot.run import protect_own_items
+    from bot.vision.inventory import protected_cells
+    base = [["skl", 4, 2], ["cm3", 5, 0], ["key", 4, 1]]
+    saved = {}
+    monkeypatch.setattr(state, "load", lambda: {"key_cell": [4, 1], "inventory_baseline": base,
+                                                "session_ended_at": time.time() - 60})
+    monkeypatch.setattr(state, "save", lambda d: saved.update(d))
+    cfg = {"inventory": {"protected": [[4, 0, 6, 4]]}}
+    items = [("skl", 4, 2), ("cm3", 5, 0), ("key", 4, 1), ("gzv", 0, 0), ("tes", 1, 0)]
+    protect_own_items(cfg, items)
+    cells = protected_cells(cfg["inventory"]["protected"])
+    assert (0, 0) not in cells and (1, 0) not in cells  # the night's gem and essence: the stowaway's
+    # after a long gap (Stephen may have played) everything is protected again and becomes the new baseline
+    monkeypatch.setattr(state, "load", lambda: {"key_cell": [4, 1], "inventory_baseline": base,
+                                                "session_ended_at": time.time() - 3600})
+    cfg = {"inventory": {"protected": [[4, 0, 6, 4]]}}
+    protect_own_items(cfg, items)
+    assert (0, 0) in protected_cells(cfg["inventory"]["protected"])
+    assert saved["inventory_baseline"] == [list(i) for i in items]

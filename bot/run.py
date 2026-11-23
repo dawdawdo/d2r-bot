@@ -136,15 +136,44 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
     return stats
 
 
+BASELINE_GAP_S = 900  # a session starting this soon after the last one ended: Stephen didn't play in between
+
+
+def inventory_baseline(cfg: dict, items: list) -> list | None:
+    """The inventory as Stephen last left it: the session-start inventory after a gap (he may have played), carried
+    over while sessions follow each other within BASELINE_GAP_S (only the bot played). Items not in it are the bot's
+    own pickups: 2026-11-23 a night of restarts protected each session's loot (gems, essences, a Manald Heal), the
+    stowaway left it all, the inventory filled and two unique pickups failed. None = protect everything (no record)."""
+    import time
+
+    from . import state
+
+    st = state.load()
+    gap = time.time() - float(st.get("session_ended_at") or 0)
+    base = st.get("inventory_baseline")
+    if base is None or gap > BASELINE_GAP_S:
+        state.save({**st, "inventory_baseline": [list(i) for i in items]})
+        log.info("inventory baseline: this session's start (last session ended %.0f min ago)", gap / 60)
+        return None
+    return [tuple(i) for i in base]
+
+
 def protect_own_items(cfg: dict, items: list) -> None:
     """Protect everything in the session-start save's inventory (but her working key stack) where `inventory.protected`
-    misses it: Stephen rearranges when he plays (2026-11-21). Logged so he can see what the session protects."""
+    misses it: Stephen rearranges when he plays (2026-11-21). Logged so he can see what the session protects. Items that
+    weren't there when he last played (inventory_baseline) are the bot's loot and go to the stowaway as usual."""
     from . import state
     from .mf import session_rects
     from .vision.inventory import protected_cells
 
     prot = cfg["inventory"]["protected"]
     cells = protected_cells(prot)
+    base = inventory_baseline(cfg, items)
+    if base is not None:
+        loot = [i for i in items if tuple(i) not in set(base)]
+        if loot:
+            log.info("inventory: bot loot since Stephen last played, left to the stowaway: %s", loot)
+        items = [i for i in items if tuple(i) in set(base)]
     rects = session_rects(items, state.load().get("key_cell"))
     added = [r for r in rects if not protected_cells([r]) <= cells]
     if added:
@@ -483,6 +512,9 @@ def main() -> int:
             log.warning("stopped by kill switch: %s", e)
             tally["kill switch"] = 1
     finally:
+        import time as _time
+
+        state.save({**state.load(), "session_ended_at": _time.time()})  # for inventory_baseline
         control.write_status(state="idle", tally=tally, started=t_start)
         control.clear()
         bot.release_all()
