@@ -270,16 +270,25 @@ class AndyFight:
         6 s later at the body among her Dark Ones)."""
         bot, sk = self.bot, self.sk
         t0 = time.time()
+        near: tuple[int, int] | None = None
         try:
             while time.time() - t0 < limit:
                 bot.check()
-                if (bot.hp or 100) < RETREAT_HP:
-                    bot.sleep(0.8)  # potions / shield first
+                if (bot.hp or 100) < RETREAT_HP:  # standing still among them to wait for potions was the chicken
+                    if near:                      # (06:32: hopped off her body into a Dark One pack, 100 -> 49 %)
+                        self.away_from(*near)
+                        near = None
+                    bot.sleep(0.5)
                     continue
                 hit = self.find()
                 if hit is None:
                     return
                 (x, y), _, _ = hit
+                near = (x, y)
+                if iso_dist(x, y) < 220 and time.time() - self.backed_at > 1.5:  # in its reach: one hop off first
+                    self.backed_at = time.time()
+                    self.away_from(x, y)
+                    continue
                 if time.time() - self.blizz_at >= BLIZZARD_CD:
                     bot.press(sk["blizzard"])
                     self.blizz_at = time.time()
