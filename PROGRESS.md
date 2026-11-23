@@ -1,7 +1,22 @@
 # Progress
 
-**Current milestone:** LK running; Andariel task (SoJs) in progress, blocked on the Catacombs Level 2 stairs (see 18:00). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel task (SoJs) running under the supervisor, fight being tuned (see 21:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-22 21:50: Andariel task (`andy`) runs end to end; no kill yet. Supervisor on `andy` (Stephen: first runs at 0 % MF).**
+Route: waypoint Catacombs 2 -> Level 3 -> Level 4 in ~35 s, every run since the fixes (bot/tasks/andariel.py: distance-
+shortest stop path, legs that fall short don't stop it, take_warp hovers the stairs with the map hidden). The stairs were
+found BY EYE: `--look-dir` frames (map hidden) show the railed stairwell going down; label scans had missed them for 3
+causes: automap lines over labels (now `--map-off`), the stairs' hover spot is ~30 px tall (grid dy 28), and my seeded
+"Level 1 stairs lead nowhere" entry made is_junk drop "... Level 3" too (now digit-aware). Level 2 exit world (-3753,-553),
+Level 3 exit (1335, 260) from the arrivals. Level 4 (no automap walls in the lair; tools/andy_probe.py): the stairs room opens
+west through a door (3 hops left), then up-right toward her throne (red carpet, pillars); she walks out to meet you.
+Fight (bot/andy.py): sweep rings for name bars (name_andariel.png; any monster gets Blizzard, her first), Blizzard /
+Glacial Spike from > 400 px, two hops back when closer or under 70 % life; loot where she was. Run 21:11 took her to 47 %
+before a poison chicken (merc dead, bought potions not drinkable then: fixed `keep_vendor_potions`). 21:17-21:44 chickens:
+Level 4 was TERRORIZED (level 93, 100 -> 48 % in 3 s): the arrival banner is now checked (TerrorZone -> wait for the hour).
+Open: merc dead (Asheara/Ormus not found by the town walk tonight; stash gold 7.6M fine); rejuvs 0 (Ormus mixed potions
+instead, needs_rejuvs False); `andy.players` 1 for testing (3 planned); add `andy` to mf.min once she has MF gear.
 
 **2026-11-22 18:00: Andariel task started (Blizzaga, MF gear, players 3); Catacombs Level 2 stairs down NOT found yet. LK running.**
 Why Andariel: D2R gives her the quest drop on every kill (monstats: all her Hell TCs = `Andarielq (H)`), so she drops 2-3x
