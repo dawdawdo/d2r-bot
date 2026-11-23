@@ -3,6 +3,15 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1 now (see 09:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 10:55: Act 1 town all live; antidotes (Stephen's idea).** Seen in real runs: Charsi repair, Kashya revive
+x2 (widest menu line = Resurrect), Akara heal + potions, Act 1 stash stop (stowaway via open_stash_a1: 4 stashed, 22 s).
+Fixed: the loop's periodic stow sent her to the Act 1 stash for nothing (now only < min_free). Antidotes: Akara (395,148)
+puts them in the inventory, never the belt; buy_antidotes shift+left-clicks them into the belt (up to ANTIDOTE_COLS 2),
+belt_kinds reads belt_antidote.png; andy.fight drinks one for her + shift+key for the merc at the stairs and again 30 s
+in while she fights. To measure vs the morning: kills, chickens, merc deaths, Akara stops per run. Gold: two revives
+(~50k each) left 5.6k carried; the next revive withdraws first. Rune names in the Act 1 stash's runes tab not read
+("33 slots changed"): harmless, look later.
+
 **2026-11-23 09:50: Andariel games stay in Act 1 (bot/a1town.py).** Act 1 spawns of a1_town tasks (andy) never
 take the waypoint to Act 3: run.one_run calls a1town.town_stop (heal: belt, then Akara; stash when < min_free or
 gold_needed: stowaway/withdraw/deposit through open_stash's Act 1 branch; Kashya revive; Akara potions when a belt
