@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, ~85 % kills, ~16 kills/h (see 16:25). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 18:20: EXPERIMENT running: merc antidote back on** (ANTIDOTE_MERC True). Since 16:55 also: search
+pattern round the fight spot (SEARCH), search starts after 2 empty sweeps / 3 minion finds + 10 s, back to her last-seen
+spot first; keep-away 400 -> 540 (bursts hit at ~406 / ~470); act detection waits for the automap; /players 1 from
+the start. Per hour since 15:45 (kill/miss/chicken/merc deaths): 16h 14/3/1/3, 17h 9/5/1/6, 18h so far 1/1/3/2.
+Compare the hour from 18:20 with the merc's antidote. Gold: withdrawals 15:26, 16:56, 17:31, 18:14 (~280k/h lately).
+
 **2026-11-23 16:55: loot lost to chickens after the kill.** 3 today (15:08, 16:37, 16:49): her death clouds plus an
 empty belt. DEATH_WAIT 5 -> 9 s; Akara refill after RESTOCK_AFTER (3) belt potions/antidotes drunk (bot.potions_used,
 counted in the controller and andy.antidotes), since the belt reader sees only the bottom row. Watch: chickens after a
