@@ -85,11 +85,11 @@ def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) 
     for attempt in range(3):
         door = {**w, "dest": None, "tries": attempt, "precise": True}
         if take_warp(bot, odo, g, door, fold, here=lambda b: area_is(ensure_automap(b), here), goal=goal):
-            from ..lk import TerrorZone, terrorized
+            from ..lk import TerrorZone, terror_info, terrorized
 
-            # "Entering The Catacombs Level 4 / Terrorized" (the banner LK reads): level 93 monsters took her from
-            # 100 to 48 % in 3 s (2026-11-22 21:43). The run loop waits at the menu for the zone to rotate.
-            if cfg["game"].get("skip_terror", True) and terrorized(bot.capture.grab()):
+            # "Entering The Catacombs Level 4 / Terrorized" banner, or "Terrorized: 93" in the area info: level 93
+            # monsters took her from 100 to 48 % in 3 s (2026-11-22 21:43). The run loop waits for the zone to rotate.
+            if cfg["game"].get("skip_terror", True) and (terrorized(bot.capture.grab()) or terror_info(ensure_automap(bot))):
                 raise TerrorZone(f"{goal} is terrorized this hour")
             return
     bot.save_failure(f"{folder}_exit_failed")

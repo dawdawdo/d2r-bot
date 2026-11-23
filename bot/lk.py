@@ -47,6 +47,26 @@ def terrorized(frame: np.ndarray) -> bool:
     return float(cv2.matchTemplate(reg, _TERROR[0], cv2.TM_CCORR_NORMED).max()) >= 0.7
 
 
+_INFO: list = []
+
+
+def _info_mask(img: np.ndarray) -> np.ndarray:
+    i = img.astype(np.int16)
+    b, g, r = i[..., 0], i[..., 1], i[..., 2]
+    return ((b > 120) & (r > 90) & (g < b - 30)).astype(np.float32)
+
+
+def terror_info(frame: np.ndarray) -> bool:
+    """The purple "Terrorized: NN" line in the area info (top right, automap open). It stays up, unlike the arrival
+    banner, which terrorized() missed in a Catacombs Level 4 frame that showed it (red-tinted zone, 2026-11-22 21:51)."""
+    if not _INFO:
+        _INFO.append(_info_mask(cv2.imread(str(ROOT / "bot" / "assets" / "templates" / "info_terrorized.png"))))
+    reg = _info_mask(frame[0:150, 1000:1280])
+    if reg.sum() < 0.5 * _INFO[0].sum():
+        return False
+    return float(cv2.matchTemplate(reg, _INFO[0], cv2.TM_CCORR_NORMED).max()) >= 0.8
+
+
 class MapChanged(BotError):
     """Arrival view doesn't match the stored map fingerprint: route is stale."""
 
