@@ -760,7 +760,13 @@ def inventory_panel(bot: Controller, want_open: bool) -> bool:
 
     for _ in range(3):
         if inventory_open(bot.capture.grab()) == want_open:
-            return True
+            if want_open:
+                return True
+            # closed, or not open YET: an open pressed just before can show up late on GLaDOS and stay up (it covered
+            # the Act 1 waypoint, 2026-11-23 04:36). Look once more after the lag
+            bot.sleep(0.4)
+            if not inventory_open(bot.capture.grab()):
+                return True
         bot.press(bot.cfg["hotkeys"]["inventory"])
         # closing: 0.15 s was shorter than GLaDOS's frame lag (up to ~0.22 s), so a second press reopened the panel
         # and it stayed up over the Catacombs (2026-11-22: "automap won't show" with the inventory open, 3 times)
