@@ -222,7 +222,7 @@ class AndyFight:
                     if self.life <= 0.06 and casts:  # her bar was nearly empty and now it's gone: dead
                         self.seen_dead = True
                         return True
-                    if misses % 3 == 0:  # nothing in view: one hop toward her throne
+                    if misses % EMPTY_SWEEPS == 0:  # nothing in view: the next search point
                         self.toward_throne()
                     continue
                 misses = 0
@@ -410,8 +410,10 @@ SEARCH = [(0, -250), (0, -500), (-420, -500), (420, -500), (0, -820), (-420, -82
 DEATH_HOPS = 3         # hops away from her body when she dies (her death burst: poison clouds round the body)
 DEATH_WAIT = 9.0       # s to wait out there before going back for the loot (5 s: back into the clouds 7 s after
                        # her death, 91 -> 52 % and a chicken with the loot on the floor, 16:37)
-MINION_STREAK = 6      # finds in a row that aren't her ...
-HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
+MINION_STREAK = 3      # finds in a row that aren't her ...
+HER_LOST_S = 10.0      # ... with her unseen this long: go look for her (toward_throne). 6 / 20 s: the search began
+                       # 63 s in and found her 2 min in, too late to kill her (17:27; a sweep takes ~5 s)
+EMPTY_SWEEPS = 2       # empty sweeps in a row before the next search point (was 3)
 ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
                        # Blizzaga's view: 10:49-12:50 ~45 % kills, 10 fights never saw her; without, 9 of 11 kills,
                        # none unseen, 2 merc deaths (revived at Kashya)
