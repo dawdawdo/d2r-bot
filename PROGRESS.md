@@ -3,6 +3,14 @@
 **Current milestone:** Andariel task running (first kill 22:54); tuning for reliability overnight (see 22:55). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 05:00: Andariel ~60-70 % kills in the latest code; first unique: Manald Heal (03:38, ilvl 75, in
+Blizzaga's inventory, unidentified).** 02:00-05:00 fixes: Act 1 spawn by the automap area name (area_town_a1/a3.png;
+the Act 3 walks ran in the Rogue Encampment), Asheara: wider search region + second pass after re-walking the last
+legs, belt-potion heal from a session's first run, keep-away 400 iso px (520 = never cast) not twice within 2 s,
+Blizzard before each back-off, keep-away before the Statics too, hop back to the fight spot (dead reckoning) when
+lost, one hop back right after the kill (death burst), inventory close re-checked after 0.4 s (lag reopened it over
+the Act 1 waypoint and the Level 3 stairs). Supervisor on `andy`; restart helper in the session scratchpad.
+
 **2026-11-23 02:00: Andariel 16 kills / 42 runs since 22:55; ~60 % in the latest code (3 of 4 01:33-01:52).** Added
 overnight: wait 4.5 s at range for her death burst, clear minions round the body before looting, hop back toward her
 after a life retreat, lost-low = dead under 40 %, inventory closed after war cries and per level (lag left it up and
