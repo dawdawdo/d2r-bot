@@ -10,6 +10,8 @@ loot lost). Since 14:42: 7 runs, 7 kills, 2 lost to a chicken after the kill. Op
 like Meph (instant heals; LK refills when dry, as for Meph) - my pick; (2) a lower chicken for Andariel (OK'd for Meph,
 deaths acceptable) - only if the numbers say so; (3) gear with more life (Stephen's call). Also: runs.csv now records
 "miss" (fight ran out, no kill); the bot page has a Miss column (Stephen read 155 "ok" as kills; 108 were).
+Gold: merc revives (50k) + repairs ~270k/h; shared stash 4.59M at 15:30 (2.5M + 2.09M) = ~17 h of Andariel. When it's
+empty the needs_merc guard fails every run and the session stops: watch on long soaks.
 
 **2026-11-23 14:25: poison cure + Akara restock.** Stephen: priorities are success rate, then speed, then resources.
 Every chicken frame today had a green (poisoned) life orb: orbs.poisoned + controller guard drink a belt antidote
