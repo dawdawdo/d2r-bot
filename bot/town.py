@@ -1676,8 +1676,15 @@ def spawn_act(bot: Controller) -> int:
         return 2
     if bot.find("a5_spawn.png", (0, 0, 1280, 450), 0.85):  # Harrogath (other towns reach 0.73)
         return 5
-    if town_by_area_name(bot) == 1:  # a Rogue Encampment spot none of the views know (2026-11-23 02:32: the Act 3
-        return 1                     # walk to Asheara ran into the camp's palisade corner)
+    named = town_by_area_name(bot)
+    if named is not None:  # a Rogue Encampment spot none of the views know (2026-11-23 02:32: the Act 3 walk to
+        return named       # Asheara ran into the camp's palisade corner)
+    last = getattr(bot, "act", None)
+    if last in (1, 2, 4, 5):
+        # nothing recognized: a new game starts in the act the last one ended in (15:38: area name unread, assumed
+        # Act 3, and the Act 3 walk to Ormus ran in the Rogue Encampment)
+        log.info("act not recognized; the last game was in act %d", last)
+        return last
     return 3
 
 
@@ -1690,9 +1697,16 @@ def town_by_area_name(bot: Controller) -> int | None:
     names = {a: f"town_a{a}" for a in (1, 3) if (ASSETS / f"area_town_a{a}.png").exists()}
     if not names:
         return None
+    from .durance import map_text_open
+
     bot.press("tab")
-    bot.kill.sleep(0.6)
+    bot.kill.sleep(0.4)
     f = bot.capture.grab()
+    for _ in range(6):  # Proton shows the map late: 0.6 s read nothing (15:38, scores 0.12 / 0.17)
+        if map_text_open(f):
+            break
+        bot.kill.sleep(0.25)
+        f = bot.capture.grab()
     bot.press("tab")
     bot.kill.sleep(0.2)
     scores = {a: area_score(f, n) for a, n in names.items()}
