@@ -3,6 +3,10 @@
 **Current milestone:** Andariel task running (first kill 22:54); tuning for reliability overnight (see 22:55). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 00:05: Andariel ~40 % kills.** 22:55-00:00: 17 runs, 7 logged kills (+1 more likely: lost at 21 %), loot
+now works (2.5 s wait, two passes): rune + whites. Misses: she isn't found (search hop now straight up: every kill had her
+bar at (639, 78)), or lost low (now: last seen < 35 % and gone 3 sweeps = dead, loot), chickens from her minions (fine).
+
 **2026-11-22 22:55: FIRST ANDARIEL KILL; supervisor on `andy` (Stephen: keep pushing overnight, LK only if truly stuck).**
 The merc had been dead all evening for want of gold on her (Asheara's dialog showed "Resurrect Waheed: 50000" with 0
 carried; deaths drop it, and the run loop tries the revive before its stash withdrawal): tools/revive_now.py withdrew
