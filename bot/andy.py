@@ -348,16 +348,28 @@ class AndyFight:
         from .lk import loot
 
         bot = self.bot
-        if self.last:  # out of reach of her death burst first (04:21, 04:26: killed at 74 / 100 %, chicken 2-7 s later)
-            self.away_from(*self.last)
-            # she (her body) is now a hop further off along the same line
-            v = np.array([self.last[0] - CENTER[0], self.last[1] - CENTER[1]], float)
-            v = v / (float(np.hypot(*v)) or 1.0) * 380 * 1.17
-            self.last = (int(np.clip(self.last[0] + v[0], 40, 1240)), int(np.clip(self.last[1] + v[1] * 0.6, 60, 560)))
-        bot.sleep(4.5)  # the drop comes at the end of her death animation: fire + poison burst round her body for a
-        # few seconds (2026-11-23 00:24 loot frame at 2.5 s: still exploding, Blizzaga poisoned at the body, no labels).
-        # Wait it out at fighting range, then hop in
-        self.clear_minions()
+        # Out of reach of her death burst first: three hops, not one (04:21, 04:26: chicken 2-7 s after the kill; 14:45:
+        # one hop away, re-poisoned 89 -> 44 % in 8 s, antidotes or not: a kill lost with its loot). Then wait for the
+        # clouds to go (the drop comes at the end of her death animation anyway), clear minions, hop back.
+        if self.last:
+            bx, by = float(self.last[0]), float(self.last[1])
+            v = np.array([CENTER[0] - bx, CENTER[1] - by], float)
+            u = v / (float(np.hypot(*v)) or 1.0)
+            if not np.hypot(*v):
+                u = np.array([0.0, 1.0])
+            step = np.array([u[0] * 380, u[1] * 380 * 0.6])  # screen offsets: the iso view squashes y
+            for _ in range(DEATH_HOPS):
+                self.hop(*step)
+                bx, by = bx - step[0] * 1.17, by - step[1] * 1.17  # the body slides the other way on screen
+            bot.sleep(DEATH_WAIT)
+            self.clear_minions()
+            for _ in range(DEATH_HOPS - 1):  # back; the last hop below lands on the body
+                self.hop(-step[0], -step[1])
+                bx, by = bx + step[0] * 1.17, by + step[1] * 1.17
+            self.last = (int(np.clip(bx, 40, 1240)), int(np.clip(by, 60, 560)))
+        else:
+            bot.sleep(DEATH_WAIT)
+            self.clear_minions()
         if self.last:
             x, y = self.last
             dx, dy = x - CENTER[0], y + 40 - CENTER[1]
@@ -388,6 +400,8 @@ class AndyFight:
         return picked
 
 
+DEATH_HOPS = 3         # hops away from her body when she dies (her death burst: poison clouds round the body)
+DEATH_WAIT = 5.0       # s to wait out there before going back for the loot
 MINION_STREAK = 6      # finds in a row that aren't her ...
 HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
 ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
