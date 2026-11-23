@@ -23,8 +23,8 @@ log = logging.getLogger(__name__)
 ROUTE = "-320,0,3;300,-150,2"  # screen px hops from the Level 4 arrival: through the door, then toward her throne
 RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings around Blizzaga for name bars
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
-TOO_CLOSE = 520    # iso px (screen dy counts double): one hop back. Blizzard lands anywhere on screen, so keep her
-                   # near its edge: her poison spray and its ticks did 100 -> 17 % at 210-360 (2026-11-22)
+TOO_CLOSE = 400    # iso px (screen dy counts double): one hop back. 520 made nearly every sighting "too close" (the
+                   # view reaches ~660 up/down) and she hopped instead of casting (03:54: 3 runs, never hit her)
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
 STATICS = 2
@@ -68,6 +68,7 @@ class AndyFight:
         self.since_her = 0  # sweeps since her bar last showed
         self.come_back: tuple[float, float] | None = None  # unit vector back toward her after a life retreat
         self.offset = np.zeros(2)  # rough screen-px displacement from the fight spot (where the route ends)
+        self.backed_at = 0.0  # last keep-away hop
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -227,8 +228,16 @@ class AndyFight:
                     self.away_from(x, y)
                     self.last = None
                     continue
-                if her and iso_dist(x, y) < TOO_CLOSE:  # waiting for her to come into Static range let her poison
-                    # reach Blizzaga first (2026-11-23 03:32: at ~390 iso px, 78 -> 42 % in 3 s with her at 42 %)
+                if her and iso_dist(x, y) < TOO_CLOSE and time.time() - self.backed_at > 2.0:
+                    # (before the Statics too: waiting for Static range let her poison land, 03:32). Not twice in a
+                    # row within 2 s: a hop blocked by the walls leaves her where she was, and then casting is better
+                    self.backed_at = time.time()
+                    if time.time() - self.blizz_at >= BLIZZARD_CD:  # one on her before going: every sighting hurts
+                        bot.press(sk["blizzard"])
+                        bot.click(x, y, "right", hover=0)
+                        self.blizz_at = time.time()
+                        casts += 1
+                        bot.sleep(0.3)
                     self.away_from(x, y)
                     # she's now about one hop further along the line from Blizzaga to her
                     v = np.array([x - CENTER[0], y - CENTER[1]], float)
