@@ -415,7 +415,8 @@ DURANCE_HEAL = 95  # % life to go in with: life carries over between games, and 
 DURANCE_MANA = 60
 
 
-def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_2", merc: bool = False) -> None:
+def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_2", merc: bool = False,
+                fill: str = "mana") -> None:
     """New Hell game -> (heal at Ormus if hurt: life carries over between games; with buy_mana also
     fill the belt with his mana potions, which heals too) -> WP `dest` (Durance 2; the Lost City for Ancient Tunnels)."""
     from .controller import BotError
@@ -460,7 +461,7 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
         if act == 4:
             restart_in_act3(bot)
         if buy_mana:
-            buy_mana_at_ormus(bot)
+            buy_mana_at_ormus(bot, fill=fill)  # fill: mana (Meph) / healing / mixed (exploring, as the tunnels)
         else:
             heal_at_ormus(bot)
         save_and_exit(bot)
@@ -575,8 +576,16 @@ def is_junk(folder: Path, g: StopGraph, crop: np.ndarray) -> bool:
             continue
         h, ww = min(old.shape[0], crop.shape[0]), min(old.shape[1], crop.shape[1])
         a, b = old[:h, :ww], crop[:h, :ww]
-        if cv2.matchTemplate(cv2.cvtColor(a, cv2.COLOR_BGR2GRAY), cv2.cvtColor(b, cv2.COLOR_BGR2GRAY),
-                             cv2.TM_CCOEFF_NORMED).max() > 0.85:
+        ga, gb = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY), cv2.cvtColor(b, cv2.COLOR_BGR2GRAY)
+        if cv2.matchTemplate(ga, gb, cv2.TM_CCOEFF_NORMED).max() > 0.85:
+            # "To The Catacombs Level 1" and "... Level 3" are the same width and match ~0.9: the last glyph decides
+            # (2026-11-22: the seeded Level 1 stairs hid every Level 3 label from the scans for hours)
+            ta, tb = ga[:, -2 * DIGIT_W:], gb[:, -2 * DIGIT_W:]
+            if cv2.matchTemplate(ta, tb, cv2.TM_CCOEFF_NORMED).max() < 0.8:
+                continue
+            if SCAN.get("debug_dir"):
+                d = Path(SCAN["debug_dir"]); d.mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(d / f"junk_{time.strftime('%H%M%S')}_{w['crop'].split('/')[-1]}"), crop)
             return True
     return False
 
@@ -656,11 +665,11 @@ class _MapHidden:
     across a label break its black box, so find_tooltip misses it: in the Catacombs the scans (map on) found the stairs
     up only in the waypoint room, which has no automap walls; with the map off the first dense scan found them."""
 
-    def __init__(self, bot) -> None:
-        self.bot, self.hid = bot, False
+    def __init__(self, bot, force: bool = False) -> None:
+        self.bot, self.hid, self.force = bot, False, force
 
     def __enter__(self):
-        if SCAN.get("map_off") and automap_shown(self.bot.capture.grab()):
+        if (SCAN.get("map_off") or self.force) and automap_shown(self.bot.capture.grab()):
             self.bot.press("tab")
             self.bot.kill.sleep(0.35)
             self.hid = True
@@ -748,6 +757,12 @@ class Walker:
             cv2.imwrite(str(self.folder / "thumbs" / f"{j}.jpg"),
                         cv2.resize(self.bot.capture.grab()[:590], None, fx=0.25, fy=0.25,
                                    interpolation=cv2.INTER_AREA))
+        if new and SCAN.get("look_dir"):  # the scene without the automap, to spot stairs by eye (2026-11-22: the
+            # Catacombs Level 3 stairs were found in such a frame after hours of label scans)
+            d = Path(SCAN["look_dir"]); d.mkdir(parents=True, exist_ok=True)
+            with _MapHidden(self.bot, force=True):
+                cv2.imwrite(str(d / f"{j:03d}_{round(odo.pos[0])}_{round(odo.pos[1])}.jpg"),
+                            cv2.resize(self.bot.capture.grab()[:590], None, fx=0.5, fy=0.5), [cv2.IMWRITE_JPEG_QUALITY, 85])
         if self.scan and SCAN.get("marks"):
             note_exit_marks(odo, g, j, self.bot.capture.grab())
         if self.scan and scan_due(g, odo.pos):
@@ -849,7 +864,8 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
         r = 200 if w["tries"] <= 1 else 320  # odometry after a long trip can be off by more than 200 px
         view = bot.capture.grab()
         with _MapHidden(bot):
-            hit = hover_find(bot, (x, y), cv2.imread(str(folder / w["crop"])), radius=r, step=40 if r == 200 else 50)
+            hit = hover_find(bot, (x, y), cv2.imread(str(folder / w["crop"])), radius=r,
+                             step=24 if w.get("mark") else (40 if r == 200 else 50))  # stairs: ~30 px tall hover spot
         if hit is not None:  # the door's look, for a sprite template (find it by sight, not odometry)
             (folder / "doors").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)

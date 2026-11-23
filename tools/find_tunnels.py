@@ -152,6 +152,12 @@ def main() -> int:
     ap.add_argument("--abort-hp", type=int, default=4, help="HP points lost during a scan that stop it")
     ap.add_argument("--seconds", type=int, default=300, help="exploration time per game")
     ap.add_argument("--frontier-wall", type=float, default=0.3, help="canvas average that counts as a wall")
+    ap.add_argument("--buy", choices=["mana", "healing", "mixed"], help="fill empty belt columns at Ormus first "
+                                                                       "(the tunnels' mixed: healing + mana for Energy Shield)")
+    ap.add_argument("--via", default="", help="learned levels to go down first, folder:here:goal;... "
+                                             "(Catacombs 3: cata2_auto:catacombs_2:catacombs_3)")
+    ap.add_argument("--look-dir", default="", help="save a half-size frame with the automap hidden at each new stop, "
+                                                  "to spot stairs by eye (scratch/...)")
     ap.add_argument("--map-off", action="store_true", help="hide the automap while hovering for labels (Catacombs)")
     ap.add_argument("--void", action="store_true", help="also teleport into open space next to stops (rooms without automap walls)")
     ap.add_argument("--no-scan", action="store_true", help="marks only: no tooltip grid scans at stops")
@@ -168,6 +174,7 @@ def main() -> int:
     _d.FRONTIER_WALL = args.frontier_wall
     _d.VOID["on"] = args.void
     SCAN["map_off"] = args.map_off
+    SCAN["look_dir"] = args.look_dir
     _d.DURANCE_HEAL = 60  # exploring: go in at 60 % (Ormus heals missed twice in a row, 2026-11-22 17:14)
     if args.no_scan:
         SCAN.update(dx=10_000, dy=10_000)  # one hover point per stop: effectively no scan
@@ -200,7 +207,8 @@ def main() -> int:
             result = "error"
             odo = None
             try:
-                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest=args.dest, merc=True)
+                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest=args.dest, merc=True,
+                            buy_mana=bool(args.buy), fill=args.buy or "mana")
                 from bot.town import cast_warcries
 
                 cast_warcries(bot)  # Battle Orders: games 1-7 ran at 345 life without it
@@ -215,6 +223,15 @@ def main() -> int:
                         for _ in range(pn):
                             bot.click(int(CENTER[0] + pdx), int(CENTER[1] + pdy), "right", hover=0)
                             bot.sleep(TP_SETTLE + frame_lag(bot) + 0.15)
+                    bot.sleep(0.6)
+                if args.via:
+                    from bot.tasks.andariel import down_a_level
+
+                    for seg in args.via.split(";"):
+                        vf, vhere, vgoal = seg.split(":")
+                        down_a_level(bot, cfg, vf, vhere, vgoal)
+                        print(f"game {n + 1}: down to {vgoal}", flush=True)
+                    use_style(args.style)
                     bot.sleep(0.6)
                 odo = AutomapOdometer.load(folder, ensure_automap(bot))
                 print(f"game {n + 1}: arrival fix {odo.pos.round().tolist()} (resp {odo.resp:.2f})", flush=True)
