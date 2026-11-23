@@ -107,6 +107,7 @@ class Andariel(Task):
     # Blizzaga's rejuvs ran out building this (2026-11-22); like the tunnels it runs on Ormus healing + mana potions
     # (potion_stop, Act 3 games) instead of being swapped for LK while the stash is dry
     needs_rejuvs = False
+    vendor_potions = True  # its belt holds Ormus healing potions: heal with those in town before hunting for Ormus
 
     @classmethod
     def ready(cls, cfg: dict) -> bool:
