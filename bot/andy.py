@@ -231,7 +231,9 @@ class AndyFight:
         from .lk import loot
 
         bot = self.bot
-        bot.sleep(2.5)  # the drop comes at the end of her death animation (1.2 s looted nothing 3 kills in a row)
+        bot.sleep(4.5)  # the drop comes at the end of her death animation: fire + poison burst round her body for a
+        # few seconds (2026-11-23 00:24 loot frame at 2.5 s: still exploding, Blizzaga poisoned at the body, no labels).
+        # Wait it out at fighting range, then hop in
         if self.last:
             x, y = self.last
             dx, dy = x - CENTER[0], y + 40 - CENTER[1]
