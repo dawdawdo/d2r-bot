@@ -67,6 +67,9 @@ def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) 
     """From the arrival spot of a learned level, along the stop graph to its exit, and through it."""
     from ..durance import AutomapOdometer, StopGraph, Walker, area_is, ensure_automap, take_warp, use_style
 
+    from ..town import inventory_panel
+
+    inventory_panel(bot, False)  # a panel left up hides the automap's right half and the stairs label
     fold = _folder(cfg, folder)
     use_style("tunnel")
     g = StopGraph.load(fold / "graph.json")

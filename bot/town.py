@@ -794,6 +794,10 @@ def cast_warcries(bot: Controller) -> None:
         back = read_weapon_set(bot) == main or _swap_to(bot, main)
     bot.press(hk["skills"]["teleport"])
     bot.sleep(0.1)
+    # each set read opens and closes the inventory; with GLaDOS's lag a close can land before the panel is up, and
+    # the panel stays over the next level (2026-11-23 00:37: Catacombs 3 stairs not found with it open). Look again.
+    bot.sleep(0.35)
+    inventory_panel(bot, False)
     if not back:
         bot.save_failure("weapon_set_unknown")
         log.warning("war cries: couldn't confirm the main weapon set")
