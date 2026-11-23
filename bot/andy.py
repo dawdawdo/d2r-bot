@@ -394,7 +394,7 @@ ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlaste
                        # Blizzaga's view: 10:49-12:50 ~45 % kills, 10 fights never saw her; without, 9 of 11 kills,
                        # none unseen, 2 merc deaths (revived at Kashya)
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
-ANTIDOTE_ROUNDS = 2    # at the stairs, then once more while she's still fighting
+ANTIDOTE_ROUNDS = 1    # at the stairs only; after that one whenever she's poisoned (bot.cure_poison, controller)
 
 
 def antidotes(bot, why: str) -> int:
@@ -428,6 +428,7 @@ def fight(bot) -> dict:
 
     log.info("fight starts, merc %s", "alive" if merc_alive(bot, tries=1) else "dead")  # to compare outcomes
     antidotes(bot, "at the stairs")
+    bot.cure_poison = True  # from here on: poisoned -> antidote (controller guard), through the fight and the loot
     hops(bot, ROUTE)
     f = AndyFight(bot)
     f.antidote_at, f.antidote_rounds = time.time(), 1

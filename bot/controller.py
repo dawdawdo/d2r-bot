@@ -159,6 +159,20 @@ class Controller:
                 raise Danger(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
+        if getattr(self, "cure_poison", False) and self.clock() - getattr(self, "_last_antidote", 0.0) > 1.5:
+            from .vision.orbs import belt_kinds, poisoned
+
+            if poisoned(self.frame, self.cfg["vision"]["orbs"]["hp"]):
+                # an antidote cures the poison: its ticks took her from ~90 to ~50 % in 2-3 s in every Andariel
+                # chicken (2026-11-23, green orb each time); +poison resist for a while too
+                kinds = belt_kinds(self.frame, self.cfg["vision"]["belt"])
+                key = next((k for k, kind in zip(self.cfg["hotkeys"]["potions"], kinds) if kind == "antidote"), None)
+                if key is not None:
+                    self._last_antidote = self.clock()
+                    log.info("poisoned (HP %.0f%%) -> antidote %s", self.hp, key)
+                    self._ensure_foreground()
+                    self.input.press(key)
+                    return
         low = not self.no_potions and (self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0))
         if low and self.clock() - self._last_potion > self.cfg["safety"].get("potion_cooldown_s", 1.5):
             self._last_potion = self.clock()

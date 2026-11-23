@@ -97,3 +97,12 @@ def test_any_npc_menu_counts_as_up(name):
 
 def test_no_menu_without_one():
     assert not a1town.menu_up(None, frame("labels_akara"))
+
+
+@pytest.mark.parametrize("name, want", [("orb_poisoned", True), ("orb_healthy", False)])
+def test_poisoned_life_orb(name, want):
+    """Every Andariel chicken on 2026-11-23 had a green (poisoned) orb: the fight cures it with an antidote."""
+    from bot.config import load_config
+    from bot.vision.orbs import poisoned
+
+    assert poisoned(frame(name), load_config()["vision"]["orbs"]["hp"]) is want

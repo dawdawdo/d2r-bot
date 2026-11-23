@@ -26,6 +26,18 @@ def orb_fill(frame: np.ndarray, region, color_range: dict, row_frac: float = 0.2
     return (len(rows) - top) / len(rows)
 
 
+def poisoned(frame: np.ndarray, hp_cfg: dict) -> bool:
+    """The life orb is green: poisoned (every Andariel chicken frame on 2026-11-23). Green = the second colour range
+    of vision.orbs.hp; true when it's most of the liquid."""
+    ranges = hp_cfg["color"] if isinstance(hp_cfg["color"], list) else [hp_cfg["color"]]
+    if len(ranges) < 2:
+        return False
+    sub = crop(frame, hp_cfg["region"])
+    green = (hsv_mask(sub, ranges[1]) > 0).sum()
+    red = (hsv_mask(sub, ranges[0]) > 0).sum()
+    return bool(green > 40 and green > 2 * red)
+
+
 def belt_slots(frame: np.ndarray, belt_cfg: dict) -> list[bool]:
     """Which visible belt slots (keys 1-4) hold a potion: potions are saturated, empty slots gray."""
     import cv2

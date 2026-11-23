@@ -167,4 +167,5 @@ class Andariel(Task):
         finally:
             safety.clear()
             safety.update(saved)
+            bot.cure_poison = False  # only in her fight (bot/andy.py turns it on)
         return out
