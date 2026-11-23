@@ -41,24 +41,9 @@ RUNES = [f"r{i:02d}" for i in range(11, 34)]  # Amn (r11) to Zod. Stephen 2026-1
 # 2026-11-19: Mage Plate (Enigma, max 3 os) and Dusk Shroud (CoH / Fortitude, 4 os) added: both drop from LK
 # chests (chest C tops out at armo75; Archon Plate, qlvl 84, can't drop there).
 RUNEWORD_BASES = {
+    # 2026-11-23 Stephen: "I don't need so many armors - probably only Archon Plate at this point". Mage Plate, Dusk
+    # Shroud and the other elite body armors (added 11-19 for Enigma / CoH / Fortitude) are off.
     "utp": "Archon Plate",
-    "xtp": "Mage Plate",
-    "uui": "Dusk Shroud",
-    # 2026-11-19: every elite body armor (4 os, CoH / Fortitude). LK chests reach Great Hauberk (qlvl 75); the rest
-    # stay on for Stephen's own runs and other areas.
-    "uea": "Wyrmhide",
-    "ula": "Scarab Husk",
-    "utu": "Wire Fleece",
-    "ung": "Diamond Mail",
-    "ucl": "Loricated Mail",
-    "uhn": "Boneweave",
-    "urs": "Great Hauberk",
-    "upl": "Balrog Skin",
-    "ult": "Hellforge Plate",
-    "uld": "Kraken Shell",
-    "uth": "Lacquered Plate",
-    "uul": "Shadow Plate",
-    "uar": "Sacred Armor",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
     "ci3": "Diadem",
