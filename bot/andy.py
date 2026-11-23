@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 ROUTE = "-320,0,3;300,-150,2"  # screen px hops from the Level 4 arrival: through the door, then toward her throne
 RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings around Blizzaga for name bars
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
-TOO_CLOSE = 400    # iso px (screen dy counts double): one hop back. 520 made nearly every sighting "too close" (the
+TOO_CLOSE = 540  # iso px: her poison bursts reached Blizzaga at ~406 and ~470 with 400 (17:59, 18:04: 88 -> 39 %
+                 # in 2 s). 520 once meant no casting at all, but that was before backed_at and the cast-before-the-hop
                    # view reaches ~660 up/down) and she hopped instead of casting (03:54: 3 runs, never hit her)
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
