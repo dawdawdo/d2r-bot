@@ -1,7 +1,11 @@
 # Progress
 
-**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1, antidotes for her only, ~80 % kills (see 13:35). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, ~85 % kills, ~16 kills/h (see 16:25). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 16:25: 85 % kills, 15.9 kills/h, no chickens in 13 runs** (since 15:45: /players 1 from the start,
+act detection waits for the automap and falls back to the last act). SoJ projection at this rate: ~3,700 kills / 15.9
+per h = ~230 h, ~10 days nonstop (was ~15). The rejuv question below is still open.
 
 **2026-11-23 15:15: QUESTION for Stephen: stash rejuvs for Andariel?** Her resists are fine (poison 73 %, cap 75);
 the problem is ~528 life and Energy Shield not taking poison. Long fights empty the belt (4 healing + 8 antidotes:
