@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 
 import cv2
@@ -12,6 +13,15 @@ OLD_PROT = protected_cells([[3, 0, 7, 4], [2, 2, 1, 2]])  # Stephen's layout whe
 PROT_1103 = protected_cells([[4, 0, 6, 4], [3, 1, 1, 3]])  # 2026-11-03 respec layout
 PROT_1115 = protected_cells([[5, 0, 5, 4], [4, 1, 1, 1], [4, 3, 1, 1]])  # 2026-11-15 layout
 
+
+
+@pytest.fixture(autouse=True)
+def _isolated_state(monkeypatch, tmp_path):
+    """protect_own_items reads and writes logs/state.json (the inventory baseline): never the real one here
+    (2026-11-23: a test run overwrote the live baseline with these fixtures)."""
+    from bot import state
+
+    monkeypatch.setattr(state, "PATH", tmp_path / "state.json")
 
 def test_eight_key_stacks_and_a_rune():
     inv = scan(cv2.imread(str(FIX / "keys8_hel.png")), KEY, OLD_PROT)
