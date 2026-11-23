@@ -25,6 +25,8 @@ MAP_PLAYER = (642, 353)  # her blue chevron on the automap (full-res px; 2026-11
 MAP_SCALE = 8.0          # world px per automap px (bot/durance.py AUTOMAP_SCALE)
 LABEL_TO_MARK = 23       # an NPC's cross sits this far below its label's centre
 LABEL_MIN = 0.8          # map_<name>.png: 0.94-1.00 on its label, <= 0.53 elsewhere (0.70: half covered by another)
+LABEL_MIN_OF = {"kashya": 0.65}  # she stands by Warriv and Cain, whose labels cover hers ("Deckard Cainshya": 0.70-0.75;
+                                 # 12:09 not found 58 px from the stash); nothing else scored over 0.59 in 20 town frames
 NAMES = ("akara", "kashya", "charsi", "stash")
 STEP_MAX = (480, 220)    # px from the screen centre for one walk click (inside bot/town.py WALK_BOX)
 BODY_UP = 45             # an NPC's clickable body is this far above the ground spot the cross marks
@@ -52,7 +54,7 @@ def map_labels(frame: np.ndarray, names=NAMES) -> dict[str, tuple[int, int, floa
         t = _template(n)
         r = cv2.matchTemplate(crop, t, cv2.TM_CCOEFF_NORMED)
         _, mx, _, loc = cv2.minMaxLoc(r)
-        if mx >= LABEL_MIN:
+        if mx >= LABEL_MIN_OF.get(n, LABEL_MIN):
             out[n] = (x0 + loc[0] + t.shape[1] // 2, y0 + loc[1] + t.shape[0] // 2, float(mx))
     return out
 

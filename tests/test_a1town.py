@@ -82,3 +82,9 @@ def test_belt_reads_antidotes(name, kinds):
 def test_antidote_columns_never_take_the_last_healing_or_mana_column(kinds, want):
     """11:23 2026-11-23: the emptied healing column became the second antidote column: no healing potions left."""
     assert a1town._antidote_cols(kinds) == want
+
+
+def test_kashya_found_under_cains_label():
+    """Her label half covered by Deckard Cain's (0.70): she's still found (LABEL_MIN_OF)."""
+    labs = a1town.map_labels(frame("labels_akara"))
+    assert "kashya" in labs and abs(labs["kashya"][0] - 587) <= 3
