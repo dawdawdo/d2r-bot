@@ -292,6 +292,12 @@ class AndyFight:
         from .lk import loot
 
         bot = self.bot
+        if self.last:  # out of reach of her death burst first (04:21, 04:26: killed at 74 / 100 %, chicken 2-7 s later)
+            self.away_from(*self.last)
+            # she (her body) is now a hop further off along the same line
+            v = np.array([self.last[0] - CENTER[0], self.last[1] - CENTER[1]], float)
+            v = v / (float(np.hypot(*v)) or 1.0) * 380 * 1.17
+            self.last = (int(np.clip(self.last[0] + v[0], 40, 1240)), int(np.clip(self.last[1] + v[1] * 0.6, 60, 560)))
         bot.sleep(4.5)  # the drop comes at the end of her death animation: fire + poison burst round her body for a
         # few seconds (2026-11-23 00:24 loot frame at 2.5 s: still exploding, Blizzaga poisoned at the body, no labels).
         # Wait it out at fighting range, then hop in
