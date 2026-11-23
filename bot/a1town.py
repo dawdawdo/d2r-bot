@@ -529,6 +529,11 @@ def back_to_wp(bot: Controller) -> bool:
     close_npc(bot)
     off = walk_to(bot, "wp", near=300)
     town_map_off(bot)
-    ok = off is not None and bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6) is not None
+    ok = False
+    for _ in range(3 if off is not None else 0):  # the map closes late: 13:11 missed it 143 px away
+        bot.kill.sleep(0.3)
+        if bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6) is not None:
+            ok = True
+            break
     log.info("back at the waypoint: %s", "yes" if ok else "no (fresh game)")
     return ok
