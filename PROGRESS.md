@@ -3,6 +3,13 @@
 **Current milestone:** Andariel task running (first kill 22:54); tuning for reliability overnight (see 22:55). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 02:00: Andariel 16 kills / 42 runs since 22:55; ~60 % in the latest code (3 of 4 01:33-01:52).** Added
+overnight: wait 4.5 s at range for her death burst, clear minions round the body before looting, hop back toward her
+after a life retreat, lost-low = dead under 40 %, inventory closed after war cries and per level (lag left it up and
+hid the Level 3 stairs), repair via tools/repair_now.py. Loot so far: runes + whites (0 % MF; her magic/rares are
+filtered). Recurring costs: merc dies most fights (50k revive; runs withdraw gold when a revive fails for it),
+Ormus/Asheara/Hratli searches sometimes miss (retried in fresh games).
+
 **2026-11-23 00:05: Andariel ~40 % kills.** 22:55-00:00: 17 runs, 7 logged kills (+1 more likely: lost at 21 %), loot
 now works (2.5 s wait, two passes): rune + whites. Misses: she isn't found (search hop now straight up: every kill had her
 bar at (639, 78)), or lost low (now: last seen < 35 % and gone 3 sweeps = dead, loot), chickens from her minions (fine).
