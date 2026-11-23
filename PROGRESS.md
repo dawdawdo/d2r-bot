@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1, antidotes for her only, ~80 % kills (see 13:35). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 14:25: poison cure + Akara restock.** Stephen: priorities are success rate, then speed, then resources.
+Every chicken frame today had a green (poisoned) life orb: orbs.poisoned + controller guard drink a belt antidote
+when bot.cure_poison (Andariel's fight and loot); the stairs antidote stays, the timed 30 s round is gone. 14:13
+chicken with "belt is empty": the half-used healing column was never topped up -> restock_at_akara: empty columns
+get 4 of their kind (healing, mana, then antidotes), then healing and mana top-ups until one spills (drunk).
+Since 12:56 (before these): 17 runs, 12 kills (71 %), 14.3 kills/h. Next: measure.
+
 **2026-11-23 13:35: SOLVED: antidotes for Blizzaga only.** 12:56-13:30 without the merc's antidote: 9 of 11 kills,
 0 never-seen, merc dead twice (revived at Kashya); with it (10:49-12:50) ~45 % kills, 10 never-seen. ANTIDOTE_MERC
 stays False. Her antidote: at the stairs + once 30 s in.
