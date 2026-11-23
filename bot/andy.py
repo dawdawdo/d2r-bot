@@ -220,7 +220,7 @@ class AndyFight:
         from .lk import loot
 
         bot = self.bot
-        bot.sleep(1.2)  # the drop comes at the end of her death animation
+        bot.sleep(2.5)  # the drop comes at the end of her death animation (1.2 s looted nothing 3 kills in a row)
         if self.last:
             x, y = self.last
             dx, dy = x - CENTER[0], y + 40 - CENTER[1]
@@ -229,7 +229,24 @@ class AndyFight:
                 dx, dy = in_play(dx, dy)
                 bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
                 bot.sleep(TP_SETTLE + frame_lag(bot) + 0.4)
+        from .lk import ensure_labels_on
+
+        bot.input.move(1270, 590)
+        ensure_labels_on(bot)
+        bot.sleep(0.3)
+        try:  # what was on the ground, for review (the filter hides most of her drop)
+            import cv2
+
+            from .config import ROOT
+
+            d = ROOT / "logs" / "andy" / "loot"
+            d.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(d / f"{time.strftime('%m%d-%H%M%S')}.jpg"), cv2.resize(bot.capture.grab(), None, fx=0.5, fy=0.5))
+        except OSError:
+            pass
         picked = loot(bot, take_all=True)
+        bot.sleep(0.8)
+        picked += loot(bot, take_all=True)  # a second look: labels under the first pick, late drops
         self.say(f"loot: {picked}")
         return picked
 
