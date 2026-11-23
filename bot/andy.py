@@ -241,6 +241,32 @@ class AndyFight:
             bot.input.move(1270, 590)
         return False
 
+    def clear_minions(self, limit: float = 15) -> None:
+        """Blizzard what's still standing around before hopping onto her body (2026-11-23 01:23: killed, then a chicken
+        6 s later at the body among her Dark Ones)."""
+        bot, sk = self.bot, self.sk
+        t0 = time.time()
+        try:
+            while time.time() - t0 < limit:
+                bot.check()
+                if (bot.hp or 100) < RETREAT_HP:
+                    bot.sleep(0.8)  # potions / shield first
+                    continue
+                hit = self.find()
+                if hit is None:
+                    return
+                (x, y), _, _ = hit
+                if time.time() - self.blizz_at >= BLIZZARD_CD:
+                    bot.press(sk["blizzard"])
+                    self.blizz_at = time.time()
+                else:
+                    bot.press(sk["glacial_spike"])
+                bot.click(x, y, "right", hover=0)
+                bot.sleep(0.4)
+        finally:
+            bot.press(sk["teleport"])
+            bot.input.move(1270, 590)
+
     def loot(self) -> list[str]:
         """Hop to where she was last seen and pick up what dropped."""
         from .lk import loot
@@ -249,6 +275,7 @@ class AndyFight:
         bot.sleep(4.5)  # the drop comes at the end of her death animation: fire + poison burst round her body for a
         # few seconds (2026-11-23 00:24 loot frame at 2.5 s: still exploding, Blizzaga poisoned at the body, no labels).
         # Wait it out at fighting range, then hop in
+        self.clear_minions()
         if self.last:
             x, y = self.last
             dx, dy = x - CENTER[0], y + 40 - CENTER[1]
