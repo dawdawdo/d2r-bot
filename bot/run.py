@@ -449,6 +449,8 @@ def main() -> int:
                             bot.keys_left = max(0, bot.keys_left - bot.keys_used)
                         state.save({**state.load(), "keys_left": bot.keys_left})
                     row.update(chests=stats.get("chests", ""), picked=" ".join(stats.get("picked", [])))
+                    if stats.get("andy") == 0:  # the fight ran out without a kill: not "ok" (Stephen 2026-11-23 read the
+                        row.update(result="miss", error="Andariel not killed")  # 155 "ok" runs as kills; 108 were)
                     stow = any(p != "rejuv" for p in stats.get("picked", []))
                     ok += 1
                     streak = map_misses = 0
