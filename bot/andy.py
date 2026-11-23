@@ -297,16 +297,22 @@ class AndyFight:
         return False
 
     def toward_throne(self) -> None:
-        """One hop toward her throne. From the fight spot (by the barrels) she comes from straight above: every kill
-        so far had her bar at (639, 78); up-right runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min,
-        never seen). Drifted off (retreats, minions): back toward the fight spot first."""
-        far = float(np.hypot(*self.offset))
-        if far > 300:
-            v = -self.offset / far * min(far, 380)
-            self.say(f"back toward the fight spot ({self.offset.round().tolist()} off)")
-            self.hop(*v)
-        else:
-            self.hop(0, -210)
+        """One hop along a search pattern round the fight spot (SEARCH, screen px from it, by dead reckoning). She
+        mostly comes from straight above (every early kill had her bar at (639, 78)), so the pattern starts there; then
+        up-left, up-right and a row deeper. 2026-11-23 15:45-17:20: 4 of 27 fights never saw her when the search only
+        went straight up and back."""
+        i = getattr(self, "search_i", 0)
+        for _ in range(len(SEARCH)):
+            target = np.array(SEARCH[i % len(SEARCH)], float)
+            d = target - self.offset
+            if float(np.hypot(*d)) > 150:
+                break
+            i += 1  # there already: the next point
+        self.search_i = i
+        n = float(np.hypot(*d)) or 1.0
+        step = d / n * min(n, 380)
+        self.say(f"search point {i % len(SEARCH)} {target.round().tolist()} ({self.offset.round().tolist()} off)")
+        self.hop(*step)
 
     def clear_minions(self, limit: float = 15) -> None:
         """Blizzard what's still standing around before hopping onto her body (2026-11-23 01:23: killed, then a chicken
@@ -400,6 +406,7 @@ class AndyFight:
         return picked
 
 
+SEARCH = [(0, -250), (0, -500), (-420, -500), (420, -500), (0, -820), (-420, -820), (420, -820), (0, 0)]
 DEATH_HOPS = 3         # hops away from her body when she dies (her death burst: poison clouds round the body)
 DEATH_WAIT = 9.0       # s to wait out there before going back for the loot (5 s: back into the clouds 7 s after
                        # her death, 91 -> 52 % and a chicken with the loot on the floor, 16:37)
