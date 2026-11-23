@@ -118,7 +118,7 @@ def close_npc(bot: Controller) -> None:
         bot.kill.sleep(0.35)
 
 
-VIA = {"stash": ("kashya", "akara"), "charsi": ("stash", "kashya", "akara"), "kashya": ("stash", "akara"),
+VIA = {"stash": ("kashya",), "charsi": ("stash", "kashya", "akara"), "kashya": ("stash", "akara"),
        "akara": ("kashya", "stash")}  # Charsi's label shows from the stash, not from Kashya's spot (2026-11-23)
 VIA_NEAR = 300  # walk this close to a VIA label, then look for the target's again
 VIA["wp"] = ("kashya", "akara")
@@ -283,10 +283,10 @@ def open_stash_a1(bot: Controller) -> bool:
 
     if stash_shown(bot):
         return True
-    for attempt in range(2):
-        off = walk_to(bot, "stash", near=NEAR)
+    for attempt in range(2):  # from Akara's end of town it's ~1,600 px with walls: 12 steps fell short (11-23 11:14)
+        off = walk_to(bot, "stash", near=NEAR, steps=20)
         if off is None:
-            break
+            continue
         town_map_off(bot)
         close_npc(bot)
         x, y = int(CENTER[0] + off[0]), int(CENTER[1] + off[1] - STASH_UP)
@@ -310,7 +310,7 @@ def revive_merc_a1(bot: Controller) -> bool:
     """Kashya: Resurrect (the widest line of her menu while the merc is dead)."""
     from .town import resurrect_result
 
-    off = walk_to(bot, "kashya", near=NEAR)
+    off = walk_to(bot, "kashya", near=NEAR, steps=16)
     if off is None or talk(bot, "kashya", off) is None:
         log.warning("Kashya not found; merc not revived")
         return False
@@ -415,7 +415,7 @@ def charsi_repair(bot: Controller) -> bool:
     if not (TEMPLATES / "npc_charsi.png").exists():  # never a line click on an unconfirmed menu (Warriv: Go East)
         log.warning("no npc_charsi.png yet: no Act 1 repair")
         return False
-    off = walk_to(bot, "charsi", near=NEAR)
+    off = walk_to(bot, "charsi", near=NEAR, steps=20)
     if off is None or talk(bot, "charsi", off) is None:
         log.warning("Charsi not found; no repair")
         return False
