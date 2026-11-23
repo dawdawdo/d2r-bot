@@ -364,6 +364,14 @@ def akara_stop(bot: Controller, buy: bool) -> bool:
     return False
 
 
+def _antidote_cols(kinds: list) -> int:
+    """Empty belt columns to fill with antidotes: up to ANTIDOTE_COLS, never at the cost of the last healing or mana
+    column (11:23 2026-11-23: the emptied healing column became antidotes and left her with none); the mixed buy
+    after this fills the reserved ones."""
+    reserve = (0 if any(k in ("hp", "rejuv") for k in kinds) else 1) + (0 if "mp" in kinds else 1)
+    return max(0, min(ANTIDOTE_COLS - kinds.count("antidote"), kinds.count(None) - reserve))
+
+
 def buy_antidotes(bot: Controller) -> int:
     """With Akara's trade open: fill empty belt columns up to ANTIDOTE_COLS with antidotes. Vendors put them in the
     inventory, never the belt (2026-11-23, plain and shift buys alike), so: 4 a column into the inventory, then
@@ -372,8 +380,7 @@ def buy_antidotes(bot: Controller) -> int:
     from .vision.inventory import protected_cells, scan as inv_scan
     from .vision.orbs import belt_kinds
 
-    kinds = belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
-    cols = min(ANTIDOTE_COLS - kinds.count("antidote"), kinds.count(None))
+    cols = _antidote_cols(belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]))
     if cols <= 0:
         return 0
     key_tpl = cv2.imread(str(TEMPLATES / "inv_key.png"))

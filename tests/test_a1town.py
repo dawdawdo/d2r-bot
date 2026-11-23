@@ -71,3 +71,14 @@ def test_belt_reads_antidotes(name, kinds):
     from bot.vision.orbs import belt_kinds
 
     assert belt_kinds(frame(name), load_config()["vision"]["belt"]) == kinds
+
+
+@pytest.mark.parametrize("kinds, want", [([None, "mp", "hp", "mp"], 1),          # healing and mana stay
+                                         ([None, "mp", None, "mp"], 1),          # one empty one is healing's
+                                         (["antidote", "mp", None, "mp"], 0),    # the last empty one is healing's
+                                         ([None, None, None, None], 2),
+                                         (["antidote", "mp", "antidote", "hp"], 0),
+                                         (["antidote", None, None, "hp"], 1)])   # one for mana, one for antidotes
+def test_antidote_columns_never_take_the_last_healing_or_mana_column(kinds, want):
+    """11:23 2026-11-23: the emptied healing column became the second antidote column: no healing potions left."""
+    assert a1town._antidote_cols(kinds) == want
