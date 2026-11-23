@@ -88,3 +88,12 @@ def test_kashya_found_under_cains_label():
     """Her label half covered by Deckard Cain's (0.70): she's still found (LABEL_MIN_OF)."""
     labs = a1town.map_labels(frame("labels_akara"))
     assert "kashya" in labs and abs(labs["kashya"][0] - 587) <= 3
+
+
+@pytest.mark.parametrize("name", ["menu_kashya", "menu_akara", "menu_charsi", "menu_warriv"])
+def test_any_npc_menu_counts_as_up(name):
+    assert a1town.menu_up(None, frame(name))
+
+
+def test_no_menu_without_one():
+    assert not a1town.menu_up(None, frame("labels_akara"))

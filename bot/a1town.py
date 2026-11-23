@@ -78,13 +78,16 @@ def town_automap(bot: Controller) -> np.ndarray:
     from .controller import BotError
     from .durance import map_text_open
 
+    from .town import close_dialog
     from .vision.inventory import inventory_open
 
-    for _ in range(3):
+    for attempt in range(3):
         f = bot.capture.grab()
         if map_text_open(f):
             return f
         close_npc(bot)
+        if attempt:  # still no map: something unrecognized is up; Esc that also closes the game menu it may open
+            close_dialog(bot)
         if inventory_open(f):  # a trade window or the stash still up (a lost Esc, 2026-11-23 11:52): Tab does nothing
             bot.press("esc")
             bot.kill.sleep(0.4)
@@ -117,10 +120,28 @@ def npc_menu(bot: Controller, frame: np.ndarray | None = None) -> tuple[int, int
     return loc if score >= 0.8 else None
 
 
+MENU_SIGNS = ("dlg_talk", "dlg_cancel", "npc_kashya", "npc_akara", "npc_charsi")
+
+
+def menu_up(bot: Controller, frame: np.ndarray | None = None) -> bool:
+    """Any NPC menu up: TALK blue (the default line) is not enough: with another line highlighted it's white
+    (2026-11-23 13:36: Kashya's menu with Hire lit after a revive; Tab did nothing and the walk failed)."""
+    from .vision.screen import match_score
+
+    f = bot.capture.grab() if frame is None else frame
+    for n in MENU_SIGNS:
+        t = _tpl.get(n)
+        if t is None:
+            t = _tpl[n] = cv2.imread(str(TEMPLATES / f"{n}.png"))
+        if match_score(f, t, (0, 0, 1280, 560))[0] >= 0.8:
+            return True
+    return False
+
+
 def close_npc(bot: Controller) -> None:
     """Esc only when an NPC menu is up: a blind Esc opens the game menu, and on top of an NPC a missed menu click
     talks to her instead (2026-11-23 probe: Kashya's dialog kept coming back during save & exit)."""
-    if npc_menu(bot) is not None:
+    if menu_up(bot):
         bot.press("esc")
         bot.kill.sleep(0.35)
 
