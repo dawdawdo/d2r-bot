@@ -390,8 +390,9 @@ class AndyFight:
 
 MINION_STREAK = 6      # finds in a row that aren't her ...
 HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
-ANTIDOTE_MERC = False  # experiment 2026-11-23 13:00: since the merc stays alive (antidotes), fights often never see
-                       # her (he tanks her out of view?). Her antidotes only for ~15 runs, then compare
+ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
+                       # Blizzaga's view: 10:49-12:50 ~45 % kills, 10 fights never saw her; without, 9 of 11 kills,
+                       # none unseen, 2 merc deaths (revived at Kashya)
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
 ANTIDOTE_ROUNDS = 2    # at the stairs, then once more while she's still fighting
 
