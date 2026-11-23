@@ -23,9 +23,18 @@ log = logging.getLogger(__name__)
 ROUTE = "-320,0,3;300,-150,2"  # screen px hops from the Level 4 arrival: through the door, then toward her throne
 RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings around Blizzaga for name bars
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
-TOO_CLOSE = 400    # px from her: two hops back first. Her poison spray reaches ~300 px and the poison keeps
-                   # ticking after a hop away (2026-11-22: green orb 100 -> 34 % at 210 and at 290 px)
+TOO_CLOSE = 360    # iso px (screen dy counts double) from her: one hop back. Her poison spray reaches ~300 and
+                   # keeps ticking after a hop away (2026-11-22: green orb 100 -> 34 % at 210 and 290 screen px)
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
+
+
+def iso_dist(x: float, y: float) -> float:
+    """Ground distance of a screen point from Blizzaga: the view is isometric, a screen px up/down is ~2 on the ground
+    (22:02: her bar 252 px straight up read "too close" at 400 and two hops took her out of view)."""
+    return math.hypot(x - CENTER[0], 2 * (y - CENTER[1]))
+
+
+GRID = [(x, y) for y in range(90, 560, 70) for x in range(120, 1180, 90)]  # last resort: the whole view (~6 s)
 
 
 def hops(bot, route: str) -> None:
@@ -50,6 +59,7 @@ class AndyFight:
         self.cries_at = getattr(bot, "cries_at", 0.0) or 0.0
         self.seen_dead = False
         self.threat: tuple[int, int] | None = None  # the last monster seen (retreat from it when hurt)
+        self.wide = False  # add the whole-view grid to the sweep
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -65,6 +75,8 @@ class AndyFight:
                 x, y = int(CENTER[0] + r * np.cos(a)), int(CENTER[1] + 0.6 * r * np.sin(a))
                 if 60 < y < 560:
                     yield x, y
+        if self.wide:  # she was seen and lost (or never seen for a while): the whole view
+            yield from sorted(GRID, key=lambda p: math.dist(p, self.last or CENTER))
 
     def find(self) -> tuple[tuple[int, int], float, bool] | None:
         """(point, life, is_her) of the first monster name under the cursor: her if she's anywhere on the sweep,
@@ -141,6 +153,7 @@ class AndyFight:
                 self.say(f"find: {hit} HP {bot.hp} MP {bot.mp}")
                 if hit is None:
                     misses += 1
+                    self.wide = misses >= 2  # two empty sweeps: next one covers the whole view
                     if self.life <= 0.06 and casts:  # her bar was nearly empty and now it's gone: dead
                         self.seen_dead = True
                         return True
@@ -159,9 +172,13 @@ class AndyFight:
                 elif self.life <= 0.06 and casts:
                     self.seen_dead = True
                     return True
-                if her and math.hypot(x - CENTER[0], y - CENTER[1]) < TOO_CLOSE:
+                self.wide = not her and misses == 0 and casts > 0 and self.life < 1.0  # keep looking for her too
+                if her and iso_dist(x, y) < TOO_CLOSE:
                     self.away_from(x, y)
-                    self.away_from(x, y)
+                    # she's now about one hop further along the line from Blizzaga to her
+                    v = np.array([x - CENTER[0], y - CENTER[1]], float)
+                    v = v / (float(np.hypot(*v)) or 1.0) * 380 * 1.17
+                    self.last = (int(np.clip(x + v[0], 40, 1240)), int(np.clip(y + v[1] * 0.6, 60, 560)))
                     continue
                 # aim a little in front of her: she walks toward Blizzaga
                 ax, ay = int(x + 0.15 * (CENTER[0] - x)), int(y + 0.15 * (CENTER[1] - y))
