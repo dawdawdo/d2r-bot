@@ -1,7 +1,16 @@
 # Progress
 
-**Current milestone:** Andariel task running: 46 kills overnight, ~60 % per run on the latest code (see 07:00). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills per run (see 08:30). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 08:30: Blizzaga in her MF set (222 %), Andariel 9 kills / 11 runs since 07:41.** Stephen asked me to
+swap the gear myself: tools/gear_swap.py (stash grid measured from a frame: cell (c,r) at (36.6+37.8c, 87.6+37.8r);
+pick piece -> click slot -> old piece back in the freed spot -> safety click on an empty stash cell). Harlequin Crest,
+Chance Guards, The Oculus on; Gheed's Fortune at inventory (0,0) (added to inventory.protected); Kira's, Magefist,
+Eschuta's in her personal stash. mf.min.andy 200. First MF run: Statics up close, poison 91 -> 2 %: Static off,
+potion at 75 %, chicken 55 % in her fight. Enigma (shared tab 5, Boneweave, str 164 >= 158) left out: it would replace
+Skin of the Vipermagi's resists. Uniques so far: Manald Heal (stashed), The Rising Sun (amulet, 08:00). Fixed: tests
+had overwritten logs/state.json's inventory baseline (now isolated, restored); Act 1 waypoint at the screen edge.
 
 **2026-11-23 07:00: overnight Andariel tally (22:55-07:00): 105 runs, 46 kills, 0 deaths, 32 chickens, 5 fails.**
 Loot: 11 runes, 3 unique picks (Manald Heal kept; the two at 05:40 likely failed: inventory full), 23 white, 1 gray, 1 key.
