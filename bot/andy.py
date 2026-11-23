@@ -27,7 +27,7 @@ TOO_CLOSE = 400    # iso px (screen dy counts double): one hop back. 520 made ne
                    # view reaches ~660 up/down) and she hopped instead of casting (03:54: 3 runs, never hit her)
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
-STATICS = 2
+STATICS = 0  # off: in the MF set (no Kira's resists) the two Statics up close let her poison take 91 -> 2 % (11-23 07:31)
 LOST_DEAD = 0.40   # her life when last seen, below which "gone for 3 sweeps" counts as dead
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
 
