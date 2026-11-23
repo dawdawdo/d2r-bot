@@ -25,6 +25,9 @@ RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings arou
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
 TOO_CLOSE = 520    # iso px (screen dy counts double): one hop back. Blizzard lands anywhere on screen, so keep her
                    # near its edge: her poison spray and its ticks did 100 -> 17 % at 210-360 (2026-11-22)
+STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
+                   # "static field a couple of times at the beginning, then teleport to where the merc can tank")
+STATICS = 2
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
 
 
@@ -60,6 +63,7 @@ class AndyFight:
         self.seen_dead = False
         self.threat: tuple[int, int] | None = None  # the last monster seen (retreat from it when hurt)
         self.wide = False  # add the whole-view grid to the sweep
+        self.statics = 0  # Static Fields cast on her so far
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -173,7 +177,21 @@ class AndyFight:
                     self.seen_dead = True
                     return True
                 self.wide = not her and misses == 0 and casts > 0 and self.life < 1.0  # keep looking for her too
-                if her and iso_dist(x, y) < TOO_CLOSE:
+                if her and self.statics < STATICS and iso_dist(x, y) < STATIC_RANGE:
+                    # she walked into reach: Static Field twice (a share of her current life each), then two hops away
+                    # so the merc holds her and Blizzard does the rest from the edge of the screen
+                    for _ in range(STATICS - self.statics):
+                        bot.press(sk["static_field"])
+                        bot.click(CENTER[0], CENTER[1] - 30, "right", hover=0)
+                        bot.sleep(0.45)
+                        self.statics += 1
+                    nb = name_bar(bot.capture.grab())
+                    self.say(f"static x{self.statics}: her life {life:.2f} -> {nb['life'] if nb else '?'}")
+                    self.away_from(x, y)
+                    self.away_from(x, y)
+                    self.last = None
+                    continue
+                if her and self.statics >= STATICS and iso_dist(x, y) < TOO_CLOSE:
                     self.away_from(x, y)
                     # she's now about one hop further along the line from Blizzaga to her
                     v = np.array([x - CENTER[0], y - CENTER[1]], float)
