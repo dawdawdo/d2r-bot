@@ -159,7 +159,9 @@ class Controller:
                 raise Danger(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
             self.save_failure(f"chicken_es_hp{int(self.hp)}_mp{int(self.mp)}")
             raise Chicken(f"energy shield broken: MP {self.mp}%, HP {self.hp}%")
-        if getattr(self, "cure_poison", False) and self.clock() - getattr(self, "_last_antidote", 0.0) > 1.5:
+        if (getattr(self, "cure_poison", False) and self.hp < s.get("cure_below_pct", 92)
+                and self.clock() - getattr(self, "_last_antidote", 0.0) > 1.5):
+            # not at full life: she gets re-poisoned at once, and three antidotes went in 5 s at 100 % (14:52)
             from .vision.orbs import belt_kinds, poisoned
 
             if poisoned(self.frame, self.cfg["vision"]["orbs"]["hp"]):
