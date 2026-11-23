@@ -123,10 +123,16 @@ def close_npc(bot: Controller) -> None:
         bot.kill.sleep(0.35)
 
 
-VIA = {"stash": ("kashya",), "charsi": ("stash", "kashya", "akara"), "kashya": ("stash", "akara"),
-       "akara": ("kashya", "stash")}  # Charsi's label shows from the stash, not from Kashya's spot (2026-11-23)
-VIA_NEAR = 300  # walk this close to a VIA label, then look for the target's again
-VIA["wp"] = ("kashya", "akara")
+AKARA_TO_STASH = (-1824, -480)  # her label -> the stash; she keeps by her tent (2 frames; a third 100 px off)
+AKARA_TO_WP = (-812, -353)       # her label -> the waypoint (2 frames within 4 px)
+# fallback labels while the target's isn't drawn (labels show within ~1,200 px of her): (label, offset to walk toward)
+VIA = {"stash": (("kashya", (0, 0)), ("akara", AKARA_TO_STASH)),
+       "charsi": (("stash", (0, 0)), ("kashya", (0, 0)), ("akara", AKARA_TO_STASH)),
+       "kashya": (("stash", (0, 0)), ("akara", AKARA_TO_STASH)),  # she keeps near the stash
+       "akara": (("kashya", (0, 0)), ("stash", (-AKARA_TO_STASH[0], -AKARA_TO_STASH[1]))),
+       "wp": (("akara", AKARA_TO_WP), ("kashya", (0, 0)))}
+# 2026-11-23 11:59: from Akara's tent neither Kashya's nor the stash's label showed: no stash, no revive
+VIA_NEAR = 300  # walk this close to a VIA point, then look for the target's label again
 ANCHOR = {"wp": ("stash", (1012, 127))}  # no label of its own: the waypoint from the stash's (2 frames agree within
                                         # 8 px, 2026-11-23)
 
@@ -143,13 +149,13 @@ def walk_to(bot: Controller, name: str, near: float = 200, steps: int = 12) -> t
     for i in range(steps):
         f = town_automap(bot)
         look, (ax, ay) = ANCHOR.get(name, (name, (0, 0)))
-        labs = map_labels(f, (look,) + VIA.get(name, ()))
+        labs = map_labels(f, (look,) + tuple(v for v, _ in VIA.get(name, ())))
         if look in labs:
             goal = name
             dx, dy = world_offset(look, labs[look])
             dx, dy = dx + ax, dy + ay
         else:
-            via = next((v for v in VIA.get(name, ()) if v in labs), None)
+            via, voff = next(((v, o) for v, o in VIA.get(name, ()) if v in labs), (None, (0, 0)))
             if via is None:
                 missing += 1
                 log.info("%s: no automap label (%d)", name, missing)
@@ -160,6 +166,7 @@ def walk_to(bot: Controller, name: str, near: float = 200, steps: int = 12) -> t
                 continue
             goal = via
             dx, dy = world_offset(via, labs[via])
+            dx, dy = dx + voff[0], dy + voff[1]
         d = math.hypot(dx, 2 * dy)
         if last is not None and last[0] == goal and math.hypot(dx - last[1], dy - last[2]) > 1500:
             log.info("%s: %s read %.0f px away, a jump: reading again", name, goal, d)  # 11-23: 349 -> 3157 -> 171
@@ -221,10 +228,16 @@ def talk(bot: Controller, name: str, off: tuple[float, float]) -> tuple[int, int
         close_npc(bot)
         x, y = int(CENTER[0] + off[0]), int(CENTER[1] + off[1] - BODY_UP)
         bot.click(min(max(x, 30), 1250), min(max(y, 50), 550))
-        bot.kill.sleep(1.5)
-        loc = dialog_open(bot, name)
-        if loc is not None:
-            return loc
+        # she walks there first: from ~350 px the dialog came after a fixed 1.5 s, and the retry's automap closed
+        # it (2026-11-23 12:03: three "misses" with Akara reached each time)
+        wait = 1.2 + math.hypot(off[0], 2 * off[1]) / 250
+        t = 0.0
+        while t < wait:
+            bot.kill.sleep(0.3)
+            t += 0.3
+            loc = dialog_open(bot, name)
+            if loc is not None:
+                return loc
         log.info("%s: click at (%d, %d) missed (try %d)", name, x, y, attempt + 1)
     close_npc(bot)
     region = (max(30, x - 160), max(50, y - 120), 320, 260)
