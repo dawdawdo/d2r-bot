@@ -15,6 +15,9 @@ Steps (in order, one game per command):
   talk:NAME      click that NPC (after goto), frame talk_NAME.png (its dialog)
   line:N         click the Nth line below TALK in the open NPC menu (1 = the line after Talk)
   stash / akara[:buy] / kashya / charsi   the real Act 1 services (bot/a1town.py)
+  press:KEY[,N]  press a key N times; rclick:X,Y[,N]  right-click N times (buy)
+  srclick:X,Y  shift+right-click; inv  toggle inventory; drinkinv:C,R;C,R  right-click inventory cells
+  beltinv:C,R;C,R  shift+left-click inventory cells (potion to belt); spress:KEY  shift+key (potion to merc)
   esc            close an NPC menu if one is up (a1town.close_npc)
   escx           press Esc (a trade window or the stash)
   exit           save & exit (also done at the end if still in game)
@@ -137,6 +140,48 @@ def main() -> int:
                 print(f"  revive: {revive_merc_a1(bot)}", flush=True)
             elif name == "charsi":  # the real repair (needs npc_charsi.png)
                 print(f"  repair: {charsi_repair(bot)}", flush=True)
+            elif name == "press":  # press:KEY[,N]  press a key N times (0.8 s apart: potion cooldown)
+                k, _, n = arg.partition(",")
+                for _ in range(int(n or 1)):
+                    bot.press(k)
+                    bot.kill.sleep(0.8)
+            elif name == "rclick":  # rclick:X,Y[,N]  right-click N times (buy one item a click in a trade window)
+                v = [int(x) for x in arg.split(",")]
+                for _ in range(v[2] if len(v) > 2 else 1):
+                    bot.click(v[0], v[1], "right")
+                    bot.kill.sleep(0.7)
+            elif name == "srclick":  # srclick:X,Y  shift + right-click (buy into the belt)
+                x, y = [int(v) for v in arg.split(",")]
+                bot.input.key_down("shift")
+                bot.kill.sleep(0.05)
+                bot.click(x, y, "right")
+                bot.kill.sleep(0.05)
+                bot.input.key_up("shift")
+                bot.kill.sleep(0.8)
+            elif name == "inv":  # toggle the inventory panel
+                bot.press(cfg["hotkeys"]["inventory"])
+                bot.kill.sleep(0.5)
+            elif name == "drinkinv":  # drinkinv:C,R[;C,R...]  right-click inventory cells (drink potions there)
+                for cell in arg.split(";"):
+                    c, r = [int(v) for v in cell.split(",")]
+                    bot.click(int(867 + 37.8 * c + 19), int(350 + 37.8 * r + 19), "right")
+                    bot.kill.sleep(0.8)
+            elif name == "beltinv":  # beltinv:C,R[;C,R]  shift+left-click inventory cells (potion -> belt)
+                for cell in arg.split(";"):
+                    c, r = [int(v) for v in cell.split(",")]
+                    bot.input.key_down("shift")
+                    bot.kill.sleep(0.05)
+                    bot.click(int(867 + 37.8 * c + 19), int(350 + 37.8 * r + 19))
+                    bot.kill.sleep(0.05)
+                    bot.input.key_up("shift")
+                    bot.kill.sleep(0.6)
+            elif name == "spress":  # spress:KEY  shift + key (a belt potion to the merc)
+                bot.input.key_down("shift")
+                bot.kill.sleep(0.05)
+                bot.press(arg)
+                bot.kill.sleep(0.05)
+                bot.input.key_up("shift")
+                bot.kill.sleep(0.8)
             elif name == "esc":  # only when an NPC menu is up (a1town.close_npc); escx: any panel (trade, stash)
                 close_npc(bot)
             elif name == "escx":

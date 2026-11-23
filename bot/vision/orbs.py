@@ -35,14 +35,36 @@ def belt_slots(frame: np.ndarray, belt_cfg: dict) -> list[bool]:
     return [bool((hsv[:, x - 10 : x + 10, 1] > 120).mean() > 0.15) for x in belt_cfg["x"]]
 
 
+ANTIDOTE_MIN = 0.75  # belt_antidote.png: 1.00 on an antidote, <= 0.40 on potions and empty slots (2026-11-23)
+_antidote_tpl = None
+
+
+def _is_antidote(frame: np.ndarray, x: int, y0: int, y1: int) -> bool:
+    """The pale antidote jar: hardly any saturated pixels, so the hue test below calls it empty."""
+    import cv2
+
+    global _antidote_tpl
+    if _antidote_tpl is None:
+        from .screen import ASSETS
+
+        _antidote_tpl = cv2.imread(str(ASSETS / "belt_antidote.png"))
+    reg = frame[max(0, y0 - 23):y1 - 6, max(0, x - 14):x + 14]
+    if _antidote_tpl is None or reg.shape[0] < _antidote_tpl.shape[0] or reg.shape[1] < _antidote_tpl.shape[1]:
+        return False
+    return cv2.minMaxLoc(cv2.matchTemplate(reg, _antidote_tpl, cv2.TM_CCOEFF_NORMED))[1] >= ANTIDOTE_MIN
+
+
 def belt_kinds(frame: np.ndarray, belt_cfg: dict) -> list[str | None]:
-    """Per visible belt slot: 'hp' (red healing), 'mp' (blue mana), 'rejuv' (purple) or None (empty)."""
+    """Per visible belt slot: 'hp' (red healing), 'mp' (blue mana), 'rejuv' (purple), 'antidote' or None (empty)."""
     import cv2
 
     y0, y1 = belt_cfg["y"]
     hsv = cv2.cvtColor(frame[y0:y1], cv2.COLOR_BGR2HSV)
     out: list[str | None] = []
     for x in belt_cfg["x"]:
+        if _is_antidote(frame, x, y0, y1):
+            out.append("antidote")
+            continue
         px = hsv[:, x - 10 : x + 10].reshape(-1, 3)
         sat = px[px[:, 1] > 120]
         if len(sat) < 0.15 * len(px):

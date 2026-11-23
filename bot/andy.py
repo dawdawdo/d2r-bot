@@ -150,6 +150,11 @@ class AndyFight:
             while time.time() < end or (time.time() < t0 + limit + 60 and time.time() - self.her_at < 12):
                 # past the limit only while she's in the fight (05:19: first seen as the 150 s ran out)
                 bot.check()
+                if (getattr(self, "antidote_rounds", ANTIDOTE_ROUNDS) < ANTIDOTE_ROUNDS
+                        and time.time() - self.antidote_at > ANTIDOTE_EVERY and time.time() - self.her_at < 5):
+                    self.antidote_rounds += 1
+                    self.antidote_at = time.time()
+                    antidotes(bot, "still fighting her")
                 if out is not None and time.time() - snap_at > 4:  # for review: what the fight looked like
                     import cv2
 
@@ -345,10 +350,41 @@ class AndyFight:
         return picked
 
 
+ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
+ANTIDOTE_ROUNDS = 2    # at the stairs, then once more while she's still fighting
+
+
+def antidotes(bot, why: str) -> int:
+    """An antidote for her (belt key) and one for the merc (shift + belt key) against Andariel's poison
+    (Stephen 2026-11-23). Returns how many were drunk."""
+    from .vision.orbs import belt_kinds
+
+    n = 0
+    for merc in (False, True):
+        kinds = belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+        key = next((k for k, kind in zip(bot.cfg["hotkeys"]["potions"], kinds) if kind == "antidote"), None)
+        if key is None:
+            break
+        if merc:
+            bot.input.key_down("shift")
+            bot.kill.sleep(0.05)
+        bot.press(key)
+        bot.kill.sleep(0.05)
+        if merc:
+            bot.input.key_up("shift")
+        bot.kill.sleep(0.35)
+        n += 1
+    if n:
+        log.info("antidote x%d (%s)", n, why)
+    return n
+
+
 def fight(bot) -> dict:
     """On Catacombs Level 4 at the stairs: go to her, kill her, loot. {"andy": 0/1, "picked": [...]}"""
+    antidotes(bot, "at the stairs")
     hops(bot, ROUTE)
     f = AndyFight(bot)
+    f.antidote_at, f.antidote_rounds = time.time(), 1
     dead = f.kill()
     log.info("Andariel %s (HP %.0f%% MP %.0f%%)", "dead" if dead else "NOT killed", bot.hp or 0, bot.mp or 0)
     if not dead:

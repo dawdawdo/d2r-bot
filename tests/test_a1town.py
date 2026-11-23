@@ -59,3 +59,15 @@ def test_kashya_menu_without_a_dead_merc_has_no_resurrect_line():
     widths = a1town._line_widths(f, a1town.npc_menu(None, f))
     assert 0 < max(widths) < a1town.RESURRECT_W  # HIRE, CANCEL
     assert widths[0] > 25 and widths[1] > widths[0]  # HIRE then the wider CANCEL
+
+
+@pytest.mark.parametrize("name, kinds", [("belt_antidote_col1", ["antidote", "mp", "hp", "mp"]),
+                                         ("belt_empty_col1", [None, "mp", "hp", "mp"]),
+                                         ("belt_hp_mp", ["hp", "mp", "hp", "mp"])])
+def test_belt_reads_antidotes(name, kinds):
+    """The pale antidote jar has no saturated pixels: without its template it read as an empty column (and every
+    run would have gone to Akara)."""
+    from bot.config import load_config
+    from bot.vision.orbs import belt_kinds
+
+    assert belt_kinds(frame(name), load_config()["vision"]["belt"]) == kinds

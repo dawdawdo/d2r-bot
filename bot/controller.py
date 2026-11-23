@@ -182,7 +182,7 @@ class Controller:
                 if kind in (want, "rejuv"):
                     return key
         for key, kind in slots:
-            if kind is None:
+            if kind is None or kind == "antidote":  # antidotes are drunk on purpose (bot/andy.py), not for life
                 continue
             if want == "hp" and kind == "mp" and (self.mp or 0) >= 70:
                 continue  # a mana potion does nothing for life when the shield is full (3 wasted, 2026-11-01)

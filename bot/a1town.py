@@ -222,7 +222,9 @@ def talk(bot: Controller, name: str, off: tuple[float, float]) -> tuple[int, int
 NEAR = 350          # close enough: a click on an NPC or the stash walks her the rest of the way (closer, the walk
                     # clicks landed on Warriv beside the stash: his menu has Go East, 2026-11-23)
 STASH_UP = 10       # the chest's body above the spot its label marks
-AKARA = {"healing_potion": (395, 337), "mana_potion": (395, 375)}  # her trade window, Misc tab (2026-11-23)
+AKARA = {"healing_potion": (395, 337), "mana_potion": (395, 375), "antidote": (395, 148)}  # Misc tab (2026-11-23)
+ANTIDOTE_COLS = 2   # belt columns of antidotes for Andariel's poison (Stephen 2026-11-23); 1 healing + 1 mana left
+INV0, INV_P = (867.0, 350.0), 37.8  # inventory grid (bot/vision/inventory.py)
 LINE_PITCH = 24     # NPC menu lines (Kashya, Akara 2026-11-23)
 RESURRECT_W = 72    # px: RESURRECT (9 letters) is the menu's widest line; CANCEL ~58
 
@@ -330,11 +332,64 @@ def akara_stop(bot: Controller, buy: bool) -> bool:
     for _ in range(8):
         bot.kill.sleep(0.3)
         if bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is not None:
+            buy_antidotes(bot)
+            from .vision.orbs import belt_kinds
+
+            if None not in belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]):  # the antidotes took the last
+                bot.press("esc")  # empty column: a healing/mana buy would only land in the inventory (2026-11-23)
+                bot.kill.sleep(0.5)
+                return True
             return buy_potions_in_trade(bot, AKARA, "mixed", "Akara")
     bot.save_failure("a1_akara_trade_not_opened")
     bot.press("esc")
     bot.kill.sleep(0.4)
     return False
+
+
+def buy_antidotes(bot: Controller) -> int:
+    """With Akara's trade open: fill empty belt columns up to ANTIDOTE_COLS with antidotes. Vendors put them in the
+    inventory, never the belt (2026-11-23, plain and shift buys alike), so: 4 a column into the inventory, then
+    shift+left-click each (into the antidote column with room, else the leftmost empty one). One left over is drunk
+    (never stashed). Returns how many reached the belt."""
+    from .vision.inventory import protected_cells, scan as inv_scan
+    from .vision.orbs import belt_kinds
+
+    kinds = belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+    cols = min(ANTIDOTE_COLS - kinds.count("antidote"), kinds.count(None))
+    if cols <= 0:
+        return 0
+    key_tpl = cv2.imread(str(TEMPLATES / "inv_key.png"))
+    prot = protected_cells(bot.cfg["inventory"]["protected"])
+
+    def empty() -> set:
+        bot.input.move(640, 600)
+        bot.kill.sleep(0.6)  # Proton shows a new item late
+        return set(inv_scan(bot.capture.grab(), key_tpl, prot)["empty"])
+
+    before = empty()
+    n = min(4 * cols, len(before))
+    for _ in range(n):
+        bot.click(*AKARA["antidote"], "right")
+        bot.kill.sleep(0.5)
+    bought = sorted(before - empty())
+
+    def cell(c: int, r: int) -> tuple[int, int]:
+        return int(INV0[0] + INV_P * c + INV_P / 2), int(INV0[1] + INV_P * r + INV_P / 2)
+
+    for c, r in bought:
+        bot.input.key_down("shift")
+        bot.kill.sleep(0.05)
+        bot.click(*cell(c, r))
+        bot.kill.sleep(0.05)
+        bot.input.key_up("shift")
+        bot.kill.sleep(0.4)
+    left = sorted(set(bought) - empty())
+    for c, r in left:  # the belt had no room for it: drink it rather than let the stowaway stash it
+        bot.click(*cell(c, r), "right")
+        bot.kill.sleep(0.6)
+    log.info("Akara: %d antidote(s) bought, %d into the belt, belt %s", len(bought), len(bought) - len(left),
+             belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"]))
+    return len(bought) - len(left)
 
 
 def charsi_repair(bot: Controller) -> bool:
