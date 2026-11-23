@@ -118,7 +118,7 @@ mf:
 andy:                  # Andariel task (bot/tasks/andariel.py, bot/andy.py)
   timeout_s: 360       # waypoint -> Level 4 -> kill -> loot: the run's deadline
   players: 1           # /players for her: 1 while testing; 3 planned (most of p7's drop gain, half her p7 life)
-  safety: {chicken_hp_pct: 35}  # the fight backs off at 55 %
+  safety: {chicken_hp_pct: 50}  # her poison keeps ticking: 7 runs 2026-11-22 fell to 17-18 % past a 35 % chicken, 1 died
 
 tunnels:               # Ancient Tunnels task (bot/tunnels.py)
   timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline

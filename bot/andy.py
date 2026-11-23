@@ -23,8 +23,8 @@ log = logging.getLogger(__name__)
 ROUTE = "-320,0,3;300,-150,2"  # screen px hops from the Level 4 arrival: through the door, then toward her throne
 RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings around Blizzaga for name bars
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
-TOO_CLOSE = 360    # iso px (screen dy counts double) from her: one hop back. Her poison spray reaches ~300 and
-                   # keeps ticking after a hop away (2026-11-22: green orb 100 -> 34 % at 210 and 290 screen px)
+TOO_CLOSE = 520    # iso px (screen dy counts double): one hop back. Blizzard lands anywhere on screen, so keep her
+                   # near its edge: her poison spray and its ticks did 100 -> 17 % at 210-360 (2026-11-22)
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
 
 
@@ -119,7 +119,7 @@ class AndyFight:
             self.cries_at = time.time()
 
     # -- the fight --------------------------------------------------------------------------------
-    def kill(self, limit: float = 120) -> bool:
+    def kill(self, limit: float = 150) -> bool:  # 120 ran out with her at 22 % (2026-11-22 22:10)
         bot, sk = self.bot, self.sk
         t0, misses, casts, snap_at = time.time(), 0, 0, 0.0
         out = None
