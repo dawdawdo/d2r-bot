@@ -390,6 +390,8 @@ class AndyFight:
 
 MINION_STREAK = 6      # finds in a row that aren't her ...
 HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
+ANTIDOTE_MERC = False  # experiment 2026-11-23 13:00: since the merc stays alive (antidotes), fights often never see
+                       # her (he tanks her out of view?). Her antidotes only for ~15 runs, then compare
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
 ANTIDOTE_ROUNDS = 2    # at the stairs, then once more while she's still fighting
 
@@ -400,7 +402,7 @@ def antidotes(bot, why: str) -> int:
     from .vision.orbs import belt_kinds
 
     n = 0
-    for merc in (False, True):
+    for merc in (False, True) if ANTIDOTE_MERC else (False,):
         kinds = belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
         key = next((k for k, kind in zip(bot.cfg["hotkeys"]["potions"], kinds) if kind == "antidote"), None)
         if key is None:
@@ -421,6 +423,9 @@ def antidotes(bot, why: str) -> int:
 
 def fight(bot) -> dict:
     """On Catacombs Level 4 at the stairs: go to her, kill her, loot. {"andy": 0/1, "picked": [...]}"""
+    from .town import merc_alive
+
+    log.info("fight starts, merc %s", "alive" if merc_alive(bot, tries=1) else "dead")  # to compare outcomes
     antidotes(bot, "at the stairs")
     hops(bot, ROUTE)
     f = AndyFight(bot)
