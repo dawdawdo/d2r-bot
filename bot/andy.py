@@ -227,7 +227,8 @@ class AndyFight:
                     self.away_from(x, y)
                     self.last = None
                     continue
-                if her and self.statics >= STATICS and iso_dist(x, y) < TOO_CLOSE:
+                if her and iso_dist(x, y) < TOO_CLOSE:  # waiting for her to come into Static range let her poison
+                    # reach Blizzaga first (2026-11-23 03:32: at ~390 iso px, 78 -> 42 % in 3 s with her at 42 %)
                     self.away_from(x, y)
                     # she's now about one hop further along the line from Blizzaga to her
                     v = np.array([x - CENTER[0], y - CENTER[1]], float)
