@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1 now (see 09:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 11:50: antidotes, first numbers; walk back to the waypoint; fight searches past minions.** 14 runs with
+antidotes vs 36 MF runs before: merc deaths 0 vs 7, chickens 2 vs 4, but kills 43 % vs 67 %: fights ran out never
+seeing her (her bar 0 times in 5 of 6, 11:20-11:45); likely the merc, alive now, tanks her out of view while Blizzaga
+shot minions at the entrance. Fix: 6 non-her finds and 20 s without her -> toward_throne (as after empty sweeps).
+Town stops end with back_to_wp (stash label + (1012, 127)) instead of a fresh game. Belt: antidote columns never take
+the last healing/mana column (_antidote_cols); a looted rejuv can fill an emptied antidote column (no stop until it's
+drunk). Re-measure kills/hour (9.7 before antidotes) over the next ~20 runs; drop the 30 s antidote round if needed.
+
 **2026-11-23 10:55: Act 1 town all live; antidotes (Stephen's idea).** Seen in real runs: Charsi repair, Kashya revive
 x2 (widest menu line = Resurrect), Akara heal + potions, Act 1 stash stop (stowaway via open_stash_a1: 4 stashed, 22 s).
 Fixed: the loop's periodic stow sent her to the Act 1 stash for nothing (now only < min_free). Antidotes: Akara (395,148)
