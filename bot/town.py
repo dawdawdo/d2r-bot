@@ -667,6 +667,22 @@ def revive_merc(bot: Controller) -> bool:
     tcfg = bot.cfg["town"]
     a = tcfg["asheara"]
     walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]] + a["route"])
+    for rnd in range(2):
+        if rnd:  # the open-loop walk fell short (2026-11-23: stopped on the boardwalk short of her hut, or at the
+            # plaza): the last legs once more, then look again
+            log.info("Asheara not in view: the last legs of her walk again")
+            walk_route(bot, a["route"][-3:])
+        done = _resurrect_round(bot, a)
+        if done is not None:
+            return done
+    bot.observe()  # the failure frame should show where the search ended, not the game's first frame
+    bot.save_failure("asheara_not_found")
+    log.warning("Asheara not found; merc not revived")
+    return False
+
+
+def _resurrect_round(bot: Controller, a: dict) -> bool | None:
+    """Look for Asheara around `a["region"]` and Resurrect. True/False once her dialog was reached, None if not found."""
     for attempt, (x, y) in enumerate(_name_points(bot, a["region"])):
         if attempt >= 5:
             break
@@ -698,10 +714,7 @@ def revive_merc(bot: Controller) -> bool:
         log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
         state.save({**st, "gold_needed": True})
         return False
-    bot.observe()  # the failure frame should show where the search ended, not the game's first frame
-    bot.save_failure("asheara_not_found")
-    log.warning("Asheara not found; merc not revived")
-    return False
+    return None
 
 
 def needs_heal(bot: Controller) -> bool:
