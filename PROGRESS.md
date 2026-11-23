@@ -1,7 +1,16 @@
 # Progress
 
-**Current milestone:** Andariel task running (first kill 22:54); tuning for reliability overnight (see 22:55). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel task running: 46 kills overnight, ~60 % per run on the latest code (see 07:00). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 07:00: overnight Andariel tally (22:55-07:00): 105 runs, 46 kills, 0 deaths, 32 chickens, 5 fails.**
+Loot: 11 runes, 3 unique picks (Manald Heal kept; the two at 05:40 likely failed: inventory full), 23 white, 1 gray, 1 key.
+Since 05:00: session protection uses Stephen's last-played inventory as a baseline (back-to-back sessions carry it),
+so the bot's own loot goes to the stowaway again (it had filled the inventory: gems, 3 Twisted Essences of Suffering,
+a Northern Worldstone Shard, the Manald Heal; stashed 05:50). The loot clear hops off monsters instead of waiting
+among them; the fight runs up to 60 s past its limit while she's in it. Open: chickens ~30 % (mostly her minions
+near the door, sometimes right after the kill), merc dies most fights (50k revives; Asheara missed ~1 in 4),
+Ormus misses cost town time. Next: MF gate once Stephen puts her MF gear on (then SoJ odds 1 in ~3,500 kills at p1).
 
 **2026-11-23 05:00: Andariel ~60-70 % kills in the latest code; first unique: Manald Heal (03:38, ilvl 75, in
 Blizzaga's inventory, unidentified).** 02:00-05:00 fixes: Act 1 spawn by the automap area name (area_town_a1/a3.png;
