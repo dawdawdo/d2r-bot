@@ -104,4 +104,9 @@ def players_for(tasks: list, cfg: dict) -> int | None:
     game = cfg["game"]
     if tasks and all(t.name == "meph" for t in tasks):
         return game.get("meph_players") or game.get("players")
+    own = {cfg.get(t.name, {}).get("players") for t in tasks} if tasks else set()
+    if len(own) == 1 and None not in own:
+        # every task has the same /players (Andariel: 1): play at it from the start. 7 then 1 each game cost two chat
+        # commands, and a failed one meant a fight at players 7 (2026-11-23 15:13: chat didn't open; 15:14 a miss)
+        return own.pop()
     return game.get("players")
