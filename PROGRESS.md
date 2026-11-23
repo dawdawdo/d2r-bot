@@ -1,7 +1,17 @@
 # Progress
 
-**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills per run (see 08:30). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; next: Act 1 town services so she never goes to Act 3 (see 09:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 09:15: Andariel runs ~2.5 min (were ~4.5), button on the bot page, filter cut to Archon Plate.**
+Every run had gone Act 1 -> Act 3 stash -> Catacombs because A2_MIN_FREE (12, sized for the tunnels' plates) > the 10-11
+free cells with Gheed's in: tasks can now set `min_free` (andy 6). SoJ projection (drop tables, 222 % MF, p1, 80 %
+kills): 1 per ~3,700 kills; at 4.5-min runs mean ~15 days nonstop (50 % by 10 d, 90 % by 34 d); faster runs cut that.
+convergentblue.com /bot/: Andariel button (index.astro + worker TASKS, commit 8b7253c on main; build with
+`PATH=/data/AutoDev/miniconda3/envs/node22/bin:$PATH npm run build`). Loot filter: RUNEWORD_BASES body armor = Archon
+Plate only (Stephen 11-23); installed with D2R closed (old copy backups/filter-20261123-091113). Uniques this morning:
+The Rising Sun, Kuko Shakaku. Stephen: Andariel runs should **never go to Act 3**. Left: Ormus heal/potions, Asheara
+revive, Hratli repair, stash when < 6 free -> Act 1 equivalents (Akara, Kashya, Charsi, Rogue stash) to build next.
 
 **2026-11-23 08:30: Blizzaga in her MF set (222 %), Andariel 9 kills / 11 runs since 07:41.** Stephen asked me to
 swap the gear myself: tools/gear_swap.py (stash grid measured from a frame: cell (c,r) at (36.6+37.8c, 87.6+37.8r);
