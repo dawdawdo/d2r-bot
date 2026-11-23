@@ -146,6 +146,7 @@ class AndyFight:
             pass
         end = t0 + limit
         self.her_at = 0.0
+        self.minions = 0
         try:
             while time.time() < end or (time.time() < t0 + limit + 60 and time.time() - self.her_at < 12):
                 # past the limit only while she's in the fight (05:19: first seen as the 150 s ran out)
@@ -198,19 +199,21 @@ class AndyFight:
                     if self.life <= 0.06 and casts:  # her bar was nearly empty and now it's gone: dead
                         self.seen_dead = True
                         return True
-                    if misses % 3 == 0:  # nothing in view: one hop toward her throne. From the fight spot (by the
-                        # barrels) she comes from straight above: every kill so far had her bar at (639, 78); up-right
-                        # runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min, never seen)
-                        far = float(np.hypot(*self.offset))
-                        if far > 300:  # drifted off (retreats, minions): back toward the fight spot first
-                            v = -self.offset / far * min(far, 380)
-                            self.say(f"back toward the fight spot ({self.offset.round().tolist()} off)")
-                            self.hop(*v)
-                        else:
-                            self.hop(0, -210)
+                    if misses % 3 == 0:  # nothing in view: one hop toward her throne
+                        self.toward_throne()
                     continue
                 misses = 0
                 (x, y), life, her = hit
+                self.minions = 0 if her else self.minions + 1
+                if (not her and self.minions >= MINION_STREAK
+                        and time.time() - max(self.her_at, t0) > HER_LOST_S):
+                    # only minions for a while: she's elsewhere (with the merc kept alive by antidotes he tanks her
+                    # out of view; 2026-11-23 11:20-11:45 five of six fights ran out never seeing her). Same step
+                    # as an empty sweep
+                    self.minions = 0
+                    self.say(f"minions only, her not seen for {time.time() - max(self.her_at, t0):.0f} s")
+                    self.toward_throne()
+                    continue
                 self.threat = (x, y)
                 if her:
                     self.last, self.life = (x, y), life
@@ -269,6 +272,18 @@ class AndyFight:
             bot.press(sk["teleport"])
             bot.input.move(1270, 590)
         return False
+
+    def toward_throne(self) -> None:
+        """One hop toward her throne. From the fight spot (by the barrels) she comes from straight above: every kill
+        so far had her bar at (639, 78); up-right runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min,
+        never seen). Drifted off (retreats, minions): back toward the fight spot first."""
+        far = float(np.hypot(*self.offset))
+        if far > 300:
+            v = -self.offset / far * min(far, 380)
+            self.say(f"back toward the fight spot ({self.offset.round().tolist()} off)")
+            self.hop(*v)
+        else:
+            self.hop(0, -210)
 
     def clear_minions(self, limit: float = 15) -> None:
         """Blizzard what's still standing around before hopping onto her body (2026-11-23 01:23: killed, then a chicken
@@ -350,6 +365,8 @@ class AndyFight:
         return picked
 
 
+MINION_STREAK = 6      # finds in a row that aren't her ...
+HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
 ANTIDOTE_ROUNDS = 2    # at the stairs, then once more while she's still fighting
 
