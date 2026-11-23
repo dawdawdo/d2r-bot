@@ -108,6 +108,7 @@ class Andariel(Task):
     # (potion_stop, Act 3 games) instead of being swapped for LK while the stash is dry
     needs_rejuvs = False
     vendor_potions = True  # its belt holds Ormus healing potions: heal with those in town before hunting for Ormus
+    min_free = 6  # inventory cells to go straight from the Act 1 spawn: her loot is small (rings, runes, gems, charms)
 
     @classmethod
     def ready(cls, cfg: dict) -> bool:

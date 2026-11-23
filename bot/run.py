@@ -202,7 +202,8 @@ def a2_start_ok(bot: Controller, cfg: dict, tasks, vendor: bool, flag: str = "a2
         log.info("Act 2 spawn: %d empty belt columns -> Act 3 for potions", empty_columns(bot))
         return False
     n = free_cells(bot)
-    ok = n >= A2_MIN_FREE
+    need = min(getattr(t, "min_free", A2_MIN_FREE) for t in tasks)  # Andariel: small loot, 6 (2026-11-23: with
+    ok = n >= need                                                # Gheed's in, 10-11 < 12 sent every run via the stash)
     log.info("Act %s spawn: %d free inventory cells -> %s", flag[1], n, "straight to the task" if ok else "Act 3 first (stash)")
     return ok
 
