@@ -3,8 +3,8 @@
 chamber -> Blizzard -> loot -> save & exit. Games end in Act 1, so the next one spawns at the Rogue Encampment waypoint.
 
 Why her: D2R gives Andariel her quest drop on every kill (monstats: all her Hell treasure classes are Andarielq (H)),
-2-3x Mephisto's rings: about 1 SoJ per 2,500 kills at 280 % MF, /players 3 (PROGRESS 2026-11-22 18:00). No MF gate yet
-(Stephen 2026-11-22: he can't swap the MF gear in now; first runs go at 0 %). Add `andy` to mf.min once he has.
+2-3x Mephisto's rings: about 1 SoJ per 3,500 kills at 280 % MF, /players 1 (PROGRESS 2026-11-22 18:00). MF gate
+mf.min.andy 200: her MF set (Shako, Chance Guards, Oculus, Gheed's; swapped in by tools/gear_swap.py 2026-11-23) reads 222 %.
 
 Ready when both levels' graphs hold a warp that reached the next level ("goal": true).
 """

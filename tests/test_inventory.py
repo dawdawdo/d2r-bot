@@ -35,7 +35,7 @@ def test_protected_cells_1115():
 def test_layout_20261119_protects_gheeds_in_col_4_and_the_skull():
     """2026-11-19: after Stephen played, Gheed's Fortune sat in col 4 rows 0-2 and a Flawless Skull at (3,3); the
     11-15 box let the stowaway stash both. Loot here: keys (3,2) and (0,3), rune (1,3), sapphire (2,3)."""
-    assert len(PROT) == 25 and (3, 3) in PROT and all((4, r) in PROT for r in range(4))
+    assert len(PROT) == 28 and (3, 3) in PROT and all((4, r) in PROT for r in range(4))  # 28: + Gheed's at (0,0) 1x3 (11-23)
     inv = scan(cv2.imread(str(FIX / "layout_20261119.png")), KEY, PROT)
     assert sorted(inv["key"]) == [(0, 3), (3, 2)]
     assert sorted(inv["other"]) == [(1, 3), (2, 3)]
