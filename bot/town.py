@@ -1654,7 +1654,29 @@ def spawn_act(bot: Controller) -> int:
         return 2
     if bot.find("a5_spawn.png", (0, 0, 1280, 450), 0.85):  # Harrogath (other towns reach 0.73)
         return 5
+    if town_by_area_name(bot) == 1:  # a Rogue Encampment spot none of the views know (2026-11-23 02:32: the Act 3
+        return 1                     # walk to Asheara ran into the camp's palisade corner)
     return 3
+
+
+def town_by_area_name(bot: Controller) -> int | None:
+    """1 / 3 from the area name in the automap info ("Rogue Encampment" / "Kurast Docks"; templates area_town_a1.png,
+    area_town_a3.png), None if neither matches or there are no templates. Toggles the automap on and back off."""
+    from .durance import area_score
+    from .vision.screen import ASSETS
+
+    names = {a: f"town_a{a}" for a in (1, 3) if (ASSETS / f"area_town_a{a}.png").exists()}
+    if not names:
+        return None
+    bot.press("tab")
+    bot.kill.sleep(0.6)
+    f = bot.capture.grab()
+    bot.press("tab")
+    bot.kill.sleep(0.2)
+    scores = {a: area_score(f, n) for a, n in names.items()}
+    best = max(scores, key=scores.get)
+    log.info("town by area name: %s", {a: round(v, 2) for a, v in scores.items()})
+    return best if scores[best] >= 0.8 else None
 
 
 A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into view (fixed map, live 2026-10-31)
