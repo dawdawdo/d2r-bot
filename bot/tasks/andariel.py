@@ -109,6 +109,7 @@ class Andariel(Task):
     needs_rejuvs = False
     vendor_potions = True  # its belt holds Ormus healing potions: heal with those in town before hunting for Ormus
     min_free = 6  # inventory cells to go straight from the Act 1 spawn: her loot is small (rings, runes, gems, charms)
+    needs_merc = True  # never fight her without the merc (bot/run.py: the run fails, the next one revives)
     a1_town = True  # stash, Akara, Kashya, Charsi in the Rogue Encampment: never Act 3 (Stephen 2026-11-23; bot/a1town.py)
 
     @classmethod

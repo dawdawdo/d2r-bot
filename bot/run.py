@@ -108,11 +108,18 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             log.info("Act 1 spawn: %d free inventory cells%s", n, f" (< {need}: stash)" if n < need else "")
             # only a near-full inventory sends her to the stash: the loop's periodic stow is for the Act 3 route, which
             # passes the stash anyway (2026-11-23 09:48: a walk and a fresh game for 0 items)
+            fails0 = getattr(bot, "merc_fails", 0)
             if town_stop(bot, cfg, repair=repair, stow=n < need):
                 save_and_exit(bot)  # the stops end far from the waypoint
                 create_game(bot, cfg["game"]["difficulty"])
                 bot.wait_for("in_game", 10)
             stow = False
+            if (any(getattr(t, "needs_merc", False) for t in tasks) and getattr(bot, "merc_fails", 0) > fails0
+                    and not merc_alive(bot)):
+                # her poison is all on Blizzaga without him (2026-11-23 12:07: chicken at 23 % after Kashya was
+                # missed): no fight this run; the next one tries the revive again
+                bot.merc_revive, bot.merc_wait = True, 0
+                raise BotError("merc dead and not revived: no Andariel without him")
         elif needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             from .town import heal_with_belt
 
