@@ -76,11 +76,16 @@ def town_automap(bot: Controller) -> np.ndarray:
     from .controller import BotError
     from .durance import map_text_open
 
+    from .vision.inventory import inventory_open
+
     for _ in range(3):
         f = bot.capture.grab()
         if map_text_open(f):
             return f
         close_npc(bot)
+        if inventory_open(f):  # a trade window or the stash still up (a lost Esc, 2026-11-23 11:52): Tab does nothing
+            bot.press("esc")
+            bot.kill.sleep(0.4)
         bot.press("tab")
         for _ in range(6):  # Proton shows the map late
             bot.kill.sleep(0.25)
@@ -397,6 +402,12 @@ def buy_antidotes(bot: Controller) -> int:
         bot.click(*AKARA["antidote"], "right")
         bot.kill.sleep(0.5)
     bought = sorted(before - empty())
+    if n and not bought:  # nothing arrived: no gold on her (2026-11-23 11:52: two revives took it all). The next
+        from . import state  # stash stop withdraws (town_stop -> withdraw_gold)
+
+        log.warning("Akara: no antidote bought (no gold?): withdrawing at the next stash stop")
+        state.save({**state.load(), "gold_needed": True})
+        return 0
 
     def cell(c: int, r: int) -> tuple[int, int]:
         return int(INV0[0] + INV_P * c + INV_P / 2), int(INV0[1] + INV_P * r + INV_P / 2)
