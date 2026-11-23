@@ -98,16 +98,39 @@ class AndyFight:
                 bot.check()
             bot.input.move(x, y)
             bot.kill.sleep(0.05)
-            nb = name_bar(bot.capture.grab())
+            frame = bot.capture.grab()
+            nb = name_bar(frame)
             if nb is None:
                 continue
             if nb.get("andariel"):
                 return (x, y), nb["life"], True
+            self._save_name(frame, x, y)
             if other is None:
                 other = ((x, y), nb["life"], False)
                 if i >= 12:  # well into the sweep with no sign of her: hit what's here now
                     break
         return other
+
+    def _save_name(self, frame, x: int, y: int) -> None:
+        """Debug (2026-11-23): fights that never see her keep finding a full-life monster where her bar always shows
+        (639, 78). Save the name bars that aren't hers (a few per fight) to check whether hers reads differently."""
+        n = getattr(self, "names_saved", 0)
+        if n >= 12 or time.time() - getattr(self, "name_saved_at", 0.0) < 3:
+            return
+        try:
+            import cv2
+
+            from .config import ROOT
+            from .vision.namebar import BAR
+
+            bx, by, bw, bh = BAR
+            out = ROOT / "logs" / "andy" / "names"
+            out.mkdir(parents=True, exist_ok=True)
+            crop = frame[max(0, by - 12):by + bh + 40, max(0, bx - 80):bx + bw + 80]
+            cv2.imwrite(str(out / f"{time.strftime('%m%d-%H%M%S')}_{x}_{y}.png"), crop)
+            self.names_saved, self.name_saved_at = n + 1, time.time()
+        except Exception:  # debugging only: never break the fight
+            pass
 
     # -- moving -----------------------------------------------------------------------------------
     def hop(self, dx: float, dy: float) -> None:
