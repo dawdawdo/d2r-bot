@@ -449,83 +449,90 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
             bot.save_failure("ormus_trade_not_opened")
             bot.press("esc")
             return False
-        from .vision.orbs import belt_kinds
-
-        def kinds():
-            return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
-
-        from .vision.inventory import protected_cells, scan as inv_scan
-
-        tpl = bot._templates.get("inv_key.png")
-        if tpl is None:
-            tpl = bot._templates["inv_key.png"] = cv2.imread(str(ASSETS / "inv_key.png"))
-        prot = protected_cells(bot.cfg["inventory"]["protected"])
-
-        def free() -> int:  # the trade screen shows the inventory where it always is
-            bot.input.move(640, 600)
-            bot.kill.sleep(0.1)
-            return len(inv_scan(bot.capture.grab(), tpl, prot)["empty"])
-
-        free0 = free()
-        spilled = [False]
-
-        def buy(pt, shift: bool = True):
-            if spilled[0]:
-                return
-            if shift:
-                bot.input.key_down("shift")
-                bot.kill.sleep(0.05)
-            bot.click(*pt, "right")
-            bot.kill.sleep(0.05)
-            if shift:
-                bot.input.key_up("shift")
-            bot.kill.sleep(0.5)
-            if free() < free0:  # it went to the inventory, not the belt: stop (2026-11-13 19:17: 8 potions, then stashed)
-                spilled[0] = True
-                bot.save_failure("potion_buy_spilled")
-                log.warning("Ormus: a potion buy landed in the inventory; no more buys this stop")
-
-        # Shift+right-click fills every empty belt column with that potion (live 2026-11-01: 4 x red).
-        # So: one red (plain right-click) claims the first empty column, shift-blue fills the rest,
-        # shift-red tops up the red column. Belt = 1 column red (life), 3 blue (mana = the shield).
-        if fill == "healing":
-            for i in range(3):
-                if None not in kinds():
-                    break
-                buy(o["healing_potion"])
-        elif fill == "mixed":  # tunnels (Stephen 2026-11-13): healing + mana, about half each (mana = Energy Shield)
-            # Plain buys only, one potion a click: shift-buys with a part-full belt put the rest in the inventory
-            # (19:17 healing x8, 19:46 mana x8; the guard's check came before the items showed). Each potion goes
-            # to the first belt slot with room; the first one that lands in the inventory ends the stop.
-            for i in range(16):
-                k = kinds()
-                want = "healing_potion" if sum(x == "hp" for x in k) <= sum(x == "mp" for x in k) else "mana_potion"
-                before = free()
-                buy(o[want], shift=False)
-                bot.kill.sleep(0.6)  # Proton: the inventory shows a new item late
-                if spilled[0] or free() < before:
-                    spilled[0] = True
-                    log.info("Ormus: belt full after %d potion(s) (the last one went to the inventory)", i)
-                    break
-        else:
-            if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
-                buy(o["healing_potion"], shift=False)
-            for i in range(3):
-                if None not in kinds():
-                    break
-                buy(o["mana_potion"])
-        # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
-        # 2026-11-02: healing + mana potions piling up on shared page 1)
-        ok = None not in kinds() or (fill == "mixed" and spilled[0])
-        bot.press("esc")
-        bot.kill.sleep(0.5)
-        log.info("Ormus: potions bought, belt %s %s", kinds(), "full" if ok else "NOT full")
-        if not ok:
-            bot.save_failure("belt_not_full_after_buying")
-        return ok
+        return buy_potions_in_trade(bot, o, fill, "Ormus")
     bot.save_failure("ormus_not_found")
     bot.ormus_missed = True  # he wanders: not a gold problem (the tunnels must not withdraw for this)
     return False
+
+
+def buy_potions_in_trade(bot: Controller, o: dict, fill: str = "mana", who: str = "Ormus") -> bool:
+    """With a vendor's trade window open on Misc: potions into the belt (o: healing_potion / mana_potion points).
+    fill: "mana" (1 red column, the rest blue), "healing" (every empty column red), "mixed" (one potion a click,
+    about half each; stops when one lands in the inventory). Closes the window. True if the belt reads full."""
+    from .vision.orbs import belt_kinds
+
+    def kinds():
+        return belt_kinds(bot.capture.grab(), bot.cfg["vision"]["belt"])
+
+    from .vision.inventory import protected_cells, scan as inv_scan
+
+    tpl = bot._templates.get("inv_key.png")
+    if tpl is None:
+        tpl = bot._templates["inv_key.png"] = cv2.imread(str(ASSETS / "inv_key.png"))
+    prot = protected_cells(bot.cfg["inventory"]["protected"])
+
+    def free() -> int:  # the trade screen shows the inventory where it always is
+        bot.input.move(640, 600)
+        bot.kill.sleep(0.1)
+        return len(inv_scan(bot.capture.grab(), tpl, prot)["empty"])
+
+    free0 = free()
+    spilled = [False]
+
+    def buy(pt, shift: bool = True):
+        if spilled[0]:
+            return
+        if shift:
+            bot.input.key_down("shift")
+            bot.kill.sleep(0.05)
+        bot.click(*pt, "right")
+        bot.kill.sleep(0.05)
+        if shift:
+            bot.input.key_up("shift")
+        bot.kill.sleep(0.5)
+        if free() < free0:  # it went to the inventory, not the belt: stop (2026-11-13 19:17: 8 potions, then stashed)
+            spilled[0] = True
+            bot.save_failure("potion_buy_spilled")
+            log.warning("%s: a potion buy landed in the inventory; no more buys this stop", who)
+
+    # Shift+right-click fills every empty belt column with that potion (live 2026-11-01: 4 x red).
+    # So: one red (plain right-click) claims the first empty column, shift-blue fills the rest,
+    # shift-red tops up the red column. Belt = 1 column red (life), 3 blue (mana = the shield).
+    if fill == "healing":
+        for i in range(3):
+            if None not in kinds():
+                break
+            buy(o["healing_potion"])
+    elif fill == "mixed":  # tunnels (Stephen 2026-11-13): healing + mana, about half each (mana = Energy Shield)
+        # Plain buys only, one potion a click: shift-buys with a part-full belt put the rest in the inventory
+        # (19:17 healing x8, 19:46 mana x8; the guard's check came before the items showed). Each potion goes
+        # to the first belt slot with room; the first one that lands in the inventory ends the stop.
+        for i in range(16):
+            k = kinds()
+            want = "healing_potion" if sum(x == "hp" for x in k) <= sum(x == "mp" for x in k) else "mana_potion"
+            before = free()
+            buy(o[want], shift=False)
+            bot.kill.sleep(0.6)  # Proton: the inventory shows a new item late
+            if spilled[0] or free() < before:
+                spilled[0] = True
+                log.info("%s: belt full after %d potion(s) (the last one went to the inventory)", who, i)
+                break
+    else:
+        if not any(k in ("hp", "rejuv") for k in kinds()) and None in kinds():
+            buy(o["healing_potion"], shift=False)
+        for i in range(3):
+            if None not in kinds():
+                break
+            buy(o["mana_potion"])
+    # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
+    # 2026-11-02: healing + mana potions piling up on shared page 1)
+    ok = None not in kinds() or (fill == "mixed" and spilled[0])
+    bot.press("esc")
+    bot.kill.sleep(0.5)
+    log.info("%s: potions bought, belt %s %s", who, kinds(), "full" if ok else "NOT full")
+    if not ok:
+        bot.save_failure("belt_not_full_after_buying")
+    return ok
 
 
 def chat(bot: Controller, text: str) -> bool:
@@ -696,25 +703,30 @@ def _resurrect_round(bot: Controller, a: dict) -> bool | None:
         bot.kill.sleep(1.5)
         bot.press("esc")
         bot.kill.sleep(0.5)
-        from . import state
-
-        if merc_alive(bot):
-            log.info("merc resurrected at Asheara")
-            state.save({**state.load(), "withdrew_unspent": False, "stash_gold_empty": False})
-            return True
-        bot.save_failure("merc_not_resurrected")
-        st = state.load()
-        if st.get("withdrew_unspent") or st.get("stash_gold_empty"):
-            # the withdrawal just before this try bought nothing: the shared stash has no gold (2026-11-15: 3.86M
-            # spent in a day; she walked to Asheara and the stash every run). No more stash trips: chest gold
-            # (loot.pick_gold) pays the next revive
-            log.warning("merc still dead after Resurrect and the last withdrawal didn't help: stash gold is empty")
-            state.save({**st, "withdrew_unspent": False, "stash_gold_empty": True, "gold_needed": False})
-            return False
-        log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
-        state.save({**st, "gold_needed": True})
-        return False
+        return resurrect_result(bot, "Asheara")
     return None
+
+
+def resurrect_result(bot: Controller, who: str) -> bool:
+    """After clicking Resurrect and closing the dialog: the merc up? Else note the gold problem (logs/state.json)."""
+    from . import state
+
+    if merc_alive(bot):
+        log.info("merc resurrected at %s", who)
+        state.save({**state.load(), "withdrew_unspent": False, "stash_gold_empty": False})
+        return True
+    bot.save_failure("merc_not_resurrected")
+    st = state.load()
+    if st.get("withdrew_unspent") or st.get("stash_gold_empty"):
+        # the withdrawal just before this try bought nothing: the shared stash has no gold (2026-11-15: 3.86M
+        # spent in a day; she walked to Asheara and the stash every run). No more stash trips: chest gold
+        # (loot.pick_gold) pays the next revive
+        log.warning("merc still dead after Resurrect and the last withdrawal didn't help: stash gold is empty")
+        state.save({**st, "withdrew_unspent": False, "stash_gold_empty": True, "gold_needed": False})
+        return False
+    log.warning("merc still dead after Resurrect (not enough gold?): withdrawing at the next stash stop")
+    state.save({**st, "gold_needed": True})
+    return False
 
 
 def needs_heal(bot: Controller) -> bool:
@@ -888,6 +900,10 @@ def open_stash(bot: Controller, attempts: int = 3) -> bool:
     """Click the stash chest (found by template; the route's end point varies by a few dozen px)
     and wait for its panel. An NPC (often Cain) standing on it eats the click and opens a dialog:
     close it with Esc and try again."""
+    if getattr(bot, "act", 3) == 1:  # the Rogue Encampment's chest (Andariel games, bot/a1town.py)
+        from .a1town import open_stash_a1
+
+        return open_stash_a1(bot)
     scfg = bot.cfg["stash"]
     for attempt in range(attempts):
         loc = bot.find("town_stash.png", region=(0, 0, 1280, 560), threshold=0.75)

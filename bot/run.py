@@ -54,7 +54,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
         bot.act = spawn_act(bot) if mode == "chests" else 3
         flag = {1: "a1_start", 2: "a2_start"}.get(bot.act)  # the Pit's games end in Act 1, the tunnels' in Act 2
         a2 = bool(flag) and tasks and all(getattr(t, flag, False) for t in tasks)
-        if a2 and a2_start_ok(bot, cfg, tasks, repair or buy_keys, flag):
+        # Act 1 games (Andariel): stash and vendors in the Rogue Encampment, never Act 3 (Stephen 2026-11-23)
+        a1_town = bot.act == 1 and bool(tasks) and all(getattr(t, "a1_town", False) for t in tasks)
+        if a1_town:
+            buy_keys = False  # only chest runs use keys
+        elif a2 and a2_start_ok(bot, cfg, tasks, repair or buy_keys, flag):
             stow = False  # room enough: the stash waits for a game that starts in Act 3
         elif leave_other_act(bot, bot.act):  # Stephen's own game ended in Act 1 or 2 (or the tunnels' did)
             bot.act = spawn_act(bot)
@@ -71,7 +75,7 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                              or (bot.merc_revive and not merc_alive(bot)) or state.load().get("gold_needed")):
             restart_in_act3(bot)  # stash and vendors are all in Act 3
             bot.act = 3
-        if mode == "chests" and bot.merc_revive and not merc_alive(bot):
+        if mode == "chests" and not a1_town and bot.merc_revive and not merc_alive(bot):
             log.info("merc is dead -> Asheara")
             if revive_merc(bot):
                 bot.merc_fails = 0
@@ -95,7 +99,19 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                 bot.keys_left, buy_keys = (n if n >= 10 else 6), False
                 log.info("keys: at least %d in the inventory (estimate was low); not buying", n)
         repair = repair or buy_keys  # same vendor
-        if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
+        if a1_town:
+            from .a1town import town_stop
+            from .town import free_cells
+
+            need = min(getattr(t, "min_free", A2_MIN_FREE) for t in tasks)
+            n = free_cells(bot)
+            log.info("Act 1 spawn: %d free inventory cells%s", n, f" (< {need}: stash)" if n < need else "")
+            if town_stop(bot, cfg, repair=repair, stow=stow or n < need):
+                save_and_exit(bot)  # the stops end far from the waypoint
+                create_game(bot, cfg["game"]["difficulty"])
+                bot.wait_for("in_game", 10)
+            stow = False
+        elif needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
             from .town import heal_with_belt
 
             vendor = getattr(bot, "keep_vendor_potions", False) or any(getattr(t, "vendor_potions", False) for t in tasks)
