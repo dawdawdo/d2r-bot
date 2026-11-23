@@ -1,7 +1,16 @@
 # Progress
 
-**Current milestone:** Andariel task (SoJs) running under the supervisor, fight being tuned (see 21:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** LK overnight; Andariel task (SoJs): route done, fight not safe yet (see 22:45). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-22 22:45: Andariel runs paused (LK back on for the night): 7 runs = 1 timeout with her at 22 %, 4 chickens
+(life fell to 17-18 % before the check), 1 died (86 % -> 0 in ~7 s), 1 town fail.** Blizzaga kept all 12 items (save:
+equipped 12, no corpse). Fixed during the evening: Ormus belt potions drunk in fights, buffs cast on Level 3 not at the
+Level 4 stairs, terror check from the area info line, search hops select Teleport, isometric distance + one-hop retreat,
+whole-view search, belt potions heal in town instead of hunting Ormus, Act 1 spawn told by its waypoint. **Next:** (1) merc
+alive first: Asheara isn't found ("merc_not_resurrected", gold_needed set; stash has 7.6M); (2) the fight needs to stay out
+of her poison: a fixed safe spot (like Meph's) to Blizzard from as she walks in, and earlier chicken in her room (her
+poison outruns the 35 % check); (3) rejuvs back (LK save_rejuvs) before more Andariel; (4) players 3 + MF gate later.
 
 **2026-11-22 21:50: Andariel task (`andy`) runs end to end; no kill yet. Supervisor on `andy` (Stephen: first runs at 0 % MF).**
 Route: waypoint Catacombs 2 -> Level 3 -> Level 4 in ~35 s, every run since the fixes (bot/tasks/andariel.py: distance-
