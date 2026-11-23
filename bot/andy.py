@@ -29,6 +29,8 @@ RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield
 
 
 def hops(bot, route: str) -> None:
+    bot.press(bot.cfg["hotkeys"]["skills"]["teleport"])  # after a Blizzard / Glacial Spike the right-click casts that
+    bot.kill.sleep(0.1)                                  # (2026-11-22 21:58: 40 s "hopping" in place at the barrels)
     for seg in route.split(";"):
         dx, dy, n = (int(v) for v in seg.split(","))
         dx, dy = in_play(dx, dy)
