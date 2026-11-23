@@ -28,7 +28,7 @@ TOO_CLOSE = 520    # iso px (screen dy counts double): one hop back. Blizzard la
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
 STATICS = 2
-LOST_DEAD = 0.35   # her life when last seen, below which "gone for 3 sweeps" counts as dead
+LOST_DEAD = 0.40   # her life when last seen, below which "gone for 3 sweeps" counts as dead
 RETREAT_HP = 70    # % life: two hops out of her reach, let potions / the shield catch up
 
 
@@ -66,6 +66,7 @@ class AndyFight:
         self.wide = False  # add the whole-view grid to the sweep
         self.statics = 0  # Static Fields cast on her so far
         self.since_her = 0  # sweeps since her bar last showed
+        self.come_back: tuple[float, float] | None = None  # unit vector back toward her after a life retreat
         self.retreat_at = 0.0
 
     # -- finding her ------------------------------------------------------------------------------
@@ -149,6 +150,10 @@ class AndyFight:
                 threat = self.last or self.threat
                 if (bot.hp or 100) < RETREAT_HP and threat and time.time() - self.retreat_at > 2.5:
                     self.say(f"HP {bot.hp:.0f}%: away from {threat}")
+                    if self.last:  # remember the way back to her (00:56: retreated at her 37 % and never found her again)
+                        v = np.array([self.last[0] - CENTER[0], self.last[1] - CENTER[1]], float)
+                        n = float(np.hypot(*v)) or 1.0
+                        self.come_back = (v[0] / n, v[1] / n)
                     self.away_from(*threat)
                     self.away_from(*threat)
                     self.last = self.threat = None
@@ -164,6 +169,16 @@ class AndyFight:
                     self.seen_dead = True
                     self.say(f"her bar last read {self.life:.2f} and is gone for 3 sweeps: dead")
                     return True
+                if hit is None and self.come_back and (bot.hp or 0) >= 80:
+                    # life is back after a retreat from her: one hop back the way we came
+                    ux, uy = self.come_back
+                    self.come_back = None
+                    dx, dy = in_play(ux * 380, uy * 380)
+                    bot.press(sk["teleport"])
+                    bot.click(int(CENTER[0] + dx), int(CENTER[1] + dy), "right", hover=0)
+                    bot.sleep(TP_SETTLE + frame_lag(bot) + 0.1)
+                    self.say("back toward her after the retreat")
+                    continue
                 if hit is None:
                     misses += 1
                     self.wide = misses >= 2  # two empty sweeps: next one covers the whole view
