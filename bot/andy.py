@@ -426,7 +426,9 @@ MINION_STREAK = 3      # finds in a row that aren't her ...
 HER_LOST_S = 10.0      # ... with her unseen this long: go look for her (toward_throne). 6 / 20 s: the search began
                        # 63 s in and found her 2 min in, too late to kill her (17:27; a sweep takes ~5 s)
 EMPTY_SWEEPS = 2       # empty sweeps in a row before the next search point (was 3)
-ANTIDOTE_MERC = False  # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
+ANTIDOTE_MERC = True   # experiment 2026-11-23 18:20: back on now that the search finds her (pattern, last-seen spot);
+                       # merc deaths 3 -> 6 /h and chickens rising without. Before the search (12:56) it read:
+                       # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
                        # Blizzaga's view: 10:49-12:50 ~45 % kills, 10 fights never saw her; without, 9 of 11 kills,
                        # none unseen, 2 merc deaths (revived at Kashya)
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
