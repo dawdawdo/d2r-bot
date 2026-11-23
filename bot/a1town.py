@@ -278,6 +278,7 @@ def talk(bot: Controller, name: str, off: tuple[float, float]) -> tuple[int, int
 
 
 # --- the services ------------------------------------------------------------------------------------------------
+RESTOCK_AFTER = 3   # belt potions drunk since the last refill that send her to Akara even with no column empty
 NEAR = 350          # close enough: a click on an NPC or the stash walks her the rest of the way (closer, the walk
                     # clicks landed on Warriv beside the stash: his menu has Go East, 2026-11-23)
 STASH_UP = 10       # the chest's body above the spot its label marks
@@ -549,6 +550,7 @@ def restock_at_akara(bot: Controller) -> bool:
         _buy(bot, "healing_potion", 4, until_spill=True)
         _buy(bot, "mana_potion", 4, until_spill=True)
     log.info("Akara: belt %s", kinds())
+    bot.potions_used = 0
     bot.press("esc")
     bot.kill.sleep(0.5)
     return True
@@ -594,7 +596,9 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
     if hp_low and heal_with_belt(bot, cfg["town"]["heal_below_pct"]):
         log.info("healed with belt potions (HP %.0f%%)", bot.hp or 0)
         hp_low = needs_heal(bot)
-    belt = empty_columns(bot) >= 1
+    used = getattr(bot, "potions_used", 0)
+    belt = empty_columns(bot) >= 1 or used >= RESTOCK_AFTER  # 16:49: a fight began on a half-used belt (only the
+    # bottom row shows) and ran dry: no healing, no antidote; her death burst then chickened her with the loot down
     if hp_low or belt:
         log.info("Act 1: Akara (%s)", ", ".join(w for w, on in (("heal", hp_low), ("potions", belt)) if on))
         walked = True

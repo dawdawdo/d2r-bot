@@ -427,6 +427,7 @@ def antidotes(bot, why: str) -> int:
             bot.input.key_down("shift")
             bot.kill.sleep(0.05)
         bot.press(key)
+        bot.potions_used = getattr(bot, "potions_used", 0) + 1
         bot.kill.sleep(0.05)
         if merc:
             bot.input.key_up("shift")

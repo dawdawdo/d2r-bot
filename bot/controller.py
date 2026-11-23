@@ -138,6 +138,7 @@ class Controller:
                 log.info("chicken at HP %.0f%%: potion %s on the way out", self.hp, key)
                 self._ensure_foreground()
                 self.input.press(key)
+                self.potions_used = getattr(self, "potions_used", 0) + 1
             raise Chicken(f"HP {self.hp}% < {s['chicken_hp_pct']}%")
         # Energy Shield gone (mana empty) while already hurt: life falls very fast from here.
         if self.mp < s.get("es_broken_mp_pct", 0) and self.hp < s.get("es_broken_hp_pct", 0):
@@ -150,6 +151,7 @@ class Controller:
                 log.info("energy shield broken (HP %.0f%% MP %.0f%%) -> potion %s", self.hp, self.mp, key)
                 self._ensure_foreground()
                 self.input.press(key)
+                self.potions_used = getattr(self, "potions_used", 0) + 1
                 return
             if self.flee_ok and self.hp >= s.get("flee_hp_pct", 60):
                 if self.clock() < self._flee_quiet:
@@ -174,6 +176,7 @@ class Controller:
                     log.info("poisoned (HP %.0f%%) -> antidote %s", self.hp, key)
                     self._ensure_foreground()
                     self.input.press(key)
+                    self.potions_used = getattr(self, "potions_used", 0) + 1
                     return
         low = not self.no_potions and (self.hp < s["potion_hp_pct"] or self.mp < s.get("potion_mp_pct", 0))
         if low and self.clock() - self._last_potion > self.cfg["safety"].get("potion_cooldown_s", 1.5):
@@ -185,6 +188,9 @@ class Controller:
             log.info("HP %.0f%% MP %.0f%% -> potion %s", self.hp, self.mp, key)
             self._ensure_foreground()
             self.input.press(key)
+            # belt potions drunk since the last refill: the belt reader sees only the bottom row, so a column with
+            # one potion left looks full (bot/a1town.py refills at Akara after RESTOCK_AFTER of these)
+            self.potions_used = getattr(self, "potions_used", 0) + 1
 
     def potion_key(self, want: str | None = None) -> str | None:
         """Hotkey of the first belt slot that still holds a potion (None if all empty). With `want`
