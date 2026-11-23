@@ -14,7 +14,7 @@ Steps (in order, one game per command):
   poke:NAME      click where goto found NAME, frame poke_NAME.png (no dialog check)
   talk:NAME      click that NPC (after goto), frame talk_NAME.png (its dialog)
   line:N         click the Nth line below TALK in the open NPC menu (1 = the line after Talk)
-  stash / akara[:buy] / kashya / charsi   the real Act 1 services (bot/a1town.py)
+  stash / akara[:buy] / kashya / charsi / towp   the real Act 1 services (bot/a1town.py)
   press:KEY[,N]  press a key N times; rclick:X,Y[,N]  right-click N times (buy)
   srclick:X,Y  shift+right-click; inv  toggle inventory; drinkinv:C,R;C,R  right-click inventory cells
   beltinv:C,R;C,R  shift+left-click inventory cells (potion to belt); spress:KEY  shift+key (potion to merc)
@@ -31,7 +31,7 @@ import cv2
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from bot.a1town import (BODY_UP, akara_stop, charsi_repair, close_npc, npc_menu, open_stash_a1,  # noqa: E402
+from bot.a1town import (BODY_UP, akara_stop, back_to_wp, charsi_repair, close_npc, npc_menu, open_stash_a1,  # noqa: E402
                         revive_merc_a1, talk, town_automap, town_map_off, walk_to)
 from bot.nav import CENTER  # noqa: E402
 from bot.config import ROOT  # noqa: E402
@@ -182,6 +182,9 @@ def main() -> int:
                 bot.kill.sleep(0.05)
                 bot.input.key_up("shift")
                 bot.kill.sleep(0.8)
+            elif name == "towp":  # the real walk back to the waypoint (a1town.back_to_wp), frame towp.png
+                print(f"  back at the waypoint: {back_to_wp(bot)}", flush=True)
+                cv2.imwrite(str(OUT / "towp.png"), bot.capture.grab())
             elif name == "esc":  # only when an NPC menu is up (a1town.close_npc); escx: any panel (trade, stash)
                 close_npc(bot)
             elif name == "escx":

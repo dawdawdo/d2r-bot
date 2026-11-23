@@ -39,15 +39,21 @@ def _template(name: str) -> np.ndarray:
     return _tpl[name]
 
 
+LABEL_BOX = 300  # px around her marker: labels show within ~1,200 world px (150 automap px); farther matches are
+                 # noise (2026-11-23: a "stash" 3,164 px off, then 149 px the next read)
+
+
 def map_labels(frame: np.ndarray, names=NAMES) -> dict[str, tuple[int, int, float]]:
     """Automap labels in view: name -> (label centre x, y, score)."""
+    x0, y0 = max(0, MAP_PLAYER[0] - LABEL_BOX), max(0, MAP_PLAYER[1] - LABEL_BOX)
+    crop = frame[y0:MAP_PLAYER[1] + LABEL_BOX, x0:MAP_PLAYER[0] + LABEL_BOX]
     out = {}
     for n in names:
         t = _template(n)
-        r = cv2.matchTemplate(frame, t, cv2.TM_CCOEFF_NORMED)
+        r = cv2.matchTemplate(crop, t, cv2.TM_CCOEFF_NORMED)
         _, mx, _, loc = cv2.minMaxLoc(r)
         if mx >= LABEL_MIN:
-            out[n] = (loc[0] + t.shape[1] // 2, loc[1] + t.shape[0] // 2, float(mx))
+            out[n] = (x0 + loc[0] + t.shape[1] // 2, y0 + loc[1] + t.shape[0] // 2, float(mx))
     return out
 
 
@@ -115,48 +121,60 @@ def close_npc(bot: Controller) -> None:
 VIA = {"stash": ("kashya", "akara"), "charsi": ("stash", "kashya", "akara"), "kashya": ("stash", "akara"),
        "akara": ("kashya", "stash")}  # Charsi's label shows from the stash, not from Kashya's spot (2026-11-23)
 VIA_NEAR = 300  # walk this close to a VIA label, then look for the target's again
+VIA["wp"] = ("kashya", "akara")
+ANCHOR = {"wp": ("stash", (1012, 127))}  # no label of its own: the waypoint from the stash's (2 frames agree within
+                                        # 8 px, 2026-11-23)
 
 
 def walk_to(bot: Controller, name: str, near: float = 200, steps: int = 12) -> tuple[float, float] | None:
     """Walk until `name` is within `near` px (isometric distance). Returns its offset from her (view px), or None.
     Each click aims SHORT px short of the target, so it doesn't land on the NPC (that talks to her). Labels show only
     within ~1,200 px of her (2026-11-23: Charsi and the stash not drawn from Akara's spot): until the target's shows,
-    walk toward a VIA label (Kashya stands by the stash, Charsi is beyond it)."""
-    last = None
+    walk toward a VIA label (Kashya stands by the stash, Charsi is beyond it). Walls (walks are straight lines): a
+    step without progress slides off at +-60 degrees, toward a VIA label too (2026-11-23: stuck 810 px from the
+    stash on the way to Charsi)."""
+    last = None  # (goal, dx, dy) of the last step
     missing = blocked = 0
     for i in range(steps):
         f = town_automap(bot)
-        labs = map_labels(f, (name,) + VIA.get(name, ()))
-        lab = labs.get(name)
-        via = next(((v, labs[v]) for v in VIA.get(name, ()) if v in labs), None)
-        if lab is None and via is not None:
-            vdx, vdy = world_offset(via[0], via[1])
-            vd = math.hypot(vdx, 2 * vdy)
-            if vd > VIA_NEAR:
-                log.info("%s: no label yet; toward %s, %.0f px away", name, via[0], vd)
-                if npc_menu(bot, f) is not None:
-                    close_npc(bot)
-                k = max(0.0, (vd - SHORT) / vd)
-                bot.click(*_step(vdx * k, vdy * k))
-                bot.kill.sleep(1.0)
+        look, (ax, ay) = ANCHOR.get(name, (name, (0, 0)))
+        labs = map_labels(f, (look,) + VIA.get(name, ()))
+        if look in labs:
+            goal = name
+            dx, dy = world_offset(look, labs[look])
+            dx, dy = dx + ax, dy + ay
+        else:
+            via = next((v for v in VIA.get(name, ()) if v in labs), None)
+            if via is None:
+                missing += 1
+                log.info("%s: no automap label (%d)", name, missing)
+                if missing >= 3:
+                    return None
+                bot.click(*_step(0, 200 if missing == 1 else -200))  # off whoever hides it / into unrevealed map
+                bot.kill.sleep(1.2)
                 continue
-        if lab is None:
+            goal = via
+            dx, dy = world_offset(via, labs[via])
+        d = math.hypot(dx, 2 * dy)
+        if last is not None and last[0] == goal and math.hypot(dx - last[1], dy - last[2]) > 1500:
+            log.info("%s: %s read %.0f px away, a jump: reading again", name, goal, d)  # 11-23: 349 -> 3157 -> 171
+            last = None
+            continue
+        log.info("%s: %s%.0f px away (%.0f, %.0f)", name, "" if goal == name else f"no label yet; {goal} ", d, dx, dy)
+        if goal == name and d <= near:
+            return dx, dy
+        if goal != name and d <= VIA_NEAR:  # by the VIA label and still no target label: look around
             missing += 1
-            log.info("%s: no automap label (%d)", name, missing)
             if missing >= 3:
                 return None
-            bot.click(*_step(0, 200 if missing == 1 else -200))  # off whoever hides it / into unrevealed map
+            bot.click(*_step(0, 200 if missing == 1 else -200))
             bot.kill.sleep(1.2)
+            last = None
             continue
-        dx, dy = world_offset(name, lab)
-        d = math.hypot(dx, 2 * dy)
-        log.info("%s: %.0f px away (%.0f, %.0f)", name, d, dx, dy)
-        if d <= near:
-            return dx, dy
-        stuck = last is not None and abs(dx - last[0]) + abs(dy - last[1]) < 30
+        stuck = last is not None and last[0] == goal and abs(dx - last[1]) + abs(dy - last[2]) < 30
         if npc_menu(bot, f) is not None:
             close_npc(bot)  # a walk click talked to someone
-        elif stuck:  # a wall or fence in the way (walks are straight lines): slide off at +-60 degrees, then on
+        elif stuck:
             blocked += 1
             a = math.atan2(dy, dx) + math.radians(60 if blocked % 2 else -60) * (1 + (blocked - 1) // 2 * 0.5)
             log.info("%s: no progress; detour %d", name, blocked)
@@ -164,7 +182,7 @@ def walk_to(bot: Controller, name: str, near: float = 200, steps: int = 12) -> t
             bot.kill.sleep(1.0)
             last = None
             continue
-        last = (dx, dy)
+        last = (goal, dx, dy)
         k = max(0.0, (d - SHORT) / d)
         bot.click(*_step(dx * k, dy * k))
         bot.kill.sleep(1.0 if d > 400 else 0.7)
@@ -464,4 +482,20 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
         if charsi_repair(bot):
             st = {k: v for k, v in state.load().items() if k != "repair_due"}
             state.save({**st, "runs_since_repair": 0, "runs_since_dur_check": 0})
+    if walked and back_to_wp(bot):
+        return False  # the waypoint is in view: no fresh game (~25 s) needed
     return walked
+
+
+def back_to_wp(bot: Controller) -> bool:
+    """After the stops: walk back to the waypoint (found from the stash's label) so the run goes on in this game.
+    True when it's in view."""
+    from .town import close_stash
+
+    close_stash(bot)
+    close_npc(bot)
+    off = walk_to(bot, "wp", near=300)
+    town_map_off(bot)
+    ok = off is not None and bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6) is not None
+    log.info("back at the waypoint: %s", "yes" if ok else "no (fresh game)")
+    return ok
