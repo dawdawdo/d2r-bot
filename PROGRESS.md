@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, ~85 % kills, ~16 kills/h (see 16:25). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 16:55: loot lost to chickens after the kill.** 3 today (15:08, 16:37, 16:49): her death clouds plus an
+empty belt. DEATH_WAIT 5 -> 9 s; Akara refill after RESTOCK_AFTER (3) belt potions/antidotes drunk (bot.potions_used,
+counted in the controller and andy.antidotes), since the belt reader sees only the bottom row. Watch: chickens after a
+kill, Akara stops per run.
+
 **2026-11-23 16:25: 85 % kills, 15.9 kills/h, no chickens in 13 runs** (since 15:45: /players 1 from the start,
 act detection waits for the automap and falls back to the last act). SoJ projection at this rate: ~3,700 kills / 15.9
 per h = ~230 h, ~10 days nonstop (was ~15). The rejuv question below is still open.
