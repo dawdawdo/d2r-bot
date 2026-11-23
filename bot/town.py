@@ -1080,6 +1080,29 @@ def _has_potion(cell: np.ndarray) -> bool:
     return float(((hsv[..., 1] > 80) & (hsv[..., 2] > 60)).mean()) > 0.05
 
 
+def heal_with_belt(bot: Controller, target: float, max_drinks: int = 3) -> bool:
+    """Drink red potions from the belt (Ormus buys for the tunnels / Andariel) until life reads >= `target`. True if it
+    does. Saves an Ormus hunt: his search walked her off and opened the game menu (2026-11-22 21:55)."""
+    from .vision.orbs import belt_kinds, orb_pcts
+
+    keys, belt = bot.cfg["hotkeys"]["potions"], bot.cfg["vision"]["belt"]
+    hp = lambda: orb_pcts(bot.capture.grab(), bot.cfg["vision"]["orbs"])["hp"]  # noqa: E731  (bot.hp is stale in town)
+    for _ in range(max_drinks):
+        now = hp()
+        if now >= target:
+            bot.hp = now
+            return True
+        kinds = belt_kinds(bot.capture.grab(), belt)
+        col = next((i for i, k in enumerate(kinds) if k == "hp"), None)
+        if col is None:
+            return False
+        bot.press(keys[col])
+        bot.kill.sleep(4.0)  # red potions heal over a few seconds
+    bot.hp = hp()
+    log.info("drank belt healing potions in town: HP %.0f%%", bot.hp)
+    return bot.hp >= target
+
+
 def drink_vendor_potions(bot: Controller) -> int:
     """Red/blue potions in the belt (Ormus buys from before): drink them in town so their columns take rejuvs.
     Stephen 2026-11-08: they aren't useful, sell them and never buy more; drinking frees the belt just the same and

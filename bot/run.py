@@ -96,6 +96,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
                 log.info("keys: at least %d in the inventory (estimate was low); not buying", n)
         repair = repair or buy_keys  # same vendor
         if needs_heal(bot) or repair:  # town detours end far from the WP -> fresh game after
+            from .town import heal_with_belt
+
+            if (bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]
+                    and getattr(bot, "keep_vendor_potions", False) and heal_with_belt(bot, cfg["town"]["heal_below_pct"])):
+                log.info("healed with belt potions (HP %.0f%%)", bot.hp)
             if bot.hp is not None and bot.hp < cfg["town"]["heal_below_pct"]:
                 log.info("HP %.0f%% at spawn -> heal at Ormus", bot.hp)
                 if not heal_at_ormus(bot):  # he wanders: once more from a fresh spawn (2026-11-02 10:02: a miss
