@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; town services in Act 1 now (see 09:50). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 13:00: OPEN: fights that never see Andariel.** Per hour (D kill, 0 never seen): 07-09h 19/24 kills, 1
+never-seen; 10h 7/12 (3); 11h 4/11 (4); 12h 5/11 (3). Not the name check (logs/andy/names: the bar at her spot (639, 78)
+read Ghoul), not the first position (first-snapshot similarity doesn't split outcomes). Streaks came with the merc
+alive (revived 10:16; antidotes from 10:49: 0 merc deaths). In a 12:46 snapshot Blizzaga stood behind a big door with a
+white automap cross ~300 px above her (the merc?). Experiment now: ANTIDOTE_MERC = False, fight start logs "merc
+alive/dead"; compare ~15 runs. If the merc is the cause: hop toward his automap marker when she's unseen (verify the
+white cross is him first).
+
 **2026-11-23 11:50: antidotes, first numbers; walk back to the waypoint; fight searches past minions.** 14 runs with
 antidotes vs 36 MF runs before: merc deaths 0 vs 7, chickens 2 vs 4, but kills 43 % vs 67 %: fights ran out never
 seeing her (her bar 0 times in 5 of 6, 11:20-11:45); likely the merc, alive now, tanks her out of view while Blizzaga
