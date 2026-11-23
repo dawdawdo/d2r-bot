@@ -106,7 +106,9 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             need = min(getattr(t, "min_free", A2_MIN_FREE) for t in tasks)
             n = free_cells(bot)
             log.info("Act 1 spawn: %d free inventory cells%s", n, f" (< {need}: stash)" if n < need else "")
-            if town_stop(bot, cfg, repair=repair, stow=stow or n < need):
+            # only a near-full inventory sends her to the stash: the loop's periodic stow is for the Act 3 route, which
+            # passes the stash anyway (2026-11-23 09:48: a walk and a fresh game for 0 items)
+            if town_stop(bot, cfg, repair=repair, stow=n < need):
                 save_and_exit(bot)  # the stops end far from the waypoint
                 create_game(bot, cfg["game"]["difficulty"])
                 bot.wait_for("in_game", 10)

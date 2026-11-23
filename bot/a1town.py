@@ -390,6 +390,9 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
             stowaway(bot)
         deposit_gold(bot)
         close_stash(bot)
+    elif deposit_gold(bot) is not None:  # carrying the max: only then does it open the stash
+        walked = True
+        close_stash(bot)
     if getattr(bot, "merc_revive", True) and not merc_alive(bot):
         log.info("merc is dead -> Kashya")
         walked = True
