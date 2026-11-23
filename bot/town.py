@@ -1631,6 +1631,8 @@ def spawn_act(bot: Controller) -> int:
         return 4
     if bot.find("a1_spawn.png", (120, 0, 560, 300), 0.75):
         return 1
+    if bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6):  # another spot in the Rogue Encampment, its waypoint in view
+        return 1                                       # (2026-11-22 22:04: the A3 town walk ran here)
     if bot.find("a2_spawn.png", (0, 0, 1280, 450), 0.75):  # Warriv's caravan, Lut Gholein (spawns vary a bit)
         return 2
     if bot.find("a5_spawn.png", (0, 0, 1280, 450), 0.85):  # Harrogath (other towns reach 0.73)
@@ -1645,8 +1647,9 @@ def open_a1_wp(bot: Controller) -> None:
     """Rogue Encampment spawn -> open its waypoint. The waypoint is ~560 px away at the end: walking there takes longer
     than the 5 s first allowed (2026-11-14 08:00), so wait 8 s and click again if the menu didn't open."""
     inventory_panel(bot, False)  # a weapon-set check that read None left it open over the waypoint (2026-11-22 20:56)
-    bot.click(*A1_WALK)
-    bot.kill.sleep(2.5)
+    if bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6) is None:  # already in view from some spawns: don't walk off
+        bot.click(*A1_WALK)
+        bot.kill.sleep(2.5)
     for attempt in range(3):
         loc = bot.find("a1_wp.png", (0, 0, 1280, 600), 0.6)
         if loc is None:
