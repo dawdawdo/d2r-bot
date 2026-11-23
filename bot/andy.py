@@ -161,8 +161,10 @@ class AndyFight:
                     if self.life <= 0.06 and casts:  # her bar was nearly empty and now it's gone: dead
                         self.seen_dead = True
                         return True
-                    if misses % 3 == 0:  # nothing in view: one hop on toward her throne
-                        hops(bot, "300,-150,1")
+                    if misses % 3 == 0:  # nothing in view: one hop toward her throne. From the fight spot (by the
+                        # barrels) she comes from straight above: every kill so far had her bar at (639, 78); up-right
+                        # runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min, never seen)
+                        hops(bot, "0,-210,1")
                     continue
                 misses = 0
                 (x, y), life, her = hit
