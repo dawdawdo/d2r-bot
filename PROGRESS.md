@@ -7,6 +7,9 @@
 DClone; ThroatCutter killed him easily -> Annihilus (+1 skills, 14 attrs, 14 res, 10 % XP), now in Blizzaga's inventory
 (protected by the session-start baseline; MF still 222 %). Goal now: 1-2 more SoJs for more Annihilus rolls; Ubers next
 for Stephen (he has the organs). Syncthing idle/100 % at start; shared gold back (38k + 49.5k carried, flag clear).
+16:22 gold gone again (a revive is ~50k: she failed at 49.5k, took the 38k, revived, then the merc died in a chicken
+with 34k left). 16:35 Stephen: LK only (`--start lk`) for runes and gold; he'll level ThroatCutter later -> stop the
+bot BEFORE he plays (shared stash file). ThroatCutter has 249k in her personal stash if the shared pile is wanted.
 
 **2026-11-24 12:00: stopped for Stephen** (playing on Singularity). Session stopped after its run, D2R closed, saves
 12:00:07. Shared stash gold ran out 11:33 -> the LK gold fallback was running (Andariel every 10 LK runs). Before the
