@@ -208,6 +208,7 @@ def protect_own_items(cfg: dict, items: list) -> None:
         prot.extend(added)
 
 
+GOLD_LK_RUNS = 10  # LK runs between tries of a merc task when the stash had no gold for his revive
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
 
 
@@ -356,6 +357,9 @@ def main() -> int:
     lk_ready = any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
     has_boss = any(t.needs_rejuvs for t in tasks)  # Meph; the tunnels run even with a dry stash (Stephen's priority, 2026-11-13)
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
+    # no gold for the merc (shared stash empty): LK until there is, then the task again (Stephen: LK when stuck)
+    gold_tasks = get_tasks(["lk"], cfg) if lk_ready and any(getattr(t, "needs_merc", False) for t in tasks) else []
+    gold_lk_runs = 0
     supplies.new_session()
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
@@ -412,6 +416,18 @@ def main() -> int:
                     log.info("stop requested (web page); not starting run %d", i + 1)
                     break
                 active = supplies.tasks_for_run(tasks, refill_tasks, cfg)  # a dry rejuv stash: LK instead
+                if gold_tasks and state.load().get("stash_gold_empty"):
+                    # the merc can't be revived (50k) and the task won't fight without him: LK earns and stashes
+                    # gold meanwhile; every GOLD_LK_RUNS runs the task tries again (a revive clears the flag)
+                    if gold_lk_runs >= GOLD_LK_RUNS:
+                        gold_lk_runs = 0
+                        state.save({**state.load(), "stash_gold_empty": False})
+                        log.info("no-gold LK spell over: %s again", "+".join(t.name for t in tasks))
+                    else:
+                        if gold_lk_runs == 0:
+                            log.warning("no gold for the merc: LK runs until there is")
+                        gold_lk_runs += 1
+                        active = gold_tasks
                 bot.no_potions = supplies.saving_rejuvs(active, refill_tasks, cfg)
                 want_players = supplies.players_for(active, cfg)
                 task_name = "+".join(t.name for t in active) or args.mode
