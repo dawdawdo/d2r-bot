@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 16:01: Andariel farming resumed; the SoJ became an Annihilus.** Stephen sold Blizzaga's SoJ (10:10) for
+DClone; ThroatCutter killed him easily -> Annihilus (+1 skills, 14 attrs, 14 res, 10 % XP), now in Blizzaga's inventory
+(protected by the session-start baseline; MF still 222 %). Goal now: 1-2 more SoJs for more Annihilus rolls; Ubers next
+for Stephen (he has the organs). Syncthing idle/100 % at start; shared gold back (38k + 49.5k carried, flag clear).
+
 **2026-11-24 12:00: stopped for Stephen** (playing on Singularity). Session stopped after its run, D2R closed, saves
 12:00:07. Shared stash gold ran out 11:33 -> the LK gold fallback was running (Andariel every 10 LK runs). Before the
 next start: Stephen done on Singularity + Syncthing settled. Small fixes committed since the 11:13 restart (load next
