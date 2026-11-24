@@ -594,6 +594,26 @@ def charsi_repair(bot: Controller) -> bool:
     return False
 
 
+def _log_merc_portrait(bot: Controller) -> None:
+    """Debug (2026-11-24): the portrait check says dead but Kashya shows no Resurrect, 5 times overnight. Log the score
+    and keep the corner, to see what his portrait looked like then."""
+    try:
+        import time
+
+        from .vision.screen import match_score
+
+        f = bot.capture.grab()
+        x, y, w, h = bot.cfg["town"]["merc_region"]
+        t = cv2.imread(str(TEMPLATES / "merc_portrait.png"))
+        score, _ = match_score(f, t, (x, y, w, h))
+        out = ROOT / "logs" / "merc_portrait"
+        out.mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(str(out / f"{time.strftime('%m%d-%H%M%S')}_{score:.2f}.png"), f[0:120, 0:200])
+        log.info("merc portrait score %.2f (alive at >= 0.85)", score)
+    except Exception as e:  # debugging only
+        log.debug("merc portrait debug: %s", e)
+
+
 def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = False) -> bool:
     """Everything due, in the Rogue Encampment: heal, stash (loot, gold for a revive, deposit), Kashya, Akara's
     potions, Charsi. True if anything walked her off (the caller starts a fresh game)."""
@@ -626,6 +646,7 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
         close_stash(bot)
     if getattr(bot, "merc_revive", True) and not merc_alive(bot) and not (bot.kill.sleep(1.5) or merc_alive(bot)):
         # (a second look: his portrait comes late after a game loads; 00:38 a walk to Kashya with him alive)
+        _log_merc_portrait(bot)
         log.info("merc is dead -> Kashya")
         walked = True
         ok = revive_merc_a1(bot)
