@@ -556,6 +556,9 @@ def restock_at_akara(bot: Controller) -> bool:
     if None not in k:
         _buy(bot, "healing_potion", 4, until_spill=True)
         _buy(bot, "mana_potion", 4, until_spill=True)
+    from .town import drink_inventory_potions
+
+    drink_inventory_potions(bot, "Akara")  # never a bought potion left for the stowaway (Stephen 2026-11-24)
     log.info("Akara: belt %s", kinds())
     bot.potions_used = 0
     bot.press("esc")

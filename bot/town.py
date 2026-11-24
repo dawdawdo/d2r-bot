@@ -455,6 +455,25 @@ def buy_mana_at_ormus(bot: Controller, max_clicks: int = 8, fill: str = "mana") 
     return False
 
 
+def drink_inventory_potions(bot: Controller, who: str) -> int:
+    """With a trade window (or the inventory) open: drink every potion still in the unprotected inventory cells, so a
+    bought potion never reaches a stash. Stephen 2026-11-24: antidotes kept turning up in the stash after vendor buys
+    (a purchase that showed late was missed by the buy's own check; 7 on shared page 1)."""
+    from .vision.inventory import cell_center, potion_kind, protected_cells
+
+    bot.input.move(640, 600)
+    bot.kill.sleep(0.7)  # Proton shows a new item late
+    f = bot.capture.grab()
+    prot = protected_cells(bot.cfg["inventory"]["protected"])
+    pots = [(c, r) for c in range(10) for r in range(4) if (c, r) not in prot and potion_kind(f, c, r)]
+    for c, r in pots:
+        bot.click(*cell_center(c, r), "right")
+        bot.kill.sleep(0.5)
+    if pots:
+        log.info("%s: drank %d leftover potion(s) in the inventory: %s", who, len(pots), pots)
+    return len(pots)
+
+
 def buy_potions_in_trade(bot: Controller, o: dict, fill: str = "mana", who: str = "Ormus") -> bool:
     """With a vendor's trade window open on Misc: potions into the belt (o: healing_potion / mana_potion points).
     fill: "mana" (1 red column, the rest blue), "healing" (every empty column red), "mixed" (one potion a click,
@@ -527,6 +546,7 @@ def buy_potions_in_trade(bot: Controller, o: dict, fill: str = "mana", who: str 
     # no "top-up" buy: with the column full it lands in the inventory and the stowaway stashed it (Stephen
     # 2026-11-02: healing + mana potions piling up on shared page 1)
     ok = None not in kinds() or (fill == "mixed" and spilled[0])
+    drink_inventory_potions(bot, who)
     bot.press("esc")
     bot.kill.sleep(0.5)
     log.info("%s: potions bought, belt %s %s", who, kinds(), "full" if ok else "NOT full")
