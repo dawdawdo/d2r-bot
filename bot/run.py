@@ -82,6 +82,8 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             else:  # not found / no gold: retry after MERC_RETRY_RUNS (2026-11-01 one miss at 21:55 left her
                 # without a merc all night: chickens 1% -> 11%, 2 deaths); give up after MERC_MAX_FAILS in a row
                 bot.merc_fails = getattr(bot, "merc_fails", 0) + 1
+                if state.load().get("stash_gold_empty"):  # no gold: the pause now, not after two more walks
+                    bot.merc_fails = max(bot.merc_fails, MERC_MAX_FAILS)
                 bot.merc_revive = False
                 bot.merc_wait = MERC_PAUSE_RUNS if bot.merc_fails >= MERC_MAX_FAILS else MERC_RETRY_RUNS
             save_and_exit(bot)
