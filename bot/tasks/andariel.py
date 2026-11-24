@@ -130,7 +130,8 @@ class Andariel(Task):
     # (potion_stop, Act 3 games) instead of being swapped for LK while the stash is dry
     needs_rejuvs = False
     vendor_potions = True  # its belt holds Ormus healing potions: heal with those in town before hunting for Ormus
-    min_free = 6  # inventory cells to go straight from the Act 1 spawn: her loot is small (rings, runes, gems, charms)
+    min_free = 10  # free cells to skip the stash (11 when the loot area is empty). 6 lost uniques: 2026-11-23 19:41 and
+    # 21:01, three each, picked with 3 / 6 scattered free cells, no room for a 2x3 or 2x4 item: left on the floor
     needs_merc = True  # never fight her without the merc (bot/run.py: the run fails, the next one revives)
     a1_town = True  # stash, Akara, Kashya, Charsi in the Rogue Encampment: never Act 3 (Stephen 2026-11-23; bot/a1town.py)
 
