@@ -501,6 +501,21 @@ def _want_supply(bot: Controller, word: str | None) -> bool:
     return bool(bot.cfg["loot"].get("rejuv_spares")) and not state.load().get("rejuv_stash_full")
 
 
+VERIFY_KINDS = ("unique", "set")  # picks confirmed in the inventory, not by the label going away
+
+
+def _inv_free(bot: Controller) -> int | None:
+    """Free inventory cells (opens the panel, checks it took, closes it again), or None if it wouldn't open."""
+    from .town import _scan_inventory, inventory_panel
+
+    if not inventory_panel(bot, True):
+        return None
+    try:
+        return len(_scan_inventory(bot, wait_open=True)["empty"])
+    finally:
+        inventory_panel(bot, False)
+
+
 def _sig(lab) -> tuple:
     return lab.kind, lab.w // 4, lab.h // 4
 
@@ -577,7 +592,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                         bot.save_failure(f"left_{lab.kind}_on_floor")
                     if what in picked:
                         picked.remove(what)  # it was counted when clicked
-                    picked.append(f"left_{what}")
+                    if f"left_{what}" not in picked:  # (a unique/set miss is already in: VERIFY_KINDS)
+                        picked.append(f"left_{what}")
                 continue
             found.append((what, lab))
         if not found:
@@ -601,8 +617,28 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
         tried[cell] = tried.get(cell, 0) + 1
         # by kind + text width too: the label moves as she walks to it (no room: 9 clicks on 2 items, 2026-11-02)
         tried[_sig(lab)] = tried.get(_sig(lab), 0) + 1
+        free0 = _inv_free(bot) if lab.kind in VERIFY_KINDS else None
         bot.click(*lab.center)
         bot.wait_still(timeout=3, min_wait=0.5)
+        if free0:  # (0 or None: full, or no count: nothing to check against)
+            free1 = _inv_free(bot)
+            if free1 is not None and free1 >= free0:
+                # 2026-11-24 10:21: a unique ring's label went away after the click, the run counted it, and it was
+                # never in her inventory (left on the floor). Not counted: look again from where it was
+                log.warning("%s label at %s clicked but nothing reached the inventory (%d free before and after)",
+                            lab.kind, lab.center, free0)
+                bot.save_failure(f"{lab.kind}_not_picked")
+                picked.append(f"left_{what}")  # taken back if a later click gets it
+                if tried[_sig(lab)] < 3:
+                    bot.click(*lab.center)  # walk to where it was: its label shows again from close by
+                    bot.wait_still(timeout=3, min_wait=0.5)
+                bot.frame = bot.capture.grab()
+                continue
+            if free1 is not None:
+                log.info("%s picked: in the inventory (%d -> %d free cells)", lab.kind, free0, free1)
+                if f"left_{what}" in picked:
+                    picked.remove(f"left_{what}")
+            bot.frame = bot.capture.grab()
         if what == "rejuv" and all(belt_slots(bot.frame, bot.cfg["vision"]["belt"])):
             what = "rejuv_spare"  # belt full: it goes to the inventory, so stash it after this run
         if what == "key" and getattr(bot, "keys_left", None) is not None:

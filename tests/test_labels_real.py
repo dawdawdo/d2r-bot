@@ -153,3 +153,32 @@ def test_no_gray_labels_on_loot_frames(name):
         pytest.skip("not a full frame")
     ignore = [*CFG["vision"]["label_ignore"], [300, 0, 680, 60], [0, 0, 110, 90]]
     assert not find_labels(img, {"gray": CFG["vision"]["labels"]["gray"]}, ignore=ignore)
+
+
+@pytest.mark.parametrize("free_after,expect", [(10, ["left_unique"]), (9, ["unique"])])
+def test_unique_pick_is_confirmed_in_the_inventory(monkeypatch, free_after, expect):
+    """2026-11-24 10:21: a unique ring's label went away after the click and the run counted it; it was never in her
+    inventory. A unique/set pick counts only when the inventory gains it; a miss is retried, then reported."""
+    from types import SimpleNamespace
+
+    import bot.lk as lk
+
+    frame = cv2.imread(str(RAW.parent / "loot" / "ring_label_vanished_1124-102157.png"))
+    counts = iter([10, free_after, 10, free_after, 10, free_after])
+    monkeypatch.setattr(lk, "_inv_free", lambda bot: next(counts))
+    clicks, fails = [], []
+
+    def click(x, y, *a, **k):  # the label goes away on the click either way (as live)
+        clicks.append((x, y))
+        cv2.rectangle(bot.frame, (x - 30, y - 10), (x + 30, y + 10), (20, 20, 20), -1)
+
+    bot = SimpleNamespace(cfg=CFG, frame=frame.copy(), keys_left=None, _labels_known=True, check=lambda: None,
+                          click=click, wait_still=lambda **k: True, sleep=lambda s: None,
+                          save_failure=lambda n: fails.append(n), capture=SimpleNamespace(grab=lambda: bot.frame.copy()))
+    picked = lk.loot(bot, take_all=True)
+    assert [p for p in picked if "unique" in p] == expect
+    assert clicks[0] == (778, 265)
+    if expect == ["left_unique"]:
+        assert fails == ["unique_not_picked"] and clicks[1] == (778, 265)  # walked to where it was
+    else:
+        assert not fails
