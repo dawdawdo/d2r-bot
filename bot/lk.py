@@ -567,7 +567,18 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                     continue
                 what = "charm"
             if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2 or tried.get(_sig(lab), 0) >= 2:
-                continue  # still there after two clicks: can't pick it up (full, or not an item)
+                # still there after two clicks: can't pick it up (full, or not an item). Say so: six uniques were
+                # left on the floor unnoticed on 2026-11-23 (inventory full), each counted as picked
+                key = ("left", _sig(lab))
+                if key not in tried:
+                    tried[key] = 1
+                    log.warning("could not pick up a %s label at %s (inventory full?)", what, lab.center)
+                    if lab.kind in ("unique", "set", "rune"):
+                        bot.save_failure(f"left_{lab.kind}_on_floor")
+                    if what in picked:
+                        picked.remove(what)  # it was counted when clicked
+                    picked.append(f"left_{what}")
+                continue
             found.append((what, lab))
         if not found:
             if i == 0 and not rescanned and _label_text_px(bot.frame, bot.cfg["vision"]["label_ignore"]) < 100:
