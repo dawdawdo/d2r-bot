@@ -69,6 +69,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             bot.merc_revive = bot.merc_wait <= 0
             if bot.merc_revive and getattr(bot, "merc_fails", 0) >= MERC_MAX_FAILS:
                 bot.merc_fails = 0  # the pause is over: a fresh set of tries
+        if mode == "chests" and not a1_town and bot.merc_revive and not merc_alive(bot):
+            gold, need = supplies.gold_total(cfg), cfg["town"].get("merc_revive_gold", 50000)
+            if gold is not None and gold < need:  # the walk to Asheara would fail: look again next run (LK picks gold)
+                log.info("merc is dead; %dk gold, a revive costs %dk: no Asheara yet", gold // 1000, need // 1000)
+                bot.merc_revive, bot.merc_wait = False, 1
         if bot.act == 4 and stow:  # extra key stacks can be dropped here; loot for the stash can't
             stow = stowaway(bot, stash=False) is None
         if bot.act == 4 and (stow or repair or buy_keys or needs_heal(bot) or belt_needs_restock(bot)
@@ -213,7 +218,6 @@ def protect_own_items(cfg: dict, items: list) -> None:
         prot.extend(added)
 
 
-GOLD_LK_RUNS = 10  # LK runs between tries of a merc task when the stash had no gold for his revive
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
 
 
@@ -364,7 +368,6 @@ def main() -> int:
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
     # no gold for the merc (shared stash empty): LK until there is, then the task again (Stephen: LK when stuck)
     gold_tasks = get_tasks(["lk"], cfg) if lk_ready and any(getattr(t, "needs_merc", False) for t in tasks) else []
-    gold_lk_runs = 0
     supplies.new_session()
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
@@ -422,18 +425,23 @@ def main() -> int:
                     log.info("stop requested (web page); not starting run %d", i + 1)
                     break
                 active = supplies.tasks_for_run(tasks, refill_tasks, cfg)  # a dry rejuv stash: LK instead
-                if gold_tasks and state.load().get("stash_gold_empty"):
-                    # the merc can't be revived (50k) and the task won't fight without him: LK earns and stashes
-                    # gold meanwhile; every GOLD_LK_RUNS runs the task tries again (a revive clears the flag)
-                    if gold_lk_runs >= GOLD_LK_RUNS:
-                        gold_lk_runs = 0
-                        state.save({**state.load(), "stash_gold_empty": False})
-                        log.info("no-gold LK spell over: %s again", "+".join(t.name for t in tasks))
-                    else:
-                        if gold_lk_runs == 0:
-                            log.warning("no gold for the merc: LK runs until there is")
-                        gold_lk_runs += 1
+                if gold_tasks:
+                    # the task won't fight without the merc and his revive is ~50k: LK blocks earn it (supplies.gold_block)
+                    gold, st0 = supplies.gold_total(cfg), state.load()
+                    lk_block, st1 = supplies.gold_block(st0, gold, cfg)
+                    until = cfg["town"].get("gold_block_until", 500000)
+                    names = "+".join(t.name for t in tasks)
+                    if st1 is not st0:
+                        state.save(st1)
+                        if lk_block:
+                            log.warning("gold %s: LK block until %dk, then %s again",
+                                        "unknown" if gold is None else f"{gold // 1000}k", until // 1000, names)
+                        else:
+                            log.warning("LK block over: %dk gold -> %s again", gold // 1000, names)
+                    if lk_block:
                         active = gold_tasks
+                        if gold is not None:
+                            log.info("LK block: %dk of %dk gold", gold // 1000, until // 1000)
                 bot.no_potions = supplies.saving_rejuvs(active, refill_tasks, cfg)
                 want_players = supplies.players_for(active, cfg)
                 task_name = "+".join(t.name for t in active) or args.mode

@@ -17,6 +17,47 @@ log = logging.getLogger(__name__)
 ZERO_RESTOCKS = 2  # in a row, with a belt slot empty; one could be a misread belt
 
 
+_TABLES = None
+
+
+def gold_total(cfg: dict) -> int | None:
+    """Her gold: carried + her own stash + the shared stash, read from the live save files (read only; the game writes
+    them at each save & exit). None when a file is missing or doesn't parse (mid-write)."""
+    global _TABLES
+    from pathlib import Path
+
+    from . import d2save
+    from .armory import STASH
+
+    try:
+        _TABLES = _TABLES or d2save.tables()
+        saves = Path(cfg["paths"]["save_dir"])
+        d2s = d2save.read_d2s(saves / f"{cfg['game']['character']}.d2s", _TABLES)
+        stats = {int(s["id"]): int(s.get("value") or 0) for s in d2s.get("stats") or []}
+        shared = sum(int(tab.get("gold") or 0) for tab in d2save.read_d2i(saves / STASH, _TABLES))
+        return stats.get(14, 0) + stats.get(15, 0) + shared  # 14 carried, 15 her stash
+    except Exception as e:  # noqa: BLE001  an unreadable save must never stop a run
+        log.info("gold unknown: %s", e)
+        return None
+
+
+def gold_block(st: dict, gold: int | None, cfg: dict) -> tuple[bool, dict]:
+    """(LK this run?, state). Gold comes in blocks (Stephen 2026-11-24: "a good long run to LK, then a good long run to
+    Andy"): a merc revive is ~50k and Andariel's merc dies about every 4th run, so switching back after one revive's
+    worth of LK left her merc dead most of the time (LK chickens 62 % without him vs 20-30 %). The block starts when
+    gold can't pay the next revive (or a revive just failed for gold, when the save can't be read) and ends at
+    town.gold_block_until."""
+    t = cfg["town"]
+    need, until = t.get("merc_revive_gold", 50000), t.get("gold_block_until", 500000)
+    block = bool(st.get("gold_block"))
+    if not block:
+        broke = gold < need if gold is not None else bool(st.get("stash_gold_empty"))
+        return (True, {**st, "gold_block": True}) if broke else (False, st)
+    if gold is not None and gold >= until:
+        return False, {**st, "gold_block": False, "stash_gold_empty": False}
+    return True, st
+
+
 def new_session() -> None:
     """A new session looks at the stash again (Stephen may have added rejuvs), but a refill under way goes on to its
     end: "do LK runs until she stocks up again, then go back to Mephisto" (Stephen 2026-11-08; restarted sessions
