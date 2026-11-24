@@ -105,11 +105,14 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
 
             need = min(getattr(t, "min_free", A2_MIN_FREE) for t in tasks)
             n = free_cells(bot)
-            log.info("Act 1 spawn: %d free inventory cells%s", n, f" (< {need}: stash)" if n < need else "")
+            log.info("Act 1 spawn: %d free inventory cells%s", n, f" (< {need}: stash)" if n < need else
+                     " (a unique/set to stash)" if getattr(bot, "stash_now", False) else "")
             # only a near-full inventory sends her to the stash: the loop's periodic stow is for the Act 3 route, which
             # passes the stash anyway (2026-11-23 09:48: a walk and a fresh game for 0 items)
             fails0 = getattr(bot, "merc_fails", 0)
-            if town_stop(bot, cfg, repair=repair, stow=n < need):
+            stash_now = n < need or getattr(bot, "stash_now", False)
+            bot.stash_now = False
+            if town_stop(bot, cfg, repair=repair, stow=stash_now):
                 save_and_exit(bot)  # the stops end far from the waypoint
                 create_game(bot, cfg["game"]["difficulty"])
                 bot.wait_for("in_game", 10)
@@ -364,6 +367,7 @@ def main() -> int:
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)
+    bot.stash_now = True  # the last session may have left a unique in the inventory (Act 1 town: one stash trip)
     rec_cfg = cfg.get("recording") or {}
     if rec_cfg.get("enabled", True):
         from .recorder import Recorders
@@ -468,6 +472,10 @@ def main() -> int:
                     if stats.get("andy") == 0:  # the fight ran out without a kill: not "ok" (Stephen 2026-11-23 read the
                         row.update(result="miss", error="Andariel not killed")  # 155 "ok" runs as kills; 108 were)
                     stow = any(p != "rejuv" for p in stats.get("picked", []))
+                    if any(p in ("unique", "set") for p in stats.get("picked", [])):
+                        # to the stash at the next town stop, not when the inventory fills hours later (2026-11-24
+                        # 09:57: the SoJ sat in her inventory; the Act 1 town only stashed below min_free)
+                        bot.stash_now = True
                     ok += 1
                     streak = map_misses = 0
                     corpse = False
