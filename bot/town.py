@@ -711,7 +711,8 @@ def resurrect_result(bot: Controller, who: str) -> bool:
     """After clicking Resurrect and closing the dialog: the merc up? Else note the gold problem (logs/state.json)."""
     from . import state
 
-    if merc_alive(bot):
+    if merc_alive(bot, tries=6):  # his portrait comes a moment after the revive: a quick look called a revive that
+        # worked a failure and sent her to withdraw 200k (2026-11-24 03:10, Kashya then showed no Resurrect)
         log.info("merc resurrected at %s", who)
         state.save({**state.load(), "withdrew_unspent": False, "stash_gold_empty": False})
         return True
