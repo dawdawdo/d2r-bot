@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 10:10: THE STONE OF JORDAN.** Andariel dropped an SoJ at 09:57 (ilvl 75, unidentified); the stowaway put it
+in the **shared stash, page 1** at 10:01:48. She died at 10:03 (72 % -> 0 in 2 s) after it was stashed; her corpse was
+recovered next game. Fixes: (1) after a unique/set pickup, and at a session's first stop, the Act 1 town stashes at the
+next stop instead of waiting for min_free; (2) magic find counts the gear on a corpse (the session after the death read
+31 % and switched to LK). Andariel restarted 10:09 at 222 %.
+
 **2026-11-24 08:16: stopped for Stephen** (he's playing on Singularity). Session stopped after its run, D2R closed on
 GLaDOS, saves last written 08:15:50. Before starting the bot again: make sure he's done on Singularity and the saves
 have synced back.
