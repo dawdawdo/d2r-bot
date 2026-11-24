@@ -106,3 +106,11 @@ def test_poisoned_life_orb(name, want):
     from bot.vision.orbs import poisoned
 
     assert poisoned(frame(name), load_config()["vision"]["orbs"]["hp"]) is want
+
+
+@pytest.mark.parametrize("name, want", [("info_terrorized_93", True), ("info_not_terrorized", False)])
+def test_terrorized_line_in_the_area_info(name, want):
+    """2026-11-23 18:00-19:00 Catacombs 4 was terrorized (level 93) and the bot fought anyway: 3 chickens in 15 min."""
+    from bot.lk import terror_info
+
+    assert terror_info(frame(name)) is want

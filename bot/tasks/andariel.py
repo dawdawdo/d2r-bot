@@ -63,6 +63,28 @@ def short_path(g, a: int, b: int, max_edge: float = 800.0) -> list[int]:
     return [a, b]
 
 
+def terror_seen(bot) -> bool:
+    """"Terrorized: NN" in the area info, read once the info text is up: the automap's lines show first, and the
+    check right after the stairs read nothing all of 2026-11-23 18:00-19:00 while every fight frame of that hour showed
+    it (5 of 5; chickens 18:04-18:18). Looks for ~1.5 s."""
+    from ..durance import ensure_automap, map_text_open
+    from ..lk import terror_info
+
+    f = ensure_automap(bot)
+    for _ in range(6):
+        if map_text_open(f):
+            break
+        bot.kill.sleep(0.25)
+        f = bot.capture.grab()
+    for _ in range(3):  # the purple line can come a moment after the rest of the info
+        if terror_info(f):
+            log.info("terror zone: \"Terrorized\" in the area info")
+            return True
+        bot.kill.sleep(0.3)
+        f = bot.capture.grab()
+    return False
+
+
 def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) -> None:
     """From the arrival spot of a learned level, along the stop graph to its exit, and through it."""
     from ..durance import AutomapOdometer, StopGraph, Walker, area_is, ensure_automap, take_warp, use_style
@@ -92,7 +114,7 @@ def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) 
 
             # "Entering The Catacombs Level 4 / Terrorized" banner, or "Terrorized: 93" in the area info: level 93
             # monsters took her from 100 to 48 % in 3 s (2026-11-22 21:43). The run loop waits for the zone to rotate.
-            if cfg["game"].get("skip_terror", True) and (terrorized(bot.capture.grab()) or terror_info(ensure_automap(bot))):
+            if cfg["game"].get("skip_terror", True) and (terrorized(bot.capture.grab()) or terror_seen(bot)):
                 raise TerrorZone(f"{goal} is terrorized this hour")
             return
     bot.save_failure(f"{folder}_exit_failed")

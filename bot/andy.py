@@ -446,6 +446,12 @@ def fight(bot) -> dict:
     from .town import merc_alive
 
     log.info("fight starts, merc %s", "alive" if merc_alive(bot, tries=1) else "dead")  # to compare outcomes
+    if bot.cfg["game"].get("skip_terror", True):
+        from .lk import TerrorZone
+        from .tasks.andariel import terror_seen
+
+        if terror_seen(bot):  # a second look: the one after the stairs missed a whole terrorized hour (18:00)
+            raise TerrorZone("catacombs_4 is terrorized this hour")
     antidotes(bot, "at the stairs")
     bot.cure_poison = True  # from here on: poisoned -> antidote (controller guard), through the fight and the loot
     hops(bot, ROUTE)
