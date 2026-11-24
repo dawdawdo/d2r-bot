@@ -23,8 +23,7 @@ log = logging.getLogger(__name__)
 ROUTE = "-320,0,3;300,-150,2"  # screen px hops from the Level 4 arrival: through the door, then toward her throne
 RING = [(r, k) for r, k in ((420, 16), (260, 12), (140, 8))]  # hover rings around Blizzaga for name bars
 BLIZZARD_CD = 1.8  # s (config hotkeys.attack comment)
-TOO_CLOSE = 540  # iso px: her poison bursts reached Blizzaga at ~406 and ~470 with 400 (17:59, 18:04: 88 -> 39 %
-                 # in 2 s). 520 once meant no casting at all, but that was before backed_at and the cast-before-the-hop
+TOO_CLOSE = 400  # iso px: one hop back. 540 (18:08) and the other 16:44-18:22 changes together: 47 % kills vs 78 %
                    # view reaches ~660 up/down) and she hopped instead of casting (03:54: 3 runs, never hit her)
 STATIC_RANGE = 300  # iso px: Static Field's reach around Blizzaga (cast twice when she walks into it; Stephen 2026-11-22:
                    # "static field a couple of times at the beginning, then teleport to where the merc can tank")
@@ -242,7 +241,6 @@ class AndyFight:
                 if her:
                     self.last, self.life = (x, y), life
                     self.her_at = time.time()
-                    self.her_world = self.offset + np.array([x - CENTER[0], y - CENTER[1]], float)  # from the spot
                     if life <= 0.0:
                         self.seen_dead = True
                         self.say("Andariel's bar is empty: dead")
@@ -299,32 +297,17 @@ class AndyFight:
         return False
 
     def toward_throne(self) -> None:
-        """One hop along a search pattern round the fight spot (SEARCH, screen px from it, by dead reckoning). She
-        mostly comes from straight above (every early kill had her bar at (639, 78)), so the pattern starts there; then
-        up-left, up-right and a row deeper. 2026-11-23 15:45-17:20: 4 of 27 fights never saw her when the search only
-        went straight up and back."""
-        hw = getattr(self, "her_world", None)
-        if hw is not None and time.time() - self.her_at < 30:
-            # lost her after a keep-away hop: back toward where she was, before the pattern (17:42: found at point 1,
-            # hit to 62 %, one hop away, then the pattern went to points 2 and 3 and never saw her again)
-            d = hw - self.offset
-            n = float(np.hypot(*d))
-            if n > 200:
-                self.say(f"toward where she was {time.time() - self.her_at:.0f} s ago ({hw.round().tolist()})")
-                self.hop(*(d / n * min(n, 380)))
-                return
-        i = getattr(self, "search_i", 0)
-        for _ in range(len(SEARCH)):
-            target = np.array(SEARCH[i % len(SEARCH)], float)
-            d = target - self.offset
-            if float(np.hypot(*d)) > 150:
-                break
-            i += 1  # there already: the next point
-        self.search_i = i
-        n = float(np.hypot(*d)) or 1.0
-        step = d / n * min(n, 380)
-        self.say(f"search point {i % len(SEARCH)} {target.round().tolist()} ({self.offset.round().tolist()} off)")
-        self.hop(*step)
+        """One hop toward her throne. From the fight spot (by the barrels) she comes from straight above: every kill
+        so far had her bar at (639, 78); up-right runs into the barrels and the brazier (2026-11-22 23:22: 2.5 min,
+        never seen). Drifted off (retreats, minions): back toward the fight spot first. (A search pattern, a sooner
+        search and a last-seen-spot search went in 17:20-17:46 and came out at 18:55 with the rest: 47 % vs 78 %.)"""
+        far = float(np.hypot(*self.offset))
+        if far > 300:
+            v = -self.offset / far * min(far, 380)
+            self.say(f"back toward the fight spot ({self.offset.round().tolist()} off)")
+            self.hop(*v)
+        else:
+            self.hop(0, -210)
 
     def clear_minions(self, limit: float = 15) -> None:
         """Blizzard what's still standing around before hopping onto her body (2026-11-23 01:23: killed, then a chicken
@@ -418,17 +401,14 @@ class AndyFight:
         return picked
 
 
-SEARCH = [(0, -250), (0, -500), (-420, -500), (420, -500), (0, -820), (-420, -820), (420, -820), (0, 0)]
 DEATH_HOPS = 3         # hops away from her body when she dies (her death burst: poison clouds round the body)
 DEATH_WAIT = 9.0       # s to wait out there before going back for the loot (5 s: back into the clouds 7 s after
                        # her death, 91 -> 52 % and a chicken with the loot on the floor, 16:37)
-MINION_STREAK = 3      # finds in a row that aren't her ...
-HER_LOST_S = 10.0      # ... with her unseen this long: go look for her (toward_throne). 6 / 20 s: the search began
-                       # 63 s in and found her 2 min in, too late to kill her (17:27; a sweep takes ~5 s)
-EMPTY_SWEEPS = 2       # empty sweeps in a row before the next search point (was 3)
-ANTIDOTE_MERC = True   # experiment 2026-11-23 18:20: back on now that the search finds her (pattern, last-seen spot);
-                       # merc deaths 3 -> 6 /h and chickens rising without. Before the search (12:56) it read:
-                       # not for the merc (2026-11-23): with his own he outlasted her poison and kept her busy out of
+MINION_STREAK = 6      # finds in a row that aren't her ...
+HER_LOST_S = 20.0      # ... with her unseen this long: go look for her (toward_throne)
+EMPTY_SWEEPS = 3       # empty sweeps in a row before the next hop toward her throne
+ANTIDOTE_MERC = False  # not for the merc (2026-11-23; tried again 18:22-18:55 with the new search: 45 % kills).
+                       # With his own he outlasted her poison and kept her busy out of
                        # Blizzaga's view: 10:49-12:50 ~45 % kills, 10 fights never saw her; without, 9 of 11 kills,
                        # none unseen, 2 merc deaths (revived at Kashya)
 ANTIDOTE_EVERY = 30.0  # s: an antidote's poison resist lasts about this long
