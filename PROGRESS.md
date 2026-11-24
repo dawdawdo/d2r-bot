@@ -3,6 +3,10 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 23:25: SINGLE-CHANGE TEST from 23:21:35: search pattern only** (SEARCH round the fight spot; 15:45 setup
+otherwise). Baseline 19:12-23:15: 74 % kills, every miss a fight that never saw her (~1 in 8). Compare the hour from
+23:21:35; keep it if never-seen drops without more chickens.
+
 **2026-11-23 22:30: state for the night.** Andariel since 19:12 (15:45 fight setup): ~76 % kills, ~12.5 kills/h.
 Live tonight: terror check after the stairs + at the fight's start; antidotes in the inventory drunk; min_free 10;
 failed pickups logged as left_<kind>; Akara's trade seen by the inventory panel (her tab strip varies). Gold: ~5 merc
