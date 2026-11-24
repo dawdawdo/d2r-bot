@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 21:10: uniques left on the floor -> stash more often.** 19:41 and 21:01: three uniques each "picked" (labels
+clicked) but never in the inventory (saves): 3 / 6 scattered free cells, no room for 2x3 / 2x4 items. Andariel
+min_free 6 -> 10 (11 = empty loot area): stash whenever loot takes more than one cell. Pickups that fail are silent:
+TODO log free cells before/after each pick. Finds tonight: Iratha's Collar (set), The Minataur.
+
 **2026-11-23 20:05: the reverted setup holds: 14 runs, 12 kills (86 %), 1 miss, 1 chicken, 13.9 kills/h** (19:12-20:05,
 no terror). Avg run 222 s (Akara refills after 3 potions add time). Gold: ~5 merc revives/h (50k each), 200k
 withdrawals every 30-45 min; shared stash ~3.4M. Next by Stephen's order: success is good; speed (Akara stops,
