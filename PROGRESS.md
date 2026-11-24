@@ -3,6 +3,10 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 01:50: SINGLE-CHANGE TEST from 01:42:40: fight limit 150 -> 210 s** (andy.timeout_s 360 -> 420). 01:14-01:36
+three fights found her, hurt her to 21-43 %, and ran out of time. Compare kills / misses from 01:42:40 with the
+baseline (19:12-23:21: 72 % kills, 15 % misses, 13 % chickens, 11.6 kills/h).
+
 **2026-11-24 00:25: search pattern test: no gain, reverted.** 23:21-00:21: 15 runs, 67 % kills, 20 % misses, 13 %
 chickens vs baseline 19:12-23:21: 67 runs, 72 % / 15 % / 13 %, 11.6 kills/h. Misses are all fights that never see
 her; the name bars there read Ghoul / Dark Shaman / Dark One (she's never under the cursor), so it's where we look,
