@@ -411,9 +411,15 @@ def akara_stop(bot: Controller, buy: bool) -> bool:
     if menu is None:
         return True
     bot.click(*_menu_line(menu, 1))  # Talk / Trade / Cancel
+    from .vision.inventory import inventory_open
+
     for _ in range(8):
         bot.kill.sleep(0.3)
-        if bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is not None:
+        # her tab strip varies (Weapons / Weapons / Misc, or Weapons / Misc: the Ormus template missed it twice,
+        # 2026-11-23 18:18 and 22:12, with the window open); the inventory panel beside it is always there
+        if (bot.find("trade_ormus_misc.png", region=(0, 0, 640, 140), threshold=0.8) is not None
+                or inventory_open(bot.capture.grab())):
+            bot.kill.sleep(0.3)
             return restock_at_akara(bot)
     bot.save_failure("a1_akara_trade_not_opened")
     bot.press("esc")
