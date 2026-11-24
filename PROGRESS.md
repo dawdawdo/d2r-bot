@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 12:00: stopped for Stephen** (playing on Singularity). Session stopped after its run, D2R closed, saves
+12:00:07. Shared stash gold ran out 11:33 -> the LK gold fallback was running (Andariel every 10 LK runs). Before the
+next start: Stephen done on Singularity + Syncthing settled. Small fixes committed since the 11:13 restart (load next
+start): withdraw logs only real withdrawals; no stash gold -> merc revive tries pause after one failure.
+
 **2026-11-24 10:36: a unique ring left on the floor.** 10:21:57 a unique ring's label (by a pillar, next to a gold pile)
 went away after the click; the run counted "unique", but it never reached her inventory (no new unique in any save).
 Lost with that game. Fix: a unique/set pick counts only when the free inventory cells drop (counted before/after the
