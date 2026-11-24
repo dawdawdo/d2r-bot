@@ -156,7 +156,8 @@ class AndyFight:
             self.cries_at = time.time()
 
     # -- the fight --------------------------------------------------------------------------------
-    def kill(self, limit: float = 150) -> bool:  # 120 ran out with her at 22 % (2026-11-22 22:10)
+    def kill(self, limit: float = 210) -> bool:  # 120 ran out with her at 22 % (2026-11-22 22:10); 150 ran out with her
+        # hurt to 21-43 % three times in an hour (2026-11-24 01:14-01:36): single-change test from 01:45
         bot, sk = self.bot, self.sk
         t0, misses, casts, snap_at = time.time(), 0, 0, 0.0
         out = None
