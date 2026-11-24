@@ -182,3 +182,21 @@ def test_unique_pick_is_confirmed_in_the_inventory(monkeypatch, free_after, expe
         assert fails == ["unique_not_picked"] and clicks[1] == (778, 265)  # walked to where it was
     else:
         assert not fails
+
+
+def test_green_arrow_streak_is_not_a_set_pick(monkeypatch):
+    """2026-11-24 11:09: a green arrow streak read as a 20 px set label; real unique/set labels are >= ~35 px."""
+    from types import SimpleNamespace
+
+    import bot.lk as lk
+
+    frame = cv2.imread(str(RAW.parent / "loot" / "green_streak_as_set_1124-110927.png"))
+    monkeypatch.setattr(lk, "_inv_free", lambda bot: 9)
+    clicks = []
+    bot = SimpleNamespace(cfg=CFG, frame=frame.copy(), keys_left=None, _labels_known=True, check=lambda: None,
+                          click=lambda x, y, *a, **k: clicks.append((x, y)), wait_still=lambda **k: True,
+                          sleep=lambda s: None, save_failure=lambda n: None,
+                          capture=SimpleNamespace(grab=lambda: bot.frame.copy()))
+    picked = lk.loot(bot, take_all=True, max_picks=4)
+    assert not [p for p in picked if "set" in p]
+    assert (494, 188) not in clicks

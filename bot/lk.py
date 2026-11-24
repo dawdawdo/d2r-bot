@@ -521,6 +521,9 @@ def _sig(lab) -> tuple:
 
 
 GRAY_MIN_W = 45  # px: gray (socketed / ethereal base) labels narrower than this aren't labels
+# unique/set: "Ring" is 46-47 px, a 3-letter base ("Cap") ~35. Narrower: a green arrow streak read as a 20 px set label
+# (2026-11-24 11:09), gold coin piles as 23-26 px uniques (11-11, 11-15)
+UNIQUE_MIN_W = 32
 
 
 def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[str]:
@@ -577,6 +580,8 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                     continue
             if lab.kind == "gray" and lab.w < GRAY_MIN_W:
                 continue  # a gray glint on the floor (2026-11-13 17:02: 20 px); the shortest base name is ~60 px
+            if lab.kind in ("unique", "set") and lab.w < UNIQUE_MIN_W:
+                continue
             if lab.kind == "magic":  # take_all too: blue jewels show (the jewel rule has no rarity)
                 if not is_charm(bot.frame, lab):
                     continue
