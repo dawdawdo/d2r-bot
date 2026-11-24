@@ -1041,11 +1041,14 @@ def withdraw_gold(bot: Controller) -> bool:
     scfg = bot.cfg["stash"]
     bot.click(*scfg["shared_tab"])
     bot.kill.sleep(0.4)
-    _withdraw_typed(bot, scfg["withdraw_gold"])
+    ok = _withdraw_typed(bot, scfg["withdraw_gold"])
     bot.press("esc")
     bot.kill.sleep(0.4)
     state.save({**state.load(), "gold_needed": False, "withdrew_unspent": True})  # unverified: revive_merc finds out
-    log.info("withdrew %d gold from the shared stash", scfg["withdraw_gold"])
+    if ok:  # (up to that much: a smaller pile all comes out)
+        log.info("withdrew up to %d gold from the shared stash", scfg["withdraw_gold"])
+    else:  # 2026-11-24 11:33: "shows no gold", then "withdrew 200000" anyway
+        log.warning("withdraw from the shared stash failed")
     return True
 
 
