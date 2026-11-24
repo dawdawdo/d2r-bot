@@ -3,6 +3,10 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 08:16: stopped for Stephen** (he's playing on Singularity). Session stopped after its run, D2R closed on
+GLaDOS, saves last written 08:15:50. Before starting the bot again: make sure he's done on Singularity and the saves
+have synced back.
+
 **2026-11-24 07:15: overnight summary.** 22:26-07:15: 133 runs, 87 kills (65 %), 24 misses (never saw her), 22 chickens,
 0 fails, 0 deaths, 9.9 kills/h. Since 19:12: 186 runs, 126 kills (68 %). Loot overnight: 17 runes, Nokozan Relic
 (unique amulet), whites; nothing left on the floor but two non-item labels. Gold: 590k shared + 179k carried at 07:15
