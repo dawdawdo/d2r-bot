@@ -114,3 +114,12 @@ def test_terrorized_line_in_the_area_info(name, want):
     from bot.lk import terror_info
 
     assert terror_info(frame(name)) is want
+
+
+def test_inventory_antidotes_are_potions_to_drink():
+    """Never stashed: the stowaway drinks what potion_kind names (4 antidotes reached shared page 1, 2026-11-23)."""
+    from bot.vision.inventory import potion_kind
+
+    f = frame("inv_antidotes")
+    assert potion_kind(f, 1, 2) == "antidote" and potion_kind(f, 2, 2) == "antidote"
+    assert potion_kind(f, 3, 2) is None  # a topaz

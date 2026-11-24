@@ -73,8 +73,13 @@ def protected_cells(rects) -> set[tuple[int, int]]:
 POTION_PX = 0.08  # share of strongly red or blue pixels: healing potions read 0.12-0.13, mana 0.10 (missed at 0.10 on 11-13), other unprotected items <= 0.07
 
 
+_ANTIDOTE: list = []
+ANTIDOTE_MIN = 0.85  # inv_antidote.png: 1.00 on antidotes, <= 0.64 on other cells (pale stamina potions the nearest)
+
+
 def potion_kind(frame: np.ndarray, c: int, r: int) -> str | None:
-    """'hp' / 'mp' for a healing / mana potion in this cell, else None (rejuvs, purple, are left alone)."""
+    """'hp' / 'mp' / 'antidote' for a healing / mana / antidote potion in this cell, else None (rejuvs, purple, are
+    left alone). Antidotes: 4 went to shared stash page 1 on 2026-11-23 (the hue tests below don't see the pale jar)."""
     import cv2
 
     x, y = cell_xy(c, r)
@@ -84,6 +89,14 @@ def potion_kind(frame: np.ndarray, c: int, r: int) -> str | None:
         return "hp"
     if ((h >= 100) & (h <= 125) & (s >= 150) & (v >= 120)).mean() >= POTION_PX:
         return "mp"
+    if not _ANTIDOTE:
+        from .screen import ASSETS
+
+        _ANTIDOTE.append(cv2.imread(str(ASSETS / "inv_antidote.png")))
+    reg = frame[y : y + SIZE, x : x + SIZE]
+    if _ANTIDOTE[0] is not None and reg.shape[0] >= _ANTIDOTE[0].shape[0] and reg.shape[1] >= _ANTIDOTE[0].shape[1]:
+        if cv2.minMaxLoc(cv2.matchTemplate(reg, _ANTIDOTE[0], cv2.TM_CCOEFF_NORMED))[1] >= ANTIDOTE_MIN:
+            return "antidote"
     return None
 
 
