@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure; fight back at the 15:45 setup (~78 %), see 19:05. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 19:50: the 18:00 hour was a missed terror zone.** "Terrorized: 93" in 5 of 5 fight frames 18:00-19:00
+(none in any other hour today), but the check after the stairs read nothing: it took the automap frame before the
+info text was up. terror_seen() waits for the text and looks again at the fight's start (fixtures info_terrorized_93 /
+info_not_terrorized). So the 18:00 chickens were level-93 fights; the 17:00 slump (no terror) was the quick changes.
+Also: 3 uniques left on the ground at 19:41 (inventory full; 4 antidotes from somewhere were in it, then stashed to
+shared page 1): potion_kind now knows antidotes, the stowaway drinks them. Shared stash 3.79M at 18:50.
+
 **2026-11-23 19:05: REVERTED the fight to the 15:45 setup** (commit b7422c8). By window: 15:45-16:44 14 kills / 18 runs
 (78 %); everything after (search pattern, sooner search, last-seen search, keep-away 540, merc antidote) 18 / 38
 (47 %). Kept: 9 s death wait, refill counter (Akara after 3 potions), automap fix. LESSON: one fight change per
