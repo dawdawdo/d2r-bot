@@ -96,6 +96,13 @@ def session_rects(items: list[tuple[str, int, int]], key_cell=None) -> list[list
     return [[c, r, *item_size(code)] for code, c, r in items if not (code == "key" and (c, r) == work)]
 
 
+def with_corpse(d2s: dict) -> dict:
+    """The save with a corpse's gear back among the items: the session after a death reads the save before the corpse
+    is picked up (2026-11-24 10:03: 31 % -> a session of LK in place of Andariel, her gear back on 30 s later)."""
+    corpse = [it for c in d2s.get("corpses") or [] if isinstance(c, dict) for it in c.get("items") or []]
+    return {**d2s, "items": list(d2s.get("items") or []) + corpse, "corpses": []} if corpse else d2s
+
+
 def read(cfg: dict, backup: Path | None = None) -> dict | None:
     """{"mf": total, "parts": [[code, mf], ...], "backup": name} from the newest backup, or None if it can't be read
     (no backup, or the save doesn't parse)."""
@@ -107,11 +114,12 @@ def read(cfg: dict, backup: Path | None = None) -> dict | None:
         return None
     try:
         d2s = d2save.read_d2s(backup / f"{char}.d2s")
-        total, parts = magic_find(d2s)
+        worn = with_corpse(d2s)
+        total, parts = magic_find(worn)
         try:  # socketed runes and gems (Ist in the Shako and Oculus: +55) live in the game tables, not the save
             from .gear import Tables, totals
 
-            total = round(totals(d2s, Tables(WORK)).get("mf", total))
+            total = round(totals(worn, Tables(WORK)).get("mf", total))
         except Exception as e:  # noqa: BLE001
             log.warning("socket MF not counted: %s", e)
     except Exception as e:  # noqa: BLE001  an unreadable save must never stop a session

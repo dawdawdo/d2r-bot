@@ -37,3 +37,14 @@ def test_gate_swaps_low_mf_boss_for_nothing_when_unknown():
     assert len(kept) == 2 and low == []
     kept, low = gate(tasks, None, cfg)  # unreadable save: no gate
     assert len(kept) == 2 and low == []
+
+
+def test_corpse_gear_counts_as_worn():
+    """2026-11-24 10:03: the session after a death read 31 % (gear on the corpse) and ran LK instead of Andariel."""
+    from bot.mf import with_corpse
+
+    shako = {"code": 0, "position": {"mode": "Equipped", "body_location": "Head"}, "stats": [{"id": 80, "value": 50}]}
+    d = {"items": [], "corpses": [{"x": 0, "y": 0, "items": [shako]}]}
+    worn = with_corpse(d)
+    assert worn["items"] == [shako] and worn["corpses"] == []
+    assert with_corpse({"items": [shako], "corpses": []})["items"] == [shako]
