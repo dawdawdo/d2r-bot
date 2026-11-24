@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-23 22:30: state for the night.** Andariel since 19:12 (15:45 fight setup): ~76 % kills, ~12.5 kills/h.
+Live tonight: terror check after the stairs + at the fight's start; antidotes in the inventory drunk; min_free 10;
+failed pickups logged as left_<kind>; Akara's trade seen by the inventory panel (her tab strip varies). Gold: ~5 merc
+revives/h, shared stash ~2.8M at 22:25 (~11 h): when it's empty runs switch to LK (gold_tasks, GOLD_LK_RUNS 10) and
+try Andariel again every 10. Open for Stephen: stash rejuvs for Andariel (question at 15:15).
+
 **2026-11-23 21:10: uniques left on the floor -> stash more often.** 19:41 and 21:01: three uniques each "picked" (labels
 clicked) but never in the inventory (saves): 3 / 6 scattered free cells, no room for 2x3 / 2x4 items. Andariel
 min_free 6 -> 10 (11 = empty loot area): stash whenever loot takes more than one cell. Pickups that fail are silent:
