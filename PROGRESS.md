@@ -1,7 +1,12 @@
 # Progress
 
-**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure; fight back at the 15:45 setup (~78 %), see 19:05. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 20:05: the reverted setup holds: 14 runs, 12 kills (86 %), 1 miss, 1 chicken, 13.9 kills/h** (19:12-20:05,
+no terror). Avg run 222 s (Akara refills after 3 potions add time). Gold: ~5 merc revives/h (50k each), 200k
+withdrawals every 30-45 min; shared stash ~3.4M. Next by Stephen's order: success is good; speed (Akara stops,
+walk-back misses); keep one change per clean hour.
 
 **2026-11-23 19:50: the 18:00 hour was a missed terror zone.** "Terrorized: 93" in 5 of 5 fight frames 18:00-19:00
 (none in any other hour today), but the check after the stairs read nothing: it took the automap frame before the
