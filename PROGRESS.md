@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 02:40: fight limit 210 s kept; overnight is harder.** Same setup: 19:12-23:21 72 % kills (67 runs) vs
+00:23-01:42 50 % (20 runs; 30 % misses, 20 % chickens). With 210 s from 01:42: 53 % kills, 13 % misses, 33 % chickens
+(15 runs): misses down, chickens up (longer fights, more poison), kills about level. Chickens are now the main loss;
+the stash-rejuv question (15:15) is the lever. Merc deaths up overnight (200k withdrawals every 30-40 min).
+
 **2026-11-24 01:50: SINGLE-CHANGE TEST from 01:42:40: fight limit 150 -> 210 s** (andy.timeout_s 360 -> 420). 01:14-01:36
 three fights found her, hurt her to 21-43 %, and ran out of time. Compare kills / misses from 01:42:40 with the
 baseline (19:12-23:21: 72 % kills, 15 % misses, 13 % chickens, 11.6 kills/h).
