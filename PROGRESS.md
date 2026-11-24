@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 10:36: a unique ring left on the floor.** 10:21:57 a unique ring's label (by a pillar, next to a gold pile)
+went away after the click; the run counted "unique", but it never reached her inventory (no new unique in any save).
+Lost with that game. Fix: a unique/set pick counts only when the free inventory cells drop (counted before/after the
+click); a miss walks to the spot and retries, then logs "nothing reached the inventory" + a failure frame and records
+left_unique. Andariel restarted 10:36 with it.
+
 **2026-11-24 10:10: THE STONE OF JORDAN.** Andariel dropped an SoJ at 09:57 (ilvl 75, unidentified); the stowaway put it
 in the **shared stash, page 1** at 10:01:48. She died at 10:03 (72 % -> 0 in 2 s) after it was stashed; her corpse was
 recovered next game. Fixes: (1) after a unique/set pickup, and at a session's first stop, the Act 1 town stashes at the
