@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, 15:45 fight setup: 86 % kills, ~14 kills/h (see 20:05). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 00:25: search pattern test: no gain, reverted.** 23:21-00:21: 15 runs, 67 % kills, 20 % misses, 13 %
+chickens vs baseline 19:12-23:21: 67 runs, 72 % / 15 % / 13 %, 11.6 kills/h. Misses are all fights that never see
+her; the name bars there read Ghoul / Dark Shaman / Dark One (she's never under the cursor), so it's where we look,
+not how. IDEA for the next session: localize on the Catacombs 4 automap (maps/blizzaga_hell/cata4_auto, a fixed lair)
+instead of dead reckoning from the route, and go to the throne room deliberately; first check in never-seen snapshots
+whether the route ends somewhere else (12:29 started in a different room).
+
 **2026-11-23 23:25: SINGLE-CHANGE TEST from 23:21:35: search pattern only** (SEARCH round the fight spot; 15:45 setup
 otherwise). Baseline 19:12-23:15: 74 % kills, every miss a fight that never saw her (~1 in 8). Compare the hour from
 23:21:35; keep it if never-seen drops without more chickens.
