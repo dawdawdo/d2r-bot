@@ -1,7 +1,13 @@
 # Progress
 
-**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure, ~85 % kills, ~16 kills/h (see 16:25). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
+**Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Act 1 town, poison cure; fight back at the 15:45 setup (~78 %), see 19:05. Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
+
+**2026-11-23 19:05: REVERTED the fight to the 15:45 setup** (commit b7422c8). By window: 15:45-16:44 14 kills / 18 runs
+(78 %); everything after (search pattern, sooner search, last-seen search, keep-away 540, merc antidote) 18 / 38
+(47 %). Kept: 9 s death wait, refill counter (Akara after 3 potions), automap fix. LESSON: one fight change per
+clean hour, compared by window (runs.csv + logs); too many quick changes hid what hurt. Next: confirm ~78 % over
+1-2 h, then try single changes again (keep-away 470?) one at a time.
 
 **2026-11-23 18:20: EXPERIMENT running: merc antidote back on** (ANTIDOTE_MERC True). Since 16:55 also: search
 pattern round the fight spot (SEARCH), search starts after 2 empty sweeps / 3 minion finds + 10 s, back to her last-seen
