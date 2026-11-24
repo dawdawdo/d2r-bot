@@ -348,7 +348,7 @@ def open_stash_a1(bot: Controller) -> bool:
 
 def revive_merc_a1(bot: Controller) -> bool:
     """Kashya: Resurrect (the widest line of her menu while the merc is dead)."""
-    from .town import resurrect_result
+    from .town import merc_alive, resurrect_result
 
     off = walk_to(bot, "kashya", near=NEAR, steps=16)
     if off is None or talk(bot, "kashya", off) is None:
@@ -360,9 +360,12 @@ def revive_merc_a1(bot: Controller) -> bool:
     widths = _line_widths(f, menu) if menu else []
     n = max(range(len(widths)), key=lambda i: widths[i]) + 1 if widths else 0
     if not widths or widths[n - 1] < RESURRECT_W:
+        close_npc(bot)
+        if menu and merc_alive(bot):  # Talk / Hire / Cancel: he's alive (his portrait was late), nothing to do
+            log.info("Kashya: no Resurrect line and his portrait is up: the merc is alive")
+            return True
         bot.save_failure("a1_kashya_no_resurrect")
         log.warning("Kashya: no Resurrect line (widths %s)", widths)
-        close_npc(bot)
         return False
     bot.click(*_menu_line(menu, n))
     bot.kill.sleep(1.5)
@@ -618,7 +621,8 @@ def town_stop(bot: Controller, cfg: dict, repair: bool = False, stow: bool = Fal
     elif deposit_gold(bot) is not None:  # carrying the max: only then does it open the stash
         walked = True
         close_stash(bot)
-    if getattr(bot, "merc_revive", True) and not merc_alive(bot):
+    if getattr(bot, "merc_revive", True) and not merc_alive(bot) and not (bot.kill.sleep(1.5) or merc_alive(bot)):
+        # (a second look: his portrait comes late after a game loads; 00:38 a walk to Kashya with him alive)
         log.info("merc is dead -> Kashya")
         walked = True
         ok = revive_merc_a1(bot)
