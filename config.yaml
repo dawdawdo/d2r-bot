@@ -146,7 +146,8 @@ loot:
 # Run extras, one switch each (Stephen 2026-11-20: find the balance of loot vs time and safety). bot/config.py
 # FEATURES maps each onto the setting the code reads. Restart the bot (site stop/start) after a change.
 features:
-  gold_pickup: false     # chest gold piles after the items. Off 11-20 to rebuild rejuvs: chickens ~4% -> ~25% with it on
+  gold_pickup: true      # chest gold piles after the items. Off 11-20..11-25 to rebuild rejuvs (on again 11-25 09:00, refill done:
+                         #   Stephen wants every tab full, and LK gold blocks pay Andariel's merc). Chickens ~4% -> ~25% with it on (11-20)
                          #   (loot.gold_*: distance / under-attack limits when on). Stephen wants every tab full eventually
   gold_deposit: true     # carrying the max -> deposit at the stash: the shared pile, then personal (one pile each), keep 200k
   weapon_racks: false    # click the Weapon Rack in both NE huts (~4 s/run). Off 11-20: 489 clicks, nothing wanted
