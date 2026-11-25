@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-25 06:19: blocks so far.** LK 22:41-03:47 (42k -> 503k; gold pickup is off since 11-20 for the rejuv
+refill, so LK gold is only what she walks over: 5 h); Andariel 03:47-06:04 (503k -> 16k, ~60 % kills, misses = never
+saw her); LK again since 06:04. Fixes tonight (Proton draws panels late both ways): Act 1 automap loop waits out the
+game menu's fade (a1town.esc_cleared; 2 Andariel fails "automap won't show" at 04:16/04:27); free_cells closes the
+inventory checked (its blind close let the next Esc open the game menu); town WP hidden -> clear_panels (stash /
+inventory / menu each checked; 06:14 the stash stayed up after a stowaway). Still open: the Docks rubble stall chain.
+
 **2026-11-25 02:00: LK gold block since 22:41 (Andariel 19:24-22:41: 48 runs, 38 kills, 0 deaths; gold 599k -> 42k;
 The Minotaur + 2 sets).** Open: Kurast Docks walk fails ~4 % of LK runs tonight (~1 % on 11-17..22): the chained
 walk stalls on the rubble by the spawn (leg 0, also 11-20), the escapes drift it, "odometry lost", then the leg-by-leg
