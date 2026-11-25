@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-25 02:00: LK gold block since 22:41 (Andariel 19:24-22:41: 48 runs, 38 kills, 0 deaths; gold 599k -> 42k;
+The Minotaur + 2 sets).** Open: Kurast Docks walk fails ~4 % of LK runs tonight (~1 % on 11-17..22): the chained
+walk stalls on the rubble by the spawn (leg 0, also 11-20), the escapes drift it, "odometry lost", then the leg-by-leg
+fallback walks from the wrong spot -> stash + town WP out of view -> run fails (~1 min each). Fix idea: after odometry
+loss, re-anchor on the stash / WP / route-end view before the remaining legs. Added automap_closed (00:06): the Tab
+close takes 0.7 s on ~1 in 6 spawns (the walk used to start after 0.2 s); it isn't the stall cause.
+
 **2026-11-24 19:23: Andariel again (gold blocks).** Since 17:06 merc tasks alternate in gold blocks (Stephen's idea):
 below one merc revive's gold (town.merc_revive_gold 50k; carried + her stash + shared, read from the saves) -> LK
 until town.gold_block_until (500k) -> the task again (supplies.gold_block; state.json gold_block). A dead merc with
