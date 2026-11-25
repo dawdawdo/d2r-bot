@@ -1740,10 +1740,11 @@ def town_by_area_name(bot: Controller) -> int | None:
 
 
 def automap_closed(bot: Controller, wait: float = 2.0, poll: float = 0.15) -> bool:
-    """After the closing Tab: wait until the automap's info text is gone before walking. Proton takes the map down late
-    as it puts it up late: the Kurast Docks walk started 0.2 s after Tab, its odometry read the map overlay and about
-    half the Act 3 spawns stalled at leg 0 (2026-11-24, ~12 % before the area-name read; 3 runs failed in 50 min).
-    Still up after `wait` (the first Tab was never seen, so the second one opened it): Tab once more."""
+    """After the closing Tab: wait until the automap's info text is gone before walking (it replaced a blind 0.2 s
+    sleep; Proton puts the map up late, so a late close would leave the overlay under the walk's odometry). Suspected
+    for 3 LK fails in 50 min on 2026-11-24, but the next runs logged no slow close: the Kurast Docks leg-0 stalls are
+    the rubble by the spawn (same frames on 11-20). Still up after `wait` (the first Tab was never seen, so the second
+    one opened it): Tab once more."""
     from .durance import map_text_open
 
     t0 = bot.clock()
