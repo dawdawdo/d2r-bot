@@ -7,7 +7,11 @@
 The Minotaur + 2 sets).** Open: Kurast Docks walk fails ~4 % of LK runs tonight (~1 % on 11-17..22): the chained
 walk stalls on the rubble by the spawn (leg 0, also 11-20), the escapes drift it, "odometry lost", then the leg-by-leg
 fallback walks from the wrong spot -> stash + town WP out of view -> run fails (~1 min each). Fix idea: after odometry
-loss, re-anchor on the stash / WP / route-end view before the remaining legs. Added automap_closed (00:06): the Tab
+loss, re-anchor on the stash / WP / route-end view before the remaining legs. 03:44 (runs 105/106): the game menu
+("Paused") was already up before the stash tries and the WP search; in 105 the last 3 fallback legs didn't move at
+all (menu up?). walk_route presses no Esc and its points are in the play area; the source is unknown. Next: in
+walk_route, on a leg that didn't move, save a frame and close an esc_menu if one is up. Run 106's last chained-walk
+frame had the town WP in view (top right) before the fallback walked her away from it. Added automap_closed (00:06): the Tab
 close takes 0.7 s on ~1 in 6 spawns (the walk used to start after 0.2 s); it isn't the stall cause.
 
 **2026-11-24 19:23: Andariel again (gold blocks).** Since 17:06 merc tasks alternate in gold blocks (Stephen's idea):
