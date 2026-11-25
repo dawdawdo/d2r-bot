@@ -3,8 +3,10 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
-**2026-11-25 14:00: running again** (Andariel; LK block ended 14:11 at 518k). Filter installed 14:00 (target uniques,
-Monarch). **Next stop: install the filter again** (Flail added 14:31 for CTA rerolls; the live copy lacks it).
+**2026-11-25 15:33: stopped for Stephen** (runeword hunting). Session 14:00-15:33: LK block ended 14:11 at 518k, then
+Andariel; 24 runs, 22 ok, 2 misses (never saw her), 0 deaths; The Mahim-Oak Curio. D2R closed, filter installed 15:33
+(target uniques, Monarch + Flail bases for Spirit / CTA rerolls), Syncthing idle / 100 %. `--start andy` when he's done.
+Watch: "war cries: couldn't confirm the main weapon set" 3 of 38 casts this session (1 of 80 earlier); casts still landed.
 
 **2026-11-25 11:15: stopped for Stephen.** Session stopped after its run, D2R closed, saves 11:15:33, Syncthing idle /
 100 %. State: LK gold block under way (52k of 500k; state.json gold_block), so `--start andy` resumes LK first.
