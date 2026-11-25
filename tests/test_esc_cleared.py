@@ -31,3 +31,15 @@ def test_gives_up_after_the_timeout(monkeypatch):
     _quiet(monkeypatch)
     bot, t = _bot(["esc_menu"])
     assert a1town.esc_cleared(bot) is False and 2.0 <= t["now"] < 2.3
+
+
+def test_free_cells_closes_the_inventory_checked(monkeypatch):
+    from bot import town
+
+    calls = []
+    bot = SimpleNamespace(cfg={"hotkeys": {"inventory": "i"}}, press=lambda k: calls.append(("press", k)),
+                          kill=SimpleNamespace(sleep=lambda s: None))
+    monkeypatch.setattr(town, "_scan_inventory", lambda b, wait_open: {"empty": [(0, 0), (1, 0)]})
+    monkeypatch.setattr(town, "inventory_panel", lambda b, want_open: calls.append(("panel", want_open)) or True)
+    assert town.free_cells(bot) == 2
+    assert calls == [("press", "i"), ("panel", False)]  # one toggle to open; the close is checked, not blind

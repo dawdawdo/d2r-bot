@@ -1844,8 +1844,9 @@ def free_cells(bot: Controller) -> int:
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.35)
     inv = _scan_inventory(bot, wait_open=True)
-    bot.press(bot.cfg["hotkeys"]["inventory"])
-    bot.kill.sleep(0.2)
+    # closed and checked: after a blind toggle + 0.2 s the panel was still drawn, the Act 1 automap step pressed Esc
+    # for it, the panel went anyway and that Esc opened the game menu (2026-11-25 04:27, "automap won't show")
+    inventory_panel(bot, False)
     return len(inv["empty"])
 
 
