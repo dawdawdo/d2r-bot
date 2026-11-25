@@ -87,7 +87,7 @@ def town_automap(bot: Controller) -> np.ndarray:
             return f
         if bot.observe() == "esc_menu" or menu_up(bot, f) or inventory_open(f):
             bot.press("esc")
-            bot.kill.sleep(0.5)
+            esc_cleared(bot)
             continue
         bot.press("tab")
         for _ in range(10):  # Proton shows the map late (up to ~2 s on GLaDOS)
@@ -97,6 +97,21 @@ def town_automap(bot: Controller) -> np.ndarray:
                 return f
     bot.save_failure("a1_automap_wont_show")
     raise BotError("automap won't show (Act 1)")
+
+
+def esc_cleared(bot: Controller, timeout: float = 2.0, poll: float = 0.2) -> bool:
+    """After an Esc: wait for the game menu / NPC menu / inventory to go before anything presses Esc again. A re-check
+    0.5 s later still saw the game menu (Proton, its fade), so the next Esc reopened it: 4 tries ran out with it up and
+    Andariel runs failed "automap won't show" (2026-11-25 04:16, 04:27)."""
+    from .vision.inventory import inventory_open
+
+    t_end = bot.clock() + timeout
+    while True:
+        bot.kill.sleep(poll)
+        if bot.observe() != "esc_menu" and not menu_up(bot, bot.frame) and not inventory_open(bot.frame):
+            return True
+        if bot.clock() >= t_end:
+            return False
 
 
 def town_map_off(bot: Controller) -> None:
