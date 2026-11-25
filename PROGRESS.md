@@ -8,7 +8,13 @@ refill, so LK gold is only what she walks over: 5 h); Andariel 03:47-06:04 (503k
 saw her); LK again since 06:04. Fixes tonight (Proton draws panels late both ways): Act 1 automap loop waits out the
 game menu's fade (a1town.esc_cleared; 2 Andariel fails "automap won't show" at 04:16/04:27); free_cells closes the
 inventory checked (its blind close let the next Esc open the game menu); town WP hidden -> clear_panels (stash /
-inventory / menu each checked; 06:14 the stash stayed up after a stowaway). Still open: the Docks rubble stall chain.
+inventory / menu each checked; 06:14 the stash stayed up after a stowaway); town WP left-half match from 0.75 (08:01:
+WP at the right edge, 0.80; all 4 saved fails at 0.75-0.80 were real WPs, misses <= 0.67). Still open: the Docks
+rubble stall chain. Every failed walk starts "stalled at leg 0" (~40 % of A3 spawns, mostly recovered); the escapes
+then take her off the route (08:12: out on the boardwalks by the thatched hut over the water), odometry is lost, and
+the leg-by-leg fallback clicks into water/edges (0 px moved on 9 clicks). Ideas: a recorded detour for the leg-0
+stall (escape 0 at leg 0 clicks "back" = the start = no-op), or on odometry loss find the stash/WP/route-end view
+before walking blind.
 
 **2026-11-25 02:00: LK gold block since 22:41 (Andariel 19:24-22:41: 48 runs, 38 kills, 0 deaths; gold 599k -> 42k;
 The Minotaur + 2 sets).** Open: Kurast Docks walk fails ~4 % of LK runs tonight (~1 % on 11-17..22): the chained
