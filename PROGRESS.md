@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-24 19:23: Andariel again (gold blocks).** Since 17:06 merc tasks alternate in gold blocks (Stephen's idea):
+below one merc revive's gold (town.merc_revive_gold 50k; carried + her stash + shared, read from the saves) -> LK
+until town.gold_block_until (500k) -> the task again (supplies.gold_block; state.json gold_block). A dead merc with
+<50k skips the Asheara walk. 17:06-18:16 LK block 23k -> ~85k (~85k/h); stopped 18:16 for Stephen (ThroatCutter died
+to Doom Lords in the WSK throne; Blizzaga keeps the Anni). 19:23 restart: Syncthing idle/100 %, 599k total gold (he
+refilled it) -> the block ends on run 1, Andariel. Stop-script bug: `pgrep -f D2R.exe` matched its own shell, so the
+wait never ended (D2R had closed); use `ps -eo comm | grep -i ^d2r` instead.
+
 **2026-11-24 16:01: Andariel farming resumed; the SoJ became an Annihilus.** Stephen sold Blizzaga's SoJ (10:10) for
 DClone; ThroatCutter killed him easily -> Annihilus (+1 skills, 14 attrs, 14 res, 10 % XP), now in Blizzaga's inventory
 (protected by the session-start baseline; MF still 222 %). Goal now: 1-2 more SoJs for more Annihilus rolls; Ubers next
