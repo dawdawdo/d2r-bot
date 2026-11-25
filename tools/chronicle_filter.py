@@ -46,6 +46,17 @@ def main() -> int:
     for r in rep["missing_uniques"]:
         print(f"  {r['name']} [{r['code']}]")
     print(f"\nbase codes: {rep['uniques']['codes']} unique, {rep['sets']['codes']} set")
+    rw = rep["rw"]
+    if rw["error"]:
+        print(f"\nrunewords: queue not read ({rw['error']})")
+    else:
+        print(f"\n== Chronicle runewords: {rw['missing']} of {rw['total']} missing; base queue ==")
+        for st in rw["steps"]:
+            print(f"  {'SHOWN ' if st['shown'] else '      '}{st['name']} [{st['code']}] (stash {st['stash']}): "
+                  + ", ".join(st["runewords"]))
+        for b in rw["stash_bases"]:
+            print(f"  socketed in the stash: {b['name']} {b['sockets']}os{' eth' if b['eth'] else ''} ({b['where']}): "
+                  + (", ".join(b["runewords"]) or "no missing runeword fits"))
     if args.dry_run:
         return 0
     src, live = cf.repo_filter(cfg), cf.live_filter(cfg)
@@ -53,7 +64,7 @@ def main() -> int:
     bak.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, bak / src.name)
     new = cf.build_filter(cf.read_filter(live if live.exists() else src),
-                          set(rep["unique_codes"]), set(rep["set_codes"]))
+                          set(rep["unique_codes"]), set(rep["set_codes"]), set(rep["rw_codes"]))
     src.write_text(json.dumps(new, indent=4) + "\n", encoding="utf-8")
     print(f"wrote {src} (old copy in {bak})")
     if args.install:

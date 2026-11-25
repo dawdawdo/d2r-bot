@@ -498,6 +498,30 @@
             "equipmentItemCode": [
                 "ci3"
             ]
+        },
+        {
+            "name": "Show Chronicle RW bases",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "equipmentRarity": [
+                "normal"
+            ],
+            "equipmentItemCode": [
+                "7cr"
+            ]
+        },
+        {
+            "name": "Show socketed Chronicle RW bases",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": true,
+            "equipmentRarity": [
+                "normal"
+            ],
+            "equipmentItemCode": [
+                "7cr"
+            ]
         }
     ]
 }

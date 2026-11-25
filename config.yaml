@@ -134,6 +134,8 @@ loot:
   # visible labels of these colors. Which uniques and sets show is decided only there, per base code:
   # tools/chronicle_filter.py regenerates it from the Chronicle. No item list to keep in step here.
   filter_name: "LK Bot"
+  rw_targets_active: 1     # Chronicle runeword bases shown at once (bot/rw_targets.py QUEUE; Stephen 2026-11-25: a few at a time)
+  rw_target_cap: 2         # ...and only while the stash holds fewer unused copies than this
   chronicle_tables: 'D:/Google_Drive/Projects/D2R_Bot_20260314/Codebase/armory_tools/scanbundle.tgz'
   pick: [rune, unique, set, gray]  # gray = socketed/eth bases; charms ("magic"): features.charms
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)

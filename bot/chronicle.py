@@ -68,6 +68,8 @@ RULE_BASES = "Show runeword bases"
 RULE_SOCKETED_BASES = "Show socketed runeword bases"
 RULE_SUPERIOR_BASES = "Show superior runeword bases"
 RULE_SOCKETED_SUPERIOR_BASES = "Show socketed superior bases"
+RULE_RW_TARGETS = "Show Chronicle RW bases"  # bot/rw_targets.py: one queue step's base at a time
+RULE_SOCKETED_RW_TARGETS = "Show socketed Chronicle RW bases"
 RULE_TARGETS = "Show target uniques"
 RULE_TARGET_RINGS = "Show target rings (SoJ)"
 # Uniques shown whether or not the Chronicle has them (Stephen 2026-11-25: "leave some uniques on the target loot list
@@ -88,7 +90,7 @@ TARGET_UNIQUES = {
 OLD_NAMES = {"Show Chronicle missing set jewelry", "Show all other gems", "Show all Gems", "Show Pul and higher runes"}
 GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_RUNES, RULE_BASES,
              RULE_SOCKETED_BASES, RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, RULE_TARGETS,
-             RULE_TARGET_RINGS} | OLD_NAMES
+             RULE_TARGET_RINGS, RULE_RW_TARGETS, RULE_SOCKETED_RW_TARGETS} | OLD_NAMES
 
 
 @dataclass
@@ -154,7 +156,7 @@ def _code_rule(name: str, rarity: str, codes: set[str]) -> list[dict]:
     return [_show(name, equipmentRarity=[rarity], equipmentItemCode=sorted(gear))] if gear else []
 
 
-def build_filter(old: dict, unique_codes: set[str], set_codes: set[str]) -> dict:
+def build_filter(old: dict, unique_codes: set[str], set_codes: set[str], rw_codes=frozenset()) -> dict:
     """The filter with its generated rules replaced and any old rarity + itemCode rule fixed. Others are untouched."""
     stray = set_codes & ITEM_RULE_CODES
     if stray:
@@ -184,6 +186,9 @@ def build_filter(old: dict, unique_codes: set[str], set_codes: set[str]) -> dict
             if codes:
                 bases = dict(equipmentRarity=[rarity], equipmentItemCode=sorted(codes))
                 new += [_show(plain, **bases), {**_show(socketed, **bases), "filterEtherealSocketed": True}]
+    if rw_codes := set(rw_codes) - set(RUNEWORD_BASES):
+        bases = dict(equipmentRarity=["normal"], equipmentItemCode=sorted(rw_codes))
+        new += [_show(RULE_RW_TARGETS, **bases), {**_show(RULE_SOCKETED_RW_TARGETS, **bases), "filterEtherealSocketed": True}]
     return {**old, "rules": rules + new}
 
 
@@ -191,14 +196,15 @@ def _rule_codes(flt: dict, name: str) -> set[str]:
     return {c for r in flt["rules"] if r["name"] == name for c in r.get("equipmentItemCode", []) + r.get("itemCode", [])}
 
 
-def up_to_date(flt: dict, unique_codes: set[str], set_codes: set[str]) -> bool:
+def up_to_date(flt: dict, unique_codes: set[str], set_codes: set[str], rw_codes=frozenset()) -> bool:
     """Does this filter already show exactly what the Chronicle still needs?"""
-    want = build_filter(flt, unique_codes, set_codes)
+    want = build_filter(flt, unique_codes, set_codes, rw_codes)
     if not {r["name"] for r in want["rules"]} <= {r["name"] for r in flt["rules"]}:
         return False  # a generated rule is missing (the ring rule has no codes to compare)
     return all(_rule_codes(flt, n) == _rule_codes(want, n)
                for n in (RULE_UNIQUES, RULE_SETS, RULE_RUNES, RULE_BASES, RULE_SOCKETED_BASES,
-                         RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, RULE_TARGETS, RULE_TARGET_RINGS))
+                         RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, RULE_TARGETS, RULE_TARGET_RINGS,
+                         RULE_RW_TARGETS, RULE_SOCKETED_RW_TARGETS))
 
 
 def save_dir(cfg: dict) -> Path:
@@ -224,6 +230,7 @@ def report(cfg: dict, stash: Path | None = None, tables: Path | None = None) -> 
     miss_u, miss_s = missing(uniques, sets, chron)
     unique_codes, set_codes = {r["code"] for r in miss_u}, {r["item"] for r in miss_s}
     live = live_filter(cfg)
+    rw = runeword_report(cfg, chron)
     return {
         "uniques": {"found": len(chron.uniques), "total": len(eligible(uniques)), "codes": len(unique_codes)},
         "sets": {"found": len(chron.sets), "total": len(eligible(sets)), "codes": len(set_codes)},
@@ -231,5 +238,23 @@ def report(cfg: dict, stash: Path | None = None, tables: Path | None = None) -> 
         "missing_uniques": [{"name": r["index"], "code": r["code"]} for r in miss_u],
         "missing_sets": [{"name": r["index"], "code": r["item"]} for r in miss_s],
         "unique_codes": sorted(unique_codes), "set_codes": sorted(set_codes),
-        "up_to_date": live.exists() and up_to_date(read_filter(live), unique_codes, set_codes),
+        "up_to_date": live.exists() and up_to_date(read_filter(live), unique_codes, set_codes, set(rw["codes"])),
+        "rw": rw, "rw_codes": rw["codes"],
     }
+
+
+def runeword_report(cfg: dict, chron: Chronicle) -> dict:
+    """Runeword part of the Chronicle (bot/rw_targets.py): queue steps, the base codes to show, socketed bases in the
+    stash and what they can become. A read failure leaves the queue empty rather than breaking the report."""
+    from . import rw_targets as rt
+
+    lcfg = cfg.get("loot") or {}
+    try:
+        t = rt.load()
+        counts, socketed = rt.stash_bases(rt.stash_items(cfg), t, chron.runewords)
+        steps = rt.targets(chron.runewords, t, counts, active=lcfg.get("rw_targets_active", rt.ACTIVE),
+                           cap=lcfg.get("rw_target_cap", rt.CAP), filter_codes=set(RUNEWORD_BASES))
+        return {"missing": len(rt.missing(chron.runewords, t)), "total": len(t.runewords), "steps": steps,
+                "codes": sorted(s["code"] for s in steps if s["shown"]), "stash_bases": socketed, "error": None}
+    except Exception as e:  # noqa: BLE001 - the uniques/sets report must not depend on this
+        return {"missing": None, "total": None, "steps": [], "codes": [], "stash_bases": [], "error": str(e)}
