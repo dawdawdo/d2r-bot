@@ -129,7 +129,7 @@ def test_runeword_bases_shown_after_hide_all_gear():
     names = [r["name"] for r in new["rules"]]
     rules = {r["name"]: r for r in new["rules"]}
     for name in (cf.RULE_BASES, cf.RULE_SOCKETED_BASES):
-        assert set(rules[name]["equipmentItemCode"]) == {"utp", "9wc", "7wc", "ci3"}  # body armor: Archon Plate only (Stephen 2026-11-23)
+        assert set(rules[name]["equipmentItemCode"]) == {"utp", "uit", "9wc", "7wc", "ci3"}  # Archon Plate (11-23) + Monarch back for Spirit (11-25)
         assert rules[name]["equipmentRarity"] == ["normal"]
         assert names.index(name) > names.index("Hide all gear")  # later rules win
     for name in (cf.RULE_SUPERIOR_BASES, cf.RULE_SOCKETED_SUPERIOR_BASES):

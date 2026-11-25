@@ -44,6 +44,9 @@ RUNEWORD_BASES = {
     # 2026-11-23 Stephen: "I don't need so many armors - probably only Archon Plate at this point". Mage Plate, Dusk
     # Shroud and the other elite body armors (added 11-19 for Enigma / CoH / Fortitude) are off.
     "utp": "Archon Plate",
+    # 2026-11-25 Stephen wants Monarchs back (off since 11-13, "enough Spirits"): Spirit rolls 25-35 % FCR, and a 35
+    # Spirit gets Blizzaga to the 105 breakpoint with Chains of Honor + Magefist in place of Vipermagi + Chance Guards.
+    "uit": "Monarch",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
     "ci3": "Diadem",

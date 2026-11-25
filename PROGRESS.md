@@ -6,7 +6,8 @@
 **2026-11-25 11:15: stopped for Stephen.** Session stopped after its run, D2R closed, saves 11:15:33, Syncthing idle /
 100 %. State: LK gold block under way (52k of 500k; state.json gold_block), so `--start andy` resumes LK first.
 **Before the next start: install the filter** (`python tools/install_filter.py`, D2R closed on both machines): it now
-has target uniques shown regardless of the Chronicle (chronicle.TARGET_UNIQUES + a unique-ring rule; cab508c).
+has target uniques shown regardless of the Chronicle (chronicle.TARGET_UNIQUES + a unique-ring rule; cab508c), and
+Monarch back on the runeword bases (Stephen 13:58: a 35 % FCR Spirit for Blizzaga).
 Since 06:19: Hratli repairs fixed (chained walk + 0.3 s hovers; Shako/Vipermagi had broken, repaired 08:46), save-based
 worn-gear repairs (supplies.worn_gear; belt repaired at 6/12, 09:47), gold pickup back on (refill done 09:00: LK block
 317k -> 523k in 23 min), Andariel 09:29-11:00: 35 runs, 0 fails, Radimant's Sphere (Chronicle). Mod for Stephen:
