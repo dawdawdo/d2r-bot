@@ -181,7 +181,10 @@ def find_town_wp(bot: Controller, frame: np.ndarray, tcfg: dict, quiet: bool = F
     if score >= tcfg.get("wp_threshold", 0.7):
         return loc
     half, hloc = match_score(frame, t[:, : t.shape[1] // 2], None)
-    if half >= 0.8:  # live: 0.86-0.87 with someone on the right brazier
+    # live: 0.86-0.87 with someone on the right brazier. 0.75: logged misses with no WP in view score 0.55-0.67; the
+    # three above that were real WPs (2026-11-25 08:01: 0.80 at x 1172, its right brazier off the screen edge where
+    # the full template can't fit, Hratli by the left one; 11-22: 0.77 with the full match at the same spot)
+    if half >= 0.75:
         return hloc
     typ = tcfg.get("wp_typical")
     if typ and score >= 0.6 and np.hypot(loc[0] - typ[0], loc[1] - typ[1]) < 40:
