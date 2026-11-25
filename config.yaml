@@ -218,6 +218,9 @@ town:
   keys_pick_below: 8             # pick keys from chests only below this estimate (drops are stacks of several)
   hratli:                        # legs after the Ormus legs: E across the plaza, SE bridge, landing, NE bridge
     route: [[1000, 560], [1150, 380], [1040, 480], [900, 470], [860, 510], [900, 540], [1118, 262], [880, 220], [1000, 170]]
+    # each leg's view displacement (median of the 3 walks that reached him, 11-23..25; they agree within ~2 px but the
+    # first and the last): the chained walk steers by odometry, the click-by-click walk failed ~18 of 22 since 11-23
+    route_disp: [[96, 29], [442, 29], [441, 124], [288, 124], [268, 153], [269, 154], [499, -96], [307, -115], [153, -58]]
     region: [600, 60, 500, 300]  # where Hratli stands at the end of the route
     trade_offset: [37, 58]       # "Trade/Repair" relative to the npc_hratli.png match
     repair_all: [362, 516]       # trade window: right anvil button ("Repair all equipment")

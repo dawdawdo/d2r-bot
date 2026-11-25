@@ -650,7 +650,14 @@ def open_hratli(bot: Controller) -> bool | None:
     pressed); None: not found."""
     tcfg = bot.cfg["town"]
     h = tcfg["hratli"]
-    walk_route(bot, tcfg["route"][: tcfg["ormus_after_leg"]] + h["route"])
+    legs = tcfg["route"][: tcfg["ormus_after_leg"]] + h["route"]
+    disps = (tcfg.get("route_disp") or [])[: tcfg["ormus_after_leg"]] + (h.get("route_disp") or [])
+    if len(disps) == len(legs):  # steer by odometry: click-by-click, one late start put every later leg off
+        gave_up = walk_chain(bot, legs, disps)
+        if gave_up is not None:
+            walk_route(bot, legs[gave_up:])
+    else:
+        walk_route(bot, legs)
     # Shape-based tooltip finder: the forge fire flickers, which fooled the frame-diff one.
     for attempt, (x, y) in enumerate(_name_points(bot, h["region"])):
         if attempt >= 5:
