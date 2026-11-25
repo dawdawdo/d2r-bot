@@ -3,13 +3,16 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-25 18:23: stopped for Stephen** (he's trying things). Session 15:52-18:23: 37 runs, 30 ok, 5 misses, 2 chickens,
+0 deaths; gold fell 518k -> 48k (merc revives), so the LK block started 18:03 and is still under way (to 500k):
+`--start andy` resumes LK first. Filter installed 18:23 (Phase Blade queue step), synced to Singularity.
+
 **2026-11-25 15:55: running again.** Stephen finished his Spirit/CTA rerolls. Cubing now holds Tal, Ort, Thul, Amn,
 Hel (cube.HOLD / config cube.hold: never inputs) and cubes Ith -> Tal, Ral -> Ort, Sol -> Shael -> Dol -> Hel; bottom rune Ith;
 the filter shows Ith (r06) and up again (installed 15:52). Next cube due ~20:05.
 Chronicle runewords a base at a time (bot/rw_targets.py, 16:08): 82 of 99 missing; 49 of the affordable ones fit the
 filter's own bases (misrolled sockets), the rest go through QUEUE (Phase Blade -> Hunter's Bow -> Gnarled Staff -> Claws ->
-War Scepter -> Targe -> Bone Wand -> Kriss), 1 shown at a time while the stash has < 2. **Next stop: install the filter**
-(adds Phase Blade; the live copy lacks it). tools/chronicle_filter.py prints the queue and what socketed stash bases can become.
+War Scepter -> Targe -> Bone Wand -> Kriss), 1 shown at a time while the stash has < 2 (installed 18:23). tools/chronicle_filter.py prints the queue and what socketed stash bases can become.
 
 **2026-11-25 15:33: stopped for Stephen** (runeword hunting). Session 14:00-15:33: LK block ended 14:11 at 518k, then
 Andariel; 24 runs, 22 ok, 2 misses (never saw her), 0 deaths; The Mahim-Oak Curio. D2R closed, filter installed 15:33
