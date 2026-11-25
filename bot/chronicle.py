@@ -47,6 +47,8 @@ RUNEWORD_BASES = {
     # 2026-11-25 Stephen wants Monarchs back (off since 11-13, "enough Spirits"): Spirit rolls 25-35 % FCR, and a 35
     # Spirit gets Blizzaga to the 105 breakpoint with Chains of Honor + Magefist in place of Vipermagi + Chance Guards.
     "uit": "Monarch",
+    # 2026-11-25 Stephen: Flails for Call to Arms rerolls (Battle Orders rolls +1-6). 5 sockets max, low str/dex.
+    "fla": "Flail",
     "9wc": "Grim Scythe",
     "7wc": "Giant Thresher",
     "ci3": "Diadem",
