@@ -43,3 +43,27 @@ def test_free_cells_closes_the_inventory_checked(monkeypatch):
     monkeypatch.setattr(town, "inventory_panel", lambda b, want_open: calls.append(("panel", want_open)) or True)
     assert town.free_cells(bot) == 2
     assert calls == [("press", "i"), ("panel", False)]  # one toggle to open; the close is checked, not blind
+
+
+def test_clear_panels_closes_each_panel_that_is_up(monkeypatch):
+    from bot import town
+
+    calls = []
+    bot = SimpleNamespace(press=lambda k: calls.append(("press", k)), observe=lambda: "esc_menu")
+    monkeypatch.setattr(town, "stash_shown", lambda b: True)
+    monkeypatch.setattr(town, "close_stash", lambda b: calls.append("close_stash") or True)
+    monkeypatch.setattr(town, "inventory_panel", lambda b, want_open: calls.append(("panel", want_open)) or True)
+    monkeypatch.setattr(a1town, "esc_cleared", lambda b: calls.append("esc_cleared") or True)
+    town.clear_panels(bot)
+    assert calls == ["close_stash", ("panel", False), ("press", "esc"), "esc_cleared"]
+
+
+def test_clear_panels_with_nothing_up_presses_nothing(monkeypatch):
+    from bot import town
+
+    calls = []
+    bot = SimpleNamespace(press=lambda k: calls.append(("press", k)), observe=lambda: "in_game")
+    monkeypatch.setattr(town, "stash_shown", lambda b: False)
+    monkeypatch.setattr(town, "inventory_panel", lambda b, want_open: True)
+    town.clear_panels(bot)
+    assert calls == []  # a blind Esc would open the game menu

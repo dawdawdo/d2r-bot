@@ -201,11 +201,7 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
             # Esc closes it; if nothing was open that opens the game menu instead: Esc again
             bot.save_failure(f"town_wp_hidden_{attempt}")
             closed = True
-            bot.press("esc")
-            bot.kill.sleep(0.5)
-            if bot.observe() == "esc_menu":
-                bot.press("esc")
-                bot.kill.sleep(0.5)
+            clear_panels(bot)
             view = bot.capture.grab()
             loc = find_town_wp(bot, view, tcfg)
         if loc is None:
@@ -227,6 +223,20 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
             log.info("waypoint menu didn't open (attempt %d)", attempt + 1)
             unstick_toward(bot, view, (loc[0] + ox, loc[1] + oy))
     raise BotError("could not open the town waypoint")
+
+
+def clear_panels(bot: Controller) -> None:
+    """Close what is really up over the town, each one checked: the stash (Esc until it's gone), the inventory, the game
+    menu (Esc, then wait out its fade). One blind Esc + 0.5 s left the stash up after a stowaway (2026-11-25 06:14:
+    the second look still had it open, on another tab) and the run failed with the town waypoint "not visible"."""
+    from .a1town import esc_cleared
+
+    if stash_shown(bot):
+        close_stash(bot)
+    inventory_panel(bot, False)
+    if bot.observe() == "esc_menu":
+        bot.press("esc")
+        esc_cleared(bot)
 
 
 def unstick_toward(bot: Controller, before: np.ndarray, target: tuple[int, int]) -> None:
