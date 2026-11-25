@@ -4,7 +4,7 @@
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
 **2026-11-25 14:00: running again** (Andariel; LK block ended 14:11 at 518k). Filter installed 14:00 (target uniques,
-Monarch). **Next stop: install the filter again** (Flail added 14:40 for CTA rerolls; the live copy lacks it).
+Monarch). **Next stop: install the filter again** (Flail added 14:31 for CTA rerolls; the live copy lacks it).
 
 **2026-11-25 11:15: stopped for Stephen.** Session stopped after its run, D2R closed, saves 11:15:33, Syncthing idle /
 100 %. State: LK gold block under way (52k of 500k; state.json gold_block), so `--start andy` resumes LK first.
