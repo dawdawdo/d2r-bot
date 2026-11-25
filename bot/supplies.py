@@ -41,6 +41,33 @@ def gold_total(cfg: dict) -> int | None:
         return None
 
 
+def worn_gear(cfg: dict, frac: float = 0.5) -> list[str] | None:
+    """Equipped items at or below `frac` of their durability (BROKEN included), from the live save (read only).
+    Ethereal items are skipped (no repair for them). None when the save can't be read. The tooltip check plus
+    town.repair_after_wear (20 runs after the first wear) assumed LK's ~1 point per 10 runs: Andariel's fights broke the
+    Shako (12) and the Vipermagi (24) within 28 runs (2026-11-25 08:15: life 556 -> 416, no MF/res from them)."""
+    global _TABLES
+    from pathlib import Path
+
+    from . import d2save
+
+    try:
+        _TABLES = _TABLES or d2save.tables()
+        d2s = d2save.read_d2s(Path(cfg["paths"]["save_dir"]) / f"{cfg['game']['character']}.d2s", _TABLES)
+    except Exception as e:  # noqa: BLE001
+        log.info("durability unknown: %s", e)
+        return None
+    worn = []
+    for it in d2s.get("items") or []:
+        pos, top, dur = it.get("position") or {}, it.get("max_durability"), it.get("durability")
+        flags = str(it.get("flags") or "")
+        if pos.get("mode") != "Equipped" or not top or dur is None or "ETHEREAL" in flags:
+            continue
+        if "BROKEN" in flags or dur <= top * frac:
+            worn.append(f"{pos.get('body_location')} {dur}/{top}")
+    return worn
+
+
 def gold_block(st: dict, gold: int | None, cfg: dict) -> tuple[bool, dict]:
     """(LK this run?, state). Gold comes in blocks (Stephen 2026-11-24: "a good long run to LK, then a good long run to
     Andy"): a merc revive is ~50k and Andariel's merc dies about every 4th run, so switching back after one revive's

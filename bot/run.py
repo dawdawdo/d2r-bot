@@ -456,6 +456,11 @@ def main() -> int:
                     due = state.load().get("repair_due")
                     repair = chests and (since_repair is None or since_repair >= cfg["town"]["repair_every"]
                                          or (due is not None and due <= 0))
+                    if chests and not repair:
+                        worn = supplies.worn_gear(cfg)  # from the save: the tooltip check came too late for Andariel
+                        if worn:
+                            log.info("worn gear in the save: %s -> repair this run", ", ".join(worn))
+                            repair = True
                     if chests and due is not None:
                         state.save({**state.load(), "repair_due": due - 1})
                     since_dur = state.load().get("runs_since_dur_check")

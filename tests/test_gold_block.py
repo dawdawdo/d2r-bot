@@ -54,3 +54,26 @@ def test_gold_total_unreadable_is_none(monkeypatch):
 
     monkeypatch.setattr(d2save, "read_d2s", boom)
     assert supplies.gold_total(CFG) is None
+
+
+def _item(loc, dur, top, flags="IDENTIFIED", mode="Equipped"):
+    return {"position": {"mode": mode, "body_location": loc}, "durability": dur, "max_durability": top, "flags": flags}
+
+
+def test_worn_gear_finds_broken_and_half_worn_equipped_items(monkeypatch):
+    from bot import d2save
+
+    items = [_item("Head", 0, 12, "IDENTIFIED | BROKEN"), _item("Torso", 12, 24), _item("Belt", 7, 12),
+             _item("Neck", None, None), _item("Feet", 3, 18, "IDENTIFIED | ETHEREAL"),
+             _item("None", 1, 50, mode="Stored")]
+    monkeypatch.setattr(supplies, "_TABLES", object())
+    monkeypatch.setattr(d2save, "read_d2s", lambda p, t: {"items": items})
+    assert supplies.worn_gear(CFG) == ["Head 0/12", "Torso 12/24"]  # belt 7/12 is above half; ethereal skipped
+
+
+def test_worn_gear_unreadable_is_none(monkeypatch):
+    from bot import d2save
+
+    monkeypatch.setattr(supplies, "_TABLES", object())
+    monkeypatch.setattr(d2save, "read_d2s", lambda p, t: (_ for _ in ()).throw(ValueError("short read")))
+    assert supplies.worn_gear(CFG) is None
