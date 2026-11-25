@@ -38,17 +38,22 @@ GEM_KEEP = 0  # recipe gems kept back from rune recipes: none (Stephen 2026-11-0
               # Amn piled up waiting on a 6th Chipped Amethyst)
 STACK_MAX = 99  # a stash stack holds 99 (Stephen 2026-10-31); a result past that stays in the cube and stops cubing
 TOP_RUNE = "Ist"  # the highest rune cubing makes (Stephen 2026-11-17: up through Ist; was Fal)
-BOTTOM_RUNE = "Amn"  # the lowest rune cubed (Stephen 2026-11-21: El-Thul aren't picked or cubed any more; Thul/Amn hit 99)
+BOTTOM_RUNE = "Ith"  # the lowest rune cubed (2026-11-25: Ith, for Tal; 11-21 to 11-25 it was Amn, El-Thul off)
+# Stephen 2026-11-25: stockpile Tal, Ort and especially Hel (Spirit / Call to Arms rerolls: Hel + Town Portal clears a
+# runeword), keep Thul and Amn too. Held runes are never cube inputs; the runes below each one cube up into it
+# (Ith -> Tal, Ral -> Ort, Sol -> Shael -> Dol -> Hel). The default for the bot (config cube.hold); plan() holds none.
+HOLD = frozenset({"Tal", "Ort", "Thul", "Amn", "Hel"})
 NEVER_FROM = "Ist"  # runes from here up are never cube inputs, whatever `top` says (Stephen 2026-11-17)
 TOP_GRADE = "Flawless"  # the highest gem grade cubing makes (Stephen keeps flawless gems: Lo+ upgrades take them)
 
 
 def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
          top_grade: str = TOP_GRADE, stack_max: int = STACK_MAX, gem_keep: int = GEM_KEEP,
-         reserve: int = GEM_RESERVE, bottom: str = "El") -> list[tuple[dict[str, int], str]]:
+         reserve: int = GEM_RESERVE, bottom: str = "El", hold=frozenset()) -> list[tuple[dict[str, int], str]]:
     """Transmutes in order, each ({input: n}, output). `counts` names runes and gems as in RUNES / gem();
     missing names count 0. Runes first, bottom up, so what one step makes feeds the next; gems after, with
-    whatever the runes left, each keeping `reserve` (runes keep `keep`); repeated until nothing changes."""
+    whatever the runes left, each keeping `reserve` (runes keep `keep`); repeated until nothing changes.
+    Runes in `hold` are never inputs (they pile up; the rune below still cubes into them)."""
     have = dict(counts)
     steps: list[tuple[dict[str, int], str]] = []
 
@@ -67,6 +72,8 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
         before = len(steps)
         for i in range(RUNES.index(bottom), last):
             rune, nxt = RUNES[i], RUNES[i + 1]
+            if rune in hold:
+                continue
             g = RUNE_GEM.get(rune)
             k = RUNES_IN.get(rune, 3)
             while n(rune) - k >= keep and (g is None or n(g) - 1 >= gem_keep) and n(nxt) < stack_max:
@@ -80,7 +87,7 @@ def plan(counts: dict[str, int], keep: int = KEEP, top: str = TOP_RUNE,
 
 
 def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RUNE,
-              gem_keep: int = GEM_KEEP) -> dict[str, tuple]:
+              gem_keep: int = GEM_KEEP, hold=frozenset()) -> dict[str, tuple]:
     """Runes the plan leaves with enough to cube but too few of their recipe gem: {rune: (runes, gem, gems)}.
     (2026-11-09 Stephen: "a lot of Amn not being cubed": Amn takes a Chipped Amethyst, kept at `keep`.)"""
     have = Counter(counts)
@@ -89,6 +96,8 @@ def gem_short(counts: dict[str, int], steps, keep: int = KEEP, top: str = TOP_RU
         have[out] += 1
     out = {}
     for rune in RUNES[:RUNES.index(top)]:
+        if rune in hold:
+            continue
         g = RUNE_GEM.get(rune)
         if g and have[rune] - RUNES_IN.get(rune, 3) >= keep and have[g] - 1 < gem_keep:
             out[rune] = (have[rune], g, have[g])

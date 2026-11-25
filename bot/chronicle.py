@@ -34,8 +34,9 @@ CATEGORY_OF = {"rin": "rings", "amu": "amule"}
 # Not gear: jewels and charms have their own any-rarity item rules; the bot only picks the colors it wants.
 ITEM_RULE_CODES = {"jew", "cm1", "cm2", "cm3"}
 
-RUNES = [f"r{i:02d}" for i in range(11, 34)]  # Amn (r11) to Zod. Stephen 2026-11-21: El-Thul hidden (Thul and Amn
-# were heading for 99; the low ones don't cube up far). Was all 33: "Stephen needs low ones for cube recipes"
+RUNES = [f"r{i:02d}" for i in range(6, 34)]  # Ith (r06) to Zod. 2026-11-25 Stephen: stockpile Tal, Ort, Hel; keep Thul
+# and Amn (Spirit / CTA rerolls); Ith cubes into Tal, Ral into Ort (cube.HOLD). 11-21 to 11-25 Amn up (Thul and Amn
+# were heading for 99). Was all 33: "Stephen needs low ones for cube recipes". El-Eth stay hidden (too far below Tal).
 # Stephen's runeword bases (2026-11-06). Temporary: delete a line when he has enough, then regenerate.
 # 2026-11-15: Mancatcher off (Insight needs a polearm; Mancatcher is a spear).
 # 2026-11-19: Mage Plate (Enigma, max 3 os) and Dusk Shroud (CoH / Fortitude, 4 os) added: both drop from LK

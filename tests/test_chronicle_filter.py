@@ -116,11 +116,11 @@ def test_only_flawless_and_perfect_gems_shown():
     assert not (hidden - high) & _shown(new)  # chipped, flawed, normal
 
 
-def test_runes_from_amn_up_shown():
-    """Stephen 2026-11-21: El-Thul (r01-r10) hidden, Amn (r11) to Zod shown."""
+def test_runes_from_ith_up_shown():
+    """2026-11-25 Stephen: stockpile Tal, Ort, Hel, keep Thul and Amn: Ith (r06) to Zod shown, El-Eth hidden."""
     new = cf.build_filter(old_filter(), SNAP_UNIQUE, SNAP_SET)
-    assert {f"r{i:02d}" for i in range(11, 34)} <= _shown(new)
-    assert not {f"r{i:02d}" for i in range(1, 11)} & _shown(new)
+    assert {f"r{i:02d}" for i in range(6, 34)} <= _shown(new)
+    assert not {f"r{i:02d}" for i in range(1, 6)} & _shown(new)
     assert "Show Pul and higher runes" not in [r["name"] for r in new["rules"]]
 
 

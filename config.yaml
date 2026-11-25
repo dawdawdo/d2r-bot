@@ -263,7 +263,8 @@ cube:
   keep: 5
   gem_keep: 0                   # rune recipes may use their gem (Chipped Amethyst for Amn...) down to none: runes first, then gems (Stephen 2026-11-09)
   gem_reserve: 10               # gem -> next grade keeps 10 of every gem (color + grade); rune recipes may still use them to 0 (Stephen 2026-11-17)
-  bottom_rune: Amn              # Stephen 2026-11-21: nothing below Amn is cubed (or shown by the filter: chronicle.RUNES)
+  bottom_rune: Ith              # 2026-11-25: Ith and up cubed and shown (chronicle.RUNES); 11-21 to 11-25 Amn (El-Thul off)
+  hold: [Tal, Ort, Thul, Amn, Hel]  # Stephen 2026-11-25: stockpile these for Spirit / CTA rerolls; never cube inputs
   top_rune: Ist                 # Stephen 2026-11-17: cube up through Ist; Ist and up are never inputs (cube.NEVER_FROM)
   top_grade: Perfect            # Stephen 2026-11-07: also 3 flawless -> 1 perfect
   max_transmutes: 200

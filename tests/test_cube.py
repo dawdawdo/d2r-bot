@@ -139,3 +139,23 @@ def test_nothing_below_the_bottom_rune_is_cubed():
     used = {k for inputs, _ in steps for k in inputs if k in cube.RUNES}
     assert used == {"Amn"} or used == {"Amn", "Sol"}
     assert cube.RUNES.index(min(used, key=cube.RUNES.index)) >= cube.RUNES.index("Amn")
+
+
+def test_held_runes_pile_up_and_the_runes_below_cube_into_them():
+    """Stephen 2026-11-25: stockpile Tal, Ort and especially Hel; keep Thul and Amn (Spirit / CTA rerolls)."""
+    counts = {"Ith": 20, "Tal": 30, "Ral": 20, "Ort": 30, "Thul": 60, "Amn": 40, "Sol": 20, "Shael": 20, "Dol": 20,
+              "Hel": 30, "Io": 20, "Chipped Topaz": 40, "Chipped Amethyst": 40, "Chipped Sapphire": 40,
+              "Chipped Ruby": 40, "Chipped Emerald": 40, "Chipped Diamond": 40, "Flawed Topaz": 40}
+    steps = cube.plan(counts, bottom=cube.BOTTOM_RUNE, hold=cube.HOLD)
+    used = {k for inputs, _ in steps for k in inputs if k in cube.RUNES}
+    assert not used & cube.HOLD
+    assert {"Ith", "Ral", "Sol", "Shael", "Dol", "Io"} <= used
+    have = final(counts, steps)
+    assert have["Tal"] > 30 and have["Ort"] > 30 and have["Hel"] > 30
+    assert all(have[r] == counts[r] for r in ("Thul", "Amn"))
+    assert all(have[r] >= 5 for r in ("Ith", "Ral", "Sol", "Shael", "Dol"))
+
+
+def test_gem_short_skips_held_runes():
+    counts = {"Amn": 30, "Chipped Amethyst": 0}
+    assert cube.gem_short(counts, [], hold=cube.HOLD) == {}
