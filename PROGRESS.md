@@ -3,6 +3,13 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-25 11:15: stopped for Stephen.** Session stopped after its run, D2R closed, saves 11:15:33, Syncthing idle /
+100 %. State: LK gold block under way (52k of 500k; state.json gold_block), so `--start andy` resumes LK first.
+Since 06:19: Hratli repairs fixed (chained walk + 0.3 s hovers; Shako/Vipermagi had broken, repaired 08:46), save-based
+worn-gear repairs (supplies.worn_gear; belt repaired at 6/12, 09:47), gold pickup back on (refill done 09:00: LK block
+317k -> 523k in 23 min), Andariel 09:29-11:00: 35 runs, 0 fails, Radimant's Sphere (Chronicle). Mod for Stephen:
+convergent-blue look in this session's dev-mods (draws only in the desktop/mobile apps attached to the session).
+
 **2026-11-25 06:19: blocks so far.** LK 22:41-03:47 (42k -> 503k; gold pickup is off since 11-20 for the rejuv
 refill, so LK gold is only what she walks over: 5 h); Andariel 03:47-06:04 (503k -> 16k, ~60 % kills, misses = never
 saw her); LK again since 06:04. Fixes tonight (Proton draws panels late both ways): Act 1 automap loop waits out the
