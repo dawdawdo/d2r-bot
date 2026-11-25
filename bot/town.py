@@ -44,8 +44,11 @@ def walk_route(bot: Controller, route: list, retries: int = 2) -> list[tuple[flo
                 log.info("leg %d: view still moving after timeout", i)
             if _view_moved(before, bot.capture.grab()):
                 break
-            log.info("leg %d: didn't move (attempt %d), clicking again", i, attempt + 1)
             bot.kill.sleep(0.5)
+            if _view_moved(before, bot.capture.grab()):  # a late start (GLaDOS): a second click doubled the leg (the
+                _walk_settle(bot, odo)                   # Hratli walk's leg 1 went 575 px for 287, 2026-11-25 08:24)
+                break
+            log.info("leg %d: didn't move (attempt %d), clicking again", i, attempt + 1)
         disps.append(tuple(float(v) for v in (odo.pos - start).round(1)))
     log.info("town walk legs %s%s", disps, " (odometry lost)" if odo.lost else "")
     return disps
@@ -684,6 +687,7 @@ def repair_at_hratli(bot: Controller, keys: bool = True) -> bool:
         log.info("repaired at Hratli")
         return True
     if opened is None:
+        bot.frame = bot.capture.grab()  # the walk doesn't refresh bot.frame: these were all the spawn view
         bot.save_failure("hratli_not_found")
         log.warning("Hratli not found; no repair")
     return False
