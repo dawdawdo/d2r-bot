@@ -1732,11 +1732,34 @@ def town_by_area_name(bot: Controller) -> int | None:
         bot.kill.sleep(0.25)
         f = bot.capture.grab()
     bot.press("tab")
-    bot.kill.sleep(0.2)
+    automap_closed(bot)
     scores = {a: area_score(f, n) for a, n in names.items()}
     best = max(scores, key=scores.get)
     log.info("town by area name: %s", {a: round(v, 2) for a, v in scores.items()})
     return best if scores[best] >= 0.8 else None
+
+
+def automap_closed(bot: Controller, wait: float = 2.0, poll: float = 0.15) -> bool:
+    """After the closing Tab: wait until the automap's info text is gone before walking. Proton takes the map down late
+    as it puts it up late: the Kurast Docks walk started 0.2 s after Tab, its odometry read the map overlay and about
+    half the Act 3 spawns stalled at leg 0 (2026-11-24, ~12 % before the area-name read; 3 runs failed in 50 min).
+    Still up after `wait` (the first Tab was never seen, so the second one opened it): Tab once more."""
+    from .durance import map_text_open
+
+    t0 = bot.clock()
+    for attempt in range(2):
+        t_end = bot.clock() + wait
+        while True:
+            bot.kill.sleep(poll)
+            if not map_text_open(bot.capture.grab()):
+                if bot.clock() - t0 > 2 * poll + 0.05:
+                    log.info("automap took %.1f s to close", bot.clock() - t0)
+                return True
+            if bot.clock() >= t_end:
+                break
+        log.info("automap still up %.1f s after Tab: Tab again", wait)
+        bot.press("tab")
+    return False
 
 
 A1_WALK = (1150, 560)  # one click from the A1 spawn brings the waypoint into view (fixed map, live 2026-10-31)
