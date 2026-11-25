@@ -62,11 +62,27 @@ RULE_BASES = "Show runeword bases"
 RULE_SOCKETED_BASES = "Show socketed runeword bases"
 RULE_SUPERIOR_BASES = "Show superior runeword bases"
 RULE_SOCKETED_SUPERIOR_BASES = "Show socketed superior bases"
+RULE_TARGETS = "Show target uniques"
+RULE_TARGET_RINGS = "Show target rings (SoJ)"
+# Uniques shown whether or not the Chronicle has them (Stephen 2026-11-25: "leave some uniques on the target loot list
+# even if they are already in my chronicle. For instance, SoJ, Andariel's visage"). By base code: a base shared by
+# several uniques shows them all. Unique rings (SoJ, Bul-Kathos, Raven Frost, Dwarf Star) have their own category rule
+# (RULE_TARGET_RINGS), unique amulets (Mara's, Highlord's) RULE_AMULETS; charms and jewels show at any rarity.
+TARGET_UNIQUES = {
+    "usk": "Andariel's Visage",
+    "uap": "Harlequin Crest (Shako)",
+    "umc": "Verdungo's Hearty Cord",
+    "zhb": "Thundergod's Vigor",
+    "xtb": "War Traveler",
+    "uhm": "Nightwing's Veil (Veil of Steel shares the base)",
+    "uhb": "Shadow Dancer",
+}
 # Removed on regenerating. Gems: "Show flawless and perfect gems" (his) plus "Show lower gems" (2026-11-07,
 # for cube recipes) are kept as they are; these old names showed the lower grades.
 OLD_NAMES = {"Show Chronicle missing set jewelry", "Show all other gems", "Show all Gems", "Show Pul and higher runes"}
 GENERATED = {RULE_UNIQUES, RULE_SETS, RULE_AMULETS, RULE_SET_CATEGORIES, RULE_JEWELS, RULE_RUNES, RULE_BASES,
-             RULE_SOCKETED_BASES, RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES} | OLD_NAMES
+             RULE_SOCKETED_BASES, RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, RULE_TARGETS,
+             RULE_TARGET_RINGS} | OLD_NAMES
 
 
 @dataclass
@@ -146,7 +162,9 @@ def build_filter(old: dict, unique_codes: set[str], set_codes: set[str]) -> dict
             del r["itemCode"]
             r["equipmentItemCode"] = ["oba"]
     new = [_show(RULE_JEWELS, itemCode=["jew"]),  # Rainbow Facet; a jewel may not count as gear
-           _show(RULE_AMULETS, equipmentRarity=["unique"], equipmentCategory=["amule"])]  # Mara's, Highlord's, Atma's
+           _show(RULE_AMULETS, equipmentRarity=["unique"], equipmentCategory=["amule"]),  # Mara's, Highlord's, Atma's
+           _show(RULE_TARGET_RINGS, equipmentRarity=["unique"], equipmentCategory=["rings"])]  # SoJ, BK, Raven Frost
+    new += _code_rule(RULE_TARGETS, "unique", set(TARGET_UNIQUES))
     if cats := sorted(CATEGORY_OF[c] for c in set_codes & set(CATEGORY_OF)):
         new.append(_show(RULE_SET_CATEGORIES, equipmentRarity=["set"], equipmentCategory=cats))
     new += _code_rule(RULE_UNIQUES, "unique", unique_codes) + _code_rule(RULE_SETS, "set", set_codes)
@@ -170,9 +188,11 @@ def _rule_codes(flt: dict, name: str) -> set[str]:
 def up_to_date(flt: dict, unique_codes: set[str], set_codes: set[str]) -> bool:
     """Does this filter already show exactly what the Chronicle still needs?"""
     want = build_filter(flt, unique_codes, set_codes)
+    if not {r["name"] for r in want["rules"]} <= {r["name"] for r in flt["rules"]}:
+        return False  # a generated rule is missing (the ring rule has no codes to compare)
     return all(_rule_codes(flt, n) == _rule_codes(want, n)
                for n in (RULE_UNIQUES, RULE_SETS, RULE_RUNES, RULE_BASES, RULE_SOCKETED_BASES,
-                         RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES))
+                         RULE_SUPERIOR_BASES, RULE_SOCKETED_SUPERIOR_BASES, RULE_TARGETS, RULE_TARGET_RINGS))
 
 
 def save_dir(cfg: dict) -> Path:

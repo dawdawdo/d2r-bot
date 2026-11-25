@@ -242,15 +242,33 @@
             ]
         },
         {
-            "name": "Show missing set jewelry",
+            "name": "Show target rings (SoJ)",
             "enabled": true,
             "ruleType": "show",
             "filterEtherealSocketed": false,
             "equipmentRarity": [
-                "set"
+                "unique"
             ],
             "equipmentCategory": [
-                "amule"
+                "rings"
+            ]
+        },
+        {
+            "name": "Show target uniques",
+            "enabled": true,
+            "ruleType": "show",
+            "filterEtherealSocketed": false,
+            "equipmentRarity": [
+                "unique"
+            ],
+            "equipmentItemCode": [
+                "uap",
+                "uhb",
+                "uhm",
+                "umc",
+                "usk",
+                "xtb",
+                "zhb"
             ]
         },
         {
@@ -289,12 +307,10 @@
                 "7wc",
                 "7wh",
                 "7ws",
-                "8lb",
                 "8lw",
                 "8rx",
                 "8ws",
                 "9ba",
-                "9gi",
                 "9gm",
                 "9gs",
                 "9m9",
@@ -388,13 +404,11 @@
                 "lea",
                 "lrg",
                 "paf",
-                "qui",
                 "uar",
                 "uh9",
                 "uhm",
                 "uth",
-                "vbt",
-                "xml"
+                "vbt"
             ]
         },
         {
