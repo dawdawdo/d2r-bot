@@ -222,6 +222,7 @@ town:
     # first and the last): the chained walk steers by odometry, the click-by-click walk failed ~18 of 22 since 11-23
     route_disp: [[96, 29], [442, 29], [441, 124], [288, 124], [268, 153], [269, 154], [499, -96], [307, -115], [153, -58]]
     region: [600, 60, 500, 300]  # where Hratli stands at the end of the route
+    near: [690, 256]             # where he stood after the chained walk (2026-11-25 08:42): hover there first
     trade_offset: [37, 58]       # "Trade/Repair" relative to the npc_hratli.png match
     repair_all: [362, 516]       # trade window: right anvil button ("Repair all equipment")
     misc_tab: [370, 77]          # trade window tabs: Armor, Weapons, Weapons, Misc

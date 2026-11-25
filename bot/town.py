@@ -315,17 +315,21 @@ def _tooltip_points(bot: Controller, region, step: int = 30):
                 yield x, y
 
 
-def _name_points(bot: Controller, region, step: int = 30):
-    """Yield hover points in `region` where an NPC/object name tooltip box appears."""
+def _name_points(bot: Controller, region, step: int = 30, wait: float = 0.08, near=None):
+    """Yield hover points in `region` where an NPC/object name tooltip box appears. `near`: try the grid points closest
+    to it first. `wait`: GLaDOS draws the tooltip up to ~0.22 s late, so a 0.08 s hover saw none in the whole Hratli
+    sweep (2026-11-25 08:42: he stood at (691, 256) in the region, 0 clicks)."""
     from .vision.tooltip import find_tooltip
 
     rx, ry, rw, rh = region
-    for y in range(ry, ry + rh, step):
-        for x in range(rx, rx + rw, step):
-            bot.input.move(x, y)
-            bot.kill.sleep(0.08)
-            if find_tooltip(bot.capture.grab(), x, y) is not None:
-                yield x, y
+    pts = [(x, y) for y in range(ry, ry + rh, step) for x in range(rx, rx + rw, step)]
+    if near is not None:
+        pts.sort(key=lambda p: abs(p[0] - near[0]) + abs(p[1] - near[1]))
+    for x, y in pts:
+        bot.input.move(x, y)
+        bot.kill.sleep(wait)
+        if find_tooltip(bot.capture.grab(), x, y) is not None:
+            yield x, y
 
 
 ORMUS_SPRITE_MIN = 0.65  # his sprite poses score 0.76-0.88 where he stands, ~0.5 elsewhere (31 town frames)
@@ -659,7 +663,7 @@ def open_hratli(bot: Controller) -> bool | None:
     else:
         walk_route(bot, legs)
     # Shape-based tooltip finder: the forge fire flickers, which fooled the frame-diff one.
-    for attempt, (x, y) in enumerate(_name_points(bot, h["region"])):
+    for attempt, (x, y) in enumerate(_name_points(bot, h["region"], step=40, wait=0.3, near=h.get("near"))):
         if attempt >= 5:
             break
         bot.click(x, y)
