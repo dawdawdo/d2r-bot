@@ -11,8 +11,12 @@ inventory; the filter keeps showing them until one is identified). `--start andy
 **Rejuvs (11-26):** Stephen is full (99). Spare rejuvs are now picked only while the stash stack is below 80
 (supplies.SPARES_BELOW): the count comes from the save at session start and is tracked through stowing/restocks (a restock
 used to re-arm spares at 98). Belt refills from the ground are unchanged.
-**Asked 11-26, waiting on Stephen:** grand charms: keep skillers, ditch the rest beyond a reroll stock of N (Cain identify
-in Act 1, tooltip 'Skills' check, drop in town); Diablo (Chaos seal-pop plan below) before Baal (waves).
+**Charm sorter, proposed 11-26 (waiting on Stephen's OK of the rules):** pick all small + grand charms, Cain identifies
+(Act 1, free), the next run reads the identified stats from the save (read only; no peeking at unidentified items) and
+drops the rejects in town. Grand: keep skillers (stat 188) + a reroll stock of 10. Small: keep all res >= 4 (Shimmering,
+any suffix: Vita life / Balance 5 FHR / Good Luck MF), single res >= 10 with life >= 16, MF >= 6, Fine 3 max dmg with
+life >= 16 (3/20/20, ThroatCutter). No FCR exists on small charms (magicsuffix.txt). A second Gheed's can't be picked
+up while she wears one: the bot gives up after 2 clicks; not worth more. Diablo before Baal (Chaos plan below).
 
 **Charms (11-26):** the filter never showed charms: "Show charms" had only itemCode, and charms count as gear (Hide all
 gear hid them). Stephen ticked small + grand charms in the game's editor 09:06 on Singularity (equipmentItemCode) and
