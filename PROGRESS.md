@@ -17,8 +17,10 @@ frame after the first Tab (`a1_automap_after_first_tab`) with its map-text score
 has the inventory panel up over the view (left open after the war cries). check_fingerprint now closes it first.
 Act 3 town walk ("town waypoint not visible at end of route", ~5 % of LK runs) clusters by hour: 4 in 11-24 23h,
 4 in 11-25 03h, 3+ in 11-26 02-03h. The 03:08-03:09 stall frames show "Corrupted tremors strike Flayer Jungle,
-Swampy Pit, and Flayer Dungeon" (Act 3 terror zones this hour). Hypothesis to test by day: an Act 3 terror zone
-adds a tremor/visual effect in the Act 3 town that breaks the walk odometry ("stalled", "odometry lost").
+Swampy Pit, and Flayer Dungeon". But 06:21 (zones Cold Plains and Cave, Act 1) failed the same way, so not Act 3
+specific. Better candidate to test by day: the terror-zone announcement is static text on the left of the view for
+the first seconds of every game, i.e. during the town walk; static overlay in the odometry patch would bias it toward
+"no motion" ("stalled", "odometry lost"). Try masking that band (left, ~y 500-560 at 1280x720) in town odometry.
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
