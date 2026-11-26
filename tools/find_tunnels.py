@@ -130,6 +130,7 @@ def main() -> int:
     ap.add_argument("--games", type=int, default=3)
     ap.add_argument("--hops", type=int, default=60)
     ap.add_argument("--fresh", action="store_true", help="forget the stored search (map changed)")
+    ap.add_argument("--no-merc", action="store_true", help="don't revive a dead merc first (that walks Act 3 for Asheara)")
     ap.add_argument("--toward", choices=sorted(DIRS), help="search that way first (a hint, e.g. nw)")
     ap.add_argument("--dest", default="wp_lost_city", help="waypoint to start from (config ui point)")
     ap.add_argument("--style", default="red", help="automap style there (durance.use_style)")
@@ -207,7 +208,7 @@ def main() -> int:
             result = "error"
             odo = None
             try:
-                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest=args.dest, merc=True,
+                to_durance2(bot, say=lambda m: print(f"game {n + 1}: {m}", flush=True), dest=args.dest, merc=not args.no_merc,
                             buy_mana=bool(args.buy), fill=args.buy or "mana")
                 from bot.town import cast_warcries
 

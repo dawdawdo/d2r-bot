@@ -52,6 +52,11 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             recover_corpse(bot)
         ensure_main_weapons(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
+        if bot.act == 5 and tasks and all(getattr(t, "a1_town", False) for t in tasks):
+            from .town import act5_to_act1
+
+            act5_to_act1(bot)  # Baal's games end in Act 5: the Rogue Encampment's stash and vendors, as Andariel's
+            bot.act = 1
         flag = {1: "a1_start", 2: "a2_start"}.get(bot.act)  # the Pit's games end in Act 1, the tunnels' in Act 2
         a2 = bool(flag) and tasks and all(getattr(t, flag, False) for t in tasks)
         # Act 1 games (Andariel): stash and vendors in the Rogue Encampment, never Act 3 (Stephen 2026-11-23)

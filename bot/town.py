@@ -1672,7 +1672,7 @@ def town_to_lower_kurast(bot: Controller, arrived_check=None, stow: bool = False
 
 
 WP_TAB = {"wp_lost_city": "wp_tab_act2", "wp_black_marsh": "wp_tab_act1", "wp_outer_cloister": "wp_tab_act1",
-          "wp_catacombs_2": "wp_tab_act1"}  # ui points not on the Act III tab -> the tab to click first
+          "wp_catacombs_2": "wp_tab_act1", "wp_worldstone_2": "wp_tab_act5"}  # ui points not on the Act III tab -> their tab
 
 
 def town_to_wp(bot: Controller, dest: str, area: str | None, arrived_check=None, stow: bool = False) -> None:
@@ -1842,11 +1842,11 @@ def leave_act1(bot: Controller) -> None:
 
 
 def act1_to(bot: Controller, dest: str) -> None:
-    """From the Rogue Encampment spawn: buffs, its waypoint, `dest` (an Act I tab point), out of town. Pit games end in
-    Act 1, so the next one spawns there."""
+    """From the Rogue Encampment spawn: buffs, its waypoint, `dest` (a waypoint point on its WP_TAB tab, Act I by
+    default; Worldstone Keep Level 2 is on Act V), out of town. Pit games end in Act 1, so the next one spawns there."""
     cast_buffs(bot)
     open_a1_wp(bot)
-    wp_travel(bot, "wp_tab_act1", dest)
+    wp_travel(bot, WP_TAB.get(dest, "wp_tab_act1"), dest)
     bot.guard(True)
     bot.wait_still(timeout=5)
     log.info("arrived at %s from Act 1 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
@@ -1946,6 +1946,20 @@ def act2_to(bot: Controller, dest: str) -> None:
 
 def leave_act5(bot: Controller) -> None:
     _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK)
+
+
+def act5_to(bot: Controller, dest: str, tab: str | None = None) -> None:
+    """From the Harrogath spawn: walk to its waypoint and take it to `dest` (default tab: WP_TAB, else Act V)."""
+    _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK,
+                     then=lambda b: wp_travel(b, tab or WP_TAB.get(dest, "wp_tab_act5"), dest))
+    bot.wait_still(timeout=5)
+    log.info("arrived at %s from Act 5 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
+
+
+def act5_to_act1(bot: Controller) -> None:
+    """Baal's games end in Act 5: the next spawns in Harrogath. Tasks that use the Rogue Encampment's stash and vendors
+    (Andariel, Baal) take its waypoint to Act 1 first (first entry of the Act I tab)."""
+    act5_to(bot, "wp_town", tab="wp_tab_act1")
 
 
 def leave_other_act(bot: Controller, act: int) -> bool:

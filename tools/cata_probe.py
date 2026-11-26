@@ -29,6 +29,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tp", default="", help="dx,dy,n;...: blind teleports after the arrival frames")
     ap.add_argument("--out", default="cata")
+    ap.add_argument("--dest", default="wp_catacombs_2", help="waypoint ui point (wp_worldstone_2: Baal)")
+    ap.add_argument("--no-merc", action="store_true", help="don't revive a dead merc first (a dead one sends the probe to Act 3)")
     args = ap.parse_args()
     out = ROOT / "scratch" / args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -44,7 +46,7 @@ def main() -> int:
         cv2.imwrite(str(out / f"{name}.png"), bot.capture.grab())
 
     try:
-        to_durance2(bot, say=lambda m: print(m, flush=True), dest="wp_catacombs_2", merc=True)
+        to_durance2(bot, say=lambda m: print(m, flush=True), dest=args.dest, merc=not args.no_merc)
         from bot.town import cast_warcries
 
         cast_warcries(bot)

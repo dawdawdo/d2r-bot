@@ -78,6 +78,10 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     elif STYLE["name"] == "cave":  # Pit (Act 1 caves): pale tan lines on a dark floor (sampled H 14-17, S 53-75, V 124-159)
         m = ((h >= 11) & (h <= 22) & (s >= 40) & (s <= 95) & (v >= 110)).astype(np.uint8)
         m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8)), np.ones((7, 7), np.uint8))
+    elif STYLE["name"] == "keep":  # Worldstone Keep (Baal): pale brown-gray lines (sampled H 12-18, S 31-74, V 61-141;
+        # 2026-11-26 probe: ~8-11k px with the map on vs ~2.2k off, the rest is lit floor)
+        m = ((h >= 12) & (h <= 18) & (s >= 35) & (s <= 75) & (v >= 75) & (v <= 145)).astype(np.uint8)
+        m &= 1 - cv2.dilate(cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8)), np.ones((7, 7), np.uint8))
     elif STYLE["name"] == "tunnel":  # Ancient Tunnels: darker, less saturated lines (sampled H 17-21, S 85-118,
         # V 72-115); the "tan" band caught the torch-lit stone instead (S ~140, V ~121) and odometry jumped 4000 px
         m = ((h >= 16) & (h <= 23) & (s >= 75) & (s <= 122) & (v >= 65) & (v <= 120)).astype(np.uint8)
@@ -95,7 +99,7 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     return out
 
 
-SHOWN_MIN = {"tunnel": 10000, "gray": 6000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
+SHOWN_MIN = {"tunnel": 10000, "gray": 6000, "keep": 5000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
 
 
 def map_text_open(frame: np.ndarray) -> bool:
@@ -443,8 +447,25 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
     act = spawn_act(bot)
     # mana too: an Energy Shield that broke last game leaves her at MP 0, and ES is her armour
     hurt = lambda: needs_heal(bot) or (bot.hp or 100) < DURANCE_HEAL or (bot.mp or 100) < DURANCE_MANA  # noqa: E731
-    if (act == 1 and WP_TAB.get(dest) == "wp_tab_act1" and not hurt() and not buy_mana
-            and (not merc or merc_alive(bot))):  # an Act I destination (Catacombs) from the Rogue Encampment spawn
+    if act in (1, 5) and WP_TAB.get(dest) in ("wp_tab_act1", "wp_tab_act5") and not buy_mana:
+        # Catacombs / Worldstone Keep: from Harrogath through the Act 1 waypoint when the merc is dead or she's hurt,
+        # then the Rogue Encampment's healer and Kashya (2026-11-26: a dead merc sent the probes to Act 3 for Asheara)
+        if act == 5 and not hurt() and (not merc or merc_alive(bot)):
+            from .town import act5_to
+
+            act5_to(bot, dest)
+            return
+        if act == 5:
+            from .town import act5_to_act1
+
+            act5_to_act1(bot)
+        if hurt() or (merc and not merc_alive(bot)):
+            from .a1town import town_stop
+
+            if town_stop(bot, bot.cfg):  # it walked off: a fresh game spawns at the Rogue Encampment waypoint
+                save_and_exit(bot)
+                create_game(bot, diff)
+                bot.wait_for("in_game", 10)
         act1_to(bot, dest)
         return
     if leave_other_act(bot, act):  # Stephen's game ended in A1/A2 (2026-11-01: walked the Rogue camp for Ormus)

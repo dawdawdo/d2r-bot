@@ -56,6 +56,8 @@ CATALOG = [
      "about": "Catacombs Level 4. Quest drop every kill: rings (SoJ), statues. About 2-3 min a run. Needs her MF gear."},
     {"name": "pit", "title": "The Pit",
      "about": "Tamoe Highland, area level 85: same plate odds as the tunnels, weaker monsters. Route in progress."},
+    {"name": "baal", "title": "Baal",
+     "about": "Worldstone Keep, five waves at the throne, then Baal. Worusk's End (statue), anything. Route in progress."},
 ]
 ORDER = [t["name"] for t in CATALOG]
 
@@ -66,8 +68,9 @@ def _classes() -> dict:
     from .meph import Mephisto
     from .pit import Pit
     from .tunnels import AncientTunnels
+    from .baal import Baal
 
-    return {c.name: c for c in (LowerKurast, Mephisto, AncientTunnels, Pit, Andariel)}
+    return {c.name: c for c in (LowerKurast, Mephisto, AncientTunnels, Pit, Andariel, Baal)}
 
 
 def catalog(cfg: dict) -> list[dict]:

@@ -184,6 +184,8 @@ ui:
   wp_black_marsh: [190, 314]   # Act I tab, 5th entry (same pitch as the other tabs): next to Tamoe Highland (the Pit)
   wp_outer_cloister: [190, 362]  # Act I tab, 6th entry: Monastery Gate -> Tamoe Highland the other way
   wp_catacombs_2: [190, 506]   # Act I tab, 9th (last) entry: Catacombs Level 2 (Andariel); pitch 48 like wp_durance_2
+  wp_tab_act5: [360, 90]       # act tabs 68 px apart (Act I 88 ... Act IV 292)
+  wp_worldstone_2: [190, 506]  # Act V tab, 9th (last) entry: Worldstone Keep Level 2 (Baal), as wp_catacombs_2
   wp_town: [240, 128]          # first entry of a tab = its town (Kurast Docks, Pandemonium Fortress)
   wp_durance_2: [240, 508]     # Act III tab, last entry: Durance of Hate Level 2
   exit_game: [165, 430]        # main menu "Exit Diablo II"
