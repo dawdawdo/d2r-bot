@@ -4,6 +4,8 @@ Stephen plays Blizzaga by hand too and changes options (2026-10-31: automap "Min
 his own "Looting" filter, difficulty scaling 3). At session start the bot reads Settings.json and
 lootfilter.json (read only) and puts back what it needs:
 - automap Full Screen (AutoMapMode 0) with Center opacity (AutoMapFade 1): Durance odometry reads its lines;
+- automap "Show Character Names" (AutoMap Party Names 1): the NPC names Act 1 town walks steer by (2026-11-26: it went
+  off around an F12 at 08:40; every run after failed at "Kashya not found");
 - the loot filter profile `loot.filter_name` for the character (labels = what the bot picks up);
 - /players (Settings "Offline Difficulty Scaling"): typed only when the setting differs.
 """
@@ -33,6 +35,9 @@ APPLY = (472, 618)
 ARROW_LEFT_X = 706
 OPTION_ROWS = {"AutoMapMode": 300, "AutoMapFade": 334}  # y of "Automap Size" / "Automap Opacity"
 WANT = {"AutoMapMode": 0, "AutoMapFade": 1}  # Full Screen, Center (in this order)
+# Checkboxes on the same paged-down Gameplay page (live 2026-11-26): click toggles, Apply writes Settings.json
+CHECKBOXES = {"AutoMap Party Names": (800, 502)}  # "Show Character Names"
+WANT_CHECKED = {"AutoMap Party Names": 1}
 
 # In game: Esc -> Loot Filter -> profile dropdown. Entries: "Select a Profile", then the .fltr names
 # sorted (live 2026-10-31: LK Bot at y 134, Looting at y 148).
@@ -94,9 +99,10 @@ def ensure_options(bot) -> bool:
     """At the main menu: automap Full Screen + Center opacity. True if they're right (now or already)."""
     cfg = bot.cfg
     cur = read_settings(cfg)
-    if all(cur.get(k) == v for k, v in WANT.items()):
+    want_all = {**WANT, **WANT_CHECKED}
+    if all(cur.get(k) == v for k, v in want_all.items()):
         return True
-    log.info("game options: setting %s (was %s)", WANT, {k: cur.get(k) for k in WANT})
+    log.info("game options: setting %s (was %s)", want_all, {k: cur.get(k) for k in want_all})
     bot.click(*OPTIONS_BUTTON)
     bot.kill.sleep(1.5)
     bot.click(*GAMEPLAY_TAB)
@@ -111,13 +117,21 @@ def ensure_options(bot) -> bool:
             bot.kill.sleep(0.4)
             bot.click(*APPLY)
             bot.kill.sleep(1.2)
+    for k, v in WANT_CHECKED.items():
+        for _ in range(2):  # a toggle: one click should do; a second try if the first was lost
+            if read_settings(cfg).get(k) == v:
+                break
+            bot.click(*CHECKBOXES[k])
+            bot.kill.sleep(0.4)
+            bot.click(*APPLY)
+            bot.kill.sleep(1.2)
     bot.press("esc")
     bot.kill.sleep(1.0)
     now = read_settings(cfg)
-    ok = all(int(now.get(k, -1)) == v for k, v in WANT.items())
+    ok = all(int(now.get(k, -1)) == v for k, v in want_all.items())
     if not ok:
         bot.save_failure("options_not_set")
-        log.warning("game options still %s", {k: now.get(k) for k in WANT})
+        log.warning("game options still %s", {k: now.get(k) for k in want_all})
     return ok
 
 

@@ -51,3 +51,33 @@ def test_act1_spawn_view():
     assert score("a1_spawn.png") > 0.9 and score("closed.png") > 0.75
     other = cv2.imread(str(FIX.parent / "durance" / "hop_up_before.png"))
     assert float(cv2.matchTemplate(other[0:300, 120:680], t, cv2.TM_CCOEFF_NORMED).max()) < 0.6
+
+
+def test_ensure_options_ticks_show_character_names(tmp_path, monkeypatch):
+    """2026-11-26: "Show Character Names" went off and Act 1 town walks lost the NPC names. Ticked through the menu."""
+    from bot import gamesettings as gs
+
+    path = tmp_path / "Settings.json"
+    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party Names": 0}))
+    clicks = []
+
+    class Bot:
+        cfg = cfg_for(tmp_path)
+        kill = type("K", (), {"sleep": staticmethod(lambda s: None)})()
+
+        def click(self, x, y):
+            clicks.append((x, y))
+            if (x, y) == gs.APPLY and gs.CHECKBOXES["AutoMap Party Names"] in clicks:
+                d = json.loads(path.read_text())
+                d["AutoMap Party Names"] = 1  # the game writes Settings.json on Apply
+                path.write_text(json.dumps(d))
+
+        def press(self, key):
+            pass
+
+        def save_failure(self, note):
+            raise AssertionError(note)
+
+    assert gs.ensure_options(Bot())
+    assert clicks.count(gs.CHECKBOXES["AutoMap Party Names"]) == 1
+    assert json.loads(path.read_text())["AutoMap Party Names"] == 1
