@@ -12,6 +12,12 @@ Watch items from this session: Kashya's Resurrect click sometimes only lights th
 after a "< 10: stash" spawn, 3 of 71 such spawns): town_automap now logs why each retry happened and, on failure, saves the
 frame after the first Tab (`a1_automap_after_first_tab`) with its map-text score. Look at the next one.
 
+**Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
+gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
+LK blocks since 11-24 take 2.5-5 h to earn 500k back; Andariel spends it in 1.5-5 h. His merc wears Tal Rasha's Horadric
+Crest + Fortitude + Insight; a leech / poison-res helm (Andariel's Visage: leech, +70 poison res; Vampire Gaze: leech, DR)
+might keep him up. Ask before moving gear (Visage is earmarked for ThroatCutter).
+
 **2026-11-25 18:23: stopped for Stephen** (he's trying things). Session 15:52-18:23: 37 runs, 30 ok, 5 misses, 2 chickens,
 0 deaths; gold fell 518k -> 48k (merc revives), so the LK block started 18:03 and is still under way (to 500k):
 `--start andy` resumes LK first. Filter installed 18:23 (Phase Blade queue step), synced to Singularity.
