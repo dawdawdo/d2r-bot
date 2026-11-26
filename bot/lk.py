@@ -590,6 +590,13 @@ def loot(bot: Controller, max_picks: int = 10, take_all: bool = False) -> list[s
                 continue
             if lab.kind == "magic":  # take_all too: blue jewels show (the jewel rule has no rarity)
                 if not is_charm(bot.frame, lab):
+                    # 2026-11-26: not one charm picked in ~19k pickups since 11-01, and "Charm" (word_charm.png) was
+                    # only ever checked on tooltip text. Keep each skipped blue label once to see what they are
+                    key = ("blue_skip", _sig(lab))
+                    if key not in tried:
+                        tried[key] = 1
+                        log.info("blue label skipped (no 'Charm' read) at (%d, %d) %dx%d", lab.x, lab.y, lab.w, lab.h)
+                        bot.save_failure(f"blue_label_skipped_{lab.x}_{lab.y}_{lab.w}_{lab.h}")
                     continue
                 what = "charm"
             if tried.get((lab.center[0] // 10, lab.center[1] // 10), 0) >= 2 or tried.get(_sig(lab), 0) >= 2:

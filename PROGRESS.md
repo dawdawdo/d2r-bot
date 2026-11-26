@@ -8,6 +8,11 @@
 6 town-walk fails, 1 false map_changed). Finds: Lazarus Spire, Godstrike Arch x2 (unidentified, shared tab 1 +
 inventory; the filter keeps showing them until one is identified). `--start andy` to resume.
 
+**Charms (Stephen asked 11-26 08:50):** the filter shows all charms (cm1/cm2/cm3, any rarity) and features.charms picks
+blue labels that read "Charm", but logs since 11-01 show 0 charm picks in ~19k pickups. The word check (word_charm.png)
+was only validated on tooltip text; ground blue labels are detected (fixtures/loot/magic_amulet_label). lk.py now logs
+"blue label skipped" and saves `blue_label_skipped_*` frames: check them after the next session.
+
 **2026-11-25 21:16: running again (andy).** Stephen played ThroatCutter (terror zones); shared gold now 1004k, so the LK
 block ended at once and Andariel resumed. Filter reinstalled 21:16 (Chronicle 25 runewords; Phase Blade step still shown
 for Grief / Kingslayer / Lawbringer / Unbending Will; his stripped 5-os Phase Blade counts 1 of 2). rw_targets.stash_bases
