@@ -40,6 +40,11 @@ WANT = {"AutoMapMode": 0, "AutoMapFade": 1}  # Full Screen, Center (in this orde
 # off again (the old Party 0 / Names 1 can't be set from the menu), so both are wanted, Party Members first.
 CHECKBOXES = {"AutoMap Party": (800, 470), "AutoMap Party Names": (800, 502)}  # Show Party Members / Character Names
 WANT_CHECKED = {"AutoMap Party": 1, "AutoMap Party Names": 1}
+# Accessibility rows, reached from the top of the Gameplay tab with the scrollbar's down arrow (live 2026-11-26):
+# key -> (arrow clicks, checkbox, wanted). Camera Shake off: the terror zones' "Corrupted tremors" shake the view,
+# and odometry (the Act 3 town walk, teleport hops) reads a shake as "stalled" / "lost" (failures cluster by hour).
+SCROLL_ARROW = (927, 551)
+SCROLLED = {"Camera Shake": (8, (800, 315), 0)}
 
 # In game: Esc -> Loot Filter -> profile dropdown. Entries: "Select a Profile", then the .fltr names
 # sorted (live 2026-10-31: LK Bot at y 134, Looting at y 148).
@@ -102,8 +107,11 @@ def ensure_options(bot) -> bool:
     cfg = bot.cfg
     cur = read_settings(cfg)
     want_all = {**WANT, **WANT_CHECKED}
+    scrolled_ok = all(cur.get(k) == v for k, (_, _, v) in SCROLLED.items())
+    if not scrolled_ok:
+        _set_scrolled(bot)
     if all(cur.get(k) == v for k, v in want_all.items()):
-        return True
+        return scrolled_ok or all(read_settings(cfg).get(k) == v for k, (_, _, v) in SCROLLED.items())
     log.info("game options: setting %s (was %s)", want_all, {k: cur.get(k) for k in want_all})
     bot.click(*OPTIONS_BUTTON)
     bot.kill.sleep(1.5)
@@ -135,6 +143,37 @@ def ensure_options(bot) -> bool:
         bot.save_failure("options_not_set")
         log.warning("game options still %s", {k: now.get(k) for k in want_all})
     return ok
+
+
+def _set_scrolled(bot) -> None:
+    """At the main menu: Options > Gameplay, down-arrow to each SCROLLED row, click its checkbox, Apply, Esc."""
+    cfg = bot.cfg
+    log.info("game options: setting %s (was %s)", {k: v for k, (_, _, v) in SCROLLED.items()},
+             {k: read_settings(cfg).get(k) for k in SCROLLED})
+    bot.click(*OPTIONS_BUTTON)
+    bot.kill.sleep(1.5)
+    bot.click(*GAMEPLAY_TAB)
+    bot.kill.sleep(1.0)
+    at = 0
+    for k, (clicks, box, want) in sorted(SCROLLED.items(), key=lambda kv: kv[1][0]):
+        for _ in range(clicks - at):
+            bot.click(*SCROLL_ARROW)
+            bot.kill.sleep(0.35)
+        at = clicks
+        for _ in range(2):
+            if read_settings(cfg).get(k) == want:
+                break
+            bot.click(*box)
+            bot.kill.sleep(0.4)
+            bot.click(*APPLY)
+            bot.kill.sleep(1.2)
+    bot.press("esc")
+    bot.kill.sleep(1.0)
+    now = read_settings(cfg)
+    bad = {k: now.get(k) for k, (_, _, v) in SCROLLED.items() if now.get(k) != v}
+    if bad:
+        bot.save_failure("scrolled_options_not_set")
+        log.warning("game options still %s", bad)
 
 
 def ensure_loot_filter(bot) -> bool:

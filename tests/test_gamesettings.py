@@ -58,7 +58,8 @@ def test_ensure_options_ticks_show_character_names(tmp_path, monkeypatch):
     from bot import gamesettings as gs
 
     path = tmp_path / "Settings.json"
-    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party": 0, "AutoMap Party Names": 0}))
+    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party": 0, "AutoMap Party Names": 0,
+                                "Camera Shake": 0}))
     clicks = []
 
     class Bot:
@@ -84,3 +85,35 @@ def test_ensure_options_ticks_show_character_names(tmp_path, monkeypatch):
     assert gs.ensure_options(Bot())
     assert clicks.count(gs.CHECKBOXES["AutoMap Party Names"]) == 1
     assert json.loads(path.read_text())["AutoMap Party Names"] == 1
+
+
+def test_camera_shake_turned_off_through_the_accessibility_rows(tmp_path):
+    """Terror zone tremors shake the view and odometry reads that as a stall (2026-11-26 Act 3 town walk fails)."""
+    from bot import gamesettings as gs
+
+    path = tmp_path / "Settings.json"
+    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party": 1, "AutoMap Party Names": 1,
+                                "Camera Shake": 1}))
+    clicks = []
+    box = gs.SCROLLED["Camera Shake"][1]
+
+    class Bot:
+        cfg = cfg_for(tmp_path)
+        kill = type("K", (), {"sleep": staticmethod(lambda s: None)})()
+
+        def click(self, x, y):
+            clicks.append((x, y))
+            if (x, y) == gs.APPLY and box in clicks:
+                d = json.loads(path.read_text())
+                d["Camera Shake"] = 0
+                path.write_text(json.dumps(d))
+
+        def press(self, key):
+            pass
+
+        def save_failure(self, note):
+            raise AssertionError(note)
+
+    assert gs.ensure_options(Bot())
+    assert clicks.count(gs.SCROLL_ARROW) == gs.SCROLLED["Camera Shake"][0] and clicks.count(box) == 1
+    assert json.loads(path.read_text())["Camera Shake"] == 0
