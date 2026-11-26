@@ -13,6 +13,10 @@ after a "< 10: stash" spawn, 3 of 71 such spawns): town_automap now logs why eac
 frame after the first Tab (`a1_automap_after_first_tab`) with its map-text score. Look at the next one.
 "map changed" stops were all false: every one of the 7 fingerprint-mismatch frames since 11-19 (latest 03:00 today)
 has the inventory panel up over the view (left open after the war cries). check_fingerprint now closes it first.
+Act 3 town walk ("town waypoint not visible at end of route", ~5 % of LK runs) clusters by hour: 4 in 11-24 23h,
+4 in 11-25 03h, 3+ in 11-26 02-03h. The 03:08-03:09 stall frames show "Corrupted tremors strike Flayer Jungle,
+Swampy Pit, and Flayer Dungeon" (Act 3 terror zones this hour). Hypothesis to test by day: an Act 3 terror zone
+adds a tremor/visual effect in the Act 3 town that breaks the walk odometry ("stalled", "odometry lost").
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
