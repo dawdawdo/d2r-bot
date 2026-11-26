@@ -1730,7 +1730,8 @@ def spawn_act(bot: Controller) -> int:
         return 5
     named = town_by_area_name(bot)
     if named is not None:  # a Rogue Encampment spot none of the views know (2026-11-23 02:32: the Act 3 walk to
-        return named       # Asheara ran into the camp's palisade corner)
+        return named       # Asheara ran into the camp's palisade corner); Harrogath with the merc in front of the
+                           # tower the a5_spawn view keys on (2026-11-26 13:03: read as Act 3, the Kurast walk ran)
     last = getattr(bot, "act", None)
     if last in (1, 2, 4, 5):
         # nothing recognized: a new game starts in the act the last one ended in (15:38: area name unread, assumed
@@ -1746,7 +1747,7 @@ def town_by_area_name(bot: Controller) -> int | None:
     from .durance import area_score
     from .vision.screen import ASSETS
 
-    names = {a: f"town_a{a}" for a in (1, 3) if (ASSETS / f"area_town_a{a}.png").exists()}
+    names = {a: f"town_a{a}" for a in (1, 3, 5) if (ASSETS / f"area_town_a{a}.png").exists()}
     if not names:
         return None
     from .durance import map_text_open
@@ -1945,13 +1946,45 @@ def act2_to(bot: Controller, dest: str) -> None:
 
 
 def leave_act5(bot: Controller) -> None:
-    _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK)
+    if not a5_label_walk(bot, _wp_to_act3):
+        _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK)
+
+
+def a5_label_walk(bot: Controller, then) -> bool:
+    """Harrogath: walk to the waypoint by the stash's automap label (a1town anchor "wp5"), click it, `then` with the
+    panel open. False if it didn't get there (the old click walk is the fallback). 2026-11-26: the fixed A5_WALK from
+    11-02 ended by Larzuk's tower every game from the Malah spawn; the label walk reached the waypoint first try."""
+    from . import a1town
+
+    off = a1town.walk_to(bot, "wp5", near=300)
+    a1town.town_map_off(bot)
+    if off is None:
+        return False
+    from .nav import CENTER
+
+    for attempt in range(3):
+        bot.kill.sleep(0.3)
+        loc = bot.find("a5_wp.png", (0, 0, 1280, 600), 0.7)
+        if loc is not None:
+            bot.click(loc[0] + A5_WP_CLICK[0], loc[1] + A5_WP_CLICK[1])
+        else:  # the merc stands on it (2026-11-26 13:01: template 0.48, the label estimate 35 px off): click the estimate
+            bot.click(int(CENTER[0] + off[0]), int(CENTER[1] + off[1]))
+        try:
+            bot.wait_for("wp_menu", 6)
+        except BotError:
+            log.info("Act 5 waypoint menu didn't open (attempt %d)", attempt + 1)
+            continue
+        then(bot)
+        return True
+    bot.save_failure("a5_wp_label_walk")
+    return False
 
 
 def act5_to(bot: Controller, dest: str, tab: str | None = None) -> None:
     """From the Harrogath spawn: walk to its waypoint and take it to `dest` (default tab: WP_TAB, else Act V)."""
-    _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK,
-                     then=lambda b: wp_travel(b, tab or WP_TAB.get(dest, "wp_tab_act5"), dest))
+    then = lambda b: wp_travel(b, tab or WP_TAB.get(dest, "wp_tab_act5"), dest)  # noqa: E731
+    if not a5_label_walk(bot, then):
+        _town_wp_by_walk(bot, 5, A5_WALK, "a5_wp.png", A5_WP_CLICK, then=then)
     bot.wait_still(timeout=5)
     log.info("arrived at %s from Act 5 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
 
