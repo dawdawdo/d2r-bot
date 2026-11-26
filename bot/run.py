@@ -368,7 +368,7 @@ def main() -> int:
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
     # no gold for the merc (shared stash empty): LK until there is, then the task again (Stephen: LK when stuck)
     gold_tasks = get_tasks(["lk"], cfg) if lk_ready and any(getattr(t, "needs_merc", False) for t in tasks) else []
-    supplies.new_session()
+    supplies.new_session(cfg)
     backend = open_backend(cfg["game"]["window_title"], launch_exe=cfg["game"]["exe"])
     bot = Controller(backend.window, backend.capture, backend.input,
                      ScreenClassifier.from_config(cfg["vision"]["states"]), session.kill, cfg)

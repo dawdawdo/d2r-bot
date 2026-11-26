@@ -8,6 +8,12 @@
 6 town-walk fails, 1 false map_changed). Finds: Lazarus Spire, Godstrike Arch x2 (unidentified, shared tab 1 +
 inventory; the filter keeps showing them until one is identified). `--start andy` to resume.
 
+**Rejuvs (11-26):** Stephen is full (99). Spare rejuvs are now picked only while the stash stack is below 80
+(supplies.SPARES_BELOW): the count comes from the save at session start and is tracked through stowing/restocks (a restock
+used to re-arm spares at 98). Belt refills from the ground are unchanged.
+**Asked 11-26, waiting on Stephen:** grand charms: keep skillers, ditch the rest beyond a reroll stock of N (Cain identify
+in Act 1, tooltip 'Skills' check, drop in town); Diablo (Chaos seal-pop plan below) before Baal (waves).
+
 **Charms (11-26):** the filter never showed charms: "Show charms" had only itemCode, and charms count as gear (Hide all
 gear hid them). Stephen ticked small + grand charms in the game's editor 09:06 on Singularity (equipmentItemCode) and
 removed the Tal Rasha Lidless Eye rule (he wears it). Repo filter = his live copy. Generator: Show jewels now has

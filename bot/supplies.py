@@ -15,6 +15,10 @@ from . import state
 log = logging.getLogger(__name__)
 
 ZERO_RESTOCKS = 2  # in a row, with a belt slot empty; one could be a misread belt
+STACK_MAX = 99  # a Materials-tab stack
+# Spare rejuvs (belt full) are picked only while the stash stack is below this. Stephen 2026-11-26: "I'm completely full
+# on rejuvs ... stop filling up on them": a restock used to re-arm spares at 98, so every refill was topped back up.
+SPARES_BELOW = 80
 
 
 _TABLES = None
@@ -85,12 +89,51 @@ def gold_block(st: dict, gold: int | None, cfg: dict) -> tuple[bool, dict]:
     return True, st
 
 
-def new_session() -> None:
+def stash_rejuvs(cfg: dict) -> int | None:
+    """Rejuvs in the shared stash's Materials stacks, from the live .d2i (read only): the emptier of the full and small
+    stacks (spares of either kind fit while it has room). None when it can't be read."""
+    global _TABLES
+    from pathlib import Path
+
+    from . import d2save
+    from .armory import STASH
+
+    try:
+        _TABLES = _TABLES or d2save.tables()
+        tabs = d2save.read_d2i(Path(cfg["paths"]["save_dir"]) / STASH, _TABLES)
+    except Exception as e:  # noqa: BLE001
+        log.info("stash rejuvs unknown: %s", e)
+        return None
+    stacks = {}
+    for tab in tabs:
+        for it in tab.get("items") or []:
+            code = d2save.code_str(it["code"]).strip()
+            if code in ("rvl", "rvs"):
+                stacks[code] = stacks.get(code, 0) + int(it.get("advanced_stash_stack_size") or it.get("quantity") or 1)
+    return min(stacks.get("rvl", 0), stacks.get("rvs", 0)) if stacks else 0
+
+
+def _spares_flag(st: dict) -> dict:
+    """rejuv_stash_full from the estimated stack count (when known): no spares until it drops below SPARES_BELOW."""
+    n = st.get("rejuv_stash_count")
+    if n is not None:
+        st["rejuv_stash_full"] = n >= SPARES_BELOW
+    return st
+
+
+def new_session(cfg: dict | None = None) -> None:
     """A new session looks at the stash again (Stephen may have added rejuvs), but a refill under way goes on to its
     end: "do LK runs until she stocks up again, then go back to Mephisto" (Stephen 2026-11-08; restarted sessions
-    had gone back to Meph with 10 of 40 stashed). To end one early: delete refill_left from logs/state.json."""
+    had gone back to Meph with 10 of 40 stashed). To end one early: delete refill_left from logs/state.json.
+    With `cfg`, the stack count comes from the save (he may have filled or emptied it by hand)."""
     st = state.load()
-    state.save({k: v for k, v in st.items() if k not in ("stash_rejuvs_empty", "restock_zero")})
+    st = {k: v for k, v in st.items() if k not in ("stash_rejuvs_empty", "restock_zero", "rejuv_stash_count")}
+    n = stash_rejuvs(cfg) if cfg else None
+    if n is not None:
+        st["rejuv_stash_count"] = n
+        _spares_flag(st)
+        log.info("stash rejuvs: %d (spares picked below %d: %s)", n, SPARES_BELOW, "no" if st["rejuv_stash_full"] else "yes")
+    state.save(st)
 
 
 def restocked(moved: int, slots_gone: bool) -> bool:
@@ -99,13 +142,17 @@ def restocked(moved: int, slots_gone: bool) -> bool:
     st = state.load()
     if moved > 0:
         st.pop("restock_zero", None)
-        state.save({**st, "rejuv_stash_full": False})  # room in the stack again
+        st["rejuv_stash_full"] = False  # room in the stack again...
+        if st.get("rejuv_stash_count") is not None:  # ...but with a count, spares wait until it's below SPARES_BELOW
+            st["rejuv_stash_count"] = max(0, st["rejuv_stash_count"] - moved)
+            _spares_flag(st)
+        state.save(st)
         return False
     zeros = st.get("restock_zero", 0) + 1
     dry = slots_gone or zeros >= ZERO_RESTOCKS
     if dry:
         st.pop("restock_zero", None)
-        st.update(stash_rejuvs_empty=True, rejuv_stash_full=False)  # a stale "full" would block spare pickups
+        st.update(stash_rejuvs_empty=True, rejuv_stash_full=False, rejuv_stash_count=0)  # a stale "full" would block spares
     else:
         st["restock_zero"] = zeros
     state.save(st)
@@ -121,6 +168,13 @@ def needs_a_page(left: list, rejuvs: set, stacks: set) -> list:
 def after_stowing(st: dict, rejuvs: int, stack_full: bool) -> dict:
     """The state after the stowaway put `rejuvs` in the Materials stack."""
     st = dict(st)
+    if stack_full:
+        st["rejuv_stash_count"] = STACK_MAX
+    elif st.get("rejuv_stash_count") is not None:
+        st["rejuv_stash_count"] = min(STACK_MAX, st["rejuv_stash_count"] + rejuvs)
+    _spares_flag(st)
+    if stack_full:
+        st["rejuv_stash_full"] = True
     left = st.get("refill_left")
     if stack_full or (left is not None and left - rejuvs <= 0):
         st.pop("stash_rejuvs_empty", None)

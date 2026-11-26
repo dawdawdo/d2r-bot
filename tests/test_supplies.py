@@ -120,3 +120,37 @@ def test_lk_only_session_saves_rejuvs_while_the_stash_is_dry():
     assert not supplies.saving_rejuvs(lk, [], {"town": {"lk_save_rejuvs": 0}})
     state.save(supplies.after_stowing(state.load(), 20, stack_full=False))
     assert not supplies.saving_rejuvs(lk, [], cfg)  # 20 stashed: she drinks again
+
+
+def test_full_stash_keeps_spares_off_until_restocks_take_it_below_the_margin(monkeypatch):
+    """Stephen 2026-11-26: completely full on rejuvs, stop filling up. A restock used to re-arm spares at 98."""
+    monkeypatch.setattr(supplies, "stash_rejuvs", lambda cfg: 99)
+    supplies.new_session({"paths": {}})
+    assert state.load()["rejuv_stash_full"] is True
+    supplies.restocked(4, False)
+    assert state.load()["rejuv_stash_count"] == 95 and state.load()["rejuv_stash_full"] is True
+    for _ in range(4):
+        supplies.restocked(4, False)
+    assert state.load()["rejuv_stash_count"] == 79 and state.load()["rejuv_stash_full"] is False
+
+
+def test_stowing_counts_up_and_a_stuck_rejuv_means_99():
+    st = supplies.after_stowing({"rejuv_stash_count": 78, "rejuv_stash_full": False}, 3, False)
+    assert st["rejuv_stash_count"] == 81 and st["rejuv_stash_full"] is True
+    st = supplies.after_stowing({"rejuv_stash_count": 40}, 0, True)
+    assert st["rejuv_stash_count"] == 99 and st["rejuv_stash_full"] is True
+
+
+def test_a_low_stash_at_session_start_allows_spares(monkeypatch):
+    state.save({"rejuv_stash_full": True})
+    monkeypatch.setattr(supplies, "stash_rejuvs", lambda cfg: 50)
+    supplies.new_session({"paths": {}})
+    assert state.load()["rejuv_stash_full"] is False
+
+
+def test_unknown_count_keeps_the_old_behaviour(monkeypatch):
+    monkeypatch.setattr(supplies, "stash_rejuvs", lambda cfg: None)
+    state.save({"rejuv_stash_full": True})
+    supplies.new_session({"paths": {}})
+    supplies.restocked(2, False)
+    assert state.load()["rejuv_stash_full"] is False  # no count: room again, as before
