@@ -65,6 +65,9 @@ specific, and the announcement text is already masked (nav.STATIC_OVERLAYS has t
 (15:01): RotW "Corrupted tremors" + Settings "Camera Shake": 1 shake the view; odometry reads it as stalled/lost.
 Camera Shake is now unticked by gamesettings.ensure_options (Accessibility row, scrollbar arrow). Compare the
 "town waypoint not visible" rate from 15:01 on with the ~5 % before (17 of 321 LK runs 11-24..26).
+Camera shake wasn't it (fails at 15:09, 15:16 with it off; leg-0 stall at the spawn, then drift). FIX 15:22: when the
+walk ends without the waypoint in view, open_town_wp walks to it by the stash's automap label (a1town anchor
+"wp3" = stash + (496, 106)); first live rescue 15:37 (2,148 px off, found, run went on).
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
