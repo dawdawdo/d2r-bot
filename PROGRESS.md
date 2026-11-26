@@ -10,6 +10,11 @@ Throne in ~2 min (14:08-14:10). Throne arrival frames: scratch/throne/. 14:14: g
 lose carried gold; revives; withdrawals), belt empty -> bot back on andy = LK gold block to 500k. Open for Stephen:
 Blizzaga's MF set is fragile in Worldstone Keep / the Throne (death or chicken about every other probe game); her
 sturdier set would need a reverse gear swap (tools/gear_swap.py only swaps INTO the MF set).
+16:28-16:33 probes (gold 521k -> 277k: a revive, potions, two deaths): down_a_level now routes to the mapped stop
+NEAREST the exit (it used the stop that saw the automap mark, 4,100-4,500 px away in Worldstone Keep; Catacombs
+unchanged). Worldstone Keep has a per-game zone modifier (first purple info line: Cursed, Lightning/Fire/Cold
+Enchanted, Extra Fast, Mana Burn); Settings "Offline Desecrated Zones Enabled": 1 is the likely source. One game
+killed her from full life in ~6 s (chain lightning). Baal probing PAUSED for Stephen: gear and/or desecrated zones.
 Games end in Act 5: run loop hops Harrogath -> Rogue Encampment for a1_town tasks (town.act5_to_act1; Harrogath
 waypoint by the stash label, anchor wp5). New: keep automap style, area templates worldstone_keep_2/3 + town_a5,
 tt_worldstone_level, down_a_level(style=), walk-in exit marks. Next: Throne template + learn the throne room

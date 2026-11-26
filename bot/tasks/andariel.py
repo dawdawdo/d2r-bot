@@ -102,7 +102,13 @@ def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str, 
     odo = AutomapOdometer.load(fold, ensure_automap(bot))
     walker = Walker(bot, odo, g, fold, scan=False)
     start = g.nearest(odo.pos, within=1e9)
-    for j in short_path(g, start, w["stop"])[1:]:
+    # the mapped stop nearest the exit, not the stop that saw it: an automap exit mark shows from ~4,500 px away
+    # (Worldstone Keep Level 3 -> Throne, 2026-11-26 16:31: the route ended 3,200 px short and the door was never
+    # reached); for stairs found by hovering the two are the same stop
+    import math
+
+    goal_stop = min(range(len(g.stops)), key=lambda i: math.dist(g.stops[i]["pos"], w["world"]))
+    for j in short_path(g, start, goal_stop)[1:]:
         # a leg that falls short isn't the end: the next stop is usually still reachable from where she landed
         # (2026-11-22: travel() gave up on the first missed leg 2,600 px from the exit)
         walker.go(g.stops[j]["pos"], tol=150, max_hops=5)

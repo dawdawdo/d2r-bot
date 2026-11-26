@@ -459,7 +459,9 @@ def to_durance2(bot, say=print, buy_mana: bool = False, dest: str = "wp_durance_
             from .town import act5_to_act1
 
             act5_to_act1(bot)
-        if hurt() or (merc and not merc_alive(bot)):
+        from .tasks.tunnels import empty_columns
+
+        if hurt() or (merc and not merc_alive(bot)) or empty_columns(bot) >= 1:  # an empty belt column: Akara first
             from .a1town import town_stop
 
             if town_stop(bot, bot.cfg):  # it walked off: a fresh game spawns at the Rogue Encampment waypoint
