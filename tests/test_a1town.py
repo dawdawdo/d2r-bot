@@ -124,36 +124,3 @@ def test_inventory_antidotes_are_potions_to_drink():
     assert potion_kind(f, 1, 2) == "antidote" and potion_kind(f, 2, 2) == "antidote"
     assert potion_kind(f, 3, 2) is None  # a topaz
 
-
-class _Bot:
-    """Just enough Controller for revive_merc_a1: counts clicks."""
-    def __init__(self):
-        self.clicks, self.failures = 0, []
-        self.kill = type("K", (), {"sleep": staticmethod(lambda s: None)})()
-        self.capture = type("C", (), {"grab": staticmethod(lambda: None)})()
-
-    def click(self, x, y):
-        self.clicks += 1
-
-    def press(self, key):
-        pass
-
-    def save_failure(self, note):
-        self.failures.append(note)
-
-
-@pytest.mark.parametrize("takes_on, want_clicks, want", [(1, 1, True), (2, 2, True), (3, 2, False)])
-def test_kashya_resurrect_gets_one_more_try_when_the_click_misses(monkeypatch, takes_on, want_clicks, want):
-    """2026-11-25 21:42: the Resurrect click only lit the line; the run failed with the merc dead."""
-    from bot import town
-
-    bot = _Bot()
-    monkeypatch.setattr(a1town, "walk_to", lambda *a, **k: (0, 0))
-    monkeypatch.setattr(a1town, "talk", lambda *a, **k: (0, 0))
-    monkeypatch.setattr(a1town, "npc_menu", lambda *a, **k: (500, 300))
-    monkeypatch.setattr(a1town, "_line_widths", lambda *a, **k: [100, 40, 50])
-    monkeypatch.setattr(a1town, "close_npc", lambda *a, **k: None)
-    monkeypatch.setattr(town, "merc_alive", lambda *a, **k: bot.clicks >= takes_on)
-    monkeypatch.setattr(town, "resurrect_result", lambda b, who: bot.clicks >= takes_on)
-    assert a1town.revive_merc_a1(bot) is want
-    assert bot.clicks == want_clicks

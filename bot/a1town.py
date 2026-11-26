@@ -375,10 +375,11 @@ def open_stash_a1(bot: Controller) -> bool:
     return False
 
 
-def revive_merc_a1(bot: Controller, retry: bool = True) -> bool:
-    """Kashya: Resurrect (the widest line of her menu while the merc is dead). One more try when the click didn't take
-    (2026-11-25 21:42: the menu still open on Resurrect, the merc still dead; ~1 in 10 revives over 11-24/25, and
-    each one cost a run)."""
+def revive_merc_a1(bot: Controller) -> bool:
+    """Kashya: Resurrect (the widest line of her menu while the merc is dead). A Resurrect that does nothing (menu
+    still up on it) means the gold she carries ran out: town_stop withdraws and asks again. Not a missed click: a
+    second click there (2026-11-26 05:16) changed nothing, the withdrawal then did (every 'still dead' of 11-25/26 came
+    after ~4 revives on a 200k withdrawal)."""
     from .town import merc_alive, resurrect_result
 
     off = walk_to(bot, "kashya", near=NEAR, steps=16)
@@ -402,11 +403,6 @@ def revive_merc_a1(bot: Controller, retry: bool = True) -> bool:
     bot.kill.sleep(1.5)
     bot.press("esc")
     bot.kill.sleep(0.5)
-    if retry and not merc_alive(bot, tries=6):
-        bot.save_failure("a1_resurrect_click_missed")
-        log.info("Kashya: merc still dead after the Resurrect click; asking her again")
-        close_npc(bot)
-        return revive_merc_a1(bot, retry=False)
     return resurrect_result(bot, "Kashya")
 
 
