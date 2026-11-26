@@ -54,3 +54,31 @@ def test_arrival_view_change():
     lk = cv2.imread(str(FIX / "lk_wp_merc_left.png"))
     assert arrived(town, lk)
     assert not arrived(town, town)
+
+
+def test_fingerprint_closes_an_inventory_panel_left_up(monkeypatch):
+    """2026-11-26 03:00: the inventory was still up after the war cries; the check called it a changed map."""
+    import numpy as np
+
+    from bot import lk, town
+    from bot.vision import inventory
+
+    panel = {"up": True}
+    closed = []
+
+    class Bot:
+        frame = None
+        kill = type("K", (), {"sleep": staticmethod(lambda s: None)})()
+
+        def observe(self):
+            self.frame = np.full((720, 1280, 3), 1 if panel["up"] else 2, np.uint8)
+
+        def save_failure(self, note):
+            raise AssertionError("no failure expected")
+
+    monkeypatch.setattr(lk, "_fp_template", lambda route: None)
+    monkeypatch.setattr(inventory, "inventory_open", lambda f: int(f[0, 0, 0]) == 1)
+    monkeypatch.setattr(town, "inventory_panel", lambda bot, want: closed.append(want) or panel.update(up=False))
+    monkeypatch.setattr(lk, "fingerprint_match", lambda f, *a, **k: int(f[0, 0, 0]) == 2)
+    lk.check_fingerprint(Bot(), {"fingerprint": {"region": None, "threshold": 0.8}})
+    assert closed == [False]

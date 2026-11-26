@@ -11,6 +11,8 @@ now counts sockets from the sockets list (empty = None), so socketed stash bases
 Watch items from this session: Kashya's Resurrect click sometimes only lights the line (21:42 run failed; ~1 in 10 revives): revive_merc_a1 now asks her twice (next session). "automap won't show (Act 1)" 6 times in ~690 Act 1 spawns since 11-23 (22:05, 01:09 this session; 3 of the last 4 right
 after a "< 10: stash" spawn, 3 of 71 such spawns): town_automap now logs why each retry happened and, on failure, saves the
 frame after the first Tab (`a1_automap_after_first_tab`) with its map-text score. Look at the next one.
+"map changed" stops were all false: every one of the 7 fingerprint-mismatch frames since 11-19 (latest 03:00 today)
+has the inventory panel up over the view (left open after the war cries). check_fingerprint now closes it first.
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).

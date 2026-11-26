@@ -214,8 +214,10 @@ def leave_via_wp(bot: Controller, route: dict, odo, tab: str, dest: str) -> bool
 
 
 def check_fingerprint(bot: Controller, route: dict) -> None:
-    """Retries for ~2 s: the merc arriving next to us (with a glow) can cover the platform."""
-    from .vision.screen import ASSETS
+    """Retries for ~2 s: the merc arriving next to us (with a glow) can cover the platform. An inventory panel left
+    up covers the view (2026-11-26 03:00: open after the war cries; "map changed" stopped the session): close it."""
+    from .town import inventory_panel
+    from .vision.inventory import inventory_open
 
     fp = route["fingerprint"]
     tpl = _fp_template(route)
@@ -223,6 +225,10 @@ def check_fingerprint(bot: Controller, route: dict) -> None:
         if i:
             bot.kill.sleep(0.5)
         bot.observe()
+        if inventory_open(bot.frame):
+            log.info("fingerprint: the inventory panel is up; closing it first")
+            inventory_panel(bot, False)
+            bot.observe()
         if fingerprint_match(bot.frame, tpl, fp["region"], fp["threshold"], fp.get("half_threshold")):
             return
     bot.save_failure("map_fingerprint_mismatch")
