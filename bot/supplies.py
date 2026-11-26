@@ -19,6 +19,7 @@ STACK_MAX = 99  # a Materials-tab stack
 # Spare rejuvs (belt full) are picked only while the stash stack is below this. Stephen 2026-11-26: "I'm completely full
 # on rejuvs ... stop filling up on them": a restock used to re-arm spares at 98, so every refill was topped back up.
 SPARES_BELOW = 80
+DRY_DOUBT = 10  # a "dry" restock with at least this many counted in the stash (from the save) is a misread
 
 
 _TABLES = None
@@ -150,6 +151,14 @@ def restocked(moved: int, slots_gone: bool) -> bool:
         return False
     zeros = st.get("restock_zero", 0) + 1
     dry = slots_gone or zeros >= ZERO_RESTOCKS
+    n = st.get("rejuv_stash_count")
+    if dry and n is not None and n >= DRY_DOUBT:
+        # the save said there are plenty (2026-11-26 14:21: "out of rejuvs" with 79 in the stash: the shift-clicks
+        # had gone to the inventory, the belt read didn't change): a misread, not a dry stash
+        log.warning("restock moved 0 with ~%d rejuvs in the stash (save): not calling it dry", n)
+        st["restock_zero"] = 0
+        state.save(st)
+        return False
     if dry:
         st.pop("restock_zero", None)
         st.update(stash_rejuvs_empty=True, rejuv_stash_full=False, rejuv_stash_count=0)  # a stale "full" would block spares

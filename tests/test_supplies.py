@@ -154,3 +154,14 @@ def test_unknown_count_keeps_the_old_behaviour(monkeypatch):
     supplies.new_session({"paths": {}})
     supplies.restocked(2, False)
     assert state.load()["rejuv_stash_full"] is False  # no count: room again, as before
+
+
+def test_zero_restocks_with_plenty_counted_are_not_dry():
+    """2026-11-26 14:21: two zero restocks called a stash with 79 rejuvs dry; LK runs went on with an empty belt."""
+    state.save({"rejuv_stash_count": 79})
+    assert supplies.restocked(0, slots_gone=False) is False
+    assert supplies.restocked(0, slots_gone=False) is False
+    assert not state.load().get("stash_rejuvs_empty")
+    state.save({"rejuv_stash_count": 3})
+    supplies.restocked(0, slots_gone=False)
+    assert supplies.restocked(0, slots_gone=False) is True  # few left: believe it
