@@ -58,7 +58,7 @@ def test_ensure_options_ticks_show_character_names(tmp_path, monkeypatch):
     from bot import gamesettings as gs
 
     path = tmp_path / "Settings.json"
-    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party Names": 0}))
+    path.write_text(json.dumps({"AutoMapMode": 0, "AutoMapFade": 1, "AutoMap Party": 0, "AutoMap Party Names": 0}))
     clicks = []
 
     class Bot:
@@ -67,9 +67,12 @@ def test_ensure_options_ticks_show_character_names(tmp_path, monkeypatch):
 
         def click(self, x, y):
             clicks.append((x, y))
-            if (x, y) == gs.APPLY and gs.CHECKBOXES["AutoMap Party Names"] in clicks:
+            if (x, y) == gs.APPLY:  # the game writes Settings.json on Apply; Names only takes with Party on
                 d = json.loads(path.read_text())
-                d["AutoMap Party Names"] = 1  # the game writes Settings.json on Apply
+                if gs.CHECKBOXES["AutoMap Party"] in clicks:
+                    d["AutoMap Party"] = 1
+                if gs.CHECKBOXES["AutoMap Party Names"] in clicks and d["AutoMap Party"]:
+                    d["AutoMap Party Names"] = 1
                 path.write_text(json.dumps(d))
 
         def press(self, key):

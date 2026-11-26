@@ -35,9 +35,11 @@ APPLY = (472, 618)
 ARROW_LEFT_X = 706
 OPTION_ROWS = {"AutoMapMode": 300, "AutoMapFade": 334}  # y of "Automap Size" / "Automap Opacity"
 WANT = {"AutoMapMode": 0, "AutoMapFade": 1}  # Full Screen, Center (in this order)
-# Checkboxes on the same paged-down Gameplay page (live 2026-11-26): click toggles, Apply writes Settings.json
-CHECKBOXES = {"AutoMap Party Names": (800, 502)}  # "Show Character Names"
-WANT_CHECKED = {"AutoMap Party Names": 1}
+# Checkboxes on the same paged-down Gameplay page (live 2026-11-26): click toggles, Apply writes Settings.json.
+# "Show Character Names" is greyed out unless "Show Party Members" is ticked, and unticking Party Members turns Names
+# off again (the old Party 0 / Names 1 can't be set from the menu), so both are wanted, Party Members first.
+CHECKBOXES = {"AutoMap Party": (800, 470), "AutoMap Party Names": (800, 502)}  # Show Party Members / Character Names
+WANT_CHECKED = {"AutoMap Party": 1, "AutoMap Party Names": 1}
 
 # In game: Esc -> Loot Filter -> profile dropdown. Entries: "Select a Profile", then the .fltr names
 # sorted (live 2026-10-31: LK Bot at y 134, Looting at y 148).
