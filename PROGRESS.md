@@ -5,7 +5,11 @@
 
 **2026-11-26 12:10-: building Baal (Stephen: "let's try Baal now"; Andariel paused).** bot/tasks/baal.py (not ready),
 bot/baal.py (throne stub). Route: Act 1 waypoint -> Act V tab wp_worldstone_2 -> wsk2_auto (Level 2 exit LEARNED, warp 2)
--> wsk3_auto (Level 3 -> Throne: searching, tools/find_tunnels.py --no-scan --marks --style keep --via wsk2...).
+-> wsk3_auto (Level 3 -> Throne LEARNED 14:06: door "To The Throne of Destruction", warp 1). Full route Harrogath ->
+Throne in ~2 min (14:08-14:10). Throne arrival frames: scratch/throne/. 14:14: gold was 0 (deaths in Worldstone Keep
+lose carried gold; revives; withdrawals), belt empty -> bot back on andy = LK gold block to 500k. Open for Stephen:
+Blizzaga's MF set is fragile in Worldstone Keep / the Throne (death or chicken about every other probe game); her
+sturdier set would need a reverse gear swap (tools/gear_swap.py only swaps INTO the MF set).
 Games end in Act 5: run loop hops Harrogath -> Rogue Encampment for a1_town tasks (town.act5_to_act1; Harrogath
 waypoint by the stash label, anchor wp5). New: keep automap style, area templates worldstone_keep_2/3 + town_a5,
 tt_worldstone_level, down_a_level(style=), walk-in exit marks. Next: Throne template + learn the throne room
