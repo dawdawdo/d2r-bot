@@ -8,7 +8,9 @@ block ended at once and Andariel resumed. Filter reinstalled 21:16 (Chronicle 25
 for Grief / Kingslayer / Lawbringer / Unbending Will; his stripped 5-os Phase Blade counts 1 of 2). rw_targets.stash_bases
 now counts sockets from the sockets list (empty = None), so socketed stash bases show again. Armory page refreshed
 20:27 by hand (backup + `python -m bot.armory --force`).
-Watch items from this session: Kashya's Resurrect click sometimes only lights the line (21:42 run failed; ~1 in 10 revives): revive_merc_a1 now asks her twice (next session). "automap won't show (Act 1)" 5 times in ~620 Act 1 spawns since 11-23 (22:05 today): town_automap now logs why each retry happened; look at the next one.
+Watch items from this session: Kashya's Resurrect click sometimes only lights the line (21:42 run failed; ~1 in 10 revives): revive_merc_a1 now asks her twice (next session). "automap won't show (Act 1)" 6 times in ~690 Act 1 spawns since 11-23 (22:05, 01:09 this session; 3 of the last 4 right
+after a "< 10: stash" spawn, 3 of 71 such spawns): town_automap now logs why each retry happened and, on failure, saves the
+frame after the first Tab (`a1_automap_after_first_tab`) with its map-text score. Look at the next one.
 
 **2026-11-25 18:23: stopped for Stephen** (he's trying things). Session 15:52-18:23: 37 runs, 30 ok, 5 misses, 2 chickens,
 0 deaths; gold fell 518k -> 48k (merc revives), so the LK block started 18:03 and is still under way (to 500k):

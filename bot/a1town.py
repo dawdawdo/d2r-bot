@@ -78,9 +78,10 @@ def town_automap(bot: Controller) -> np.ndarray:
     really up first (the game menu, an NPC menu, a trade/stash panel): a blind Esc opened the game menu and the
     retries left it up (17:35)."""
     from .controller import BotError
-    from .durance import map_text_open
+    from .durance import map_text_open, map_text_score
     from .vision.inventory import inventory_open
 
+    first = None  # the frame after the first Tab's wait: kept for a failure (was the map up but not recognised?)
     for attempt in range(4):
         f = bot.capture.grab()
         if map_text_open(f):
@@ -99,6 +100,13 @@ def town_automap(bot: Controller) -> np.ndarray:
             f = bot.capture.grab()
             if map_text_open(f):
                 return f
+        if first is None:
+            first = f
+    if first is not None:
+        log.info("automap: map text score after the first Tab %.2f (open >= 0.5)", map_text_score(first))
+        bot.frame = first
+        bot.save_failure("a1_automap_after_first_tab")
+        bot.frame = bot.capture.grab()
     bot.save_failure("a1_automap_wont_show")
     raise BotError("automap won't show (Act 1)")
 

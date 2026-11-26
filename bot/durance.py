@@ -101,10 +101,15 @@ SHOWN_MIN = {"tunnel": 10000, "gray": 6000}  # tunnels: lit arches alone give ~4
 def map_text_open(frame: np.ndarray) -> bool:
     """The area info block (top right) shows only with the automap open; its "Difficulty: Hell" line is the same
     everywhere: edge match 0.95-1.0 open, 0.12-0.17 closed (Black Marsh, Lost City, tunnels, Outer Cloister, 2026-11-14)."""
+    return map_text_score(frame) >= 0.5  # 0.67-0.79 with map lines drawn through the text (Pit, 6 failed runs 2026-11-14)
+
+
+def map_text_score(frame: np.ndarray) -> float:
+    """Edge match of the "Difficulty" line in the area info block (see map_text_open)."""
     from .vision.screen import ASSETS
 
     t = _area_tmpl(ASSETS / "automap_difficulty_text.png")  # not difficulty_hell.png: that is the Hell button
-    return float(cv2.matchTemplate(_lap(frame[20:110, 1000:1280]), _lap(t), cv2.TM_CCOEFF_NORMED).max()) >= 0.5  # 0.67-0.79 with map lines drawn through the text (Pit, 6 failed runs 2026-11-14)
+    return float(cv2.matchTemplate(_lap(frame[20:110, 1000:1280]), _lap(t), cv2.TM_CCOEFF_NORMED).max())
 
 
 def automap_shown(frame: np.ndarray) -> bool:
