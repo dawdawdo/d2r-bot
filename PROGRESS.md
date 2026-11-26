@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 08:40: stopped by F12** (supervisor staying stopped; D2R not running). Night 21:16-08:40: Andariel 125 runs
+(86 kills, 25 misses, 11 chickens, 3 fails), LK gold blocks 02:10-03:59 and 06:08-07:08 (70 runs: 55 ok, 8 chickens,
+6 town-walk fails, 1 false map_changed). Finds: Lazarus Spire, Godstrike Arch x2 (unidentified, shared tab 1 +
+inventory; the filter keeps showing them until one is identified). `--start andy` to resume.
+
 **2026-11-25 21:16: running again (andy).** Stephen played ThroatCutter (terror zones); shared gold now 1004k, so the LK
 block ended at once and Andariel resumed. Filter reinstalled 21:16 (Chronicle 25 runewords; Phase Blade step still shown
 for Grief / Kingslayer / Lawbringer / Unbending Will; his stripped 5-os Phase Blade counts 1 of 2). rw_targets.stash_bases
