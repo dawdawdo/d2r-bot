@@ -85,7 +85,11 @@ def town_automap(bot: Controller) -> np.ndarray:
         f = bot.capture.grab()
         if map_text_open(f):
             return f
-        if bot.observe() == "esc_menu" or menu_up(bot, f) or inventory_open(f):
+        why = [n for n, hit in (("esc_menu", bot.observe() == "esc_menu"), ("npc_menu", menu_up(bot, f)),
+                                ("inventory", inventory_open(f))) if hit]
+        if attempt:  # diagnostics: ~1 in 120 Act 1 spawns ends here, some in 3 s (Esc path), some in 10 s (Tab path)
+            log.info("automap not up (attempt %d): %s", attempt + 1, ", ".join(why) or "pressing Tab again")
+        if why:
             bot.press("esc")
             esc_cleared(bot)
             continue
