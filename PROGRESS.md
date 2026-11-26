@@ -79,6 +79,8 @@ Camera Shake is now unticked by gamesettings.ensure_options (Accessibility row, 
 Camera shake wasn't it (fails at 15:09, 15:16 with it off; leg-0 stall at the spawn, then drift). FIX 15:22: when the
 walk ends without the waypoint in view, open_town_wp walks to it by the stash's automap label (a1town anchor
 "wp3" = stash + (496, 106)); first live rescue 15:37 (2,148 px off, found, run went on).
+Rescued 2 of 3 so far; 17:37 the walk ended in the west huts, beyond the stash label's range ("wp3: no automap
+label" x3). Next: VIA labels for Act 3 (Ormus / Asheara / Hratli templates + their offsets to the stash).
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
