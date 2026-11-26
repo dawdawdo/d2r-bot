@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 12:10-: building Baal (Stephen: "let's try Baal now"; Andariel paused).** bot/tasks/baal.py (not ready),
+bot/baal.py (throne stub). Route: Act 1 waypoint -> Act V tab wp_worldstone_2 -> wsk2_auto (Level 2 exit LEARNED, warp 2)
+-> wsk3_auto (Level 3 -> Throne: searching, tools/find_tunnels.py --no-scan --marks --style keep --via wsk2...).
+Games end in Act 5: run loop hops Harrogath -> Rogue Encampment for a1_town tasks (town.act5_to_act1; Harrogath
+waypoint by the stash label, anchor wp5). New: keep automap style, area templates worldstone_keep_2/3 + town_a5,
+tt_worldstone_level, down_a_level(style=), walk-in exit marks. Next: Throne template + learn the throne room
+(waves, portal, Baal), then an alternate-games mode so andy and baal share a session.
+
 **2026-11-26 11:17: running again (andy)** after Stephen finished on Singularity. Filter installed 10:59 (jewels as gear).
 First restart failed every run with "Kashya not found": automap "Show Character Names" (Settings AutoMap Party
 Names) went off around the 08:40 F12 + game close on GLaDOS (someone at GLaDOS; the game closed 08:40:40, Singularity's
