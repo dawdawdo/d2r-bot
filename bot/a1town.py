@@ -184,7 +184,8 @@ VIA = {"stash": (("kashya", (0, 0)), ("akara", AKARA_TO_STASH)),
 # 2026-11-23 11:59: from Akara's tent neither Kashya's nor the stash's label showed: no stash, no revive
 VIA_NEAR = 300  # walk this close to a VIA point, then look for the target's label again
 ANCHOR = {"wp": ("stash", (1012, 127)),
-          "wp5": ("stash", (-439, 33))}  # Harrogath: the waypoint from its stash's label (2026-11-26 probe, one frame)  # no label of its own: the waypoint from the stash's (2 frames agree within
+          "wp5": ("stash", (-439, 33)),  # Harrogath: the waypoint from its stash's label (2026-11-26 probe, one frame)
+          "wp3": ("stash", (496, 106))}  # Kurast Docks: from the stash's label (2026-11-26 15:20, at a normal route end)  # no label of its own: the waypoint from the stash's (2 frames agree within
                                         # 8 px, 2026-11-23)
 
 

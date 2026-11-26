@@ -210,6 +210,20 @@ def open_town_wp(bot: Controller, tcfg: dict) -> None:
             clear_panels(bot)
             view = bot.capture.grab()
             loc = find_town_wp(bot, view, tcfg)
+        if loc is None and attempt == 0:
+            # the walk drifted (the Kurast Docks leg-0 stalls by the spawn: 'done 37 px from the recorded end' and
+            # the waypoint off screen, 2026-11-26 15:09): walk to it by the stash's automap label, then look again
+            from . import a1town
+
+            if a1town.walk_to(bot, "wp3", near=250) is not None:
+                a1town.town_map_off(bot)
+                bot.kill.sleep(0.4)
+                view = bot.capture.grab()
+                loc = find_town_wp(bot, view, tcfg)
+                if loc is not None:
+                    log.info("town WP found after the label walk")
+            else:
+                a1town.town_map_off(bot)
         if loc is None:
             bot.save_failure(f"town_wp_not_found_{attempt}")
             raise BotError("town waypoint not visible at end of route")
