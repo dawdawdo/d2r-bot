@@ -61,8 +61,10 @@ has the inventory panel up over the view (left open after the war cries). check_
 Act 3 town walk ("town waypoint not visible at end of route", ~5 % of LK runs) clusters by hour: 4 in 11-24 23h,
 4 in 11-25 03h, 3+ in 11-26 02-03h. The 03:08-03:09 stall frames show "Corrupted tremors strike Flayer Jungle,
 Swampy Pit, and Flayer Dungeon". But 06:21 (zones Cold Plains and Cave, Act 1) failed the same way, so not Act 3
-specific, and the announcement text is already masked (nav.STATIC_OVERLAYS has the chat lines). Cause still open:
-look at the walk_stall_leg* frames by day (stalls usually recover; ~5 % of LK runs don't).
+specific, and the announcement text is already masked (nav.STATIC_OVERLAYS has the chat lines). New suspect
+(15:01): RotW "Corrupted tremors" + Settings "Camera Shake": 1 shake the view; odometry reads it as stalled/lost.
+Camera Shake is now unticked by gamesettings.ensure_options (Accessibility row, scrollbar arrow). Compare the
+"town waypoint not visible" rate from 15:01 on with the ~5 % before (17 of 321 LK runs 11-24..26).
 
 **Open question for Stephen (2026-11-26 02:10): merc revives eat about half the bot's time.** 21:16-02:10: 1004k -> 12k
 gold, 19 Kashya revives at 50k (merc alive at every fight start, dead after ~30 % of the 68 fights: Andariel kills him).
