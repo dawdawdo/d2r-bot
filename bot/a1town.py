@@ -361,8 +361,10 @@ def open_stash_a1(bot: Controller) -> bool:
     return False
 
 
-def revive_merc_a1(bot: Controller) -> bool:
-    """Kashya: Resurrect (the widest line of her menu while the merc is dead)."""
+def revive_merc_a1(bot: Controller, retry: bool = True) -> bool:
+    """Kashya: Resurrect (the widest line of her menu while the merc is dead). One more try when the click didn't take
+    (2026-11-25 21:42: the menu still open on Resurrect, the merc still dead; ~1 in 10 revives over 11-24/25, and
+    each one cost a run)."""
     from .town import merc_alive, resurrect_result
 
     off = walk_to(bot, "kashya", near=NEAR, steps=16)
@@ -386,6 +388,11 @@ def revive_merc_a1(bot: Controller) -> bool:
     bot.kill.sleep(1.5)
     bot.press("esc")
     bot.kill.sleep(0.5)
+    if retry and not merc_alive(bot, tries=6):
+        bot.save_failure("a1_resurrect_click_missed")
+        log.info("Kashya: merc still dead after the Resurrect click; asking her again")
+        close_npc(bot)
+        return revive_merc_a1(bot, retry=False)
     return resurrect_result(bot, "Kashya")
 
 
