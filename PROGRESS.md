@@ -3,6 +3,15 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 11:17: running again (andy)** after Stephen finished on Singularity. Filter installed 10:59 (jewels as gear).
+First restart failed every run with "Kashya not found": automap "Show Character Names" (Settings AutoMap Party
+Names) went off around the 08:40 F12 + game close on GLaDOS (someone at GLaDOS; the game closed 08:40:40, Singularity's
+first write 08:42:57, so no overlap). gamesettings.ensure_options now ticks Show Party Members + Show Character Names
+through the menu (Names is greyed without Party; the old Party 0 / Names 1 can't be set from the menu). NB: D2R's
+process comm is "Main" under Proton: check `ps -eo args | grep -c '[D]2R.exe'`, not comm.
+Stephen 11-26: targets are Baal (Worusk's statue, the one he lacks) and Andariel (SoJ); next build project = Baal
+(waiting on his go). ThroatCutter respec plan + resists on the site.
+
 **2026-11-26 08:40: stopped by F12** (supervisor staying stopped; D2R not running). Night 21:16-08:40: Andariel 125 runs
 (86 kills, 25 misses, 11 chickens, 3 fails), LK gold blocks 02:10-03:59 and 06:08-07:08 (70 runs: 55 ok, 8 chickens,
 6 town-walk fails, 1 false map_changed). Finds: Lazarus Spire, Godstrike Arch x2 (unidentified, shared tab 1 +
