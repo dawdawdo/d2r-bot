@@ -93,7 +93,7 @@ def test_existing_pickups_kept():
         assert rules[name] == next(r for r in old["rules"] if r["name"] == name)
     assert set(rules["Show BiS uniques"]["equipmentItemCode"]) == {"uvg", "ulc", "usk"}
     assert rules[cf.RULE_AMULETS]["equipmentCategory"] == ["amule"]
-    assert rules[cf.RULE_JEWELS]["itemCode"] == ["jew"]
+    assert rules[cf.RULE_JEWELS]["equipmentItemCode"] == ["jew"]  # jewels are gear: itemCode alone never showed them
     assert rules["Show Tal Rasha Lidless Eye"]["equipmentItemCode"] == ["oba"]
     assert [r["name"] for r in new["rules"]][:3] == ["Hide all gear", "Hide misc", "Hide gems"]  # later rules win
 

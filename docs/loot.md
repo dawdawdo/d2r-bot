@@ -32,7 +32,7 @@ To verify on the next D2R start: the game accepts rules that combine itemCode wi
 | Show BiS uniques (added 2026-10-27, Stephen) | unique `uvg` Dracul's Grasp, `ulc` Arachnid Mesh, `usk` Andariel's Visage, `amu` amulets (Mara's, Highlord's, Atma's), `jew` Rainbow Facet, `cm3` Gheed's Fortune |
 | Show Tal Rasha Lidless Eye | set `oba` |
 | Show rejuvenation potions and keys | rvs, rvl, key (picked only when the belt / key stack needs them). The game drops this rule when it rewrites the file (seen twice); harmless, nothing hides them |
-| Show charms (added 2026-10-31, Stephen) | cm1 cm2 cm3, any rarity. Blue labels are picked only if they say "Charm" (`word_charm.png`); the stowaway sends items whose tooltip says "Charm" to Blizzaga's personal tab, the rest to shared page 1. 2026-10-31: "Eligible for Chronicle" items get past the hide rules (a magic Amulet, a unique Large Axe), so color alone isn't enough |
+| Show charms (added 2026-10-31, Stephen) | Small and grand charms, any rarity. Charms and jewels count as gear: the rule needs `equipmentItemCode` (ticked in the game's editor); the itemCode-only version showed nothing until Stephen fixed it 2026-11-26. Blue labels are picked only if they say "Charm" (`word_charm.png`); the stowaway sends items whose tooltip says "Charm" to Blizzaga's personal tab, the rest to shared page 1. 2026-10-31: "Eligible for Chronicle" items get past the hide rules (a magic Amulet, a unique Large Axe), so color alone isn't enough |
 | Hidden | all gear, El–Amn (r01–r13), gold, potions, scrolls, ammo, gems, skulls |
 
 Picked items are stashed by the stowaway at the stash stop; stashed runes are logged by name in

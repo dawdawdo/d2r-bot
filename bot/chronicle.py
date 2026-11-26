@@ -169,7 +169,10 @@ def build_filter(old: dict, unique_codes: set[str], set_codes: set[str], rw_code
         elif r["name"] == "Show Tal Rasha Lidless Eye" and "itemCode" in r:
             del r["itemCode"]
             r["equipmentItemCode"] = ["oba"]
-    new = [_show(RULE_JEWELS, itemCode=["jew"]),  # Rainbow Facet; a jewel may not count as gear
+    # Jewels count as gear, like charms: "Hide all gear" hides them and an itemCode-only show rule doesn't bring them back
+    # (2026-11-26: Stephen found "Show charms" with nothing ticked in the game's editor and ticked them, which wrote
+    # equipmentItemCode). Both keys, as his fixed charm rule has
+    new = [_show(RULE_JEWELS, equipmentItemCode=["jew"], itemCode=["jew"]),  # Rainbow Facet, rainbow jewels
            _show(RULE_AMULETS, equipmentRarity=["unique"], equipmentCategory=["amule"]),  # Mara's, Highlord's, Atma's
            _show(RULE_TARGET_RINGS, equipmentRarity=["unique"], equipmentCategory=["rings"])]  # SoJ, BK, Raven Frost
     new += _code_rule(RULE_TARGETS, "unique", set(TARGET_UNIQUES))
