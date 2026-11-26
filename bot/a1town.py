@@ -82,7 +82,9 @@ def town_automap(bot: Controller) -> np.ndarray:
     from .vision.inventory import inventory_open
 
     first = None  # the frame after the first Tab's wait: kept for a failure (was the map up but not recognised?)
-    for attempt in range(4):
+    # 6 tries, not 4: 2026-11-26 04:03 after Akara's shop two Tabs went nowhere, then the game menu was up (a late Esc
+    # from closing her trade), and the 4th try just made it
+    for attempt in range(6):
         f = bot.capture.grab()
         if map_text_open(f):
             return f
