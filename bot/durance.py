@@ -869,6 +869,32 @@ def hover_find(bot, around, label: np.ndarray, radius: int = 200, step: int = 40
     return None
 
 
+def _any_tooltip_near(bot, around, folder: Path, radius: int = 200, step: int = 24, min_w: int = 120,
+                      max_h: int = 34):
+    """Hover a grid around `around`, nearest first, until a one-line tooltip at least `min_w` wide shows by the cursor:
+    that point (the tooltip's crop saved as warps/tt_mark_<time>.png), or None."""
+    from .vision.tooltip import find_tooltip
+
+    ax, ay = around
+    pts = sorted(((x, y) for y in range(ay - radius, ay + radius + 1, step) for x in range(ax - radius, ax + radius + 1, step)
+                  if 40 <= x <= 1240 and 40 <= y <= 560), key=lambda p: math.dist(p, around))
+    with _MapHidden(bot):
+        for i, (x, y) in enumerate(pts):
+            if i % 6 == 0:
+                bot.check()
+            bot.input.move(x, y)
+            bot.kill.sleep(0.1)
+            f = bot.capture.grab()
+            box = find_tooltip(f, x, y, half_w=230, max_w=420)
+            if box is not None and box[2] >= min_w and box[3] <= max_h:
+                bx, by, bw, bh = box
+                (folder / "warps").mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(folder / "warps" / f"tt_mark_{time.strftime('%m%d-%H%M%S')}.png"), f[by:by + bh, bx:bx + bw])
+                log.info("exit mark: a %d px tooltip at (%d, %d) (not the expected label)", bw, x, y)
+                return x, y
+    return None
+
+
 def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, here=None,
               goal: str = "durance_3") -> bool:
     """Click a level exit; record where it leads (top-right area name crop). True if we left the area
@@ -897,6 +923,11 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
             (folder / "doors").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)
         walked_in = False
+        if hit is None and w.get("mark"):
+            # the expected label isn't there: the exit may read differently (Worldstone Keep Level 3 -> "Throne of
+            # Destruction", 2026-11-26: a door like the stairs, the "Worldstone Keep Level" label never matched). Any
+            # one-line tooltip close to the mark counts; its crop is kept for a template
+            hit = _any_tooltip_near(bot, (x, y), folder, radius=r)
         if hit is None and w.get("mark") and (w["tries"] >= 2 or w.get("walk")):
             # an exit mark that never shows a label may be a walk-in passage (Worldstone Keep Level 3 -> the Throne
             # of Destruction, 2026-11-26): teleport onto the mark and see if the area changes
