@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-25 21:16: running again (andy).** Stephen played ThroatCutter (terror zones); shared gold now 1004k, so the LK
+block ended at once and Andariel resumed. Filter reinstalled 21:16 (Chronicle 25 runewords; Phase Blade step still shown
+for Grief / Kingslayer / Lawbringer / Unbending Will; his stripped 5-os Phase Blade counts 1 of 2). rw_targets.stash_bases
+now counts sockets from the sockets list (empty = None), so socketed stash bases show again. Armory page refreshed
+20:27 by hand (backup + `python -m bot.armory --force`).
+
 **2026-11-25 18:23: stopped for Stephen** (he's trying things). Session 15:52-18:23: 37 runs, 30 ok, 5 misses, 2 chickens,
 0 deaths; gold fell 518k -> 48k (merc revives), so the LK block started 18:03 and is still under way (to 500k):
 `--start andy` resumes LK first. Filter installed 18:23 (Phase Blade queue step), synced to Singularity.

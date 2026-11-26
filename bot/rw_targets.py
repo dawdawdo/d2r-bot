@@ -36,7 +36,6 @@ QUEUE = [
 ACTIVE = 1   # queue steps shown at once
 CAP = 2      # stop showing a step's base once the stash holds this many unused copies
 BIG = {"r31", "r32", "r33"}  # Jah, Cham, Zod
-NUMSOCK = 194  # itemstatcost: item_numsockets (a base's socket count; empty sockets have no socket entries)
 
 
 def _tsv(path: Path) -> list[dict]:
@@ -146,7 +145,7 @@ def stash_bases(items: list[tuple[dict, str]], t: Tables, chron_ids: set[int]) -
                 or "RUNEWORD" in str(it.get("flags")) or any(it.get("sockets") or []):
             continue
         counts[code] += 1
-        n = sum(int(s.get("value") or 0) for s in it.get("stats") or [] if s.get("id") == NUMSOCK)
+        n = len(it.get("sockets") or [])  # one entry per socket, None while empty (as bot/bases.py counts them)
         if n:
             socketed.append(dict(code=code, name=t.bases[code].get("name", code), sockets=n, where=where,
                                  eth="ETHEREAL" in str(it.get("flags")),
