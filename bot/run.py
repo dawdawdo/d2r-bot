@@ -409,6 +409,15 @@ def main() -> int:
     except BotError as e:
         log.warning("game options not checked: %s", e)
     corpse = state.load().get("corpse", True)  # persisted: a session that ended clean has none
+    gs_now = supplies.gear_state(cfg)  # the save knows better than the flag (a probe's death never set it)
+    if gs_now is not None:
+        worn, on_corpse = gs_now
+        if on_corpse:
+            log.warning("save: %d item(s) on her corpse, %d worn: recovering it first", on_corpse, worn)
+            corpse = True
+        elif worn == 0:
+            session.kill.trip("the save shows nothing equipped and no corpse: not running her naked")
+            session.kill.check()
     stow = True  # check the inventory at session start, then after runs that picked anything but rejuvs
     new_file = not RUNS_CSV.exists()
     ok = streak = map_misses = 0

@@ -165,3 +165,15 @@ def test_zero_restocks_with_plenty_counted_are_not_dry():
     state.save({"rejuv_stash_count": 3})
     supplies.restocked(0, slots_gone=False)
     assert supplies.restocked(0, slots_gone=False) is True  # few left: believe it
+
+
+def test_gear_state_counts_worn_items_and_the_corpse(monkeypatch):
+    """2026-11-26: gear on a corpse the run loop didn't know about; Andariel runs went on naked."""
+    from bot import d2save
+
+    monkeypatch.setattr(d2save, "tables", lambda: None)
+    monkeypatch.setattr(d2save, "read_d2s", lambda path, t=None: {
+        "items": [{"position": {"mode": "Equipped"}}, {"position": {"mode": "Stored"}}],
+        "corpses": [{"items": [{}, {}, {}]}]})
+    monkeypatch.setattr(supplies, "_TABLES", None)
+    assert supplies.gear_state({"paths": {"save_dir": "/x"}, "game": {"character": "B"}}) == (1, 3)

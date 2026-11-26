@@ -90,6 +90,26 @@ def gold_block(st: dict, gold: int | None, cfg: dict) -> tuple[bool, dict]:
     return True, st
 
 
+def gear_state(cfg: dict) -> tuple[int, int] | None:
+    """(items equipped, items lying on her corpse) from the live save (read only); None when it can't be read.
+    2026-11-26 16:34-16:46: a death outside the run loop (a probe) left her gear on a corpse the run loop didn't know
+    about (logs/state.json corpse false), and Andariel runs went on naked (max life 232): two deaths, four chickens."""
+    global _TABLES
+    from pathlib import Path
+
+    from . import d2save
+
+    try:
+        _TABLES = _TABLES or d2save.tables()
+        d = d2save.read_d2s(Path(cfg["paths"]["save_dir"]) / f"{cfg['game']['character']}.d2s", _TABLES)
+    except Exception as e:  # noqa: BLE001
+        log.info("gear state unknown: %s", e)
+        return None
+    worn = sum(1 for it in d.get("items") or [] if (it.get("position") or {}).get("mode") == "Equipped")
+    corpse = sum(len(c.get("items") or []) for c in d.get("corpses") or [] if isinstance(c, dict))
+    return worn, corpse
+
+
 def stash_rejuvs(cfg: dict) -> int | None:
     """Rejuvs in the shared stash's Materials stacks, from the live .d2i (read only): the emptier of the full and small
     stacks (spares of either kind fit while it has room). None when it can't be read."""

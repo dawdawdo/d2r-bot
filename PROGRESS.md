@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 16:46: Blizzaga ran naked for 12 min (my fault).** The 16:32 probe death left all 12 items on a corpse;
+probes die outside the run loop, so logs/state.json still said corpse false and the 16:34 Andariel session never
+clicked it (max life 232: 2 deaths, 4 chickens, 29k + gold lost). Recovered 16:50 (save: 12 equipped, no corpse).
+Fix: run.py reads the save at session start (supplies.gear_state): items on a corpse -> recover first; nothing worn
+and no corpse -> kill switch, never run naked.
+
 **2026-11-26 12:10-: building Baal (Stephen: "let's try Baal now"; Andariel paused).** bot/tasks/baal.py (not ready),
 bot/baal.py (throne stub). Route: Act 1 waypoint -> Act V tab wp_worldstone_2 -> wsk2_auto (Level 2 exit LEARNED, warp 2)
 -> wsk3_auto (Level 3 -> Throne LEARNED 14:06: door "To The Throne of Destruction", warp 1). Full route Harrogath ->
