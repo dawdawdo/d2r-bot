@@ -85,15 +85,16 @@ def terror_seen(bot) -> bool:
     return False
 
 
-def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str) -> None:
-    """From the arrival spot of a learned level, along the stop graph to its exit, and through it."""
+def down_a_level(bot: Controller, cfg: dict, folder: str, here: str, goal: str, style: str = "tunnel") -> None:
+    """From the arrival spot of a learned level, along the stop graph to its exit, and through it. `style`: the
+    level's automap look (durance.use_style): "tunnel" for the Catacombs, "keep" for Worldstone Keep."""
     from ..durance import AutomapOdometer, StopGraph, Walker, area_is, ensure_automap, take_warp, use_style
 
     from ..town import inventory_panel
 
     inventory_panel(bot, False)  # a panel left up hides the automap's right half and the stairs label
     fold = _folder(cfg, folder)
-    use_style("tunnel")
+    use_style(style)
     g = StopGraph.load(fold / "graph.json")
     w = next((x for x in g.warps if x.get("goal") and x.get("dest") not in (None, "none")), None)
     if w is None:

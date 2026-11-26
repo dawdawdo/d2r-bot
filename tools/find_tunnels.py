@@ -230,7 +230,7 @@ def main() -> int:
 
                     for seg in args.via.split(";"):
                         vf, vhere, vgoal = seg.split(":")
-                        down_a_level(bot, cfg, vf, vhere, vgoal)
+                        down_a_level(bot, cfg, vf, vhere, vgoal, style=args.style)
                         print(f"game {n + 1}: down to {vgoal}", flush=True)
                     use_style(args.style)
                     bot.sleep(0.6)

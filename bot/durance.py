@@ -896,16 +896,30 @@ def take_warp(bot, odo: AutomapOdometer, g: StopGraph, w: dict, folder: Path, he
         if hit is not None:  # the door's look, for a sprite template (find it by sight, not odometry)
             (folder / "doors").mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(folder / "doors" / f"{time.strftime('%m%d-%H%M%S')}_{hit[0]}_{hit[1]}.png"), view)
-        if hit is None:
+        walked_in = False
+        if hit is None and w.get("mark") and (w["tries"] >= 2 or w.get("walk")):
+            # an exit mark that never shows a label may be a walk-in passage (Worldstone Keep Level 3 -> the Throne
+            # of Destruction, 2026-11-26): teleport onto the mark and see if the area changes
+            log.info("warp %s: no label; teleporting onto the mark at (%d, %d)", w["crop"], x, y)
+            hop(bot, odo, (x - CENTER[0]) / HOP_GAIN, (y - CENTER[1]) / HOP_GAIN)
+            bot.sleep(2.0)
+            walked_in = not here(bot)
+            if walked_in:
+                w["walk"] = True  # the learned route (a copy) teleports onto it next time
+        if hit is None and not walked_in:
             log.info("warp %s: its label doesn't show around (%d, %d)", w["crop"], x, y)
             if w["tries"] >= 3:
                 w["dest"] = "none"
             return False
-        x, y = hit
+        if hit is not None:
+            x, y = hit
+    else:
+        walked_in = False
     x, y = int(np.clip(x, 60, 1220)), int(np.clip(y, 40, 560))
-    bot.click(x, y)
-    bot.sleep(3.0)
-    if here(bot) and w.get("reclick", True):
+    if not walked_in:
+        bot.click(x, y)
+        bot.sleep(3.0)
+    if here(bot) and not walked_in and w.get("reclick", True):
         # a closed door (the Lost City Trap Door) opens on the first click and is entered on the next:
         # hover again; a tooltip there now (it may read differently) gets one more click
         from .vision.tooltip import find_tooltip

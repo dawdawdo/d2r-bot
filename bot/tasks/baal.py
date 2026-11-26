@@ -70,6 +70,6 @@ class Baal(Task):
                 cast_warcries(bot)
                 cast_buffs(bot)
                 bot.cries_at = time.time()
-            down_a_level(bot, self.cfg, folder, here, goal)
+            down_a_level(bot, self.cfg, folder, here, goal, style="keep")
             log.info("on %s (HP %.0f%% MP %.0f%%)", goal, bot.hp or 0, bot.mp or 0)
         return baal.throne(bot)
