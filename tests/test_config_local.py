@@ -15,7 +15,7 @@ def test_local_file_overrides_only_what_it_names(tmp_path):
     path = _write(tmp_path, "game: {exe: win.exe, character: Blizzaga}\npaths: {save_dir: elsewhere}\n")
     _write(tmp_path, f"game: {{exe: linux.exe}}\npaths: {{save_dir: '{saves.as_posix()}'}}\n", "config.local.yaml")
     cfg = load_config(path)
-    assert cfg["game"] == {"exe": "linux.exe", "character": "Blizzaga"}
+    assert cfg["game"] == {"exe": "linux.exe", "character": "Blizzaga", "default_character": "Blizzaga"}
     assert cfg["paths"]["save_dir"] == Path(saves)
 
 

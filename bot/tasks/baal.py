@@ -39,7 +39,9 @@ class Baal(Task):
     @classmethod
     def ready(cls, cfg: dict) -> bool:
         from .. import baal
+        from ..config import for_character, task_character
 
+        cfg = for_character(cfg, task_character(cfg, [cls.name]))  # Smoked's own maps (maps/smoked_hell)
         return all(level_exit(cfg, f) for f, _, _ in LEVELS) and baal.READY
 
     def enter(self, bot: Controller, stow: bool = False, chained: bool = False) -> None:

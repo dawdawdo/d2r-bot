@@ -10,9 +10,10 @@ from __future__ import annotations
 import argparse
 import csv
 import logging
+import os
 import time
 
-from .config import ROOT
+from .config import CHARACTER_ENV, ROOT, apply_profile, task_character
 from .controller import BotError, Chicken, Controller, Died, GameSkipped, RunTimeout
 from .learn import learn_map
 from .lk import MapChanged, TerrorZone
@@ -52,10 +53,12 @@ def one_run(bot: Controller, cfg: dict, mode: str, repair: bool = False, buy_key
             recover_corpse(bot)
         ensure_main_weapons(bot)
         bot.act = spawn_act(bot) if mode == "chests" else 3
-        if bot.act == 5 and tasks and all(getattr(t, "a1_town", False) for t in tasks):
-            from .town import act5_to_act1
+        if bot.act in (4, 5) and tasks and all(getattr(t, "a1_town", False) for t in tasks):
+            from .town import act4_to_act1, act5_to_act1
 
-            act5_to_act1(bot)  # Baal's games end in Act 5: the Rogue Encampment's stash and vendors, as Andariel's
+            # Baal's games end in Act 5: the Rogue Encampment's stash and vendors, as Andariel's. Act 4: Stephen's own
+            # game ended there (Smoked, 2026-11-27)
+            (act5_to_act1 if bot.act == 5 else act4_to_act1)(bot)
             bot.act = 1
         flag = {1: "a1_start", 2: "a2_start"}.get(bot.act)  # the Pit's games end in Act 1, the tunnels' in Act 2
         a2 = bool(flag) and tasks and all(getattr(t, flag, False) for t in tasks)
@@ -332,6 +335,14 @@ def main() -> int:
 
     session = start_session()
     cfg = session.cfg
+    # one character per session: the tasks' (baal = Smoked), with his config profile and his own logs/state_<name>.json
+    char = task_character(cfg, args.tasks.split(",")) if args.mode == "chests" else cfg["game"]["character"]
+    apply_profile(cfg, char)
+    os.environ[CHARACTER_ENV] = char  # later load_config() calls in this process play the same character
+    state.use(char, cfg["game"]["default_character"])
+    other_char = char != cfg["game"]["default_character"]
+    if other_char:
+        log.info("character: %s (config profiles.%s, route %s)", char, char, cfg["game"]["route"])
     if args.no_act4:
         cfg["game"]["act4_exit"] = False
     if args.pick:
@@ -346,7 +357,11 @@ def main() -> int:
         not_ready = [t.name for t in tasks if not t.ready(cfg)]
         if not_ready:
             log.warning("task(s) %s not ready yet (no route): running the rest, or LK", ", ".join(not_ready))
-            tasks = [t for t in tasks if t.name not in not_ready] or get_tasks(["lk"], cfg)
+            tasks = [t for t in tasks if t.name not in not_ready]
+            if not tasks and other_char:  # LK is Blizzaga's route: nothing this character can run
+                session.kill.trip(f"{', '.join(not_ready)} not ready and {char} has no LK route")
+                session.kill.check()
+            tasks = tasks or get_tasks(["lk"], cfg)
     log.info("tasks: %s", ", ".join(t.name for t in tasks) or "-")
     from . import mf
 
@@ -363,12 +378,12 @@ def main() -> int:
         mins = cfg["mf"]["min"]
         log.warning("magic find %d%% is below %s: running LK instead until the MF gear is on", mf_info["mf"],
                     ", ".join(f"{n}'s {mins[n]}%" for n in mf_low))
-        if not any(t.name == "lk" for t in tasks):
+        if not any(t.name == "lk" for t in tasks) and not other_char:
             tasks = get_tasks(["lk"], cfg) + tasks
         log.info("tasks: %s", ", ".join(t.name for t in tasks))
     control.set_sticky(mf=mf_info and {**mf_info, "low": mf_low,
                                        "min": {n: cfg["mf"]["min"][n] for n in mf_low}})
-    lk_ready = any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
+    lk_ready = not other_char and any(t["name"] == "lk" and t["ready"] for t in catalog(cfg))
     has_boss = any(t.needs_rejuvs for t in tasks)  # Meph; the tunnels run even with a dry stash (Stephen's priority, 2026-11-13)
     refill_tasks = get_tasks(["lk"], cfg) if has_boss and lk_ready else []
     # no gold for the merc (shared stash empty): LK until there is, then the task again (Stephen: LK when stuck)

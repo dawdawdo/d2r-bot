@@ -83,4 +83,55 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> dict:
     for key, value in game.items():
         if isinstance(value, dict) and set(value) <= _PLATFORMS:
             game[key] = value.get(sys.platform)
+    if "character" in game:
+        game["default_character"] = game["character"]
+    if os.environ.get(CHARACTER_ENV) and "character" in game:  # tools run as another character (probes, route learning)
+        apply_profile(cfg, os.environ[CHARACTER_ENV])
     return cfg
+
+
+# A session plays one character. game.character (Blizzaga) is the default; a task whose config section names another
+# (baal: {character: Smoked}, Stephen's Hammerdin 2026-11-27) runs that character with `profiles.<name>` merged over the
+# config: his route (maps/<route>/), hotkeys, buffs. hotkeys.skills is replaced whole (Blizzaga's blizzard: a must not
+# leak into his a = Concentration). Tools take the character from the environment: D2R_CHARACTER=Smoked.
+CHARACTER_ENV = "D2R_CHARACTER"
+REPLACED = (("hotkeys", "skills"), ("inventory", "protected"))
+
+
+def apply_profile(cfg: dict, character: str | None) -> dict:
+    if not character or character == cfg["game"]["character"]:
+        return cfg
+    prof = (cfg.get("profiles") or {}).get(character)
+    if prof is None:
+        raise ValueError(f"no config profiles.{character} (known: {sorted(cfg.get('profiles') or {})})")
+    import copy
+
+    prof = copy.deepcopy(prof)
+    whole = {path: prof[path[0]].pop(path[1]) for path in REPLACED if path[1] in (prof.get(path[0]) or {})}
+    _merge(cfg, prof)
+    for (sec, key), value in whole.items():
+        cfg.setdefault(sec, {})[key] = value
+    cfg["game"]["character"] = character
+    return cfg
+
+
+def task_character(cfg: dict, names) -> str:
+    """The character the tasks `names` are played with (their config `character`, else game.character)."""
+    chars = {(cfg.get(n) or {}).get("character") or cfg["game"].get("default_character") or cfg["game"]["character"]
+             for n in names}
+    if len(chars) > 1:
+        raise ValueError(f"tasks {', '.join(names)} need different characters ({', '.join(sorted(chars))}): "
+                         "one character per session")
+    return chars.pop() if chars else cfg["game"]["character"]
+
+
+def for_character(cfg: dict, character: str) -> dict:
+    """A copy of `cfg` as `character` plays it (cfg itself unchanged)."""
+    import copy
+
+    if character == cfg["game"]["character"]:
+        return cfg
+    base = copy.deepcopy(cfg)
+    if base["game"]["character"] != base["game"].get("default_character", base["game"]["character"]):
+        raise ValueError("for_character: cfg already has another character's profile")
+    return apply_profile(base, character)

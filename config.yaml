@@ -122,9 +122,26 @@ andy:                  # Andariel task (bot/tasks/andariel.py, bot/andy.py)
                                                    # (11-22), and to 2 % from 91 % in the MF set (11-23 07:31)
 
 baal:                  # Baal task (bot/tasks/baal.py, bot/baal.py; in progress)
+  character: Smoked    # Stephen's Hammerdin (2026-11-27): Blizzaga can't hold the throne room (profiles.Smoked below)
   timeout_s: 600
   players: 1           # 2026-11-26: the 22:29 throne probe ran at LK's players 7 (left over) and the waves killed her in
                        # ~8 s; at players 1 (21:20) she held ~20 s. Probes set it too (bot.town.set_players)
+
+# Other characters (bot/config.py apply_profile): merged over this file when a session plays them (a task's
+# `character`, or D2R_CHARACTER=<name> for tools). hotkeys.skills and inventory.protected are replaced whole.
+profiles:
+  Smoked:              # Paladin, Blessed Hammer (respec 2026-11-27), Enigma for Teleport, Act 2 merc with Insight
+    game: {route: smoked_hell}       # his own map seed: maps/smoked_hell/ (Worldstone Keep learned for him)
+    hotkeys:
+      # as Stephen set them (save 2026-11-27 11:44; slots 5-8 = a s d e, same key bindings as Blizzaga's)
+      skills: {concentration: a, teleport: s, redemption: d, holy_shield: e}
+      hammer: left                   # Blessed Hammer is his LEFT skill: shift + left click casts it in place
+      aura: concentration            # on the right while fighting (auras only work from the right slot)
+      buffs: [holy_shield]
+      warcries: []                   # no Call to Arms
+      main_weapon_set: 1             # I = Spirit sword + the 97-res Rondache (all res capped); II = Devil Star + Spirit
+    inventory: {protected: []}       # his charms etc.: protected from his session-start save (run.protect_own_items)
+    safety: {es_broken_mp_pct: 0}    # no Energy Shield: low mana is just low mana (Blizzaga's ES chicken would misfire)
 
 tunnels:               # Ancient Tunnels task (bot/tunnels.py)
   timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline

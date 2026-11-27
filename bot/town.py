@@ -868,7 +868,8 @@ def cast_warcries(bot: Controller) -> None:
     toggle: counting presses can't notice a lost one. An exception on the way (chicken, F12), or tabs that can't
     be read, leave `weapons_dirty` for the next game's check."""
     hk = bot.cfg["hotkeys"]
-    if not hk.get("warcries"):
+    if not hk.get("warcries"):  # no Call to Arms (Smoked): still leave Teleport on the right, as callers expect
+        bot.press(hk["skills"]["teleport"])
         return
     main = hk["main_weapon_set"]
     bot.weapons_dirty = True
@@ -2065,6 +2066,13 @@ def act4_to(bot: Controller, dest: str, arrived_check=None, area: str | None = "
         bot.save_failure(f"not_at_{dest}")
         raise BotError(f"waypoint {dest}: arrived somewhere else")
     log.info("arrived at %s from Act 4 (HP %.0f%% MP %.0f%%)", dest, bot.hp or 0, bot.mp or 0)
+
+
+def act4_to_act1(bot: Controller) -> None:
+    """Pandemonium Fortress spawn -> its waypoint -> the Rogue Encampment (first entry of the Act I tab)."""
+    open_a4_wp(bot)
+    wp_travel(bot, "wp_tab_act1", "wp_town")
+    bot.wait_still(timeout=5)
 
 
 def restart_in_act3(bot: Controller) -> None:
