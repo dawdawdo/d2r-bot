@@ -3,6 +3,23 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 13:50: GLaDOS back on (Stephen closed D2R on Singularity, staying off). LK running (supervisor `lk`):
+Blizzaga has 36 stash rejuvs (98 yesterday), gold 500k. Smoked's Baal is blocked: his automap draws no walls.**
+- Second incident, 13:25: GLaDOS's D2R had been open since 11:49 and D2R never re-reads saves, so the Smoked learning
+  game played its 12:06 copy (level 84) and wrote it plus its stale shared stash over Stephen's 13:13 saves (level 86,
+  new runewords, stash). Restored the 13:13:39 files from backups/20261127-132401 with his OK (verified: Smoked 86,
+  Anni + torch, stash 500,104 gold). Guard (12ddbbe, bot/savewatch.py): sessions record the save files at close; the
+  next session closes D2R if they changed while it stayed open. Memory d2r-caches-saves-relaunch.
+- Smoked's automap (Tab) shows the area text and his position cross but no walls and no waypoint icon, in Worldstone
+  Keep 2 and in Durance 2 (live probes 13:34 and 13:42). Blizzaga's draws normally in the same D2R session, same
+  settings, same waypoint (15k vs 2.8k line px). Town automap labels do work for him. His .ma1 automap file is 23 KB
+  after a day of play (Blizzaga's .ma3: 1.18 MB, ThroatCutter's .ma0: 184 KB; Damon and Shamelock are also near the
+  empty size). Every Worldstone Keep route tool relies on the automap. Asked Stephen: does Tab show walls when he plays
+  Smoked? May I move Smoked.ma1 aside (backup kept) so D2R starts a fresh automap file?
+- AutomapOdometer: weak fix -> screen-odometry step (up to 8 in a row; draws on the canvas only where nothing is learned).
+  Smoked reached 8 stops on that alone, then lost track hopping off the plateau across void (frames don't overlap).
+  maps/smoked_hell/wsk2_auto holds only noise (not committed).
+
 **2026-11-27 12:15: GLaDOS stopped; Stephen runs the bot on Singularity.** Don't start anything on GLaDOS until he says so.
 Incident: I started Blizzaga (andy 11:48-12:03, 4 ok) and a Smoked probe (12:05) after "done for today" while D2R was
 still open on Singularity: shared-stash sync conflict at 11:59 (ModernSharedStashSoftCoreV2.sync-conflict-20261127-
