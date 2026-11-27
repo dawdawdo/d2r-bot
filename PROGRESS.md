@@ -3,6 +3,18 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 21:22: Baal throne probes; bot on LK (Stephen: "default to LK", no Andariel until Baal works).**
+Stephen 20:50: OK to burn gold building Baal, LK to refill. Terror zones = the "Desecrated Zones" setting (game creation
+> gear > Offline > Enable Terror Zones); left ON: the purple area lines are the current terror zone + its per-game
+modifier, not Worldstone Keep's. No sturdier gear exists (Magefist / Eschuta's / Tal pieces; no Kira's).
+Fixed: keep-style map-open check = area text only (the lit WSK waypoint read as 'map open'; it walked blind = many of
+the WSK deaths). Route now clean: Harrogath -> Throne in ~1 min at 100 % life (21:05).
+Throne geometry (open loop from the arrival door; throne-area automap too sparse for odometry): 8 hops (350,-170) =
+the golden arch; 11 hops = inside the throne room, Baal's throne at about (+490,-160) from her.
+Wave probe 21:20 (scratchpad wave_probe.py: Blizzard at (+300,0) every 1.85 s): dead or nearly in ~20 s; Burning
+Souls' lightning + teleport-when-struck (her gear) throws her around the room. Next: stand at the arch / room edge
+and Blizzard in, clear the room first, merc tanks; or decide she can't hold the room in this gear.
+
 **2026-11-26 20:35: paused (F12, then Stephen asked).** Andariel 18:12-20:35: 32 kills of 37, no deaths; gold 461k ->
 170k (merc revives). Gear 12/12. Baal waiting on Stephen: A sturdier gear (reverse swap), B Desecrated Zones off on
 GLaDOS (recommended first), C keep going with a gold floor. Resume: `--start andy`.
