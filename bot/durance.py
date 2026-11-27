@@ -99,7 +99,8 @@ def automap_pixels(frame: np.ndarray) -> np.ndarray:
     return out
 
 
-SHOWN_MIN = {"tunnel": 10000, "gray": 6000, "keep": 5000}  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
+SHOWN_MIN = {"tunnel": 10000, "gray": 6000, "keep": 30000}  # keep: the map-open check is the area text alone (2026-11-26
+# 21:03: 5,383 "line" px with the map OFF by the lit Worldstone Keep waypoint, 3,646 with it ON in the Throne)  # tunnels: lit arches alone give ~4.5k "line" px with the map off, the map ~45k
 
 
 def map_text_open(frame: np.ndarray) -> bool:
