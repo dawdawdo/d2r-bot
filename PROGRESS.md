@@ -3,6 +3,11 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 02:05: LK overnight, healthy** (since the 23:55 merc revive: 44 ok of 50, 0 chickens; gold 18 -> ~340k by 01:37).
+Watch: "cursor jumped with no physical pointer input" ~3 per run since ~22:26 (223 in the 23:00 session), constant
+offsets (dy -126, dx -558 or -78): a read-back / window-offset mismatch, not a person; the bot ignores it and runs are
+fine. Look at bot/io/base.py if timeouts rise. Pending for Stephen: site icons by screen capture vs CASC extraction.
+
 **2026-11-26 23:00: Baal paused again; LK running; gold 18.** Wave probe 3 (players 1, Lidless Eye, 10 hops, Blizzard on
 the approach, retreat below 65 %): dead ~6 s after arriving, during the war cries; Burning Souls drained mana 59 -> 10 %
 in 2 s, Energy Shield then let life collapse. She was carrying a withdrawal: gold 201k -> 18. Oculus back on, gear
