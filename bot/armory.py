@@ -36,7 +36,7 @@ A = ROOT / "armory"
 WORK = A / "work"
 LAST = WORK / "last.json"
 STASH = "ModernSharedStashSoftCoreV2.d2i"
-SCRIPTS = ("inv.py", "gen.py", "chron.py", "build.py", "armory.html")
+SCRIPTS = ("inv.py", "gen.py", "chron.py", "build.py", "armory.html", "icon_map.json")
 CHECK_EVERY_S = 300
 
 

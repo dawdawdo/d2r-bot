@@ -30,7 +30,7 @@ def walk(it,loc):
     out.append(dict(loc=loc,code=c,base=b['name'],kind=b['kind'],type=b['type'],tier=b['tier'],quality=q,name=rw or nm,set=extra,
         runeword=rw,eth='ETHEREAL' in it['flags'],socketed=socks,nsock=sum(1 for s in it['stats'] if False),qty=it.get('quantity'),
         ilvl=it['level'],defense=it.get('defense'),stats=stats(it['stats'])+stats(it.get('runeword_stats') or []),
-        pos=it['position'],w=b.get('w',1),h=b.get('h',1)))
+        pos=it['position'],w=b.get('w',1),h=b.get('h',1),gfx=it.get('variable_gfx_id')))
 # every saves/<Name>.json except the shared stash (char.json is a legacy duplicate of Blizzaga)
 CH=[(os.path.basename(f)[:-5],)*2 for f in sorted(glob.glob(S+'/saves/*.json')) if os.path.basename(f) not in ('stash.json','char.json')]
 for CN,CF in CH:

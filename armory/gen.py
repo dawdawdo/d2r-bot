@@ -1,6 +1,6 @@
 """inventory.json + saves/*.json -> pagedata.json (items, runes, gems, mats, chars, snap).
 Keeps rwdb / farm text from the previous pagedata.json. Run from the scan folder (needs xl/skills.txt)."""
-import json, struct, csv, glob, os
+import json, struct, csv, glob, os, re
 o = json.load(open('inventory.json')); st = json.load(open('saves/stash.json')); old = json.load(open('pagedata.json'))
 c = lambda x: struct.pack('<I', x).decode('latin-1').strip()
 RUNES = "El Eld Tir Nef Eth Ith Tal Ral Ort Thul Amn Sol Shael Dol Hel Io Lum Ko Fal Lem Pul Um Mal Ist Gul Vex Ohm Lo Sur Ber Jah Cham Zod".split()
@@ -108,6 +108,27 @@ def sockname(s):
 
 GRID_PAGES = ('Stash', 'Inventory', 'Cube')  # stored items with a cell: the page's stash grid (2026-11-26)
 
+# Item pictures (armory/icons.py, from the game files; Stephen OK'd 2026-11-27): the site serves /bot/items/<ic>.webp
+ICONS = json.load(open('icon_map.json')) if os.path.exists('icon_map.json') else None
+INVTRANS = set(ICONS['invtrans']) if ICONS else set()
+_ikey = lambda n: re.sub(r'[^a-z0-9]+', '_', n.lower().replace("'", '')).strip('_')
+
+
+def icon(x):
+  if not ICONS: return None
+  base = ICONS['items'].get(x['code']); a = base; col = None
+  if x['quality'] in ('Unique', 'Set') and not x.get('runeword'):
+    kind = 'uniques' if x['quality'] == 'Unique' else 'sets'; tab = ICONS[kind]; k = _ikey(x['name'])
+    v = tab.get(k) or tab.get('the_' + k)
+    if v: a = v.get({'exc': 'uber', 'elite': 'ultra'}.get(x.get('tier'), 'normal')) or a
+    col = ICONS['tints'][kind].get(k) or ICONS['tints'][kind].get('the_' + k)
+  n, g = ICONS['variants'].get(x['code'], 0), x.get('gfx')
+  if a and a == base and n and isinstance(g, int) and 0 <= g < n:  # rings, amulets, charms, jewels: the save picks one
+    a = f'{a}{g + 1}'  # picture k is file k+1 (checked against Blizzaga's inventory on screen)
+  if a and col and x['code'] in INVTRANS:  # the game recolours this unique / set item (icons.py made <asset>~<col>)
+    a = f'{a}~{col}'
+  return a
+
 
 def cell(x):
   p = x['pos']
@@ -117,16 +138,17 @@ def cell(x):
 
 
 items = []
-minor = []  # the grid's other stored items (potions, gems, runes, keys, books): [loc, x, y, w, h, name]
+minor = []  # the grid's other stored items (potions, gems, runes, keys, books): [loc, x, y, w, h, name, icon]
 for x in o:
   if x['type'] in ('rune','book','rpot','ques','key','hpot','mpot','spot','apot','wpot','scro','tpot') or (x['code'][:2] in GEMP and x['type'].startswith('gem')) or x['code'] in ('skz','skl','skc','skf','sku') or x['code'] in MATS:
     c = cell(x)
     if c:
-      minor.append([x['loc'], c['gx'], c['gy'], c['gw'], c['gh'], x['name']])
+      minor.append([x['loc'], c['gx'], c['gy'], c['gw'], c['gh'], x['name'], icon(x)])
     continue
   items.append(dict(l=x['loc'], q=x['quality'], n=x['name'], b=x['base'], t=x['tier'], e=x['eth'], s=[sockname(s) for s in x['socketed']], k=x['kind'], ty=x['type'],
                     il=x['ilvl'], st=lines(x['stats']), rw=bool(x['runeword']), set=x.get('set', ''), eq=x['pos']['mode'] == 'Equipped',
-                    **({'sl': x['pos'].get('body_location')} if x['pos']['mode'] == 'Equipped' else {}), **cell(x)))
+                    **({'sl': x['pos'].get('body_location')} if x['pos']['mode'] == 'Equipped' else {}), **cell(x),
+                    **({'ic': icon(x)} if icon(x) else {})))
 
 chars = []; snap = 0
 for f in sorted(glob.glob('saves/*.json')):

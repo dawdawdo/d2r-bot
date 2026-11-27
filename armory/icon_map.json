@@ -1,0 +1,4217 @@
+{
+"invtrans": [
+"2ax",
+"2hs",
+"6bs",
+"6cb",
+"6cs",
+"6hb",
+"6hx",
+"6l7",
+"6lb",
+"6ls",
+"6lw",
+"6lx",
+"6mx",
+"6rx",
+"6s7",
+"6sb",
+"6ss",
+"6sw",
+"6ws",
+"72a",
+"72h",
+"7ar",
+"7ax",
+"7b7",
+"7b8",
+"7ba",
+"7bk",
+"7bl",
+"7br",
+"7bs",
+"7bt",
+"7bw",
+"7cl",
+"7cm",
+"7cr",
+"7cs",
+"7dg",
+"7di",
+"7fb",
+"7fc",
+"7fl",
+"7ga",
+"7gd",
+"7gi",
+"7gl",
+"7gm",
+"7gs",
+"7gw",
+"7h7",
+"7ha",
+"7ja",
+"7kr",
+"7la",
+"7ls",
+"7lw",
+"7m7",
+"7ma",
+"7mp",
+"7mt",
+"7o7",
+"7p7",
+"7pa",
+"7pi",
+"7qr",
+"7qs",
+"7s7",
+"7s8",
+"7sb",
+"7sc",
+"7sm",
+"7sp",
+"7sr",
+"7ss",
+"7st",
+"7ta",
+"7tk",
+"7tr",
+"7ts",
+"7tw",
+"7vo",
+"7wa",
+"7wb",
+"7wc",
+"7wd",
+"7wh",
+"7wn",
+"7ws",
+"7xf",
+"7yw",
+"8bs",
+"8cb",
+"8cs",
+"8hb",
+"8hx",
+"8l8",
+"8lb",
+"8ls",
+"8lw",
+"8lx",
+"8mx",
+"8rx",
+"8s8",
+"8sb",
+"8ss",
+"8sw",
+"8ws",
+"92a",
+"92h",
+"9ar",
+"9ax",
+"9b7",
+"9b8",
+"9b9",
+"9ba",
+"9bk",
+"9bl",
+"9br",
+"9bs",
+"9bt",
+"9bw",
+"9cl",
+"9cm",
+"9cr",
+"9cs",
+"9dg",
+"9di",
+"9fb",
+"9fc",
+"9fl",
+"9ga",
+"9gd",
+"9gi",
+"9gl",
+"9gm",
+"9gs",
+"9gw",
+"9h9",
+"9ha",
+"9ja",
+"9kr",
+"9la",
+"9ls",
+"9lw",
+"9m9",
+"9ma",
+"9mp",
+"9mt",
+"9p9",
+"9pa",
+"9pi",
+"9qr",
+"9qs",
+"9s8",
+"9s9",
+"9sb",
+"9sc",
+"9sm",
+"9sp",
+"9sr",
+"9ss",
+"9st",
+"9ta",
+"9tk",
+"9tr",
+"9ts",
+"9tw",
+"9vo",
+"9wa",
+"9wb",
+"9wc",
+"9wd",
+"9wh",
+"9wn",
+"9ws",
+"9xf",
+"9yw",
+"aar",
+"am1",
+"am2",
+"am3",
+"am4",
+"am5",
+"am6",
+"am7",
+"am8",
+"am9",
+"ama",
+"amb",
+"amc",
+"amd",
+"ame",
+"amf",
+"axe",
+"axf",
+"ba1",
+"ba2",
+"ba3",
+"ba4",
+"ba5",
+"bal",
+"bar",
+"bax",
+"bhm",
+"bkf",
+"bld",
+"brn",
+"brs",
+"bsd",
+"bsh",
+"bst",
+"bsw",
+"btl",
+"btx",
+"buc",
+"bwn",
+"cap",
+"cbw",
+"ces",
+"chn",
+"ci0",
+"ci1",
+"ci2",
+"ci3",
+"clb",
+"clm",
+"clw",
+"cm3",
+"crn",
+"crs",
+"cs2",
+"cst",
+"d33",
+"dgr",
+"dir",
+"dr1",
+"dr2",
+"dr3",
+"dr4",
+"dr5",
+"dr6",
+"dr7",
+"dr8",
+"dr9",
+"dra",
+"drb",
+"drc",
+"drd",
+"dre",
+"drf",
+"fhl",
+"fla",
+"flb",
+"flc",
+"fld",
+"ful",
+"g33",
+"gax",
+"ghm",
+"gis",
+"gix",
+"glv",
+"gma",
+"gsc",
+"gsd",
+"gth",
+"gts",
+"gwn",
+"hal",
+"hax",
+"hbl",
+"hbt",
+"hbw",
+"hdm",
+"hfh",
+"hgl",
+"hla",
+"hlm",
+"hst",
+"hxb",
+"jav",
+"kit",
+"kri",
+"ktr",
+"lax",
+"lbb",
+"lbl",
+"lbt",
+"lbw",
+"lea",
+"leg",
+"lgl",
+"lrg",
+"lsd",
+"lst",
+"ltp",
+"lwb",
+"lxb",
+"mac",
+"mau",
+"mbl",
+"mbt",
+"mgl",
+"mpi",
+"msf",
+"msk",
+"mst",
+"mxb",
+"ob1",
+"ob2",
+"ob3",
+"ob4",
+"ob5",
+"ob6",
+"ob7",
+"ob8",
+"ob9",
+"oba",
+"obb",
+"obc",
+"obd",
+"obe",
+"obf",
+"pax",
+"pik",
+"pil",
+"plt",
+"qf1",
+"qf2",
+"qui",
+"rng",
+"rxb",
+"sbb",
+"sbr",
+"sbw",
+"scl",
+"scm",
+"scp",
+"scy",
+"skp",
+"skr",
+"sml",
+"spc",
+"spk",
+"spl",
+"spr",
+"spt",
+"ssd",
+"ssp",
+"sst",
+"stu",
+"swb",
+"tax",
+"tbl",
+"tbt",
+"tgl",
+"tkf",
+"tow",
+"tri",
+"tsp",
+"uap",
+"uar",
+"ucl",
+"uea",
+"uh9",
+"uhb",
+"uhc",
+"uhg",
+"uhl",
+"uhm",
+"uhn",
+"uit",
+"ukp",
+"ula",
+"ulb",
+"ulc",
+"uld",
+"ulg",
+"ulm",
+"ult",
+"umb",
+"umc",
+"umg",
+"uml",
+"ung",
+"uow",
+"upk",
+"upl",
+"urg",
+"urn",
+"urs",
+"ush",
+"usk",
+"utb",
+"utc",
+"utg",
+"uth",
+"utp",
+"uts",
+"utu",
+"uuc",
+"uui",
+"uul",
+"uvb",
+"uvc",
+"uvg",
+"vbl",
+"vbt",
+"vgl",
+"vou",
+"wac",
+"wae",
+"waf",
+"wax",
+"whm",
+"wnd",
+"wrb",
+"wsc",
+"wsd",
+"wsp",
+"wst",
+"xap",
+"xar",
+"xcl",
+"xea",
+"xh9",
+"xhb",
+"xhg",
+"xhl",
+"xhm",
+"xhn",
+"xit",
+"xkp",
+"xla",
+"xlb",
+"xld",
+"xlg",
+"xlm",
+"xlt",
+"xmb",
+"xmg",
+"xml",
+"xng",
+"xow",
+"xpk",
+"xpl",
+"xrg",
+"xrn",
+"xrs",
+"xsh",
+"xsk",
+"xtb",
+"xtg",
+"xth",
+"xtp",
+"xts",
+"xtu",
+"xuc",
+"xui",
+"xul",
+"xvb",
+"xvg",
+"ywn",
+"zhb",
+"zlb",
+"zmb",
+"ztb",
+"zvb"
+],
+"items": {
+"0sc": "scroll/identify_scroll",
+"2ax": "axe/double_axe",
+"2hs": "sword/two_handed_sword",
+"6bs": "staff/battle_staff",
+"6cb": "bow/composite_bow",
+"6cs": "staff/gnarled_staff",
+"6hb": "bow/hunters_bow",
+"6hx": "bow/heavy_crossbow",
+"6l7": "bow/long_battle_bow",
+"6lb": "bow/long_bow",
+"6ls": "staff/long_staff",
+"6lw": "bow/long_war_bow",
+"6lx": "bow/light_crossbow",
+"6mx": "bow/crossbow",
+"6rx": "bow/repeating_crossbow",
+"6s7": "bow/short_battle_bow",
+"6sb": "bow/short_bow",
+"6ss": "staff/short_staff",
+"6sw": "bow/short_war_bow",
+"6ws": "staff/war_staff",
+"72a": "axe/double_axe",
+"72h": "sword/two_handed_sword",
+"7ar": "h2h/katar",
+"7ax": "axe/axe",
+"7b7": "sword/bastard_sword",
+"7b8": "axe/balanced_axe",
+"7ba": "axe/broad_axe",
+"7bk": "knife/balanced_knife",
+"7bl": "knife/blade",
+"7br": "spear/brandistock",
+"7bs": "sword/broad_sword",
+"7bt": "axe/battle_axe",
+"7bw": "wand/bone_wand",
+"7cl": "club/club",
+"7cm": "sword/claymore",
+"7cr": "sword/crystal_sword",
+"7cs": "h2h/hatchet_hands",
+"7dg": "knife/dagger",
+"7di": "knife/dirk",
+"7fb": "sword/flamberge",
+"7fc": "sword/falchion",
+"7fl": "mace/flail",
+"7ga": "axe/great_axe",
+"7gd": "sword/great_sword",
+"7gi": "axe/giant_axe",
+"7gl": "javelin/glaive",
+"7gm": "hammer/great_maul",
+"7gs": "sword/giant_sword",
+"7gw": "wand/grim_wand",
+"7h7": "polearm/halberd",
+"7ha": "axe/hand_axe",
+"7ja": "javelin/javelin",
+"7kr": "knife/kriss",
+"7la": "axe/large_axe",
+"7ls": "sword/long_sword",
+"7lw": "h2h/claws",
+"7m7": "hammer/maul",
+"7ma": "mace/mace",
+"7mp": "axe/military_pick",
+"7mt": "mace/morning_star",
+"7o7": "polearm/bardiche",
+"7p7": "spear/pike",
+"7pa": "polearm/poleaxe",
+"7pi": "javelin/pilum",
+"7qr": "h2h/scissors_katar",
+"7qs": "scepter/grand_scepter",
+"7s7": "javelin/short_spear",
+"7s8": "polearm/scythe",
+"7sb": "sword/saber",
+"7sc": "scepter/scepter",
+"7sm": "sword/scimitar",
+"7sp": "club/spiked_club",
+"7sr": "spear/spear",
+"7ss": "sword/short_sword",
+"7st": "spear/spetum",
+"7ta": "axe/throwing_axe",
+"7tk": "knife/throwing_knife",
+"7tr": "spear/trident",
+"7ts": "javelin/throwing_spear",
+"7tw": "h2h/claws",
+"7vo": "polearm/voulge",
+"7wa": "axe/war_axe",
+"7wb": "h2h/katar",
+"7wc": "polearm/war_scythe",
+"7wd": "sword/war_sword",
+"7wh": "hammer/war_hammer",
+"7wn": "wand/wand",
+"7ws": "scepter/war_scepter",
+"7xf": "h2h/hatchet_hands",
+"7yw": "wand/yew_wand",
+"8bs": "staff/battle_staff",
+"8cb": "bow/composite_bow",
+"8cs": "staff/gnarled_staff",
+"8hb": "bow/hunters_bow",
+"8hx": "bow/heavy_crossbow",
+"8l8": "bow/long_battle_bow",
+"8lb": "bow/long_bow",
+"8ls": "staff/long_staff",
+"8lw": "bow/long_war_bow",
+"8lx": "bow/light_crossbow",
+"8mx": "bow/crossbow",
+"8rx": "bow/repeating_crossbow",
+"8s8": "bow/short_battle_bow",
+"8sb": "bow/short_bow",
+"8ss": "staff/short_staff",
+"8sw": "bow/short_war_bow",
+"8ws": "staff/war_staff",
+"92a": "axe/double_axe",
+"92h": "sword/two_handed_sword",
+"9ar": "h2h/katar",
+"9ax": "axe/axe",
+"9b7": "polearm/bardiche",
+"9b8": "axe/balanced_axe",
+"9b9": "sword/bastard_sword",
+"9ba": "axe/broad_axe",
+"9bk": "knife/balanced_knife",
+"9bl": "knife/blade",
+"9br": "spear/brandistock",
+"9bs": "sword/broad_sword",
+"9bt": "axe/battle_axe",
+"9bw": "wand/bone_wand",
+"9cl": "club/club",
+"9cm": "sword/claymore",
+"9cr": "sword/crystal_sword",
+"9cs": "h2h/hatchet_hands",
+"9dg": "knife/dagger",
+"9di": "knife/dirk",
+"9fb": "sword/flamberge",
+"9fc": "sword/falchion",
+"9fl": "mace/flail",
+"9ga": "axe/great_axe",
+"9gd": "sword/great_sword",
+"9gi": "axe/giant_axe",
+"9gl": "javelin/glaive",
+"9gm": "hammer/great_maul",
+"9gs": "sword/giant_sword",
+"9gw": "wand/grim_wand",
+"9h9": "polearm/halberd",
+"9ha": "axe/hand_axe",
+"9ja": "javelin/javelin",
+"9kr": "knife/kriss",
+"9la": "axe/large_axe",
+"9ls": "sword/long_sword",
+"9lw": "h2h/claws",
+"9m9": "hammer/maul",
+"9ma": "mace/mace",
+"9mp": "axe/military_pick",
+"9mt": "mace/morning_star",
+"9p9": "spear/pike",
+"9pa": "polearm/poleaxe",
+"9pi": "javelin/pilum",
+"9qr": "h2h/scissors_katar",
+"9qs": "scepter/grand_scepter",
+"9s8": "polearm/scythe",
+"9s9": "javelin/short_spear",
+"9sb": "sword/saber",
+"9sc": "scepter/scepter",
+"9sm": "sword/scimitar",
+"9sp": "club/spiked_club",
+"9sr": "spear/spear",
+"9ss": "sword/short_sword",
+"9st": "spear/spetum",
+"9ta": "axe/throwing_axe",
+"9tk": "knife/throwing_knife",
+"9tr": "spear/trident",
+"9ts": "javelin/throwing_spear",
+"9tw": "h2h/claws",
+"9vo": "polearm/voulge",
+"9wa": "axe/war_axe",
+"9wb": "h2h/katar",
+"9wc": "polearm/war_scythe",
+"9wd": "sword/war_sword",
+"9wh": "hammer/war_hammer",
+"9wn": "wand/wand",
+"9ws": "scepter/war_scepter",
+"9xf": "h2h/hatchet_hands",
+"9yw": "wand/yew_wand",
+"aar": "armor/ancient_armor",
+"am1": "bow/stag_bow",
+"am2": "bow/reflex_bow",
+"am3": "spear/maiden_spear",
+"am4": "spear/maiden_pike",
+"am5": "javelin/maiden_javelin",
+"am6": "bow/stag_bow",
+"am7": "bow/reflex_bow",
+"am8": "spear/maiden_spear",
+"am9": "spear/maiden_pike",
+"ama": "javelin/maiden_javelin",
+"amb": "bow/stag_bow",
+"amc": "bow/reflex_bow",
+"amd": "spear/maiden_spear",
+"ame": "spear/maiden_pike",
+"amf": "javelin/maiden_javelin",
+"amu": "amulet/amulet",
+"aqv": "quiver/arrows",
+"ass": "quest/book_of_skill",
+"axe": "axe/axe",
+"axf": "h2h/hatchet_hands",
+"ba1": "helmet/jawbone_cap",
+"ba2": "helmet/fanged_helm",
+"ba3": "helmet/horned_helm",
+"ba4": "helmet/assault_helmet",
+"ba5": "helmet/avenger_guard",
+"ba6": "helmet/jawbone_cap",
+"ba7": "helmet/fanged_helm",
+"ba8": "helmet/horned_helm",
+"ba9": "helmet/assault_helmet",
+"baa": "helmet/avenger_guard",
+"bab": "helmet/jawbone_cap",
+"bac": "helmet/fanged_helm",
+"bad": "helmet/horned_helm",
+"bae": "helmet/assault_helmet",
+"baf": "helmet/avenger_guard",
+"bal": "axe/balanced_axe",
+"bar": "polearm/bardiche",
+"bax": "axe/broad_axe",
+"bbb": "quest/lam_esens_tome",
+"bet": "quest/burning_essence_of_terror",
+"bey": "body_part/eye",
+"bhm": "helmet/bone_helm",
+"bkd": "scroll/deciphered_bark_scroll",
+"bkf": "knife/balanced_knife",
+"bks": "quest/bark_scroll",
+"bld": "knife/blade",
+"box": "quest/horadric_cube",
+"bpl": "potion/full_mana_potion",
+"bps": "potion/mana_potion",
+"brn": "spear/brandistock",
+"brs": "armor/breast_plate",
+"brz": "body_part/brain",
+"bsd": "sword/broad_sword",
+"bsh": "shield/bone_shield",
+"bst": "staff/battle_staff",
+"bsw": "sword/bastard_sword",
+"btl": "h2h/claws",
+"btx": "axe/battle_axe",
+"buc": "shield/buckler",
+"bwn": "wand/bone_wand",
+"cap": "helmet/cap_hat",
+"cbw": "bow/composite_bow",
+"ceh": "quest/charged_essense_of_hatred",
+"ces": "h2h/hatchet_hands",
+"chn": "armor/chain_mail",
+"ci0": "circlet/circlet",
+"ci1": "circlet/coronet",
+"ci2": "circlet/tiara",
+"ci3": "circlet/diadem",
+"cjw": "gem/perfect_diamond",
+"clb": "club/club",
+"clm": "sword/claymore",
+"clw": "h2h/claws",
+"cm1": "charm/charm_small",
+"cm2": "charm/charm_medium",
+"cm3": "charm/charm_large",
+"cqv": "quiver/bolts",
+"crn": "helmet/crown",
+"crs": "sword/crystal_sword",
+"cs2": "charm/charm_large",
+"cst": "staff/gnarled_staff",
+"d33": "knife/decoy_dagger",
+"dgr": "knife/dagger",
+"dhn": "body_part/fang",
+"dir": "knife/dirk",
+"dr1": "pelt/wolf_head",
+"dr2": "pelt/hawk_helm",
+"dr3": "pelt/antlers",
+"dr4": "pelt/falcon_mask",
+"dr5": "pelt/spirit_mask",
+"dr6": "pelt/wolf_head",
+"dr7": "pelt/hawk_helm",
+"dr8": "pelt/antlers",
+"dr9": "pelt/falcon_mask",
+"dra": "pelt/spirit_mask",
+"drb": "pelt/wolf_head",
+"drc": "pelt/hawk_helm",
+"drd": "pelt/antlers",
+"dre": "pelt/falcon_mask",
+"drf": "pelt/spirit_mask",
+"ear": "body_part/player_ear",
+"elx": "potion/elixir",
+"eyz": "body_part/eye",
+"fed": "quest/festering_essence_of_destruction",
+"fhl": "helmet/full_helm",
+"fla": "mace/flail",
+"flb": "sword/flamberge",
+"flc": "sword/falchion",
+"fld": "armor/field_plate",
+"flg": "body_part/flag",
+"fng": "body_part/fang",
+"ful": "armor/full_plate_mail",
+"g33": "knife/gidbinn",
+"g34": "quest/gold_bird",
+"gax": "axe/great_axe",
+"gcb": "gem/chipped_saphire",
+"gcg": "gem/chipped_emerald",
+"gcr": "gem/chipped_ruby",
+"gcv": "gem/chipped_amethyst",
+"gcw": "gem/chipped_diamond",
+"gcy": "gem/chipped_topaz",
+"gfb": "gem/flawed_saphire",
+"gfg": "gem/flawed_emerald",
+"gfr": "gem/flawed_ruby",
+"gfv": "gem/flawed_amethyst",
+"gfw": "gem/flawed_diamond",
+"gfy": "gem/flawed_topaz",
+"ghm": "helmet/great_helm",
+"gis": "sword/giant_sword",
+"gix": "axe/giant_axe",
+"glb": "gem/flawless_saphire",
+"gld": "gold/gold",
+"glg": "gem/flawless_emerald",
+"glr": "gem/flawless_ruby",
+"glv": "javelin/glaive",
+"glw": "gem/flawless_diamond",
+"gly": "gem/flawless_topaz",
+"gma": "hammer/great_maul",
+"gpb": "gem/perfect_saphire",
+"gpg": "gem/perfect_emerald",
+"gpl": "potion/strangling_gas_potion",
+"gpm": "potion/choking_gas_potion",
+"gpr": "gem/perfect_ruby",
+"gps": "potion/rancid_gas_potion",
+"gpv": "gem/perfect_amethyst",
+"gpw": "gem/perfect_diamond",
+"gpy": "gem/perfect_topaz",
+"gsb": "gem/saphire",
+"gsc": "scepter/grand_scepter",
+"gsd": "sword/great_sword",
+"gsg": "gem/emerald",
+"gsr": "gem/ruby",
+"gsv": "gem/amethyst",
+"gsw": "gem/diamond",
+"gsy": "gem/topaz",
+"gth": "armor/gothic_plate",
+"gts": "shield/gothic_shield",
+"gwn": "wand/grim_wand",
+"gzv": "gem/flawless_amethyst",
+"hal": "polearm/halberd",
+"hax": "axe/hand_axe",
+"hbl": "belt/girdle_h",
+"hbt": "boot/plate_boots",
+"hbw": "bow/hunters_bow",
+"hdm": "hammer/horadric_malus",
+"hfh": "hammer/hellforge_hammer",
+"hgl": "glove/gaunlets_h",
+"hla": "armor/hard_leather_armor",
+"hlm": "helmet/helm",
+"hp1": "potion/lesser_healing_potion",
+"hp2": "potion/light_healing_potion",
+"hp3": "potion/healing_potion2",
+"hp4": "potion/strong_healing_potion",
+"hp5": "potion/greater_healing_potion",
+"hpf": "potion/full_healing_potion",
+"hpo": "potion/healing_potion",
+"hrb": "herb/herb",
+"hrn": "body_part/horn",
+"hrt": "body_part/heart",
+"hst": "staff/horadric_staff",
+"hxb": "bow/heavy_crossbow",
+"ibk": "book/identify_book",
+"ice": "quest/scroll_of_self_resurrect",
+"isc": "scroll/identify_scroll",
+"j34": "quest/jade_figurine",
+"jav": "javelin/javelin",
+"jaw": "body_part/jawbone",
+"jew": "gem/perfect_diamond",
+"key": "key/skeleton_key",
+"kit": "shield/kite_shield",
+"kri": "knife/kriss",
+"ktr": "h2h/katar",
+"lax": "axe/large_axe",
+"lbb": "bow/long_battle_bow",
+"lbl": "belt/sash_l",
+"lbt": "boot/leather_boots",
+"lbw": "bow/long_bow",
+"lea": "armor/leather_armor",
+"leg": "club/wirts_leg",
+"lgl": "glove/gloves_l",
+"lrg": "shield/large_shield",
+"lsd": "sword/long_sword",
+"lst": "staff/long_staff",
+"ltp": "armor/light_plate",
+"luv": "key/mephisto_key",
+"lwb": "bow/long_war_bow",
+"lxb": "bow/light_crossbow",
+"mac": "mace/mace",
+"mau": "hammer/maul",
+"mbl": "belt/belt_m",
+"mbr": "body_part/brain",
+"mbt": "boot/chain_boots",
+"mgl": "glove/bracers_m",
+"mp1": "potion/lesser_mana_potion",
+"mp2": "potion/light_mana_potion",
+"mp3": "potion/mana_potion2",
+"mp4": "potion/strong_mana_potion",
+"mp5": "potion/greater_mana_potion",
+"mpf": "potion/full_mana_potion",
+"mpi": "axe/military_pick",
+"mpo": "potion/mana_potion",
+"msf": "staff/staff_of_the_kings",
+"msk": "helmet/mask",
+"mss": "quest/mephisto_soul_stone",
+"mst": "mace/morning_star",
+"mxb": "bow/crossbow",
+"ne1": "voodoo_head/preserved_head",
+"ne2": "voodoo_head/zombie_head",
+"ne3": "voodoo_head/unraveller_head",
+"ne4": "voodoo_head/gargoyle_head",
+"ne5": "voodoo_head/demon_head",
+"ne6": "voodoo_head/preserved_head",
+"ne7": "voodoo_head/zombie_head",
+"ne8": "voodoo_head/unraveller_head",
+"ne9": "voodoo_head/gargoyle_head",
+"nea": "voodoo_head/demon_head",
+"neb": "voodoo_head/preserved_head",
+"ned": "voodoo_head/unraveller_head",
+"nee": "voodoo_head/gargoyle_head",
+"nef": "voodoo_head/demon_head",
+"neg": "voodoo_head/zombie_head",
+"ob1": "orb/eagle_orb",
+"ob2": "orb/sacred_globe",
+"ob3": "orb/smoked_sphere",
+"ob4": "orb/clasped_orb",
+"ob5": "orb/dragon_stone",
+"ob6": "orb/eagle_orb",
+"ob7": "orb/sacred_globe",
+"ob8": "orb/smoked_sphere",
+"ob9": "orb/clasped_orb",
+"oba": "orb/dragon_stone",
+"obb": "orb/eagle_orb",
+"obc": "orb/sacred_globe",
+"obd": "orb/smoked_sphere",
+"obe": "orb/clasped_orb",
+"obf": "orb/dragon_stone",
+"opl": "potion/fulminating_potion",
+"opm": "potion/exploding_potion",
+"ops": "potion/oil_potion",
+"pa1": "shield/targe",
+"pa2": "shield/rondache",
+"pa3": "shield/heraldic_shield",
+"pa4": "shield/aerin_shield",
+"pa5": "shield/crown_shield",
+"pa6": "shield/targe",
+"pa7": "shield/rondache",
+"pa8": "shield/heraldic_shield",
+"pa9": "shield/aerin_shield",
+"paa": "shield/crown_shield",
+"pab": "shield/targe",
+"pac": "shield/rondache",
+"pad": "shield/heraldic_shield",
+"pae": "shield/aerin_shield",
+"paf": "shield/crown_shield",
+"pax": "polearm/poleaxe",
+"pik": "spear/pike",
+"pil": "javelin/pilum",
+"pk1": "key/mephisto_key",
+"pk2": "key/mephisto_key",
+"pk3": "key/mephisto_key",
+"plt": "armor/plate_mail",
+"qbr": "body_part/brain",
+"qey": "body_part/eye",
+"qf1": "mace/khalim_flail",
+"qf2": "mace/super_khalim_flail",
+"qhr": "body_part/heart",
+"qll": "body_part/quill",
+"qui": "armor/quilted_armor",
+"r01": "rune/el_rune",
+"r02": "rune/eld_rune",
+"r03": "rune/tir_rune",
+"r04": "rune/nef_rune",
+"r05": "rune/eth_rune",
+"r06": "rune/ith_rune",
+"r07": "rune/tal_rune",
+"r08": "rune/ral_rune",
+"r09": "rune/ort_rune",
+"r10": "rune/thul_rune",
+"r11": "rune/amn_rune",
+"r12": "rune/sol_rune",
+"r13": "rune/shael_rune",
+"r14": "rune/dol_rune",
+"r15": "rune/hel_rune",
+"r16": "rune/io_rune",
+"r17": "rune/lum_rune",
+"r18": "rune/ko_rune",
+"r19": "rune/fal_rune",
+"r20": "rune/lem_rune",
+"r21": "rune/pul_rune",
+"r22": "rune/um_rune",
+"r23": "rune/mal_rune",
+"r24": "rune/ist_rune",
+"r25": "rune/gul_rune",
+"r26": "rune/vex_rune",
+"r27": "rune/ohm_rune",
+"r28": "rune/lo_rune",
+"r29": "rune/sur_rune",
+"r30": "rune/ber_rune",
+"r31": "rune/jah_rune",
+"r32": "rune/cham_rune",
+"r33": "rune/zod_rune",
+"rin": "ring/ring",
+"rng": "armor/ring_mail",
+"rpl": "potion/full_healing_potion",
+"rps": "potion/healing_potion",
+"rvl": "potion/full_rejuv_potion",
+"rvs": "potion/rejuv_potion",
+"rxb": "bow/repeating_crossbow",
+"sbb": "bow/short_battle_bow",
+"sbr": "sword/saber",
+"sbw": "bow/short_bow",
+"scl": "armor/scale_mail",
+"scm": "sword/scimitar",
+"scp": "scepter/scepter",
+"scy": "polearm/scythe",
+"scz": "scepter/scepter",
+"skc": "gem/chipped_skull",
+"skf": "gem/flawed_skull",
+"skl": "gem/flawless_skull",
+"skp": "helmet/skull_cap",
+"skr": "h2h/scissors_katar",
+"sku": "gem/skull",
+"skz": "gem/perfect_skull",
+"sml": "shield/small_shield",
+"sol": "body_part/soul",
+"spc": "club/spiked_club",
+"spe": "body_part/soul",
+"spk": "shield/spiked_shield",
+"spl": "armor/splint_mail",
+"spr": "spear/spear",
+"spt": "spear/spetum",
+"ssd": "sword/short_sword",
+"ssp": "javelin/short_spear",
+"sst": "staff/short_staff",
+"std": "body_part/flag",
+"stu": "armor/studded_leather",
+"swb": "bow/short_war_bow",
+"tal": "body_part/tail",
+"tax": "axe/throwing_axe",
+"tbk": "book/town_portal_book",
+"tbl": "belt/heavy_belt",
+"tbt": "boot/light_plate_boots",
+"tch": "torch/torch",
+"tes": "quest/twisted_essence_of_suffering",
+"tgl": "glove/light_gauntlets",
+"tkf": "knife/throwing_knife",
+"toa": "quest/token_of_absolution",
+"tow": "shield/tower_shield",
+"tr1": "quest/scroll_of_horadric_quest_info",
+"tr2": "quest/bark_scroll",
+"tri": "spear/trident",
+"tsc": "scroll/town_portal_scroll",
+"tsp": "javelin/throwing_spear",
+"ua1": "shard/talics_anguish",
+"ua2": "shard/korlics_pain",
+"ua3": "shard/madawcs_ire",
+"ua4": "shard/bulkathos_nightmare",
+"ua5": "shard/worusks_end",
+"uap": "helmet/cap_hat",
+"uar": "armor/ancient_armor",
+"ucl": "armor/scale_mail",
+"uea": "armor/leather_armor",
+"uh9": "helmet/bone_helm",
+"uhb": "boot/plate_boots",
+"uhc": "belt/girdle_h",
+"uhg": "glove/gaunlets_h",
+"uhl": "helmet/full_helm",
+"uhm": "helmet/great_helm",
+"uhn": "armor/chain_mail",
+"uit": "shield/kite_shield",
+"ukp": "helmet/skull_cap",
+"ula": "armor/hard_leather_armor",
+"ulb": "boot/leather_boots",
+"ulc": "belt/sash_l",
+"uld": "armor/field_plate",
+"ulg": "glove/gloves_l",
+"ulm": "helmet/helm",
+"ult": "armor/plate_mail",
+"um1": "body_part/fragment_cold",
+"um2": "body_part/fragment_magic",
+"um3": "body_part/fragment_lightning",
+"um4": "body_part/fragment_fire",
+"um5": "body_part/fragment_physical",
+"um6": "body_part/fragment_poison",
+"umb": "boot/chain_boots",
+"umc": "belt/belt_m",
+"umg": "glove/bracers_m",
+"uml": "shield/small_shield",
+"ung": "armor/ring_mail",
+"uow": "shield/tower_shield",
+"upk": "shield/spiked_shield",
+"upl": "armor/splint_mail",
+"urg": "shield/large_shield",
+"urn": "helmet/crown",
+"urs": "armor/breast_plate",
+"ush": "shield/bone_shield",
+"usk": "helmet/mask",
+"utb": "boot/light_plate_boots",
+"utc": "belt/heavy_belt",
+"utg": "glove/light_gauntlets",
+"uth": "armor/gothic_plate",
+"utp": "armor/light_plate",
+"uts": "shield/gothic_shield",
+"utu": "armor/studded_leather",
+"uuc": "shield/buckler",
+"uui": "armor/quilted_armor",
+"uul": "armor/full_plate_mail",
+"uvb": "boot/heavy_boots",
+"uvc": "belt/light_belt",
+"uvg": "glove/heavy_gloves",
+"vbl": "belt/light_belt",
+"vbt": "boot/heavy_boots",
+"vgl": "glove/heavy_gloves",
+"vip": "amulet/viper_amulet",
+"vou": "polearm/voulge",
+"vps": "potion/stamina_potion",
+"wa1": "grimoires/oldbook",
+"wa2": "grimoires/tome_book",
+"wa3": "grimoires/codex",
+"wa4": "grimoires/compendium",
+"wa5": "grimoires/grimoire",
+"wa6": "grimoires/oldbook",
+"wa7": "grimoires/tome_book",
+"wa8": "grimoires/codex",
+"wa9": "grimoires/compendium",
+"waa": "grimoires/grimoire",
+"wab": "grimoires/oldbook",
+"wac": "grimoires/tome_book",
+"wad": "grimoires/codex",
+"wae": "grimoires/compendium",
+"waf": "grimoires/grimoire",
+"wax": "axe/war_axe",
+"whm": "hammer/war_hammer",
+"wms": "potion/thawing_potion",
+"wnd": "wand/wand",
+"wrb": "h2h/katar",
+"wsc": "polearm/war_scythe",
+"wsd": "sword/war_sword",
+"wsp": "scepter/war_scepter",
+"wst": "staff/war_staff",
+"xa1": "shard/mote_of_anguish",
+"xa2": "shard/mote_of_pain",
+"xa3": "shard/mote_of_hatred",
+"xa4": "shard/mote_of_terror",
+"xa5": "shard/mote_of_destruction",
+"xap": "helmet/cap_hat",
+"xar": "armor/ancient_armor",
+"xcl": "armor/scale_mail",
+"xea": "armor/leather_armor",
+"xh9": "helmet/bone_helm",
+"xhb": "boot/plate_boots",
+"xhg": "glove/gaunlets_h",
+"xhl": "helmet/full_helm",
+"xhm": "helmet/great_helm",
+"xhn": "armor/chain_mail",
+"xit": "shield/kite_shield",
+"xkp": "helmet/skull_cap",
+"xla": "armor/hard_leather_armor",
+"xlb": "boot/leather_boots",
+"xld": "armor/field_plate",
+"xlg": "glove/gloves_l",
+"xlm": "helmet/helm",
+"xlt": "armor/plate_mail",
+"xmb": "boot/chain_boots",
+"xmg": "glove/bracers_m",
+"xml": "shield/small_shield",
+"xng": "armor/ring_mail",
+"xow": "shield/tower_shield",
+"xpk": "shield/spiked_shield",
+"xpl": "armor/splint_mail",
+"xrg": "shield/large_shield",
+"xrn": "helmet/crown",
+"xrs": "armor/breast_plate",
+"xsh": "shield/bone_shield",
+"xsk": "helmet/mask",
+"xtb": "boot/light_plate_boots",
+"xtg": "glove/light_gauntlets",
+"xth": "armor/gothic_plate",
+"xtp": "armor/light_plate",
+"xts": "shield/gothic_shield",
+"xtu": "armor/studded_leather",
+"xuc": "shield/buckler",
+"xui": "armor/quilted_armor",
+"xul": "armor/full_plate_mail",
+"xvb": "boot/heavy_boots",
+"xvg": "glove/heavy_gloves",
+"xyz": "quest/scroll_of_self_resurrect",
+"yps": "potion/antidote_potion",
+"ywn": "wand/yew_wand",
+"zhb": "belt/girdle_h",
+"zlb": "belt/sash_l",
+"zmb": "belt/belt_m",
+"ztb": "belt/heavy_belt",
+"zvb": "belt/light_belt"
+},
+"sets": {
+"aldurs_advance": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"aldurs_deception": {
+"normal": "armor/full_plate_mail",
+"uber": "armor/full_plate_mail",
+"ultra": "armor/full_plate_mail"
+},
+"aldurs_gauntlet": {
+"normal": "mace/bloodrise",
+"uber": "mace/bloodrise",
+"ultra": "mace/bloodrise"
+},
+"aldurs_stony_gaze": {
+"normal": "pelt/antlers",
+"uber": "pelt/antlers",
+"ultra": "pelt/antlers"
+},
+"angelic_halo": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"angelic_mantle": {
+"normal": "armor/ring_mail",
+"uber": "armor/ring_mail",
+"ultra": "armor/ring_mail"
+},
+"angelic_sickle": {
+"normal": "sword/krintizs_skewer",
+"uber": "sword/krintizs_skewer",
+"ultra": "sword/krintizs_skewer"
+},
+"angelic_wings": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"arcannas_deathwand": {
+"normal": "staff/war_staff",
+"uber": "staff/war_staff",
+"ultra": "staff/war_staff"
+},
+"arcannas_flesh": {
+"normal": "armor/light_plate",
+"uber": "armor/light_plate",
+"ultra": "armor/light_plate"
+},
+"arcannas_head": {
+"normal": "helmet/skull_cap",
+"uber": "helmet/skull_cap",
+"ultra": "helmet/skull_cap"
+},
+"arcannas_sign": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"arctic_binding": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"arctic_furs": {
+"normal": "armor/quilted_armor",
+"uber": "armor/quilted_armor",
+"ultra": "armor/quilted_armor"
+},
+"arctic_horn": {
+"normal": "bow/hellclap",
+"uber": "bow/hellclap",
+"ultra": "bow/hellclap"
+},
+"arctic_mitts": {
+"normal": "glove/light_gauntlets",
+"uber": "glove/light_gauntlets",
+"ultra": "glove/light_gauntlets"
+},
+"banes_authority": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"banes_oathmaker": {
+"normal": "knife/banes_spire",
+"uber": "knife/banes_spire",
+"ultra": "knife/banes_spire"
+},
+"banes_wraithskin": {
+"normal": "armor/hard_leather_armor",
+"uber": "armor/hard_leather_armor",
+"ultra": "armor/hard_leather_armor"
+},
+"berserkers_hatchet": {
+"normal": "axe/double_axe",
+"uber": "axe/double_axe",
+"ultra": "axe/double_axe"
+},
+"berserkers_hauberk": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"berserkers_headgear": {
+"normal": "helmet/coif_of_glory",
+"uber": "helmet/coif_of_glory",
+"ultra": "helmet/coif_of_glory"
+},
+"bul_kathos_sacred_charge": {
+"normal": "sword/the_patriarch",
+"uber": "sword/the_patriarch",
+"ultra": "sword/the_patriarch"
+},
+"bul_kathos_tribal_guardian": {
+"normal": "sword/war_sword",
+"uber": "sword/war_sword",
+"ultra": "sword/war_sword"
+},
+"cathans_mesh": {
+"normal": "armor/chain_mail",
+"uber": "armor/chain_mail",
+"ultra": "armor/chain_mail"
+},
+"cathans_rule": {
+"normal": "staff/battle_staff",
+"uber": "staff/battle_staff",
+"ultra": "staff/battle_staff"
+},
+"cathans_seal": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"cathans_sigil": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"cathans_visage": {
+"normal": "helmet/mask",
+"uber": "helmet/mask",
+"ultra": "helmet/mask"
+},
+"civerbs_cudgel": {
+"normal": "scepter/grand_scepter",
+"uber": "scepter/grand_scepter",
+"ultra": "scepter/grand_scepter"
+},
+"civerbs_icon": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"civerbs_ward": {
+"normal": "shield/stormguild",
+"uber": "shield/stormguild",
+"ultra": "shield/stormguild"
+},
+"cleglaws_claw": {
+"normal": "shield/umbral_disk",
+"uber": "shield/umbral_disk",
+"ultra": "shield/umbral_disk"
+},
+"cleglaws_pincers": {
+"normal": "glove/bracers_m",
+"uber": "glove/bracers_m",
+"ultra": "glove/bracers_m"
+},
+"cleglaws_tooth": {
+"normal": "sword/hellplague",
+"uber": "sword/hellplague",
+"ultra": "sword/hellplague"
+},
+"cow_kings_hide": {
+"normal": "armor/studded_leather",
+"uber": "armor/studded_leather",
+"ultra": "armor/studded_leather"
+},
+"cow_kings_hoofs": {
+"normal": "boot/heavy_boots",
+"uber": "boot/heavy_boots",
+"ultra": "boot/heavy_boots"
+},
+"cow_kings_horns": {
+"normal": "helmet/cap_hat",
+"uber": "helmet/cap_hat",
+"ultra": "helmet/cap_hat"
+},
+"credendum": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"dangoons_teaching": {
+"normal": "mace/dangoons_teaching",
+"uber": "mace/dangoons_teaching",
+"ultra": "mace/dangoons_teaching"
+},
+"deaths_guard": {
+"normal": "belt/sash_l",
+"uber": "belt/sash_l",
+"ultra": "belt/sash_l"
+},
+"deaths_hand": {
+"normal": "glove/gloves_l",
+"uber": "glove/gloves_l",
+"ultra": "glove/gloves_l"
+},
+"deaths_touch": {
+"normal": "sword/war_sword",
+"uber": "sword/war_sword",
+"ultra": "sword/war_sword"
+},
+"griswolds_heart": {
+"normal": "armor/corpsemourn",
+"uber": "armor/corpsemourn",
+"ultra": "armor/corpsemourn"
+},
+"griswolds_honor": {
+"normal": "shield/crown_shield",
+"uber": "shield/crown_shield",
+"ultra": "shield/crown_shield"
+},
+"griswolds_valor": {
+"normal": "helmet/crown",
+"uber": "helmet/crown",
+"ultra": "helmet/crown"
+},
+"griswoldss_redemption": {
+"normal": "scepter/war_scepter",
+"uber": "scepter/war_scepter",
+"ultra": "scepter/war_scepter"
+},
+"guillaumes_face": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"haemosus_adament": {
+"normal": "armor/haemosus_adament",
+"uber": "armor/haemosus_adament",
+"ultra": "armor/haemosus_adament"
+},
+"heavens_taebaek": {
+"normal": "shield/heavens_taebaek",
+"uber": "shield/heavens_taebaek",
+"ultra": "shield/heavens_taebaek"
+},
+"horazons_countenance": {
+"normal": "helmet/horazons_countenance",
+"uber": "helmet/horazons_countenance",
+"ultra": "helmet/horazons_countenance"
+},
+"horazons_dominion": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"horazons_hold": {
+"normal": "glove/gloves_l",
+"uber": "glove/gloves_l",
+"ultra": "glove/gloves_l"
+},
+"horazons_legacy": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"horazons_secrets": {
+"normal": "grimoires/ars_torbaalos",
+"uber": "grimoires/ars_torbaalos",
+"ultra": "grimoires/ars_torbaalos"
+},
+"hsarus_iron_fist": {
+"normal": "shield/pelta_lunata",
+"uber": "shield/pelta_lunata",
+"ultra": "shield/pelta_lunata"
+},
+"hsarus_iron_heel": {
+"normal": "boot/chain_boots",
+"uber": "boot/chain_boots",
+"ultra": "boot/chain_boots"
+},
+"hsarus_iron_stay": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"hwanins_justice": {
+"normal": "polearm/voulge",
+"uber": "polearm/voulge",
+"ultra": "polearm/voulge"
+},
+"hwanins_refuge": {
+"normal": "armor/scale_mail",
+"uber": "armor/scale_mail",
+"ultra": "armor/scale_mail"
+},
+"hwanins_seal": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"hwanins_splendor": {
+"normal": "helmet/crown_of_thieves",
+"uber": "helmet/crown_of_thieves",
+"ultra": "helmet/crown_of_thieves"
+},
+"immortal_kings_detail": {
+"normal": "belt/girdle_h",
+"uber": "belt/girdle_h",
+"ultra": "belt/girdle_h"
+},
+"immortal_kings_forge": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"immortal_kings_pillar": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"immortal_kings_soul_cage": {
+"normal": "armor/victors_silk",
+"uber": "armor/victors_silk",
+"ultra": "armor/victors_silk"
+},
+"immortal_kings_stone_crusher": {
+"normal": "hammer/maul",
+"uber": "hammer/maul",
+"ultra": "hammer/maul"
+},
+"immortal_kings_will": {
+"normal": "helmet/avenger_guard",
+"uber": "helmet/avenger_guard",
+"ultra": "helmet/avenger_guard"
+},
+"infernal_cranium": {
+"normal": "helmet/war_bonnet",
+"uber": "helmet/war_bonnet",
+"ultra": "helmet/war_bonnet"
+},
+"infernal_sign": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"infernal_torch": {
+"normal": "wand/grim_wand",
+"uber": "wand/grim_wand",
+"ultra": "wand/grim_wand"
+},
+"irathas_coil": {
+"normal": "helmet/crown",
+"uber": "helmet/crown",
+"ultra": "helmet/crown"
+},
+"irathas_collar": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"irathas_cord": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"irathas_cuff": {
+"normal": "glove/light_gauntlets",
+"uber": "glove/light_gauntlets",
+"ultra": "glove/light_gauntlets"
+},
+"isenharts_case": {
+"normal": "armor/breast_plate",
+"uber": "armor/breast_plate",
+"ultra": "armor/breast_plate"
+},
+"isenharts_horns": {
+"normal": "helmet/duskdeep",
+"uber": "helmet/duskdeep",
+"ultra": "helmet/duskdeep"
+},
+"isenharts_lightbrand": {
+"normal": "sword/griswolds_edge",
+"uber": "sword/griswolds_edge",
+"ultra": "sword/griswolds_edge"
+},
+"isenharts_parry": {
+"normal": "shield/the_ward",
+"uber": "shield/the_ward",
+"ultra": "shield/the_ward"
+},
+"laying_of_hands": {
+"normal": "glove/gloves_l",
+"uber": "glove/gloves_l",
+"ultra": "glove/gloves_l"
+},
+"magnus_skin": {
+"normal": "glove/heavy_gloves",
+"uber": "glove/heavy_gloves",
+"ultra": "glove/heavy_gloves"
+},
+"mavinas_caster": {
+"normal": "bow/reflex_bow",
+"uber": "bow/reflex_bow",
+"ultra": "bow/reflex_bow"
+},
+"mavinas_embrace": {
+"normal": "armor/field_plate",
+"uber": "armor/field_plate",
+"ultra": "armor/field_plate"
+},
+"mavinas_icy_clutch": {
+"normal": "glove/light_gauntlets",
+"uber": "glove/light_gauntlets",
+"ultra": "glove/light_gauntlets"
+},
+"mavinas_tenet": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"mavinas_true_sight": {
+"normal": "circlet/diadem",
+"uber": "circlet/diadem",
+"ultra": "circlet/diadem"
+},
+"mc_auleys_paragon": {
+"normal": "helmet/war_bonnet",
+"uber": "helmet/war_bonnet",
+"ultra": "helmet/war_bonnet"
+},
+"mc_auleys_riprap": {
+"normal": "boot/heavy_boots",
+"uber": "boot/heavy_boots",
+"ultra": "boot/heavy_boots"
+},
+"mc_auleys_superstition": {
+"normal": "wand/gravenspine",
+"uber": "wand/gravenspine",
+"ultra": "wand/gravenspine"
+},
+"mc_auleys_taboo": {
+"normal": "glove/heavy_gloves",
+"uber": "glove/heavy_gloves",
+"ultra": "glove/heavy_gloves"
+},
+"milabregas_diadem": {
+"normal": "helmet/crown",
+"uber": "helmet/crown",
+"ultra": "helmet/crown"
+},
+"milabregas_orb": {
+"normal": "shield/steelclash",
+"uber": "shield/steelclash",
+"ultra": "shield/steelclash"
+},
+"milabregas_robe": {
+"normal": "armor/victors_silk",
+"uber": "armor/victors_silk",
+"ultra": "armor/victors_silk"
+},
+"milabregas_rod": {
+"normal": "scepter/war_scepter",
+"uber": "scepter/war_scepter",
+"ultra": "scepter/war_scepter"
+},
+"najs_circlet": {
+"normal": "circlet/circlet",
+"uber": "circlet/circlet",
+"ultra": "circlet/circlet"
+},
+"najs_light_plate": {
+"normal": "armor/plate_mail",
+"uber": "armor/plate_mail",
+"ultra": "armor/plate_mail"
+},
+"najs_puzzler": {
+"normal": "staff/lazarus_spire",
+"uber": "staff/lazarus_spire",
+"ultra": "staff/lazarus_spire"
+},
+"natalyas_mark": {
+"normal": "h2h/natalyas_mark",
+"uber": "h2h/natalyas_mark",
+"ultra": "h2h/natalyas_mark"
+},
+"natalyas_shadow": {
+"normal": "armor/scale_mail",
+"uber": "armor/scale_mail",
+"ultra": "armor/scale_mail"
+},
+"natalyas_soul": {
+"normal": "boot/chain_boots",
+"uber": "boot/chain_boots",
+"ultra": "boot/chain_boots"
+},
+"natalyas_totem": {
+"normal": "helmet/wormskull",
+"uber": "helmet/wormskull",
+"ultra": "helmet/wormskull"
+},
+"ondals_almighty": {
+"normal": "helmet/ondals_almighty",
+"uber": "helmet/ondals_almighty",
+"ultra": "helmet/ondals_almighty"
+},
+"rite_of_passage": {
+"normal": "boot/leather_boots",
+"uber": "boot/leather_boots",
+"ultra": "boot/leather_boots"
+},
+"sazabis_cobalt_redeemer": {
+"normal": "sword/hellplague",
+"uber": "sword/hellplague",
+"ultra": "sword/hellplague"
+},
+"sazabis_ghost_liberator": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"sazabis_mental_sheath": {
+"normal": "helmet/duskdeep",
+"uber": "helmet/duskdeep",
+"ultra": "helmet/duskdeep"
+},
+"sigons_gage": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"sigons_guard": {
+"normal": "shield/bverrit_keep",
+"uber": "shield/bverrit_keep",
+"ultra": "shield/bverrit_keep"
+},
+"sigons_sabot": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"sigons_shelter": {
+"normal": "armor/gothic_plate",
+"uber": "armor/gothic_plate",
+"ultra": "armor/gothic_plate"
+},
+"sigons_visor": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"sigons_wrap": {
+"normal": "belt/girdle_h",
+"uber": "belt/girdle_h",
+"ultra": "belt/girdle_h"
+},
+"spiritual_custodian": {
+"normal": "armor/quilted_armor",
+"uber": "armor/quilted_armor",
+"ultra": "armor/quilted_armor"
+},
+"tal_rashas_adjudication": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"tal_rashas_fire_spun_cloth": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"tal_rashas_horadric_crest": {
+"normal": "helmet/mask",
+"uber": "helmet/mask",
+"ultra": "helmet/mask"
+},
+"tal_rashas_howling_wind": {
+"normal": "armor/gothic_plate",
+"uber": "armor/gothic_plate",
+"ultra": "armor/gothic_plate"
+},
+"tal_rashas_lidless_eye": {
+"normal": "orb/dragon_stone",
+"uber": "orb/dragon_stone",
+"ultra": "orb/dragon_stone"
+},
+"tancreds_crowbill": {
+"normal": "axe/mindrend",
+"uber": "axe/mindrend",
+"ultra": "axe/mindrend"
+},
+"tancreds_hobnails": {
+"normal": "boot/leather_boots",
+"uber": "boot/leather_boots",
+"ultra": "boot/leather_boots"
+},
+"tancreds_skull": {
+"normal": "helmet/wormskull",
+"uber": "helmet/wormskull",
+"ultra": "helmet/wormskull"
+},
+"tancreds_spine": {
+"normal": "armor/goldskin",
+"uber": "armor/goldskin",
+"ultra": "armor/goldskin"
+},
+"tancreds_weird": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"telling_of_beads": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"trang_ouls_claws": {
+"normal": "glove/bracers_m",
+"uber": "glove/bracers_m",
+"ultra": "glove/bracers_m"
+},
+"trang_ouls_girth": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"trang_ouls_guise": {
+"normal": "helmet/wormskull",
+"uber": "helmet/wormskull",
+"ultra": "helmet/wormskull"
+},
+"trang_ouls_scales": {
+"normal": "armor/full_plate_mail",
+"uber": "armor/full_plate_mail",
+"ultra": "armor/full_plate_mail"
+},
+"trang_ouls_wing": {
+"normal": "voodoo_head/gargoyle_head",
+"uber": "voodoo_head/gargoyle_head",
+"ultra": "voodoo_head/gargoyle_head"
+},
+"vidalas_ambush": {
+"normal": "armor/leather_armor",
+"uber": "armor/leather_armor",
+"ultra": "armor/leather_armor"
+},
+"vidalas_barb": {
+"normal": "bow/long_battle_bow",
+"uber": "bow/long_battle_bow",
+"ultra": "bow/long_battle_bow"
+},
+"vidalas_fetlock": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"vidalas_snare": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"warlords_authority": {
+"normal": "belt/girdle_h",
+"uber": "belt/girdle_h",
+"ultra": "belt/girdle_h"
+},
+"warlords_conquest": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"warlords_crushers": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"warlords_lust": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"warlords_mantle": {
+"normal": "armor/full_plate_mail",
+"uber": "armor/full_plate_mail",
+"ultra": "armor/full_plate_mail"
+},
+"wihtstans_guard": {
+"normal": "shield/mosers_blessed_circle",
+"uber": "shield/mosers_blessed_circle",
+"ultra": "shield/mosers_blessed_circle"
+},
+"wilhelms_pride": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+}
+},
+"tints": {
+"sets": {
+"aldurs_advance": "oran",
+"aldurs_deception": "oran",
+"aldurs_gauntlet": "oran",
+"aldurs_stony_gaze": "oran",
+"angelic_mantle": "lgry",
+"angelic_sickle": "lgry",
+"arcannas_deathwand": "blac",
+"arcannas_flesh": "blac",
+"arcannas_head": "blac",
+"arctic_binding": "lgld",
+"arctic_furs": "lgld",
+"arctic_horn": "lgld",
+"arctic_mitts": "lgld",
+"banes_authority": "dred",
+"banes_wraithskin": "dred",
+"berserkers_hatchet": "dred",
+"berserkers_hauberk": "dred",
+"berserkers_headgear": "dred",
+"bul_kathos_sacred_charge": "dgrn",
+"bul_kathos_tribal_guardian": "dgrn",
+"cathans_mesh": "dgrn",
+"cathans_rule": "dgrn",
+"cathans_visage": "dgrn",
+"civerbs_cudgel": "lyel",
+"civerbs_ward": "lyel",
+"cleglaws_claw": "lred",
+"cleglaws_pincers": "lred",
+"cleglaws_tooth": "lred",
+"credendum": "lblu",
+"deaths_guard": "lred",
+"deaths_hand": "lred",
+"deaths_touch": "lred",
+"griswolds_heart": "dgld",
+"griswolds_valor": "dgld",
+"griswoldss_redemption": "dgld",
+"guillaumes_face": "lgry",
+"hsarus_iron_fist": "dred",
+"hsarus_iron_heel": "dred",
+"hsarus_iron_stay": "dred",
+"immortal_kings_detail": "lgry",
+"immortal_kings_forge": "lgry",
+"immortal_kings_pillar": "lgry",
+"immortal_kings_soul_cage": "lgry",
+"immortal_kings_stone_crusher": "lgry",
+"immortal_kings_will": "lgry",
+"infernal_cranium": "lyel",
+"infernal_sign": "lyel",
+"infernal_torch": "lyel",
+"irathas_coil": "lgry",
+"irathas_cord": "lgry",
+"irathas_cuff": "lgry",
+"isenharts_case": "lgld",
+"isenharts_horns": "lgld",
+"isenharts_lightbrand": "lgld",
+"isenharts_parry": "lgld",
+"laying_of_hands": "lblu",
+"magnus_skin": "lgry",
+"mavinas_caster": "whit",
+"mavinas_embrace": "whit",
+"mavinas_icy_clutch": "whit",
+"mavinas_tenet": "whit",
+"mavinas_true_sight": "whit",
+"mcauleys_paragon": "lpur",
+"mcauleys_riprap": "lpur",
+"mcauleys_superstition": "lpur",
+"mcauleys_taboo": "lpur",
+"milabregas_diadem": "dblu",
+"milabregas_orb": "dblu",
+"milabregas_robe": "dblu",
+"milabregas_rod": "dblu",
+"natalyas_mark": "dgry",
+"natalyas_shadow": "dgry",
+"natalyas_soul": "dgry",
+"natalyas_totem": "dgry",
+"rite_of_passage": "lblu",
+"sazabis_cobalt_redeemer": "dblu",
+"sazabis_ghost_liberator": "dblu",
+"sazabis_mental_sheath": "dblu",
+"sigons_gage": "whit",
+"sigons_guard": "whit",
+"sigons_sabot": "whit",
+"sigons_shelter": "whit",
+"sigons_visor": "whit",
+"sigons_wrap": "whit",
+"spiritual_custodian": "lblu",
+"tal_rashas_fire_spun_cloth": "dpur",
+"tal_rashas_horadric_crest": "dpur",
+"tal_rashas_howling_wind": "dpur",
+"tal_rashas_lidless_eye": "dpur",
+"tancreds_crowbill": "dgld",
+"tancreds_hobnails": "dgld",
+"tancreds_skull": "dgld",
+"tancreds_spine": "dgld",
+"trang_ouls_claws": "dyel",
+"trang_ouls_girth": "dyel",
+"trang_ouls_guise": "dgld",
+"trang_ouls_scales": "dyel",
+"vidalas_ambush": "blac",
+"vidalas_barb": "blac",
+"vidalas_fetlock": "blac",
+"warlords_authority": "lgld",
+"warlords_conquest": "lgld",
+"warlords_crushers": "lgld",
+"warlords_lust": "lgld",
+"warlords_mantle": "lgld",
+"wihtstans_guard": "lgry",
+"wilhelms_pride": "lgry"
+},
+"uniques": {
+"andariels_visage": "dred",
+"arachnid_mesh": "blac",
+"arkaines_valor": "lred",
+"ars_aldiablolos": "cred",
+"ars_dulmephistos": "cblu",
+"baezils_vortex": "dblu",
+"bane_ash": "lgrn",
+"baranars_star": "lred",
+"black_cleft": "lgry",
+"blackhand_key": "blac",
+"blackhorns_face": "blac",
+"blackleach_blade": "blac",
+"blade_of_ali_baba": "cred",
+"bladebone": "lgry",
+"bladebuckle": "dyel",
+"blastbark": "lyel",
+"blinkbats_form": "dred",
+"bloodfist": "oran",
+"bloodletter": "cred",
+"bloodmoon": "cred",
+"bloodpact_shard": "dred",
+"bloodravens_charge": "dgld",
+"bloodthief": "whit",
+"bone_break": "whit",
+"boneflesh": "dgld",
+"bonehew": "bwht",
+"boneshade": "dgry",
+"butchers_pupil": "cblu",
+"carin_shard": "cblu",
+"cerebus": "bwht",
+"chance_guards": "lred",
+"cold_rupture": "lblu",
+"coldkill": "cblu",
+"corpsemourn": "blac",
+"crack_of_the_heavens": "lyel",
+"crafted_black_cleft": "lgry",
+"crafted_bone_break": "whit",
+"crafted_cold_rupture": "lblu",
+"crafted_crack_of_the_heavens": "lyel",
+"crafted_flame_rift": "lred",
+"crafted_rotting_fissure": "lgrn",
+"crown_of_ages": "dgld",
+"crown_of_thieves": "dgld",
+"crushflange": "blac",
+"culwens_point": "whit",
+"dark_clan_crusher": "dgld",
+"darkglow": "dgrn",
+"darksight_helm": "blac",
+"deathss_web": "bwht",
+"demon_machine": "blac",
+"demonlimb": "dgrn",
+"demons_arch": "cred",
+"dimoaks_hew": "blac",
+"djinnslayer": "dpur",
+"doombringer": "dred",
+"draculs_grasp": "dred",
+"dreadfang": "blac",
+"duriels_shell": "oran",
+"eaglehorn": "dgld",
+"ethereal_edge": "whit",
+"executioners_justice": "blac",
+"fechmars_axe": "lpur",
+"flame_rift": "lred",
+"flamebellow": "cred",
+"fleshripper": "dred",
+"frostburn": "dred",
+"frostwind": "cblu",
+"gargoyles_bite": "cgrn",
+"gheeds_wager": "dgld",
+"ghostflame": "cblu",
+"giantskull": "lgry",
+"goblin_toe": "dgry",
+"godstrike_arch": "lgry",
+"goldwrap": "lblu",
+"gorefoot": "dblu",
+"goreshovel": "dpur",
+"greyform": "lgry",
+"grims_burning_dead": "cred",
+"guardian_angel": "lgry",
+"gull": "lgry",
+"gutsiphon": "lgrn",
+"harlequin_crest": "cgrn",
+"hawkmail": "cgrn",
+"headstriker": "bwht",
+"heavenly_garb": "cblu",
+"heavens_light": "cblu",
+"hellslayer": "dred",
+"horizons_tornado": "dpur",
+"hotspur": "cred",
+"howltusk": "dgry",
+"iceblink": "lgld",
+"irices_shard": "dblu",
+"ironpelt": "dgry",
+"ironstone": "cblu",
+"ironward": "blac",
+"jadetalon": "cgrn",
+"kerkes_sanctuary": "lgrn",
+"kiras_guardian": "blac",
+"knell_striker": "dred",
+"kuko_shakaku": "lpur",
+"lacerator": "blac",
+"lance_of_yaggai": "lred",
+"lenyms_cord": "cgrn",
+"leviathan": "cgrn",
+"lidless_wall": "dgld",
+"maelstromwrath": "dblu",
+"magefist": "lgry",
+"mang_songs_lesson": "dgld",
+"medusas_gaze": "lred",
+"messerschmidts_reaver": "blac",
+"nightsmoke": "lyel",
+"nightwings_veil": "cblu",
+"ormus_robes": "blac",
+"pierre_tombale_couant": "lgld",
+"pluckeye": "cblu",
+"pompes_wrath": "cred",
+"precrafted_black_cleft": "lgry",
+"precrafted_bone_break": "whit",
+"precrafted_cold_rupture": "lblu",
+"precrafted_crack_of_the_heavens": "lyel",
+"precrafted_flame_rift": "lred",
+"precrafted_rotting_fissure": "lgrn",
+"pus_spiter": "cgrn",
+"rakescar": "dgry",
+"rattlecage": "dpur",
+"ravenlore": "dgld",
+"ribcracker": "lblu",
+"rimeraven": "dred",
+"riphook": "cred",
+"ripsaw": "cblu",
+"rixots_keen": "blac",
+"rockfleece": "dgry",
+"rotting_fissure": "lgrn",
+"runemaster": "lblu",
+"rusthandle": "lgld",
+"schaefers_hammer": "lblu",
+"serpent_lord": "cgrn",
+"shadowdancer": "blac",
+"skin_of_the_flayerd_one": "lred",
+"skin_of_the_vipermagi": "dblu",
+"skullcollector": "blac",
+"snakecord": "blac",
+"souldrain": "dred",
+"soulfeast_tine": "lyel",
+"soulflay": "dgrn",
+"sparking_mail": "lyel",
+"spellsteel": "whit",
+"spike_thorn": "dyel",
+"spire_of_honor": "lgry",
+"spirit_ward": "dblu",
+"steel_carapice": "dgry",
+"steeldriver": "cgrn",
+"steelgoad": "cgrn",
+"steelshade": "blac",
+"stormchaser": "cblu",
+"stormeye": "cred",
+"stormlash": "dgry",
+"stormrider": "lred",
+"stormspike": "cblu",
+"stormspire": "dblu",
+"swordguard": "bwht",
+"tarnhelm": "oran",
+"tearhaunch": "dgrn",
+"templars_might": "cgrn",
+"the_atlantian": "lblu",
+"the_battlebranch": "lblu",
+"the_centurion": "cred",
+"the_cranium_basher": "blac",
+"the_diggler": "dgry",
+"the_dragon_chang": "dpur",
+"the_face_of_horror": "lblu",
+"the_generals_tan_do_li_ga": "dblu",
+"the_gladiators_bane": "lgry",
+"the_grandfather": "lyel",
+"the_grim_reaper": "lpur",
+"the_hand_of_broc": "cblu",
+"the_humongous": "blac",
+"the_impaler": "lred",
+"the_iron_jang_bong": "dyel",
+"the_meat_scraper": "dred",
+"the_salamander": "dred",
+"the_tannr_gorerod": "lgry",
+"the_vile_husk": "dgry",
+"thunderstroke": "dblu",
+"tiamats_rebuke": "lgry",
+"tomb_reaver": "lyel",
+"toothrow": "whit",
+"treads_of_cthon": "lgrn",
+"twitchthroe": "lgrn",
+"tyraels_might": "dblu",
+"umes_lament": "lblu",
+"undead_crown": "blac",
+"vampiregaze": "cgrn",
+"veil_of_steel": "lgry",
+"venomsward": "dyel",
+"verdugos_hearty_cord": "blac",
+"viperfork": "dgrn",
+"warlords_trust": "whit",
+"warpspear": "cblu",
+"warshrike": "bwht",
+"whichwild_string": "lblu",
+"widowmaker": "dred",
+"windforce": "dyel",
+"windhammer": "cblu",
+"witherstring": "lred",
+"wizardspike": "lgry",
+"wizendraw": "dgrn",
+"woestave": "dblu",
+"wraithflight": "dblu",
+"wraithstep": "lgry",
+"zakarums_hand": "lpur"
+}
+},
+"uniques": {
+"alma_negra": {
+"normal": "shield/rondache",
+"uber": "shield/rondache",
+"ultra": "shield/rondache"
+},
+"amulet_of_the_viper": {
+"normal": "amulet/viper_amulet",
+"uber": "amulet/viper_amulet",
+"ultra": "amulet/viper_amulet"
+},
+"andariels_visage": {
+"normal": "helmet/mask",
+"uber": "helmet/mask",
+"ultra": "helmet/mask"
+},
+"annihilus": {
+"normal": "quest/mephisto_soul_stone",
+"uber": "quest/mephisto_soul_stone",
+"ultra": "quest/mephisto_soul_stone"
+},
+"arachnid_mesh": {
+"normal": "belt/sash_l",
+"uber": "belt/sash_l",
+"ultra": "belt/sash_l"
+},
+"ariocs_needle": {
+"normal": "spear/spear",
+"uber": "spear/spear",
+"ultra": "spear/spear"
+},
+"arkaines_valor": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"arm_of_king_leoric": {
+"normal": "wand/gravenspine",
+"uber": "wand/gravenspine",
+"ultra": "wand/gravenspine"
+},
+"arreats_face": {
+"normal": "helmet/avenger_guard",
+"uber": "helmet/avenger_guard",
+"ultra": "helmet/avenger_guard"
+},
+"ars_aldiablolos": {
+"normal": "grimoires/ars_aldiablolos",
+"uber": "grimoires/ars_aldiablolos",
+"ultra": "grimoires/ars_aldiablolos"
+},
+"ars_dulmephistos": {
+"normal": "grimoires/ars_aldiablolos",
+"uber": "grimoires/ars_aldiablolos",
+"ultra": "grimoires/ars_aldiablolos"
+},
+"ars_torbaalos": {
+"normal": "grimoires/ars_aldiablolos",
+"uber": "grimoires/ars_aldiablolos",
+"ultra": "grimoires/ars_aldiablolos"
+},
+"athenas_wrath": {
+"normal": "polearm/athenas_wrath",
+"uber": "polearm/athenas_wrath",
+"ultra": "polearm/athenas_wrath"
+},
+"atmas_scarab": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"atmas_wail": {
+"normal": "armor/gothic_plate",
+"uber": "armor/gothic_plate",
+"ultra": "armor/gothic_plate"
+},
+"azurewrath": {
+"normal": "sword/crystal_sword",
+"uber": "sword/crystal_sword",
+"ultra": "sword/crystal_sword"
+},
+"baezils_vortex": {
+"normal": "mace/flail",
+"uber": "mace/flail",
+"ultra": "mace/flail"
+},
+"bane_ash": {
+"normal": "staff/short_staff",
+"uber": "staff/short_staff",
+"ultra": "staff/short_staff"
+},
+"baranars_star": {
+"normal": "mace/bloodrise",
+"uber": "mace/bloodrise",
+"ultra": "mace/bloodrise"
+},
+"bing_sz_wang": {
+"normal": "sword/claymore",
+"uber": "sword/claymore",
+"ultra": "sword/claymore"
+},
+"black_cleft": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"black_hades": {
+"normal": "armor/full_plate_mail",
+"uber": "armor/full_plate_mail",
+"ultra": "armor/full_plate_mail"
+},
+"blackbogs_sharp": {
+"normal": "knife/the_jade_tan_do",
+"uber": "knife/the_jade_tan_do",
+"ultra": "knife/the_jade_tan_do"
+},
+"blackhand_key": {
+"normal": "wand/blackhand_key",
+"uber": "wand/blackhand_key",
+"ultra": "wand/blackhand_key"
+},
+"blackhorns_face": {
+"normal": "helmet/mask",
+"uber": "helmet/mask",
+"ultra": "helmet/mask"
+},
+"blackleach_blade": {
+"normal": "polearm/voulge",
+"uber": "polearm/voulge",
+"ultra": "polearm/voulge"
+},
+"blackoak_shield": {
+"normal": "shield/umbral_disk",
+"uber": "shield/umbral_disk",
+"ultra": "shield/umbral_disk"
+},
+"blacktongue": {
+"normal": "sword/blacktongue",
+"uber": "sword/blacktongue",
+"ultra": "sword/blacktongue"
+},
+"blade_of_ali_baba": {
+"normal": "sword/falchion",
+"uber": "sword/falchion",
+"ultra": "sword/falchion"
+},
+"bladebone": {
+"normal": "axe/double_axe",
+"uber": "axe/double_axe",
+"ultra": "axe/double_axe"
+},
+"bladebuckle": {
+"normal": "belt/girdle_h",
+"uber": "belt/girdle_h",
+"ultra": "belt/girdle_h"
+},
+"blastbark": {
+"normal": "bow/long_war_bow",
+"uber": "bow/long_war_bow",
+"ultra": "bow/long_war_bow"
+},
+"blinkbats_form": {
+"normal": "armor/leather_armor",
+"uber": "armor/leather_armor",
+"ultra": "armor/leather_armor"
+},
+"blood_crescent": {
+"normal": "sword/blood_crescent",
+"uber": "sword/blood_crescent",
+"ultra": "sword/blood_crescent"
+},
+"bloodfist": {
+"normal": "glove/heavy_gloves",
+"uber": "glove/heavy_gloves",
+"ultra": "glove/heavy_gloves"
+},
+"bloodletter": {
+"normal": "sword/short_sword",
+"uber": "sword/short_sword",
+"ultra": "sword/short_sword"
+},
+"bloodmoon": {
+"normal": "sword/hexfire",
+"uber": "sword/hexfire",
+"ultra": "sword/hexfire"
+},
+"bloodpact_shard": {
+"normal": "knife/dirk",
+"uber": "knife/dirk",
+"ultra": "knife/dirk"
+},
+"bloodravens_charge": {
+"normal": "bow/hellclap",
+"uber": "bow/hellclap",
+"ultra": "bow/hellclap"
+},
+"bloodrise": {
+"normal": "mace/bloodrise",
+"uber": "mace/bloodrise",
+"ultra": "mace/bloodrise"
+},
+"bloodthief": {
+"normal": "spear/brandistock",
+"uber": "spear/soulfeast_tine",
+"ultra": "spear/brandistock"
+},
+"bloodtree_stump": {
+"normal": "hammer/maul",
+"uber": "hammer/maul",
+"ultra": "hammer/maul"
+},
+"bone_break": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"boneflame": {
+"normal": "voodoo_head/gargoyle_head",
+"uber": "voodoo_head/gargoyle_head",
+"ultra": "voodoo_head/gargoyle_head"
+},
+"boneflesh": {
+"normal": "armor/plate_mail",
+"uber": "armor/plate_mail",
+"ultra": "armor/plate_mail"
+},
+"bonehew": {
+"normal": "polearm/bardiche",
+"uber": "polearm/bardiche",
+"ultra": "polearm/bardiche"
+},
+"boneshade": {
+"normal": "wand/gravenspine",
+"uber": "wand/gravenspine",
+"ultra": "wand/gravenspine"
+},
+"boneslayer_blade": {
+"normal": "axe/brainhew",
+"uber": "axe/brainhew",
+"ultra": "axe/brainhew"
+},
+"bonesob": {
+"normal": "hammer/bonesob",
+"uber": "hammer/bonesob",
+"ultra": "hammer/bonesob"
+},
+"brainhew": {
+"normal": "axe/brainhew",
+"uber": "axe/brainhew",
+"ultra": "axe/brainhew"
+},
+"bul_kathos_wedding_band": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"buriza_do_kyanon": {
+"normal": "bow/hellcast",
+"uber": "bow/hellcast",
+"ultra": "bow/hellcast"
+},
+"butchers_pupil": {
+"normal": "axe/deathspade",
+"uber": "axe/deathspade",
+"ultra": "axe/deathspade"
+},
+"bverrit_keep": {
+"normal": "shield/bverrit_keep",
+"uber": "shield/bverrit_keep",
+"ultra": "shield/bverrit_keep"
+},
+"carin_shard": {
+"normal": "wand/yew_wand",
+"uber": "wand/yew_wand",
+"ultra": "wand/yew_wand"
+},
+"carrion_wind": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"cerebus": {
+"normal": "pelt/wolf_head",
+"uber": "pelt/wolf_head",
+"ultra": "pelt/wolf_head"
+},
+"chance_guards": {
+"normal": "glove/bracers_m",
+"uber": "glove/bracers_m",
+"ultra": "glove/bracers_m"
+},
+"chromatic_ire": {
+"normal": "staff/lazarus_spire",
+"uber": "staff/lazarus_spire",
+"ultra": "staff/lazarus_spire"
+},
+"cliffkiller": {
+"normal": "bow/long_battle_bow",
+"uber": "bow/long_battle_bow",
+"ultra": "bow/long_battle_bow"
+},
+"cloudcrack": {
+"normal": "sword/blacktongue",
+"uber": "sword/blacktongue",
+"ultra": "sword/blacktongue"
+},
+"coif_of_glory": {
+"normal": "helmet/coif_of_glory",
+"uber": "helmet/coif_of_glory",
+"ultra": "helmet/coif_of_glory"
+},
+"cold_rupture": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"coldkill": {
+"normal": "axe/the_gnasher",
+"uber": "axe/the_gnasher",
+"ultra": "axe/the_gnasher"
+},
+"coldsteel_eye": {
+"normal": "sword/blood_crescent",
+"uber": "sword/blood_crescent",
+"ultra": "sword/blood_crescent"
+},
+"corpsemourn": {
+"normal": "armor/corpsemourn",
+"uber": "armor/corpsemourn",
+"ultra": "armor/corpsemourn"
+},
+"crack_of_the_heavens": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"crainte_vomir": {
+"normal": "sword/shadowfang",
+"uber": "sword/shadowfang",
+"ultra": "sword/shadowfang"
+},
+"cranebeak": {
+"normal": "axe/mindrend",
+"uber": "axe/mindrend",
+"ultra": "axe/mindrend"
+},
+"crescent_moon": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"crow_caw": {
+"normal": "armor/scale_mail",
+"uber": "armor/scale_mail",
+"ultra": "armor/scale_mail"
+},
+"crown_of_ages": {
+"normal": "helmet/crown",
+"uber": "helmet/crown_of_thieves",
+"ultra": "helmet/crown"
+},
+"crown_of_thieves": {
+"normal": "helmet/crown_of_thieves",
+"uber": "helmet/crown_of_thieves",
+"ultra": "helmet/crown_of_thieves"
+},
+"crushflange": {
+"normal": "mace/mace",
+"uber": "mace/mace",
+"ultra": "mace/mace"
+},
+"culwens_point": {
+"normal": "sword/war_sword",
+"uber": "sword/war_sword",
+"ultra": "sword/war_sword"
+},
+"cutthroat_1": {
+"normal": "h2h/claws",
+"uber": "h2h/claws",
+"ultra": "h2h/claws"
+},
+"dark_clan_crusher": {
+"normal": "club/felloak",
+"uber": "club/felloak",
+"ultra": "club/felloak"
+},
+"darkforge_spawn": {
+"normal": "voodoo_head/demon_head",
+"uber": "voodoo_head/demon_head",
+"ultra": "voodoo_head/demon_head"
+},
+"darkglow": {
+"normal": "armor/ring_mail",
+"uber": "armor/ring_mail",
+"ultra": "armor/ring_mail"
+},
+"darksight_helm": {
+"normal": "helmet/duskdeep",
+"uber": "helmet/duskdeep",
+"ultra": "helmet/duskdeep"
+},
+"deathbit": {
+"normal": "knife/throwing_knife",
+"uber": "knife/throwing_knife",
+"ultra": "knife/throwing_knife"
+},
+"deathcleaver": {
+"normal": "axe/war_axe",
+"uber": "axe/war_axe",
+"ultra": "axe/war_axe"
+},
+"deathspade": {
+"normal": "axe/deathspade",
+"uber": "axe/deathspade",
+"ultra": "axe/deathspade"
+},
+"deathss_web": {
+"normal": "wand/grim_wand",
+"uber": "wand/blackhand_key",
+"ultra": "wand/grim_wand"
+},
+"defenders_bile": {
+"normal": "body_part/fragment_poison",
+"uber": "body_part/fragment_poison",
+"ultra": "body_part/fragment_poison"
+},
+"defenders_fire": {
+"normal": "body_part/fragment_fire",
+"uber": "body_part/fragment_fire",
+"ultra": "body_part/fragment_fire"
+},
+"demon_machine": {
+"normal": "bow/doomspittle",
+"uber": "bow/doomspittle",
+"ultra": "bow/doomspittle"
+},
+"demonhorns_edge": {
+"normal": "helmet/horned_helm",
+"uber": "helmet/horned_helm",
+"ultra": "helmet/horned_helm"
+},
+"demonlimb": {
+"normal": "club/stoutnail",
+"uber": "club/stoutnail",
+"ultra": "club/stoutnail"
+},
+"demons_arch": {
+"normal": "javelin/short_spear",
+"uber": "javelin/short_spear",
+"ultra": "javelin/short_spear"
+},
+"dimoaks_hew": {
+"normal": "polearm/bardiche",
+"uber": "polearm/bardiche",
+"ultra": "polearm/bardiche"
+},
+"djinnslayer": {
+"normal": "sword/blood_crescent",
+"uber": "sword/blood_crescent",
+"ultra": "sword/blood_crescent"
+},
+"doombringer": {
+"normal": "sword/blacktongue",
+"uber": "sword/blacktongue",
+"ultra": "sword/blacktongue"
+},
+"doomspittle": {
+"normal": "bow/doomspittle",
+"uber": "bow/doomspittle",
+"ultra": "bow/doomspittle"
+},
+"draculs_grasp": {
+"normal": "glove/heavy_gloves",
+"uber": "glove/heavy_gloves",
+"ultra": "glove/heavy_gloves"
+},
+"dragonscale": {
+"normal": "shield/aerin_shield",
+"uber": "shield/aerin_shield",
+"ultra": "shield/aerin_shield"
+},
+"dreadfang": {
+"normal": "sword/two_handed_sword",
+"uber": "sword/two_handed_sword",
+"ultra": "sword/two_handed_sword"
+},
+"duriels_shell": {
+"normal": "armor/breast_plate",
+"uber": "armor/breast_plate",
+"ultra": "armor/breast_plate"
+},
+"duskdeep": {
+"normal": "helmet/duskdeep",
+"uber": "helmet/duskdeep",
+"ultra": "helmet/duskdeep"
+},
+"dwarf_star": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"eaglehorn": {
+"normal": "bow/long_battle_bow",
+"uber": "bow/long_battle_bow",
+"ultra": "bow/long_battle_bow"
+},
+"earthshaker": {
+"normal": "hammer/war_hammer",
+"uber": "hammer/war_hammer",
+"ultra": "hammer/war_hammer"
+},
+"earthshifter": {
+"normal": "hammer/great_maul",
+"uber": "hammer/the_gavel_of_pain",
+"ultra": "hammer/great_maul"
+},
+"endlesshail": {
+"normal": "bow/piercerib",
+"uber": "bow/piercerib",
+"ultra": "bow/piercerib"
+},
+"entropy_locket": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"eschutas_temper": {
+"normal": "orb/sacred_globe",
+"uber": "orb/sacred_globe",
+"ultra": "orb/sacred_globe"
+},
+"ethereal_edge": {
+"normal": "axe/broad_axe",
+"uber": "axe/broad_axe",
+"ultra": "axe/broad_axe"
+},
+"executioners_justice": {
+"normal": "axe/giant_axe",
+"uber": "axe/the_minataur",
+"ultra": "axe/giant_axe"
+},
+"fathom": {
+"normal": "orb/dragon_stone",
+"uber": "orb/dragon_stone",
+"ultra": "orb/dragon_stone"
+},
+"fechmars_axe": {
+"normal": "axe/large_axe",
+"uber": "axe/large_axe",
+"ultra": "axe/large_axe"
+},
+"felloak": {
+"normal": "club/felloak",
+"uber": "club/felloak",
+"ultra": "club/felloak"
+},
+"firelizards_talons": {
+"normal": "h2h/claws",
+"uber": "h2h/claws",
+"ultra": "h2h/claws"
+},
+"flame_rift": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"flamebellow": {
+"normal": "sword/kinemils_awl",
+"uber": "sword/kinemils_awl",
+"ultra": "sword/kinemils_awl"
+},
+"fleshrender": {
+"normal": "club/stoutnail",
+"uber": "club/stoutnail",
+"ultra": "club/stoutnail"
+},
+"fleshripper": {
+"normal": "knife/the_jade_tan_do",
+"uber": "knife/the_jade_tan_do",
+"ultra": "knife/the_jade_tan_do"
+},
+"frostburn": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"frostwind": {
+"normal": "sword/hellplague",
+"uber": "sword/hellplague",
+"ultra": "sword/hellplague"
+},
+"gargoyles_bite": {
+"normal": "javelin/throwing_spear",
+"uber": "javelin/throwing_spear",
+"ultra": "javelin/throwing_spear"
+},
+"gheeds_fortune": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"gheeds_wager": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"ghostflame": {
+"normal": "knife/blade",
+"uber": "knife/stormspike",
+"ultra": "knife/blade"
+},
+"ghoulhide": {
+"normal": "glove/bracers_m",
+"uber": "glove/bracers_m",
+"ultra": "glove/bracers_m"
+},
+"giantskull": {
+"normal": "helmet/bone_helm",
+"uber": "helmet/bone_helm",
+"ultra": "helmet/bone_helm"
+},
+"gimmershred": {
+"normal": "axe/throwing_axe",
+"uber": "axe/throwing_axe",
+"ultra": "axe/throwing_axe"
+},
+"ginthers_rift": {
+"normal": "sword/ginthers_rift",
+"uber": "sword/ginthers_rift",
+"ultra": "sword/ginthers_rift"
+},
+"gleamscythe": {
+"normal": "sword/gleamscythe",
+"uber": "sword/gleamscythe",
+"ultra": "sword/gleamscythe"
+},
+"gloomstrap": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"goblin_toe": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"godstrike_arch": {
+"normal": "bow/long_war_bow",
+"uber": "bow/long_war_bow",
+"ultra": "bow/long_war_bow"
+},
+"goldskin": {
+"normal": "armor/goldskin",
+"uber": "armor/goldskin",
+"ultra": "armor/goldskin"
+},
+"goldwrap": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"gorefoot": {
+"normal": "boot/heavy_boots",
+"uber": "boot/heavy_boots",
+"ultra": "boot/heavy_boots"
+},
+"gorerider": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"goreshovel": {
+"normal": "axe/broad_axe",
+"uber": "axe/broad_axe",
+"ultra": "axe/broad_axe"
+},
+"gravenspine": {
+"normal": "wand/gravenspine",
+"uber": "wand/gravenspine",
+"ultra": "wand/gravenspine"
+},
+"gravepalm": {
+"normal": "glove/heavy_gloves",
+"uber": "glove/heavy_gloves",
+"ultra": "glove/heavy_gloves"
+},
+"greyform": {
+"normal": "armor/quilted_armor",
+"uber": "armor/quilted_armor",
+"ultra": "armor/quilted_armor"
+},
+"griffons_eye": {
+"normal": "circlet/diadem",
+"uber": "circlet/tiara",
+"ultra": "circlet/diadem"
+},
+"grims_burning_dead": {
+"normal": "polearm/war_scythe",
+"uber": "polearm/war_scythe",
+"ultra": "polearm/war_scythe"
+},
+"griswolds_edge": {
+"normal": "sword/griswolds_edge",
+"uber": "sword/griswolds_edge",
+"ultra": "sword/griswolds_edge"
+},
+"guardian_angel": {
+"normal": "armor/plate_mail",
+"uber": "armor/plate_mail",
+"ultra": "armor/plate_mail"
+},
+"guardian_naga": {
+"normal": "axe/war_axe",
+"uber": "axe/war_axe",
+"ultra": "axe/war_axe"
+},
+"guardians_light": {
+"normal": "body_part/fragment_magic",
+"uber": "body_part/fragment_magic",
+"ultra": "body_part/fragment_magic"
+},
+"guardians_thunder": {
+"normal": "body_part/fragment_lightning",
+"uber": "body_part/fragment_lightning",
+"ultra": "body_part/fragment_lightning"
+},
+"gull": {
+"normal": "knife/dagger",
+"uber": "knife/dagger",
+"ultra": "knife/dagger"
+},
+"gutsiphon": {
+"normal": "bow/doomspittle",
+"uber": "bow/doomspittle",
+"ultra": "bow/doomspittle"
+},
+"halaberds_reign": {
+"normal": "helmet/assault_helmet",
+"uber": "helmet/assault_helmet",
+"ultra": "helmet/assault_helmet"
+},
+"hand_of_blessed_light": {
+"normal": "scepter/war_scepter",
+"uber": "scepter/war_scepter",
+"ultra": "scepter/war_scepter"
+},
+"harlequin_crest": {
+"normal": "helmet/cap_hat",
+"uber": "helmet/cap_hat",
+"ultra": "helmet/cap_hat"
+},
+"hawkmail": {
+"normal": "armor/scale_mail",
+"uber": "armor/scale_mail",
+"ultra": "armor/scale_mail"
+},
+"headhunters_glory": {
+"normal": "shield/wall_of_the_eyeless",
+"uber": "shield/wall_of_the_eyeless",
+"ultra": "shield/wall_of_the_eyeless"
+},
+"headstriker": {
+"normal": "sword/broad_sword",
+"uber": "sword/broad_sword",
+"ultra": "sword/broad_sword"
+},
+"heart_carver": {
+"normal": "knife/dirk",
+"uber": "knife/dirk",
+"ultra": "knife/dirk"
+},
+"heavenly_garb": {
+"normal": "armor/light_plate",
+"uber": "armor/light_plate",
+"ultra": "armor/light_plate"
+},
+"heavens_light": {
+"normal": "scepter/scepter",
+"uber": "scepter/scepter",
+"ultra": "scepter/scepter"
+},
+"hell_forge_hammer": {
+"normal": "hammer/hellforge_hammer",
+"uber": "hammer/hellforge_hammer",
+"ultra": "hammer/hellforge_hammer"
+},
+"hellcast": {
+"normal": "bow/hellcast",
+"uber": "bow/hellcast",
+"ultra": "bow/hellcast"
+},
+"hellclap": {
+"normal": "bow/hellclap",
+"uber": "bow/hellclap",
+"ultra": "bow/hellclap"
+},
+"hellfire_torch": {
+"normal": "torch/torch",
+"uber": "torch/torch",
+"ultra": "torch/torch"
+},
+"hellmouth": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"hellplague": {
+"normal": "sword/hellplague",
+"uber": "sword/hellplague",
+"ultra": "sword/hellplague"
+},
+"hellrack": {
+"normal": "bow/hellcast",
+"uber": "bow/hellcast",
+"ultra": "bow/hellcast"
+},
+"hellslayer": {
+"normal": "axe/the_chieftan",
+"uber": "axe/the_chieftan",
+"ultra": "axe/the_chieftan"
+},
+"herald_of_zakarum": {
+"normal": "shield/aerin_shield",
+"uber": "shield/aerin_shield",
+"ultra": "shield/aerin_shield"
+},
+"hexfire": {
+"normal": "sword/hexfire",
+"uber": "sword/hexfire",
+"ultra": "sword/hexfire"
+},
+"highlords_wrath": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"homunculus": {
+"normal": "voodoo_head/demon_head",
+"uber": "voodoo_head/demon_head",
+"ultra": "voodoo_head/demon_head"
+},
+"hone_sundan": {
+"normal": "spear/spetum",
+"uber": "spear/spetum",
+"ultra": "spear/spetum"
+},
+"horadric_staff": {
+"normal": "staff/horadric_staff",
+"uber": "staff/horadric_staff",
+"ultra": "staff/horadric_staff"
+},
+"horazons_secrets": {
+"normal": "grimoires/ars_torbaalos",
+"uber": "grimoires/ars_torbaalos",
+"ultra": "grimoires/ars_torbaalos"
+},
+"horizons_tornado": {
+"normal": "mace/flail",
+"uber": "mace/flail",
+"ultra": "mace/flail"
+},
+"hotspur": {
+"normal": "boot/leather_boots",
+"uber": "boot/leather_boots",
+"ultra": "boot/leather_boots"
+},
+"howltusk": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"husoldal_evo": {
+"normal": "polearm/halberd",
+"uber": "polearm/halberd",
+"ultra": "polearm/halberd"
+},
+"iceblink": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"ichorsting": {
+"normal": "bow/ichorsting",
+"uber": "bow/ichorsting",
+"ultra": "bow/ichorsting"
+},
+"infernostride": {
+"normal": "boot/leather_boots",
+"uber": "boot/leather_boots",
+"ultra": "boot/leather_boots"
+},
+"irices_shard": {
+"normal": "knife/blade",
+"uber": "knife/stormspike",
+"ultra": "knife/blade"
+},
+"ironpelt": {
+"normal": "armor/ironpelt",
+"uber": "armor/ironpelt",
+"ultra": "armor/ironpelt"
+},
+"ironstone": {
+"normal": "hammer/war_hammer",
+"uber": "hammer/war_hammer",
+"ultra": "hammer/war_hammer"
+},
+"ironward": {
+"normal": "scepter/war_scepter",
+"uber": "scepter/war_scepter",
+"ultra": "scepter/war_scepter"
+},
+"iros_torch": {
+"normal": "wand/iros_torch",
+"uber": "wand/iros_torch",
+"ultra": "wand/iros_torch"
+},
+"islestrike": {
+"normal": "axe/double_axe",
+"uber": "axe/double_axe",
+"ultra": "axe/double_axe"
+},
+"jadetalon": {
+"normal": "h2h/katar",
+"uber": "h2h/katar",
+"ultra": "h2h/katar"
+},
+"jalals_mane": {
+"normal": "pelt/spirit_mask",
+"uber": "pelt/spirit_mask",
+"ultra": "pelt/spirit_mask"
+},
+"kelpie_snare": {
+"normal": "spear/razortine",
+"uber": "spear/razortine",
+"ultra": "spear/razortine"
+},
+"kerkes_sanctuary": {
+"normal": "shield/bverrit_keep",
+"uber": "shield/bverrit_keep",
+"ultra": "shield/bverrit_keep"
+},
+"khalim_flail": {
+"normal": "mace/khalim_flail",
+"uber": "mace/khalim_flail",
+"ultra": "mace/khalim_flail"
+},
+"kinemils_awl": {
+"normal": "sword/kinemils_awl",
+"uber": "sword/kinemils_awl",
+"ultra": "sword/kinemils_awl"
+},
+"kiras_guardian": {
+"normal": "circlet/tiara",
+"uber": "circlet/tiara",
+"ultra": "circlet/diadem"
+},
+"knell_striker": {
+"normal": "scepter/scepter",
+"uber": "scepter/scepter",
+"ultra": "scepter/scepter"
+},
+"krintizs_skewer": {
+"normal": "sword/krintizs_skewer",
+"uber": "sword/krintizs_skewer",
+"ultra": "sword/krintizs_skewer"
+},
+"kuko_shakaku": {
+"normal": "bow/kuko_shakaku",
+"uber": "bow/kuko_shakaku",
+"ultra": "bow/kuko_shakaku"
+},
+"lacerator": {
+"normal": "axe/balanced_axe",
+"uber": "axe/balanced_axe",
+"ultra": "axe/balanced_axe"
+},
+"lance_guard": {
+"normal": "shield/lance_guard",
+"uber": "shield/lance_guard",
+"ultra": "shield/lance_guard"
+},
+"lance_of_yaggai": {
+"normal": "spear/spetum",
+"uber": "spear/spetum",
+"ultra": "spear/spetum"
+},
+"langer_briser": {
+"normal": "bow/langer_briser",
+"uber": "bow/langer_briser",
+"ultra": "bow/langer_briser"
+},
+"lavagout": {
+"normal": "glove/light_gauntlets",
+"uber": "glove/light_gauntlets",
+"ultra": "glove/light_gauntlets"
+},
+"lazarus_spire": {
+"normal": "staff/lazarus_spire",
+"uber": "staff/lazarus_spire",
+"ultra": "staff/lazarus_spire"
+},
+"leadcrow": {
+"normal": "bow/leadcrow",
+"uber": "bow/leadcrow",
+"ultra": "bow/leadcrow"
+},
+"lenyms_cord": {
+"normal": "belt/sash_l",
+"uber": "belt/sash_l",
+"ultra": "belt/sash_l"
+},
+"leviathan": {
+"normal": "armor/field_plate",
+"uber": "armor/field_plate",
+"ultra": "armor/field_plate"
+},
+"lidless_wall": {
+"normal": "shield/lidless_wall",
+"uber": "shield/lidless_wall",
+"ultra": "shield/lidless_wall"
+},
+"lightsabre": {
+"normal": "sword/lightsabre",
+"uber": "sword/lightsabre",
+"ultra": "sword/lightsabre"
+},
+"lycanders_aim": {
+"normal": "bow/reflex_bow",
+"uber": "bow/reflex_bow",
+"ultra": "bow/reflex_bow"
+},
+"lycanders_flank": {
+"normal": "spear/maiden_pike",
+"uber": "spear/maiden_pike",
+"ultra": "spear/maiden_pike"
+},
+"maelstromwrath": {
+"normal": "wand/yew_wand",
+"uber": "wand/yew_wand",
+"ultra": "wand/yew_wand"
+},
+"magefist": {
+"normal": "glove/light_gauntlets",
+"uber": "glove/light_gauntlets",
+"ultra": "glove/light_gauntlets"
+},
+"magewrath": {
+"normal": "bow/hellclap",
+"uber": "bow/hellclap",
+"ultra": "bow/hellclap"
+},
+"manald_heal": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"mang_songs_lesson": {
+"normal": "staff/skullcollector",
+"uber": "staff/skullcollector",
+"ultra": "staff/skullcollector"
+},
+"maras_kaleidoscope": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"marrowwalk": {
+"normal": "boot/chain_boots",
+"uber": "boot/chain_boots",
+"ultra": "boot/chain_boots"
+},
+"measured_wrath": {
+"normal": "grimoires/measured_wrath",
+"uber": "grimoires/measured_wrath",
+"ultra": "grimoires/measured_wrath"
+},
+"medusas_gaze": {
+"normal": "shield/bverrit_keep",
+"uber": "shield/bverrit_keep",
+"ultra": "shield/bverrit_keep"
+},
+"messerschmidts_reaver": {
+"normal": "axe/brainhew",
+"uber": "axe/brainhew",
+"ultra": "axe/brainhew"
+},
+"metalgrid": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"mindrend": {
+"normal": "axe/mindrend",
+"uber": "axe/mindrend",
+"ultra": "axe/mindrend"
+},
+"moonfall": {
+"normal": "mace/bloodrise",
+"uber": "mace/bloodrise",
+"ultra": "mace/bloodrise"
+},
+"mosers_blessed_circle": {
+"normal": "shield/mosers_blessed_circle",
+"uber": "shield/mosers_blessed_circle",
+"ultra": "shield/mosers_blessed_circle"
+},
+"nagelring": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"natures_peace": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"nightsmoke": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"nightwings_veil": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"nokozan_relic": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"nords_tenderizer": {
+"normal": "club/felloak",
+"uber": "club/felloak",
+"ultra": "club/felloak"
+},
+"nosferatus_coil": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"ondals_wisdom": {
+"normal": "staff/lazarus_spire",
+"uber": "staff/lazarus_spire",
+"ultra": "staff/lazarus_spire"
+},
+"opalvein": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"ormus_robes": {
+"normal": "armor/quilted_armor",
+"uber": "armor/quilted_armor",
+"ultra": "armor/quilted_armor"
+},
+"peasent_crown": {
+"normal": "helmet/cap_hat",
+"uber": "helmet/cap_hat",
+"ultra": "helmet/cap_hat"
+},
+"pelta_lunata": {
+"normal": "shield/pelta_lunata",
+"uber": "shield/pelta_lunata",
+"ultra": "shield/pelta_lunata"
+},
+"piercerib": {
+"normal": "bow/piercerib",
+"uber": "bow/piercerib",
+"ultra": "bow/piercerib"
+},
+"pierre_tombale_couant": {
+"normal": "polearm/poleaxe",
+"uber": "polearm/poleaxe",
+"ultra": "polearm/poleaxe"
+},
+"plague_bearer": {
+"normal": "sword/plague_bearer",
+"uber": "sword/plague_bearer",
+"ultra": "sword/plague_bearer"
+},
+"pluckeye": {
+"normal": "bow/short_bow",
+"uber": "bow/short_bow",
+"ultra": "bow/short_bow"
+},
+"pompes_wrath": {
+"normal": "axe/mindrend",
+"uber": "axe/mindrend",
+"ultra": "axe/mindrend"
+},
+"protectors_frost": {
+"normal": "body_part/fragment_cold",
+"uber": "body_part/fragment_cold",
+"ultra": "body_part/fragment_cold"
+},
+"protectors_stone": {
+"normal": "body_part/fragment_physical",
+"uber": "body_part/fragment_physical",
+"ultra": "body_part/fragment_physical"
+},
+"pullspite": {
+"normal": "bow/pullspite",
+"uber": "bow/pullspite",
+"ultra": "bow/pullspite"
+},
+"pus_spiter": {
+"normal": "bow/pus_spiter",
+"uber": "bow/pus_spiter",
+"ultra": "bow/pus_spiter"
+},
+"que_hegans_wisdon": {
+"normal": "armor/light_plate",
+"uber": "armor/light_plate",
+"ultra": "armor/light_plate"
+},
+"radimants_sphere": {
+"normal": "shield/the_ward",
+"uber": "shield/the_ward",
+"ultra": "shield/the_ward"
+},
+"rainbow_facet": {
+"normal": "gem/perfect_diamond",
+"uber": "gem/perfect_diamond",
+"ultra": "gem/perfect_diamond"
+},
+"rakescar": {
+"normal": "axe/war_axe",
+"uber": "axe/war_axe",
+"ultra": "axe/war_axe"
+},
+"rattlecage": {
+"normal": "armor/gothic_plate",
+"uber": "armor/gothic_plate",
+"ultra": "armor/gothic_plate"
+},
+"raven_frost": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"ravenlore": {
+"normal": "pelt/falcon_mask",
+"uber": "pelt/falcon_mask",
+"ultra": "pelt/falcon_mask"
+},
+"razoredge": {
+"normal": "axe/the_gnasher",
+"uber": "axe/the_gnasher",
+"ultra": "axe/the_gnasher"
+},
+"razorswitch": {
+"normal": "staff/short_staff",
+"uber": "staff/short_staff",
+"ultra": "staff/short_staff"
+},
+"razortail": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"razortine": {
+"normal": "spear/razortine",
+"uber": "spear/razortine",
+"ultra": "spear/razortine"
+},
+"ribcracker": {
+"normal": "staff/long_staff",
+"uber": "staff/long_staff",
+"ultra": "staff/long_staff"
+},
+"rimeraven": {
+"normal": "bow/long_bow",
+"uber": "bow/kuko_shakaku",
+"ultra": "bow/long_bow"
+},
+"riphook": {
+"normal": "bow/hunters_bow",
+"uber": "bow/hunters_bow",
+"ultra": "bow/hunters_bow"
+},
+"ripsaw": {
+"normal": "sword/flamberge",
+"uber": "sword/todesfaelle_flamme",
+"ultra": "sword/flamberge"
+},
+"rixots_keen": {
+"normal": "sword/short_sword",
+"uber": "sword/short_sword",
+"ultra": "sword/short_sword"
+},
+"rockfleece": {
+"normal": "armor/field_plate",
+"uber": "armor/field_plate",
+"ultra": "armor/field_plate"
+},
+"rockstopper": {
+"normal": "helmet/rockstopper",
+"uber": "helmet/rockstopper",
+"ultra": "helmet/rockstopper"
+},
+"rotting_fissure": {
+"normal": "charm/charm_large",
+"uber": "charm/charm_large",
+"ultra": "charm/charm_large"
+},
+"runemaster": {
+"normal": "axe/double_axe",
+"uber": "axe/double_axe",
+"ultra": "axe/double_axe"
+},
+"rusthandle": {
+"normal": "scepter/grand_scepter",
+"uber": "scepter/grand_scepter",
+"ultra": "scepter/grand_scepter"
+},
+"sandstorm_trek": {
+"normal": "boot/heavy_boots",
+"uber": "boot/heavy_boots",
+"ultra": "boot/heavy_boots"
+},
+"saracens_chance": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"schaefers_hammer": {
+"normal": "hammer/war_hammer",
+"uber": "hammer/war_hammer",
+"ultra": "hammer/war_hammer"
+},
+"seraphs_hymn": {
+"normal": "amulet/amulet2",
+"uber": "amulet/amulet2",
+"ultra": "amulet/amulet2"
+},
+"serpent_lord": {
+"normal": "staff/long_staff",
+"uber": "staff/long_staff",
+"ultra": "staff/long_staff"
+},
+"shadowdancer": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"shadowfang": {
+"normal": "sword/shadowfang",
+"uber": "sword/shadowfang",
+"ultra": "sword/shadowfang"
+},
+"shadowkiller": {
+"normal": "h2h/shadowkiller",
+"uber": "h2h/shadowkiller",
+"ultra": "h2h/shadowkiller"
+},
+"shaftstop": {
+"normal": "armor/chain_mail",
+"uber": "armor/chain_mail",
+"ultra": "armor/chain_mail"
+},
+"silkweave": {
+"normal": "boot/chain_boots",
+"uber": "boot/chain_boots",
+"ultra": "boot/chain_boots"
+},
+"skin_of_the_flayerd_one": {
+"normal": "armor/hard_leather_armor",
+"uber": "armor/hard_leather_armor",
+"ultra": "armor/hard_leather_armor"
+},
+"skin_of_the_vipermagi": {
+"normal": "armor/leather_armor",
+"uber": "armor/leather_armor",
+"ultra": "armor/leather_armor"
+},
+"skullcollector": {
+"normal": "staff/skullcollector",
+"uber": "staff/skullcollector",
+"ultra": "staff/skullcollector"
+},
+"skullders_ire": {
+"normal": "armor/splint_mail",
+"uber": "armor/splint_mail",
+"ultra": "armor/splint_mail"
+},
+"skystrike": {
+"normal": "bow/short_bow",
+"uber": "bow/short_bow",
+"ultra": "bow/short_bow"
+},
+"sling": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"snakecord": {
+"normal": "belt/light_belt",
+"uber": "belt/light_belt",
+"ultra": "belt/light_belt"
+},
+"snowclash": {
+"normal": "belt/heavy_belt",
+"uber": "belt/heavy_belt",
+"ultra": "belt/heavy_belt"
+},
+"soul_harvest": {
+"normal": "polearm/soul_harvest",
+"uber": "polearm/soul_harvest",
+"ultra": "polearm/soul_harvest"
+},
+"souldrain": {
+"normal": "glove/bracers_m",
+"uber": "glove/bracers_m",
+"ultra": "glove/bracers_m"
+},
+"soulfeast_tine": {
+"normal": "spear/soulfeast_tine",
+"uber": "spear/soulfeast_tine",
+"ultra": "spear/soulfeast_tine"
+},
+"soulflay": {
+"normal": "sword/claymore",
+"uber": "sword/claymore",
+"ultra": "sword/claymore"
+},
+"sparking_mail": {
+"normal": "armor/chain_mail",
+"uber": "armor/chain_mail",
+"ultra": "armor/chain_mail"
+},
+"spellsteel": {
+"normal": "axe/broad_axe",
+"uber": "axe/broad_axe",
+"ultra": "axe/broad_axe"
+},
+"spike_thorn": {
+"normal": "shield/swordback_hold",
+"uber": "shield/swordback_hold",
+"ultra": "shield/swordback_hold"
+},
+"spineripper": {
+"normal": "knife/dagger",
+"uber": "knife/dagger",
+"ultra": "knife/dagger"
+},
+"spire_of_honor": {
+"normal": "spear/pike",
+"uber": "spear/pike",
+"ultra": "spear/pike"
+},
+"spirit_ward": {
+"normal": "shield/the_ward",
+"uber": "shield/the_ward",
+"ultra": "shield/the_ward"
+},
+"spiritforge": {
+"normal": "armor/ring_mail",
+"uber": "armor/ring_mail",
+"ultra": "armor/ring_mail"
+},
+"spiritkeeper": {
+"normal": "pelt/antlers",
+"uber": "pelt/antlers",
+"ultra": "pelt/antlers"
+},
+"staff_of_kings": {
+"normal": "staff/staff_of_the_kings",
+"uber": "staff/staff_of_the_kings",
+"ultra": "staff/staff_of_the_kings"
+},
+"stealskull": {
+"normal": "helmet/coif_of_glory",
+"uber": "helmet/coif_of_glory",
+"ultra": "helmet/coif_of_glory"
+},
+"steel_carapice": {
+"normal": "armor/full_plate_mail",
+"uber": "armor/full_plate_mail",
+"ultra": "armor/full_plate_mail"
+},
+"steelclash": {
+"normal": "shield/steelclash",
+"uber": "shield/steelclash",
+"ultra": "shield/steelclash"
+},
+"steeldriver": {
+"normal": "hammer/great_maul",
+"uber": "hammer/great_maul",
+"ultra": "hammer/great_maul"
+},
+"steelgoad": {
+"normal": "polearm/voulge",
+"uber": "polearm/voulge",
+"ultra": "polearm/voulge"
+},
+"steelpillar": {
+"normal": "spear/pike",
+"uber": "spear/pike",
+"ultra": "spear/pike"
+},
+"steelrend": {
+"normal": "glove/gaunlets_h",
+"uber": "glove/gaunlets_h",
+"ultra": "glove/gaunlets_h"
+},
+"steelshade": {
+"normal": "helmet/coif_of_glory",
+"uber": "helmet/coif_of_glory",
+"ultra": "helmet/coif_of_glory"
+},
+"stone_crusher": {
+"normal": "hammer/war_hammer",
+"uber": "hammer/war_hammer",
+"ultra": "hammer/war_hammer"
+},
+"stoneraven": {
+"normal": "spear/maiden_spear",
+"uber": "spear/maiden_spear",
+"ultra": "spear/maiden_spear"
+},
+"stormchaser": {
+"normal": "shield/stormchaser",
+"uber": "shield/stormchaser",
+"ultra": "shield/stormchaser"
+},
+"stormeye": {
+"normal": "scepter/war_scepter",
+"uber": "scepter/war_scepter",
+"ultra": "scepter/war_scepter"
+},
+"stormguild": {
+"normal": "shield/stormguild",
+"uber": "shield/stormguild",
+"ultra": "shield/stormguild"
+},
+"stormlash": {
+"normal": "mace/flail",
+"uber": "mace/flail",
+"ultra": "mace/flail"
+},
+"stormrider": {
+"normal": "axe/stormrider",
+"uber": "axe/stormrider",
+"ultra": "axe/stormrider"
+},
+"stormshield": {
+"normal": "shield/steelclash",
+"uber": "shield/steelclash",
+"ultra": "shield/steelclash"
+},
+"stormspike": {
+"normal": "knife/stormspike",
+"uber": "knife/stormspike",
+"ultra": "knife/stormspike"
+},
+"stormspire": {
+"normal": "polearm/war_scythe",
+"uber": "polearm/war_scythe",
+"ultra": "polearm/war_scythe"
+},
+"stoutnail": {
+"normal": "club/stoutnail",
+"uber": "club/stoutnail",
+"ultra": "club/stoutnail"
+},
+"string_of_ears": {
+"normal": "belt/sash_l",
+"uber": "belt/sash_l",
+"ultra": "belt/sash_l"
+},
+"suicide_branch": {
+"normal": "wand/wand",
+"uber": "wand/wand",
+"ultra": "wand/wand"
+},
+"super_khalim_flail": {
+"normal": "mace/super_khalim_flail",
+"uber": "mace/super_khalim_flail",
+"ultra": "mace/super_khalim_flail"
+},
+"sureshrill_frost": {
+"normal": "mace/mace",
+"uber": "mace/mace",
+"ultra": "mace/mace"
+},
+"swordback_hold": {
+"normal": "shield/swordback_hold",
+"uber": "shield/swordback_hold",
+"ultra": "shield/swordback_hold"
+},
+"swordguard": {
+"normal": "sword/the_patriarch",
+"uber": "sword/the_patriarch",
+"ultra": "sword/the_patriarch"
+},
+"tarnhelm": {
+"normal": "helmet/skull_cap",
+"uber": "helmet/rockstopper",
+"ultra": "helmet/skull_cap"
+},
+"tearhaunch": {
+"normal": "boot/plate_boots",
+"uber": "boot/plate_boots",
+"ultra": "boot/plate_boots"
+},
+"templars_might": {
+"normal": "armor/victors_silk",
+"uber": "armor/victors_silk",
+"ultra": "armor/victors_silk"
+},
+"the_atlantian": {
+"normal": "sword/war_sword",
+"uber": "sword/war_sword",
+"ultra": "sword/war_sword"
+},
+"the_battlebranch": {
+"normal": "polearm/poleaxe",
+"uber": "polearm/poleaxe",
+"ultra": "polearm/poleaxe"
+},
+"the_cats_eye": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"the_centurion": {
+"normal": "armor/hard_leather_armor",
+"uber": "armor/hard_leather_armor",
+"ultra": "armor/hard_leather_armor"
+},
+"the_chieftan": {
+"normal": "axe/the_chieftan",
+"uber": "axe/the_chieftan",
+"ultra": "axe/the_chieftan"
+},
+"the_cranium_basher": {
+"normal": "hammer/great_maul",
+"uber": "hammer/the_gavel_of_pain",
+"ultra": "hammer/great_maul"
+},
+"the_diggler": {
+"normal": "knife/dirk",
+"uber": "knife/dirk",
+"ultra": "knife/dirk"
+},
+"the_dragon_chang": {
+"normal": "spear/spear",
+"uber": "spear/spear",
+"ultra": "spear/spear"
+},
+"the_eye_of_etlich": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"the_face_of_horror": {
+"normal": "helmet/mask",
+"uber": "helmet/mask",
+"ultra": "helmet/mask"
+},
+"the_fetid_sprinkler": {
+"normal": "scepter/grand_scepter",
+"uber": "scepter/grand_scepter",
+"ultra": "scepter/grand_scepter"
+},
+"the_gavel_of_pain": {
+"normal": "hammer/the_gavel_of_pain",
+"uber": "hammer/the_gavel_of_pain",
+"ultra": "hammer/the_gavel_of_pain"
+},
+"the_generals_tan_do_li_ga": {
+"normal": "mace/flail",
+"uber": "mace/flail",
+"ultra": "mace/flail"
+},
+"the_gladiators_bane": {
+"normal": "armor/studded_leather",
+"uber": "armor/ironpelt",
+"ultra": "armor/studded_leather"
+},
+"the_gnasher": {
+"normal": "axe/the_gnasher",
+"uber": "axe/the_gnasher",
+"ultra": "axe/the_gnasher"
+},
+"the_grandfather": {
+"normal": "sword/the_patriarch",
+"uber": "sword/the_patriarch",
+"ultra": "sword/the_patriarch"
+},
+"the_grim_reaper": {
+"normal": "polearm/war_scythe",
+"uber": "polearm/war_scythe",
+"ultra": "polearm/war_scythe"
+},
+"the_hand_of_broc": {
+"normal": "glove/gloves_l",
+"uber": "glove/gloves_l",
+"ultra": "glove/gloves_l"
+},
+"the_humongous": {
+"normal": "axe/giant_axe",
+"uber": "axe/the_minataur",
+"ultra": "axe/giant_axe"
+},
+"the_impaler": {
+"normal": "spear/spear",
+"uber": "spear/spear",
+"ultra": "spear/spear"
+},
+"the_iron_jang_bong": {
+"normal": "staff/war_staff",
+"uber": "staff/skullcollector",
+"ultra": "staff/war_staff"
+},
+"the_jade_tan_do": {
+"normal": "knife/the_jade_tan_do",
+"uber": "knife/the_jade_tan_do",
+"ultra": "knife/the_jade_tan_do"
+},
+"the_mahim_oak_curio": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"the_meat_scraper": {
+"normal": "polearm/bardiche",
+"uber": "polearm/bardiche",
+"ultra": "polearm/bardiche"
+},
+"the_minataur": {
+"normal": "axe/the_minataur",
+"uber": "axe/the_minataur",
+"ultra": "axe/the_minataur"
+},
+"the_oculus": {
+"normal": "orb/dragon_stone",
+"uber": "orb/dragon_stone",
+"ultra": "orb/dragon_stone"
+},
+"the_patriarch": {
+"normal": "sword/the_patriarch",
+"uber": "sword/the_patriarch",
+"ultra": "sword/the_patriarch"
+},
+"the_reapers_toll": {
+"normal": "polearm/scythe",
+"uber": "polearm/scythe",
+"ultra": "polearm/scythe"
+},
+"the_reedeemer": {
+"normal": "scepter/scepter",
+"uber": "scepter/scepter",
+"ultra": "scepter/scepter"
+},
+"the_rising_sun": {
+"normal": "amulet/amulet",
+"uber": "amulet/amulet",
+"ultra": "amulet/amulet"
+},
+"the_salamander": {
+"normal": "staff/battle_staff",
+"uber": "staff/battle_staff",
+"ultra": "staff/battle_staff"
+},
+"the_scalper": {
+"normal": "axe/throwing_axe",
+"uber": "axe/throwing_axe",
+"ultra": "axe/throwing_axe"
+},
+"the_spirit_shroud": {
+"normal": "armor/quilted_armor",
+"uber": "armor/quilted_armor",
+"ultra": "armor/quilted_armor"
+},
+"the_stone_of_jordan": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"the_tannr_gorerod": {
+"normal": "spear/pike",
+"uber": "spear/pike",
+"ultra": "spear/pike"
+},
+"the_vile_husk": {
+"normal": "sword/kinemils_awl",
+"uber": "sword/kinemils_awl",
+"ultra": "sword/kinemils_awl"
+},
+"the_ward": {
+"normal": "shield/the_ward",
+"uber": "shield/the_ward",
+"ultra": "shield/the_ward"
+},
+"thudergods_vigor": {
+"normal": "belt/girdle_h",
+"uber": "belt/girdle_h",
+"ultra": "belt/girdle_h"
+},
+"thunderstroke": {
+"normal": "javelin/maiden_javelin",
+"uber": "javelin/maiden_javelin",
+"ultra": "javelin/maiden_javelin"
+},
+"tiamats_rebuke": {
+"normal": "shield/steelclash",
+"uber": "shield/steelclash",
+"ultra": "shield/steelclash"
+},
+"titans_revenge": {
+"normal": "javelin/maiden_javelin",
+"uber": "javelin/maiden_javelin",
+"ultra": "javelin/maiden_javelin"
+},
+"todesfaelle_flamme": {
+"normal": "sword/todesfaelle_flamme",
+"uber": "sword/todesfaelle_flamme",
+"ultra": "sword/todesfaelle_flamme"
+},
+"tomb_reaver": {
+"normal": "polearm/poleaxe",
+"uber": "polearm/poleaxe",
+"ultra": "polearm/poleaxe"
+},
+"toothrow": {
+"normal": "armor/field_plate",
+"uber": "armor/field_plate",
+"ultra": "armor/field_plate"
+},
+"treads_of_cthon": {
+"normal": "boot/chain_boots",
+"uber": "boot/chain_boots",
+"ultra": "boot/chain_boots"
+},
+"twitchthroe": {
+"normal": "armor/studded_leather",
+"uber": "armor/ironpelt",
+"ultra": "armor/studded_leather"
+},
+"tyraels_might": {
+"normal": "armor/victors_silk",
+"uber": "armor/victors_silk",
+"ultra": "armor/victors_silk"
+},
+"umbral_disk": {
+"normal": "shield/umbral_disk",
+"uber": "shield/umbral_disk",
+"ultra": "shield/umbral_disk"
+},
+"umes_lament": {
+"normal": "wand/grim_wand",
+"uber": "wand/blackhand_key",
+"ultra": "wand/grim_wand"
+},
+"undead_crown": {
+"normal": "helmet/crown",
+"uber": "helmet/crown_of_thieves",
+"ultra": "helmet/crown"
+},
+"unique_warlock_helm": {
+"normal": "helmet/unique_warlock_helm",
+"uber": "helmet/unique_warlock_helm",
+"ultra": "helmet/unique_warlock_helm"
+},
+"valkiry_wing": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"vampiregaze": {
+"normal": "helmet/wormskull",
+"uber": "helmet/wormskull",
+"ultra": "helmet/wormskull"
+},
+"veil_of_steel": {
+"normal": "helmet/great_helm",
+"uber": "helmet/great_helm",
+"ultra": "helmet/great_helm"
+},
+"venom_grip": {
+"normal": "glove/gloves_l",
+"uber": "glove/gloves_l",
+"ultra": "glove/gloves_l"
+},
+"venomsward": {
+"normal": "armor/breast_plate",
+"uber": "armor/breast_plate",
+"ultra": "armor/breast_plate"
+},
+"verdugos_hearty_cord": {
+"normal": "belt/belt_m",
+"uber": "belt/belt_m",
+"ultra": "belt/belt_m"
+},
+"victors_silk": {
+"normal": "armor/victors_silk",
+"uber": "armor/victors_silk",
+"ultra": "armor/victors_silk"
+},
+"viperfork": {
+"normal": "spear/brandistock",
+"uber": "spear/soulfeast_tine",
+"ultra": "spear/brandistock"
+},
+"visceratuant": {
+"normal": "shield/pelta_lunata",
+"uber": "shield/pelta_lunata",
+"ultra": "shield/pelta_lunata"
+},
+"wall_of_the_eyeless": {
+"normal": "shield/wall_of_the_eyeless",
+"uber": "shield/wall_of_the_eyeless",
+"ultra": "shield/wall_of_the_eyeless"
+},
+"war_bonnet": {
+"normal": "helmet/war_bonnet",
+"uber": "helmet/war_bonnet",
+"ultra": "helmet/war_bonnet"
+},
+"warlords_trust": {
+"normal": "axe/large_axe",
+"uber": "axe/large_axe",
+"ultra": "axe/large_axe"
+},
+"warpspear": {
+"normal": "staff/battle_staff",
+"uber": "staff/battle_staff",
+"ultra": "staff/battle_staff"
+},
+"warshrike": {
+"normal": "knife/warshrike",
+"uber": "knife/warshrike",
+"ultra": "knife/warshrike"
+},
+"wartraveler": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"waterwalk": {
+"normal": "boot/heavy_boots",
+"uber": "boot/heavy_boots",
+"ultra": "boot/heavy_boots"
+},
+"whichwild_string": {
+"normal": "bow/whichwild_string",
+"uber": "bow/whichwild_string",
+"ultra": "bow/whichwild_string"
+},
+"widowmaker": {
+"normal": "bow/hellclap",
+"uber": "bow/hellclap",
+"ultra": "bow/hellclap"
+},
+"windforce": {
+"normal": "bow/long_war_bow",
+"uber": "bow/long_war_bow",
+"ultra": "bow/long_war_bow"
+},
+"windhammer": {
+"normal": "hammer/maul",
+"uber": "hammer/maul",
+"ultra": "hammer/maul"
+},
+"wisp": {
+"normal": "ring/ring",
+"uber": "ring/ring",
+"ultra": "ring/ring"
+},
+"witherstring": {
+"normal": "bow/hunters_bow",
+"uber": "bow/hunters_bow",
+"ultra": "bow/hunters_bow"
+},
+"wizardspike": {
+"normal": "knife/dagger",
+"uber": "knife/dagger",
+"ultra": "knife/dagger"
+},
+"wizendraw": {
+"normal": "bow/long_battle_bow",
+"uber": "bow/long_battle_bow",
+"ultra": "bow/long_battle_bow"
+},
+"woestave": {
+"normal": "polearm/halberd",
+"uber": "polearm/halberd",
+"ultra": "polearm/halberd"
+},
+"wolfhowl": {
+"normal": "helmet/fanged_helm",
+"uber": "helmet/fanged_helm",
+"ultra": "helmet/fanged_helm"
+},
+"wormskull": {
+"normal": "helmet/wormskull",
+"uber": "helmet/wormskull",
+"ultra": "helmet/wormskull"
+},
+"wraithflight": {
+"normal": "javelin/glaive",
+"uber": "javelin/glaive",
+"ultra": "javelin/glaive"
+},
+"wraithstep": {
+"normal": "boot/light_plate_boots",
+"uber": "boot/light_plate_boots",
+"ultra": "boot/light_plate_boots"
+},
+"zakarums_hand": {
+"normal": "scepter/scepter",
+"uber": "scepter/scepter",
+"ultra": "scepter/scepter"
+}
+},
+"variants": {
+"amu": 3,
+"cm1": 3,
+"cm2": 3,
+"cm3": 3,
+"jew": 6,
+"rin": 5,
+"vip": 3
+}
+}
