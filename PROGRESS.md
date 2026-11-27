@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 22:32: Baal on hold, LK running.** The Oculus has "25 % chance to cast Teleport when struck" (that threw
+her around); tools/gear_swap.py --set baal swaps it with Tal Rasha's Lidless Eye (personal stash (0,0)), both ways.
+22:29 wave probe with the Lidless Eye: an empty throne room at 801/801, then a wave (Hell Witches + lightning) killed
+her in ~8 s (32k gold lost). She can't stand in the room; Baal needs a kiting fighter (Blizzard from range, teleport
+away when hit) or a sturdier character. Oculus back on (MF for LK). Asked Stephen.
+
 **2026-11-26 21:22: Baal throne probes; bot on LK (Stephen: "default to LK", no Andariel until Baal works).**
 Stephen 20:50: OK to burn gold building Baal, LK to refill. Terror zones = the "Desecrated Zones" setting (game creation
 > gear > Offline > Enable Terror Zones); left ON: the purple area lines are the current terror zone + its per-game

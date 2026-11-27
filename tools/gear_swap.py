@@ -44,6 +44,10 @@ SWAPS = [
     ("Chance Guards for Magefist", (6, 8, 2, 2), "gloves", (2, 2)),
     ("The Oculus for Eschuta's Temper", (5, 7, 1, 3), "weapon", (1, 2)),
 ]
+# Baal (Stephen 2026-11-26 "do whatever you need"): the Oculus casts Teleport when struck (25 %), which threw her around
+# the throne room into the Burning Souls. Tal Rasha's Lidless Eye (personal stash (0, 0), 1x3 like the Oculus) instead.
+# The same swap again puts the Oculus back (it then lies at (0, 0)): --set baal both ways.
+BAAL_SWAPS = [("Tal Rasha's Lidless Eye <-> The Oculus", (0, 0, 1, 3), "weapon", (1, 3))]
 GHEED = (1, 0, 1, 3)           # stash cell of Gheed's Fortune
 GHEED_TO = (0, 0, 1, 3)        # inventory cell for it
 SAFETY = stash_center(5, 3, 1, 1)  # an empty stash cell
@@ -52,6 +56,8 @@ SAFETY = stash_center(5, 3, 1, 1)  # an empty stash cell
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry", action="store_true", help="open the stash and save frames only")
+    ap.add_argument("--set", choices=["mf", "baal"], default="mf", help="mf: into her MF gear (Shako, Chance Guards, "
+                    "Oculus, Gheed's); baal: swap the orb between the Oculus and Tal Rasha's Lidless Eye")
     args = ap.parse_args()
     out = ROOT / "scratch" / "gear_swap"
     out.mkdir(parents=True, exist_ok=True)
@@ -85,13 +91,18 @@ def main() -> int:
         shot("start")
         if args.dry:
             return 0
-        for name, (c, r, w, h), slot, (ow, oh) in SWAPS:
+        for name, (c, r, w, h), slot, (ow, oh) in (BAAL_SWAPS if args.set == "baal" else SWAPS):
             print(name, flush=True)
             click(*stash_center(c, r, w, h), "the MF piece in the stash")
             click(*eq[slot], f"the {slot} slot")
             click(*stash_center(c, r, ow, oh), "the old piece into the freed stash spot")
             click(*SAFETY, "an empty stash cell (safety)")
             shot(slot)
+        if args.set == "baal":
+            bot.press("esc")
+            bot.kill.sleep(0.4)
+            print(f"frames in {out}", flush=True)
+            return 0
         print("Gheed's Fortune to the inventory", flush=True)
         click(*stash_center(*GHEED), "Gheed's Fortune in the stash")
         click(*inv_center(*GHEED_TO), "inventory column 0")
