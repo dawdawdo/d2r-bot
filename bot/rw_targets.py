@@ -24,7 +24,6 @@ WORK = ROOT / "armory" / "work"
 # (base code, base name, the missing runewords it was picked for on 2026-11-25). Greedy: each step covers the most
 # runewords the earlier steps and the filter's own bases don't. Reorder or trim freely.
 QUEUE = [
-    ("7cr", "Phase Blade", "Death, Grief, King's Grace, Kingslayer, Lawbringer, Unbending Will"),
     ("hbw", "Hunter's Bow", "Edge, Harmony, Melody, Wrath, Zephyr"),
     ("cst", "Gnarled Staff", "Leaf, Memory"),
     ("clw", "Claws", "Chaos, Pattern"),
@@ -32,6 +31,9 @@ QUEUE = [
     ("pa1", "Targe", "Exile"),
     ("bwn", "Bone Wand", "White"),
     ("kri", "Kriss", "Ritual"),
+    # 2026-11-27 Stephen: swords done but Grief, and he has a 5-socket Phase Blade for it; only Kingslayer (4 os) is left
+    # for this base, so it went last and the bows (missile runewords) took the active slot.
+    ("7cr", "Phase Blade", "Death, Grief, King's Grace, Kingslayer, Lawbringer, Unbending Will"),
 ]
 ACTIVE = 1   # queue steps shown at once
 CAP = 2      # stop showing a step's base once the stash holds this many unused copies

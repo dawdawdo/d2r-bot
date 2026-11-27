@@ -35,9 +35,10 @@ def test_fits_by_type_and_sockets(t):
 
 def test_first_open_step_shown_until_the_stash_has_enough(t):
     steps = rt.targets(set(), t, Counter(), active=1, filter_codes=set(cf.RUNEWORD_BASES))
-    assert steps[0]["code"] == "7cr" and steps[0]["shown"] and not any(s["shown"] for s in steps[1:])
-    assert "Grief" in steps[0]["runewords"] and "Strength" not in steps[0]["runewords"]  # a Flail carries Strength
-    full = rt.targets(set(), t, Counter({"7cr": rt.CAP}), active=1, filter_codes=set(cf.RUNEWORD_BASES))
+    assert steps[0]["code"] == "hbw" and steps[0]["shown"] and not any(s["shown"] for s in steps[1:])
+    blade = next(s for s in steps if s["code"] == "7cr")  # last since 2026-11-27 (Stephen has his Grief base)
+    assert "Grief" in blade["runewords"] and "Strength" not in blade["runewords"]  # a Flail carries Strength
+    full = rt.targets(set(), t, Counter({"hbw": rt.CAP}), active=1, filter_codes=set(cf.RUNEWORD_BASES))
     assert not full[0]["shown"]
 
 

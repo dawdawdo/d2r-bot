@@ -1,15 +1,20 @@
 """Rebuild Blizzaga's Armory data from the newest save backup and send it to convergentblue.com/bot/ (armory tabs).
 
-    python -m bot.armory            # build from the newest backup if it's new, upload
-    python -m bot.armory --force    # rebuild and upload even if that backup was already done
+    python -m bot.armory            # build from the save files if they changed since the last build, upload
+    python -m bot.armory --force    # rebuild and upload even if nothing changed
+    python -m bot.armory --backup   # build from the newest save backup instead
     python -m bot.armory --no-upload
 
-Reads only backups/<ts>/ (the copy bot/session.py makes at every session start), never the live save folder. The
+Builds from a private copy of the save files (armory/work/live/, copied read-only), never the live folder itself. The
 pipeline is the armory project's (armory/README.md): dump each .d2s and the shared stash (bot/d2save.py, same JSON
 as the old Linux-only d2dump) -> inv.py -> gen.py ->
 chron.py -> build.py, in armory/work/. armory/pagedata.json is both the result and the next build's "previous
-snapshot" (build.py works out what changed from it). The supervisor calls maybe_refresh() each tick; it builds in a
-thread, at most once per new backup.
+snapshot" (build.py works out what changed from it and stamps when each item first showed up).
+
+The supervisor calls maybe_refresh() each tick. Stephen 2026-11-27: "capture any time there is a change", not only at
+session starts: every CHECK_EVERY_S it compares the save files (bot/savewatch.snapshot) with the last build's, and once
+they have been quiet for QUIET_S (the game has finished writing) it rebuilds in a thread, at most every MIN_GAP_S.
+Saves that arrive from the other machine (Syncthing) count too, so his own play shows up while a supervisor runs.
 """
 from __future__ import annotations
 
@@ -28,7 +33,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from . import d2save
+from . import d2save, savewatch
 from .config import ROOT, load_config
 
 log = logging.getLogger("bot.armory")
@@ -37,7 +42,10 @@ WORK = A / "work"
 LAST = WORK / "last.json"
 STASH = "ModernSharedStashSoftCoreV2.d2i"
 SCRIPTS = ("inv.py", "gen.py", "chron.py", "build.py", "armory.html", "icon_map.json")
-CHECK_EVERY_S = 300
+CHECK_EVERY_S = 60   # how often the supervisor looks at the save files
+QUIET_S = 20         # newest save write at least this old: the game has finished writing them
+MIN_GAP_S = 120      # at most one build per this many seconds (an LK run saves every ~2 min)
+LIVE = WORK / "live"
 
 
 def latest_backup(cfg: dict) -> Path | None:
@@ -120,25 +128,76 @@ def refresh(cfg: dict, force: bool = False, send: bool = True) -> str:
     return msg
 
 
+def live_copy(cfg: dict, dest: Path = LIVE) -> tuple[Path, dict] | None:
+    """Copy the characters and the shared stash out of the save folder (read only). None if a file changed while
+    copying (the game was writing): try again at the next check."""
+    src = Path(cfg["paths"]["save_dir"])
+    before = savewatch.snapshot(src)
+    shutil.rmtree(dest, ignore_errors=True)
+    dest.mkdir(parents=True)
+    for p in sorted(src.glob("*.d2s")) + [src / STASH]:
+        if ".sync-conflict-" not in p.name:
+            shutil.copy2(p, dest / p.name)
+    after = savewatch.snapshot(src)
+    return (dest, after) if after == before else None
+
+
+def _last() -> dict:
+    try:
+        return json.loads(LAST.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def refresh_live(cfg: dict, force: bool = False, send: bool = True) -> str:
+    """Build from the save files as they are now and upload (only if they changed since the last build)."""
+    last = _last()
+    state = json.loads(json.dumps(savewatch.snapshot(cfg["paths"]["save_dir"])))  # same shape as stored
+    if not force and last.get("saves") == state:
+        return "saves unchanged since the last build"
+    got = live_copy(cfg)
+    if got is None:
+        return "saves changed while copying: next time"
+    folder, state = got
+    t0 = time.time()
+    path = build(folder)
+    msg = f"built from the saves in {time.time() - t0:.1f} s"
+    if not send:
+        return msg + " (not uploaded)"
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if force or digest != last.get("sent"):
+        msg += f", uploaded {upload(cfg, path) // 1024} KB"
+        last["sent"] = digest
+    LAST.write_text(json.dumps(last | {"saves": state, "at": time.time()}))
+    return msg
+
+
+def due(snap: dict, last: dict, now: float) -> bool:
+    """Rebuild now? The saves differ from the last build's, the newest write is QUIET_S old, MIN_GAP_S since the last."""
+    snap = json.loads(json.dumps(snap))
+    if not snap or last.get("saves") == snap:
+        return False
+    newest = max(m for m, _ in snap.values()) / 1e9
+    return now - newest >= QUIET_S and now - float(last.get("at") or 0) >= MIN_GAP_S
+
+
 _busy = threading.Lock()
 _checked = 0.0
 
 
 def maybe_refresh(cfg: dict) -> None:
-    """Supervisor hook: cheap check, build in a background thread when a new backup appeared."""
+    """Supervisor hook: cheap check (file times), build in a background thread when the saves changed."""
     global _checked
     if time.time() - _checked < CHECK_EVERY_S or _busy.locked():
         return
     _checked = time.time()
-    b = latest_backup(cfg)
-    last = json.loads(LAST.read_text()) if LAST.exists() else {}
-    if b is None or last.get("backup") == b.name:
+    if not due(savewatch.snapshot(cfg["paths"]["save_dir"]), _last(), time.time()):
         return
 
     def job():
         with _busy:
             try:
-                log.info("armory: %s", refresh(cfg))
+                log.info("armory: %s", refresh_live(cfg))
             except Exception as e:  # the armory must never disturb the bot
                 log.warning("armory refresh failed: %s", e)
     threading.Thread(target=job, name="armory", daemon=True).start()
@@ -148,9 +207,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-upload", action="store_true")
+    ap.add_argument("--backup", action="store_true", help="build from the newest save backup instead of the saves")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s")
-    print(refresh(load_config(), force=a.force, send=not a.no_upload))
+    fn = refresh if a.backup else refresh_live
+    print(fn(load_config(), force=a.force, send=not a.no_upload))
     return 0
 
 

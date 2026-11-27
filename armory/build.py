@@ -25,6 +25,23 @@ if prev and prev.get('snap') and prev.get('snap') != D.get('snap'):
                     rw=sorted(set(nc.get('rw', [])) - set(pc.get('rw', []))))
 elif prev.get('delta') and 'delta' not in D:
   D['delta'] = prev['delta']
+# ---- when things first showed up: builds run on every save change now (2026-11-27), so "since the previous build"
+# is a couple of minutes. Each item carries `nt` (ms it first appeared, 0 = before this was tracked) and `news` keeps
+# 30 days of Chronicle finds and rune changes; the page shows whatever is newer than the viewer's last "Got it". ----
+now = int(time.time() * 1000)
+changed = bool(prev) and prev.get('snap') != D.get('snap')
+sig = lambda i: (i['n'], i['b'], i['q'], i.get('il'), i.get('e'))
+stamps = collections.defaultdict(list)
+for i in prev.get('items', []):
+  stamps[sig(i)].append(i.get('nt', 0))
+for i in D['items']:
+  have = stamps.get(sig(i))
+  i['nt'] = have.pop(0) if have else (now if changed else 0)
+news = [e for e in prev.get('news', []) if now - e.get('t', 0) < 30 * 86400 * 1000]
+dl = D.get('delta') or {}
+if changed and dl.get('since') == prev.get('snap') and any(dl.get(k) for k in ('runes', 'u', 's', 'rw')):
+  news.append({'t': now, **{k: dl.get(k) or ({} if k == 'runes' else []) for k in ('runes', 'u', 's', 'rw')}})
+D['news'] = news[-300:]
 # ---- the bot character's stat totals for the Bot tab's "Current gear" (d2r-bot bot/gear.py) ----
 try:
   import sys
