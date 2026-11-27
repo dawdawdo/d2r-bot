@@ -4,7 +4,7 @@ def tsv(f): return list(csv.DictReader(open(T+f,encoding='latin-1'),delimiter='\
 base={}
 for f,kind in (('weapons.txt','weapon'),('armor.txt','armor'),('misc.txt','misc')):
     for r in tsv(f):
-        if r.get('code'): base[r['code']]=dict(name=r['name'],kind=kind,type=r.get('type',''),req=r.get('levelreq',''),tier=('elite' if r.get('code')==r.get('ultracode') else 'exc' if r.get('code')==r.get('ubercode') else 'norm') if kind!='misc' else '')
+        if r.get('code'): base[r['code']]=dict(w=int(r.get('invwidth') or 1),h=int(r.get('invheight') or 1),name=r['name'],kind=kind,type=r.get('type',''),req=r.get('levelreq',''),tier=('elite' if r.get('code')==r.get('ultracode') else 'exc' if r.get('code')==r.get('ubercode') else 'norm') if kind!='misc' else '')
 isc={int(r['*ID']):r['Stat'] for r in tsv('itemstatcost.txt') if r.get('*ID','').isdigit()}
 X=S+'/xl/'
 def xr(f): return list(csv.DictReader(open(X+f,encoding='latin-1'),delimiter='\t'))
@@ -20,7 +20,7 @@ def code(c): return struct.pack('<I',c).decode('latin-1').strip()
 def stats(st): return [ (isc.get(s['id'],str(s['id'])), s['layer'], s['value']) for s in st]
 out=[]
 def walk(it,loc):
-    c=code(it['code']); b=base.get(c,dict(name=c,kind='?',type='',req='',tier=''))
+    c=code(it['code']); b=base.get(c,dict(name=c,kind='?',type='',req='',tier='',w=1,h=1))
     q=it['quality']; qd=it.get('quality_data') or {}; nm=b['name']; extra=''
     if q=='Unique' and 'SetUnique' in qd: nm=U.get(qd['SetUnique']['file_index'],nm); nm={'Unique Warlock Helm':"Hellwarden's Will"}.get(nm,nm)
     if q=='Set' and 'SetUnique' in qd: nm,extra=SI.get(qd['SetUnique']['file_index'],(nm,''))
@@ -30,7 +30,7 @@ def walk(it,loc):
     out.append(dict(loc=loc,code=c,base=b['name'],kind=b['kind'],type=b['type'],tier=b['tier'],quality=q,name=rw or nm,set=extra,
         runeword=rw,eth='ETHEREAL' in it['flags'],socketed=socks,nsock=sum(1 for s in it['stats'] if False),qty=it.get('quantity'),
         ilvl=it['level'],defense=it.get('defense'),stats=stats(it['stats'])+stats(it.get('runeword_stats') or []),
-        pos=it['position']))
+        pos=it['position'],w=b.get('w',1),h=b.get('h',1)))
 # every saves/<Name>.json except the shared stash (char.json is a legacy duplicate of Blizzaga)
 CH=[(os.path.basename(f)[:-5],)*2 for f in sorted(glob.glob(S+'/saves/*.json')) if os.path.basename(f) not in ('stash.json','char.json')]
 for CN,CF in CH:

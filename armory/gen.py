@@ -106,12 +106,27 @@ def sockname(s):
   if s[:2] in GEMP and s[2:] in GEMN: return GEMNAME(s)
   return {'jew': 'Jewel'}.get(s, s)
 
+GRID_PAGES = ('Stash', 'Inventory', 'Cube')  # stored items with a cell: the page's stash grid (2026-11-26)
+
+
+def cell(x):
+  p = x['pos']
+  if p.get('mode') != 'Stored' or p.get('store_page') not in GRID_PAGES or '(' in x['loc']:
+    return {}
+  return dict(gx=p.get('inv_x', 0), gy=p.get('inv_y', 0), gw=x.get('w', 1), gh=x.get('h', 1))
+
+
 items = []
+minor = []  # the grid's other stored items (potions, gems, runes, keys, books): [loc, x, y, w, h, name]
 for x in o:
-  if x['type'] in ('rune','book','rpot','ques','key','hpot','mpot','spot','apot','wpot','scro','tpot') or (x['code'][:2] in GEMP and x['type'].startswith('gem')) or x['code'] in ('skz','skl','skc','skf','sku') or x['code'] in MATS: continue
+  if x['type'] in ('rune','book','rpot','ques','key','hpot','mpot','spot','apot','wpot','scro','tpot') or (x['code'][:2] in GEMP and x['type'].startswith('gem')) or x['code'] in ('skz','skl','skc','skf','sku') or x['code'] in MATS:
+    c = cell(x)
+    if c:
+      minor.append([x['loc'], c['gx'], c['gy'], c['gw'], c['gh'], x['name']])
+    continue
   items.append(dict(l=x['loc'], q=x['quality'], n=x['name'], b=x['base'], t=x['tier'], e=x['eth'], s=[sockname(s) for s in x['socketed']], k=x['kind'], ty=x['type'],
                     il=x['ilvl'], st=lines(x['stats']), rw=bool(x['runeword']), set=x.get('set', ''), eq=x['pos']['mode'] == 'Equipped',
-                    **({'sl': x['pos'].get('body_location')} if x['pos']['mode'] == 'Equipped' else {})))
+                    **({'sl': x['pos'].get('body_location')} if x['pos']['mode'] == 'Equipped' else {}), **cell(x)))
 
 chars = []; snap = 0
 for f in sorted(glob.glob('saves/*.json')):
@@ -120,7 +135,7 @@ for f in sorted(glob.glob('saves/*.json')):
   ch = json.load(open(f)).get('character', {})
   chars.append(dict(n=b[:-5], c=ch.get('class', ''), lv=ch.get('level', 0)))
   snap = max(snap, ch.get('last_save_time') or 0)
-old.update(items=items, runes=runes, gems=gems, mats=mats, chars=chars, snap=snap * 1000)
+old.update(items=items, minor=minor, runes=runes, gems=gems, mats=mats, chars=chars, snap=snap * 1000)
 old['farm']['Stone of Jordan'] = ['+1 to all skills', 'Adds 1-12 lightning damage', '+20 to mana', 'Increase max mana 25%']
 json.dump(old, open('pagedata.json', 'w'), separators=(',', ':'))
 print(len(items), 'items ·', {k: v for k, v in runes.items() if v}, '·', len(chars), 'characters')
