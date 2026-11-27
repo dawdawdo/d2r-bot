@@ -3,6 +3,10 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 06:41: bot paused by Stephen** after Andariel run 29 (ok). Gear 12/12, gold ~302k. 05:00-06:00 Catacombs was
+the terror zone (level 93): kills 6/14, one death, three revives. Idea offered: skip Andariel while Catacombs is terrorized.
+Restart: `python -m bot.supervisor --start andy` (LK is the gold fallback).
+
 **2026-11-27 05:20: site stash view shows the game's item art** (Stephen OK'd reading the game files): armory/icons.py
 -> convergentblue public/bot/items (840 WebP incl. unique/set tints), gen.py `ic` per item. Rerun icons.py after a patch.
 
