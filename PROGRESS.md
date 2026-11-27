@@ -3,6 +3,19 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 12:15: GLaDOS stopped; Stephen runs the bot on Singularity.** Don't start anything on GLaDOS until he says so.
+Incident: I started Blizzaga (andy 11:48-12:03, 4 ok) and a Smoked probe (12:05) after "done for today" while D2R was
+still open on Singularity: shared-stash sync conflict at 11:59 (ModernSharedStashSoftCoreV2.sync-conflict-20261127-
+115944-LBBRA7D.d2i, same content as the current stash; Stephen may delete it). His Save & Exit at 12:09 won: Annihilus in
+shared tab 1 once, gold 831k, Smoked as he left him; lost only Blizzaga's stashed flawless topaz + skull. Rule now
+(memory confirm-singularity-closed): confirm D2R is closed on Singularity + quiet save folder before any session.
+Smoked Baal groundwork (da3915d): config `profiles.Smoked` (route smoked_hell, hotkeys a Concentration / s Teleport /
+d Redemption / e Holy Shield, Blessed Hammer on left), `baal.character: Smoked`, per-character logs/state_<name>.json,
+char_Smoked.png, Act 4 -> Act 1 hop, bot/hammer.py (shift + left click in place). Tools: `D2R_CHARACTER=Smoked`.
+Smoked is 84 with all resists capped (97-res Rondache in front, Spirit on swap). First wsk2 learning game (12:05):
+reached Worldstone Keep 2, then "automap fix lost" on the first hop (look at that first). Next: learn wsk2/wsk3 for
+him, throne stand spot (Blizzaga's: 10 hops of (350,-170) from the arrival), waves with hammer(), Baal.
+
 **2026-11-27 07:50: next build = key bosses for Blizzaga: Countess (Terror) first, then Summoner (Hate).** Stephen runs
 Nihlathak (Destruction) with ThroatCutter. He did 3 Uber Tristrams (Druid, Druid, Necro torches); out of organs, keys
 Terror 1 / Hate 0 / Destruction 0. Waiting for him to stop playing (Singularity) before live route learning.
