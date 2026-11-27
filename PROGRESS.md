@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 04:39: bot on Andariel (LK = gold fallback); Baal parked, Stephen farms it himself.** Gold ~717k at 03:37.
+Future Baal bot = a second character, not Blizzaga (base life 190): ThroatCutter (Assassin 94, life 1037, CoH) with
+the shared Enigma for Teleport, or a Hammerdin respec of Smoked. Needs: per-character profile + fight routine, relearn
+of that character's own Worldstone Keep maps, Stephen's OK on Enigma use and probe deaths. Details: memory
+baal-bot-second-character.
+
 **2026-11-27 02:05: LK overnight, healthy** (since the 23:55 merc revive: 44 ok of 50, 0 chickens; gold 18 -> ~340k by 01:37).
 Watch: "cursor jumped with no physical pointer input" ~3 per run since ~22:26 (223 in the 23:00 session), constant
 offsets (dy -126, dx -558 or -78): a read-back / window-offset mismatch, not a person; the bot ignores it and runs are
