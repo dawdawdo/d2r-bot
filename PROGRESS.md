@@ -3,6 +3,9 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 05:20: site stash view shows the game's item art** (Stephen OK'd reading the game files): armory/icons.py
+-> convergentblue public/bot/items (840 WebP incl. unique/set tints), gen.py `ic` per item. Rerun icons.py after a patch.
+
 **2026-11-27 04:39: bot on Andariel (LK = gold fallback); Baal parked, Stephen farms it himself.** Gold ~717k at 03:37.
 Future Baal bot = Smoked respecced to Hammerdin (Stephen OK'd the respec + Enigma 2026-11-27; plan in memory
 baal-bot-second-character; waiting for him to respec, swap gear, set hotkeys a/s/w/q). Needs: per-character profile + fight routine, relearn
