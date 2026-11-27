@@ -3,6 +3,14 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 14:45: site refreshes on every save change; Hunter's Bow is the runeword base target.** Supervisor
+restarted (new code; it had run since 11-21) and LK resumed. bot/armory.py: every 60 s it compares the save files, and
+20 s after the game stops writing it rebuilds from a private copy and uploads (at most every 2 min; saves arriving via
+Syncthing count too). build.py stamps items with first-seen times (`nt`) and keeps 30 days of Chronicle/rune `news`;
+the bot page (convergentblue 70c735c) shows everything since the viewer's last "Got it". rw_targets: Phase Blade
+moved last (Stephen has his Grief base); filter regenerated + installed (shows normal Hunter's Bows). Open: if
+Singularity's supervisor also uploads, two machines would race on the news stamps; make only one upload.
+
 **2026-11-27 13:50: GLaDOS back on (Stephen closed D2R on Singularity, staying off). LK running (supervisor `lk`):
 Blizzaga has 36 stash rejuvs (98 yesterday), gold 500k. Smoked's Baal is blocked: his automap draws no walls.**
 - Second incident, 13:25: GLaDOS's D2R had been open since 11:49 and D2R never re-reads saves, so the Smoked learning
