@@ -40,6 +40,13 @@ MIN_PIXELS = 1500  # mask pixels (full res) for "the automap is showing"; live: 
 GOOD_RESP = 0.08   # phase-correlation peak for a trusted fix (live hops: 0.20-0.30)
 HOP_GAIN = 1.17    # landing / commanded offset (nav.HOP_GAIN)
 MAX_JUMP = 700     # world px a fix may move her beyond the hops commanded since the last trusted fix
+# No automap to fix on (Smoked's Worldstone Keep 2 waypoint, 2026-11-27: an open lit plateau, 500 line px outside the
+# light, the first hop "lost"): step by screen odometry instead (that hop: (-268, -38) at resp 0.48, the commanded
+# (-264, -17)), still drawing the views onto the canvas so the automap fix can take over once there is a map to match.
+SCENE_MIN = 0.10   # screen phase-correlation peak trusted alone; weaker (>= nav.MIN_RESPONSE) only if it agrees with the hop
+SCENE_MAX_RUN = 8  # screen-only steps in a row before "lost" (its drift adds up)
+SPARSE_CANVAS = 1500  # canvas sum under a view below which a screen step may draw on it (learned maps: 2,000-7,400
+# under any stop; Smoked's empty Worldstone Keep 2: ~570 of noise): never smear a learned map at a guessed position
 
 
 _LIGHT: np.ndarray | None = None
@@ -131,6 +138,24 @@ def view_mask(frame: np.ndarray) -> np.ndarray:
     return cv2.GaussianBlur(m, (3, 3), 0.8)
 
 
+def _scene(frame: np.ndarray) -> np.ndarray:
+    """The frame as screen odometry compares it (nav._small_dungeon: the light circle moves with her)."""
+    from .nav import _small_dungeon
+
+    return _small_dungeon(frame)
+
+
+_SCENE_WIN: dict = {}
+
+
+def _scene_window(shape) -> np.ndarray:
+    if shape not in _SCENE_WIN:
+        from .nav import _odo_window
+
+        _SCENE_WIN[shape] = _odo_window(shape)
+    return _SCENE_WIN[shape]
+
+
 _SEEN: np.ndarray | None = None
 
 
@@ -163,6 +188,9 @@ class AutomapOdometer:
         self.canvas = self._average(self.hits, self.seen)
         self.origin = np.array(origin, float)  # canvas px of the arrival view's top-left
         self.added = 0
+        self.scene = _scene(frame) if frame is not None else None  # last frame, for screen odometry (SCENE_MIN)
+        self.scene_run = 0  # screen-only steps since the last automap fix
+        self.scene_resp = 0.0
         if frame is not None:
             if self.canvas.size:
                 self.localize(view_mask(frame), np.zeros(2))
@@ -221,8 +249,27 @@ class AutomapOdometer:
         return guess - np.array([dx, dy]) * SCALE, float(resp)
 
     # --- Odometer interface --------------------------------------------------------------------
+    def _scene_step(self, frame: np.ndarray, expect) -> np.ndarray | None:
+        """How far the screen moved since the last frame this odometer saw, if that can be trusted."""
+        from .nav import MAX_STEP_X, MAX_STEP_Y, MIN_RESPONSE, _matches_hop
+
+        cur = _scene(frame)
+        prev, self.scene = self.scene, cur
+        if prev is None or prev.shape != cur.shape:
+            return None
+        (dx, dy), resp = cv2.phaseCorrelate(prev, cur, _scene_window(cur.shape))
+        moved = np.array([-dx * 2, -dy * 2])
+        if abs(moved[0]) > MAX_STEP_X or abs(moved[1]) > MAX_STEP_Y:
+            return None
+        if resp >= SCENE_MIN or (resp >= MIN_RESPONSE and _matches_hop(moved, expect)):
+            self.scene_resp = float(resp)
+            return moved
+        return None
+
     def update(self, frame: np.ndarray, expect=None) -> tuple[float, float]:
         mask = view_mask(frame)
+        was_lost = self.lost
+        scene = self._scene_step(frame, expect)
         guesses = [self.pos]
         if expect is not None:
             guesses.insert(0, self.pos + np.asarray(expect, float) * HOP_GAIN)
@@ -237,11 +284,22 @@ class AutomapOdometer:
                         MAX_JUMP + self.untracked, self.resp)
             self.resp = 0.0
         if self.resp < GOOD_RESP:
+            # pos is stale once lost (no steps counted since), so a screen step from it would be wrong too
+            if scene is not None and not was_lost and self.scene_run < SCENE_MAX_RUN and map_text_open(frame):
+                self.scene_run += 1
+                self.pos = self.pos + scene
+                self.since_anchor += math.hypot(*scene)
+                if float(self._crop(self.pos, mask.shape).sum()) < SPARSE_CANVAS:
+                    self._add(mask, self.pos)  # nothing learned here yet: the map has to grow from somewhere
+                log.info("automap fix weak (resp %.3f): screen step %s (resp %.2f), %d in a row", self.resp,
+                         scene.round().tolist(), self.scene_resp, self.scene_run)
+                return float(scene[0]), float(scene[1])
             if not self.lost:
                 log.warning("automap fix weak (resp %.3f)", self.resp)
             self.lost = True
             return 0.0, 0.0
         self.lost = False
+        self.scene_run = 0
         self.untracked = 0.0
         moved = new - self.pos
         self.pos = new
@@ -252,10 +310,11 @@ class AutomapOdometer:
     def relocate(self, frame: np.ndarray, guesses) -> bool:
         """Find ourselves again after a jump: try each guess (world), keep the best fix."""
         mask = view_mask(frame)
+        self.scene = _scene(frame)
         new, resp = max((self.localize(mask, g) for g in guesses), key=lambda r: r[1])
         if resp < GOOD_RESP:
             return False
-        self.pos, self.resp, self.lost, self.untracked = new, resp, False, 0.0
+        self.pos, self.resp, self.lost, self.untracked, self.scene_run = new, resp, False, 0.0, 0
         self._add(mask, self.pos)
         return True
 
