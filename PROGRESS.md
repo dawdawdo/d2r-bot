@@ -14,8 +14,10 @@ Blizzaga has 36 stash rejuvs (98 yesterday), gold 500k. Smoked's Baal is blocked
   Keep 2 and in Durance 2 (live probes 13:34 and 13:42). Blizzaga's draws normally in the same D2R session, same
   settings, same waypoint (15k vs 2.8k line px). Town automap labels do work for him. His .ma1 automap file is 23 KB
   after a day of play (Blizzaga's .ma3: 1.18 MB, ThroatCutter's .ma0: 184 KB; Damon and Shamelock are also near the
-  empty size). Every Worldstone Keep route tool relies on the automap. Asked Stephen: does Tab show walls when he plays
-  Smoked? May I move Smoked.ma1 aside (backup kept) so D2R starts a fresh automap file?
+  empty size). Every Worldstone Keep route tool relies on the automap.
+  14:00: moving Smoked.ma1 aside (Stephen OK'd; backups/20261127-135529_smoked_ma1) did NOT help: D2R made a fresh
+  5 KB one, still no walls. F9/F10/F11 (center/fade/party toggles) don't change it either (F10 cycled AutoMapFade to 3;
+  put back to 1 through the Options menu). Cause unknown. Still open for Stephen: does Tab show walls when he plays Smoked?
 - AutomapOdometer: weak fix -> screen-odometry step (up to 8 in a row; draws on the canvas only where nothing is learned).
   Smoked reached 8 stops on that alone, then lost track hopping off the plateau across void (frames don't overlap).
   maps/smoked_hell/wsk2_auto holds only noise (not committed).
