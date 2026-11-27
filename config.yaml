@@ -121,6 +121,11 @@ andy:                  # Andariel task (bot/tasks/andariel.py, bot/andy.py)
   safety: {chicken_hp_pct: 55, potion_hp_pct: 75}  # her poison keeps ticking: fell to 17-18 % past a 35 % chicken
                                                    # (11-22), and to 2 % from 91 % in the MF set (11-23 07:31)
 
+baal:                  # Baal task (bot/tasks/baal.py, bot/baal.py; in progress)
+  timeout_s: 600
+  players: 1           # 2026-11-26: the 22:29 throne probe ran at LK's players 7 (left over) and the waves killed her in
+                       # ~8 s; at players 1 (21:20) she held ~20 s. Probes set it too (bot.town.set_players)
+
 tunnels:               # Ancient Tunnels task (bot/tunnels.py)
   timeout_s: 420       # waypoint -> trap door -> farm; the run's deadline
   farm_s: 240          # time spent inside the tunnels
