@@ -4,8 +4,8 @@
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
 **2026-11-27 04:39: bot on Andariel (LK = gold fallback); Baal parked, Stephen farms it himself.** Gold ~717k at 03:37.
-Future Baal bot = a second character, not Blizzaga (base life 190): ThroatCutter (Assassin 94, life 1037, CoH) with
-the shared Enigma for Teleport, or a Hammerdin respec of Smoked. Needs: per-character profile + fight routine, relearn
+Future Baal bot = Smoked respecced to Hammerdin (Stephen OK'd the respec + Enigma 2026-11-27; plan in memory
+baal-bot-second-character; waiting for him to respec, swap gear, set hotkeys a/s/w/q). Needs: per-character profile + fight routine, relearn
 of that character's own Worldstone Keep maps, Stephen's OK on Enigma use and probe deaths. Details: memory
 baal-bot-second-character.
 
