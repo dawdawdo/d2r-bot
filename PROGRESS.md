@@ -3,6 +3,12 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-26 23:00: Baal paused again; LK running; gold 18.** Wave probe 3 (players 1, Lidless Eye, 10 hops, Blizzard on
+the approach, retreat below 65 %): dead ~6 s after arriving, during the war cries; Burning Souls drained mana 59 -> 10 %
+in 2 s, Energy Shield then let life collapse. She was carrying a withdrawal: gold 201k -> 18. Oculus back on, gear
+12/12. Conclusion for Stephen: Blizzaga can't survive the throne room in any gear she has; Baal bot needs a different
+plan (sturdier char / gear, or no ES vs mana drain) or Stephen gets Worusk's End with ThroatCutter.
+
 **2026-11-26 22:45: site stash view live** (Stephen asked; tile version, no game art): convergentblue.com/bot/ Stash tab >
 Stash view: per-tab 10x10 grid (inventory 10x4, cube 3x4), quality-coloured tiles at their real size, game-style hover /
 tap tooltips with Ditch / Move / New tags. Data: armory/inv.py base sizes, gen.py gx/gy/gw/gh + 'minor' (potions, gems,
