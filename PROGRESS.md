@@ -8,8 +8,8 @@ magic charms, nearly all from 11-26/27; he has plenty of grand charms to reroll;
 are unidentified, so bot/charms.py reads their stats from the save at the next stash stop (the save the last game
 wrote) and keeps only `loot.charms_keep` matches (small/large: all res; grand: all res or any skill tab; uniques
 always); the rest are dropped in town. Nothing drops unless the save covers every loot cell and the tooltip says Charm.
-loot.csv now names each charm ("Charm dropped: Grand Charm: +5 life"). The ~40 junk charms already in her stash stay
-until Stephen says (by the same rules only 3 skillers would be kept).
+loot.csv now names each charm ("Charm dropped: Grand Charm: +5 life"). The ~40 charms already in her stash stay: Stephen
+sorts them himself (11-28); the bot never touches stashed charms.
 First live stash stop showed an older leak: session start protected the config's fixed rectangles, including cells
 that held nothing of Stephen's (col 0 rows 0-2, kept for Gheed's since 11-23; (4,3)/(5,3) among his charms). The game
 drops loot into those, unseen by the stowaway (a grand charm, Hel, a sapphire sat there). protect_own_items now
