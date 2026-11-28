@@ -24,6 +24,7 @@ TABS = {0: "Bow", 1: "Passive", 2: "Javelin", 8: "Fire", 9: "Lightning", 10: "Co
         17: "Poison & Bone", 18: "Summoning", 24: "Combat (Pal)", 25: "Offensive Auras", 26: "Defensive Auras",
         32: "Combat (Barb)", 33: "Masteries", 34: "Warcries", 40: "Summoning (Dru)", 41: "Shape Shifting",
         42: "Elemental", 48: "Traps", 49: "Shadow Disciplines", 50: "Martial Arts"}  # armory/fmt.py
+CLASSES = ("Amazon", "Sorceress", "Necromancer", "Paladin", "Barbarian", "Druid", "Assassin", "Warlock")
 NAMES = {0: "+{} str", 1: "+{} energy", 2: "+{} dex", 3: "+{} vit", 19: "+{} AR", 21: "+{} min dmg", 22: "+{} max dmg",
          31: "+{} def", 79: "{}% gold", 80: "{}% MF", 96: "{}% FRW", 99: "{}% FHR"}
 
@@ -64,7 +65,7 @@ def describe(it: dict) -> str:
         if i in res:
             continue
         if i == SKILL_TAB:
-            parts.append(f"+{v} {TABS.get(s.get('layer'), 'class')} skills")
+            parts.append(f"+{v} {tab_name(s.get('layer'))} skills")
         elif i == 7:
             parts.append(f"+{v >> 8} life")
         elif i == 9:
@@ -76,6 +77,15 @@ def describe(it: dict) -> str:
     return f"{size}: {'; '.join(parts) or 'damage only'}"
 
 
+def tab_name(layer) -> str:
+    """"Martial Arts"; tabs armory/fmt.py has no name for (the Warlock's): "Warlock tab 2"."""
+    if layer in TABS:
+        return TABS[layer]
+    if isinstance(layer, int) and 0 <= layer // 8 < len(CLASSES):
+        return f"{CLASSES[layer // 8]} tab {layer % 8 + 1}"
+    return "class"
+
+
 def read_save(cfg: dict) -> dict:
     """The character's save as D2R last wrote it (read-only)."""
     return d2save.read_d2s(Path(cfg["paths"]["save_dir"]) / f"{cfg['game']['character']}.d2s")
@@ -85,8 +95,8 @@ def footprint(c: int, r: int, size: tuple[int, int]) -> set[tuple[int, int]]:
     return {(c + dc, r + dr) for dc in range(size[0]) for dr in range(size[1])}
 
 
-def sort(d2s: dict, loot_cells, rules: dict) -> tuple[list[dict], dict[tuple[int, int], str]]:
-    """Loot charms in the save's inventory: ([{cell, cells, what}] to drop, {cell: description} to keep). Cells are
+def sort(d2s: dict, loot_cells, rules: dict) -> tuple[list[dict], dict[tuple[int, int], dict]]:
+    """Loot charms in the save's inventory: ([{cell, cells, what}] to drop, {cell: {cells, what}} to keep). Cells are
     the item's top-left inventory cell, as cell_center takes them. Nothing to drop if a loot cell on screen has no
     item in the save (the save is older than the inventory) or a charm reaches outside the loot cells."""
     from .mf import item_size
@@ -105,14 +115,14 @@ def sort(d2s: dict, loot_cells, rules: dict) -> tuple[list[dict], dict[tuple[int
             continue
         if not cells <= loot:
             log.warning("charms: the save's %s at (%d, %d) reaches outside the loot cells; keeping it", cd, c, r)
-            kept[(c, r)] = describe(it)
+            kept[(c, r)] = {"cells": cells, "what": describe(it)}
         elif keep(it, rules):
-            kept[(c, r)] = describe(it)
+            kept[(c, r)] = {"cells": cells, "what": describe(it)}
         else:
             junk.append({"cell": (c, r), "cells": cells, "what": describe(it)})
     stale = loot - covered
     if stale and junk:
         log.warning("charms: %d loot cell(s) %s aren't in the save; dropping nothing", len(stale), sorted(stale)[:4])
-        kept.update({j["cell"]: j["what"] for j in junk})
+        kept.update({j["cell"]: {"cells": j["cells"], "what": j["what"]} for j in junk})
         junk = []
     return junk, kept

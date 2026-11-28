@@ -1477,7 +1477,7 @@ def _spill_to_shared_pages(bot: Controller, spill: list, left: list) -> list:
 def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
     """Loot charms that match no keep rule (bot/charms.py: their stats come from the save, as they're unidentified)
     are dropped here, before the stash opens; their cells leave inv["other"]. Each must also say "Charm" when hovered.
-    Returns (inventory cells freed, {cell: description} of the loot charms kept)."""
+    Returns (inventory cells freed, {cell: {cells, what}} of the loot charms kept)."""
     from . import charms
     from .vision.inventory import cell_center
 
@@ -1501,7 +1501,7 @@ def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
         else:
             log.warning("charms: the save has %s at %s but the tooltip doesn't say Charm; leaving it", j["what"],
                         j["cell"])
-            kept[j["cell"]] = j["what"]
+            kept[j["cell"]] = {"cells": j["cells"], "what": j["what"]}
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
     if not drop_cells(bot, [j["cell"] for j in sure], "junk charms"):
@@ -1555,10 +1555,12 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             runes_before = bot.capture.grab()
             tab = None
             items = charms = 0
-            charm_names = []
+            charm_names, moved = [], set()
             rejuv_cells = set()
             stack_cells, keep_cells = set(), set()
             for i, (c, r) in enumerate(inv["other"]):
+                if (c, r) in moved:  # the rest of a charm stashed above (a lagging frame still showed it: counted 3x)
+                    continue
                 if i:  # a grand/large charm fills 2-3 cells: its other cells are empty once it's stashed
                     bot.input.move(640, 600)
                     bot.kill.sleep(0.15)
@@ -1586,7 +1588,9 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 items += 1
                 charms += charm
                 if charm:
-                    charm_names.append(kept_charms.get((c, r)))
+                    k = kept_charms.get((c, r)) or {}
+                    charm_names.append(k.get("what"))
+                    moved |= k.get("cells", set())
             left = still_there()
             retry = [cell for cell in left if cell in stack_cells]
             if retry:  # one more try, so that a missed click isn't taken for a full stack

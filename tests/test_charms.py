@@ -28,6 +28,7 @@ def test_describe():
     gc = item("cm3", 0, 0, [(188, 50, 1), (7, 0, 16 << 8)])
     assert charms.describe(gc) == "Grand Charm: +1 Martial Arts skills; +16 life"
     assert charms.describe(item("cm1", 0, 0, ALL_RES + [(80, 0, 7)])) == "Small Charm: 5 all res; 7% MF"
+    assert charms.describe(item("cm3", 0, 0, [(188, 57, 1)])) == "Grand Charm: +1 Warlock tab 2 skills"
 
 
 def test_sort_drops_junk_loot_charms_only():
@@ -40,7 +41,7 @@ def test_sort_drops_junk_loot_charms_only():
     ]}
     junk, kept = charms.sort(save, [(0, 0), (0, 1), (0, 2), (1, 0), (3, 0)], RULES)
     assert [j["cell"] for j in junk] == [(0, 0)] and junk[0]["cells"] == {(0, 0), (0, 1), (0, 2)}
-    assert kept == {(1, 0): "Small Charm: 5 all res"}
+    assert {c: k["what"] for c, k in kept.items()} == {(1, 0): "Small Charm: 5 all res"}
 
 
 def test_sort_drops_nothing_when_the_save_is_older_than_the_inventory():
@@ -67,4 +68,5 @@ def test_stash_stop_drops_junk_and_keeps_the_rest(monkeypatch):
     n, kept = town._drop_junk_charms(bot, inv)
     assert n == 3 and dropped == [(0, 0)] and logged == ["Charm dropped: Grand Charm: +5 life"]
     assert inv["other"] == [(1, 0), (2, 0)]
-    assert kept == {(1, 0): "Small Charm: 5 all res", (2, 0): "Small Charm: +9 AR"}  # (2, 0) didn't say Charm
+    assert {c: k["what"] for c, k in kept.items()} == {(1, 0): "Small Charm: 5 all res",
+                                                      (2, 0): "Small Charm: +9 AR"}  # (2, 0) didn't say Charm
