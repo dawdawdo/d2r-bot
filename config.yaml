@@ -139,7 +139,8 @@ profiles:
       aura: concentration            # on the right while fighting (auras only work from the right slot)
       buffs: [holy_shield]
       warcries: []                   # no Call to Arms
-      main_weapon_set: 1             # I = Spirit sword + the 97-res Rondache (all res capped); II = Devil Star + Spirit
+      main_weapon_set: 1             # I = Heart of the Oak + Spirit Rondache (Stephen 2026-11-28; was Spirit sword + the
+                                     #   40-res Rondache). Check the set numbers in his save before his next session
     inventory: {protected: []}       # his charms etc.: protected from his session-start save (run.protect_own_items)
     safety: {es_broken_mp_pct: 0}    # no Energy Shield: low mana is just low mana (Blizzaga's ES chicken would misfire)
 
