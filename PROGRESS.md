@@ -3,6 +3,17 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-28 12:30: next = keys, then Baal. Countess goes to Smoked: she is cold immune in Hell.**
+Stephen's goals (memory goals-2026-11-28): (1) a torch per class: Assassin, Paladin, Sorc, Barb, Warlock, Amazon;
+(2) two more SoJ -> Anni; (3) Baal statue; (4) Chronicle; (5) a level-90 of each class. Gold and rejuvs are plentiful.
+Keys in the shared stash: Terror 0, Hate 3, Destruction 5. The Countess (corruptrogue3 + Fire Enchanted) has 130 cold
+res in Hell (D2R's monstats.txt, read-only), so Blizzaga can't kill her: Countess -> Smoked (Hammerdin, Enigma
+teleport), after checking his automap (no walls on 11-27). Summoner (75 cold res) -> Blizzaga. Nihlathak -> Stephen.
+Key chance per kill at players 1/3/7: Countess 7.1/9.1/9.8 %, Summoner 8.6/11.6/12.8 %, Nihlathak 8.1/10.4/11.4 %.
+Smoked's resists in Hell (save 12:13): about 6 % fire/cold/poison, 16 % lightning; candidates in Shared tab 3: rare
+ring 37 fire/11/11/11, magic ring 14 all + 26 life. No gloves/boots with fire res anywhere in the stashes.
+Waiting for: Stephen to confirm D2R is closed on Singularity (Smoked + stash written there 12:13:34).
+
 **2026-11-28 10:30: INCIDENT: the junk-charm drop step lost three of Stephen's items; removed, drops now checked.**
 Stephen found Blizzaga's Horadric Cube gone. From the backups and the stowaway's saved tooltip frames: every drop
 from _drop_junk_charms (2db2b58, live 22:34) took the item SIX COLUMNS RIGHT of its target and never the charm:
