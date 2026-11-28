@@ -1474,6 +1474,44 @@ def _spill_to_shared_pages(bot: Controller, spill: list, left: list) -> list:
     return left
 
 
+def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
+    """Loot charms that match no keep rule (bot/charms.py: their stats come from the save, as they're unidentified)
+    are dropped here, before the stash opens; their cells leave inv["other"]. Each must also say "Charm" when hovered.
+    Returns (charms dropped, {cell: description} of the loot charms kept)."""
+    from . import charms
+    from .vision.inventory import cell_center
+
+    rules = bot.cfg["loot"].get("charms_keep")
+    if rules is None:
+        return 0, {}
+    try:
+        junk, kept = charms.sort(charms.read_save(bot.cfg), inv["other"], rules)
+    except Exception as e:  # noqa: BLE001  an unreadable save keeps every charm, as before
+        log.warning("charms: save not read (%s); keeping them all", e)
+        return 0, {}
+    if not junk:
+        return 0, kept
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.35)
+    sure = []
+    for j in junk:
+        tip = _save_tooltip(bot, *cell_center(*j["cell"]))
+        if _is_charm(tip, *cell_center(*j["cell"])):
+            sure.append(j)
+        else:
+            log.warning("charms: the save has %s at %s but the tooltip doesn't say Charm; leaving it", j["what"],
+                        j["cell"])
+            kept[j["cell"]] = j["what"]
+    bot.press(bot.cfg["hotkeys"]["inventory"])
+    bot.kill.sleep(0.2)
+    n = drop_cells(bot, [j["cell"] for j in sure], "junk charms")
+    if n:
+        gone = set().union(*(j["cells"] for j in sure))
+        inv["other"] = [cell for cell in inv["other"] if cell not in gone]
+        _log_loot([f"Charm dropped: {j['what']}" for j in sure])
+    return n, kept
+
+
 def cell_center_of(cell: tuple[int, int]) -> tuple[int, int]:
     from .vision.inventory import cell_center
 
@@ -1496,9 +1534,10 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         inv = _scan_inventory(bot, wait_open=True)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
+    dropped, kept_charms = _drop_junk_charms(bot, inv) if inv["other"] else (0, {})
     if inv["other"] and not stash:
         return None
-    done = {"stashed": 0, "dropped": 0}
+    done = {"stashed": 0, "dropped": dropped}
     loot_cells = set(inv["other"])
 
     def still_there() -> list:
@@ -1516,6 +1555,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             runes_before = bot.capture.grab()
             tab = None
             items = charms = 0
+            charm_names = []
             rejuv_cells = set()
             stack_cells, keep_cells = set(), set()
             for i, (c, r) in enumerate(inv["other"]):
@@ -1545,6 +1585,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
                 _ctrl_click(bot, *cell_center(c, r))
                 items += 1
                 charms += charm
+                if charm:
+                    charm_names.append(kept_charms.get((c, r)))
             left = still_there()
             retry = [cell for cell in left if cell in stack_cells]
             if retry:  # one more try, so that a missed click isn't taken for a full stack
@@ -1591,7 +1633,8 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
             if unread:
                 others, unread = 0, max(0, done["stashed"] - charms - rejuvs)
             full_stacks = [cell for cell in left if cell in stack_cells and cell not in keep_cells]
-            _log_loot([f"{n} Rune" for n in runes] + ["Charm to personal tab"] * charms
+            _log_loot([f"{n} Rune" for n in runes]
+                      + [f"Charm to personal tab: {d}" if d else "Charm to personal tab" for d in charm_names]
                       + ["Rejuvenation Potion to Materials tab"] * rejuvs + ["item to shared tab"] * max(0, others)
                       + ["dropped: its stash stack is full"] * len(full_stacks)
                       + ["item stashed (rune or other, name not read)"] * unread)
