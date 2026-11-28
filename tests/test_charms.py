@@ -65,6 +65,6 @@ def test_stash_stop_drops_junk_and_keeps_the_rest(monkeypatch):
                          "press": lambda *a: None, "kill": type("K", (), {"sleep": lambda *a: None})()})()
     inv = {"other": [(0, 0), (0, 1), (0, 2), (1, 0), (2, 0)]}
     n, kept = town._drop_junk_charms(bot, inv)
-    assert n == 1 and dropped == [(0, 0)] and logged == ["Charm dropped: Grand Charm: +5 life"]
+    assert n == 3 and dropped == [(0, 0)] and logged == ["Charm dropped: Grand Charm: +5 life"]
     assert inv["other"] == [(1, 0), (2, 0)]
     assert kept == {(1, 0): "Small Charm: 5 all res", (2, 0): "Small Charm: +9 AR"}  # (2, 0) didn't say Charm

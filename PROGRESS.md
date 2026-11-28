@@ -3,6 +3,20 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-27 22:30: charm sorter (2db2b58).** Stephen: "way too many charms" (Blizzaga's stash had 22 grand + 20 small
+magic charms, nearly all from 11-26/27; he has plenty of grand charms to reroll; no small one had all res). Loot charms
+are unidentified, so bot/charms.py reads their stats from the save at the next stash stop (the save the last game
+wrote) and keeps only `loot.charms_keep` matches (small/large: all res; grand: all res or any skill tab; uniques
+always); the rest are dropped in town. Nothing drops unless the save covers every loot cell and the tooltip says Charm.
+loot.csv now names each charm ("Charm dropped: Grand Charm: +5 life"). The ~40 junk charms already in her stash stay
+until Stephen says (by the same rules only 3 skillers would be kept).
+First live stash stop showed an older leak: session start protected the config's fixed rectangles, including cells
+that held nothing of Stephen's (col 0 rows 0-2, kept for Gheed's since 11-23; (4,3)/(5,3) among his charms). The game
+drops loot into those, unseen by the stowaway (a grand charm, Hel, a sapphire sat there). protect_own_items now
+protects exactly his items from the session-start save; the fixed rectangles only apply when the save can't be read.
+Live 22:34: "Charm dropped: Grand Charm: +5 life", then Hel + sapphire stashed. Seen on the way: _drink_potions took
+that sapphire (5,3) for a potion (the right-click did nothing; it was stashed after). Harmless so far.
+
 **2026-11-27 14:45: site refreshes on every save change; Hunter's Bow is the runeword base target.** Supervisor
 restarted (new code; it had run since 11-21) and LK resumed. bot/armory.py: every 60 s it compares the save files, and
 20 s after the game stops writing it rebuilds from a private copy and uploads (at most every 2 min; saves arriving via

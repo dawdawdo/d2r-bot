@@ -138,3 +138,24 @@ def test_bot_loot_since_stephen_last_played_is_not_protected(monkeypatch, tmp_pa
     protect_own_items(cfg, items)
     assert (0, 0) in protected_cells(cfg["inventory"]["protected"])
     assert saved["inventory_baseline"] == [list(i) for i in items]
+
+
+def test_protected_cells_with_nothing_of_his_are_freed(monkeypatch):
+    """2026-11-27: col 0 rows 0-2 (kept for Gheed's since 11-23) and (4,3)/(5,3) among his charms were empty in the
+    save; loot landed there (a grand charm, Hel, a sapphire) and the stowaway never saw it."""
+    import time
+
+    from bot import state
+    from bot.run import protect_own_items
+    from bot.vision.inventory import protected_cells
+    own = [["cm3", 4, 0], ["cm3", 5, 0], ["cm3", 6, 0], ["cm3", 7, 0], ["ibk", 8, 0], ["tbk", 9, 0], ["box", 8, 2],
+           ["cm1", 6, 3], ["cm1", 7, 3], ["skl", 3, 3], ["key", 3, 2]]
+    monkeypatch.setattr(state, "load", lambda: {"key_cell": [3, 2], "inventory_baseline": own,
+                                                "session_ended_at": time.time() - 60})
+    monkeypatch.setattr(state, "save", lambda d: None)
+    cfg = {"inventory": {"protected": [[4, 0, 6, 4], [3, 3, 1, 1], [0, 0, 1, 3]]}}
+    items = [tuple(i) for i in own] + [("cm3", 0, 0), ("r15", 4, 3), ("gsb", 5, 3), ("r08", 0, 3)]
+    protect_own_items(cfg, items)
+    cells = protected_cells(cfg["inventory"]["protected"])
+    assert not cells & {(0, 0), (0, 1), (0, 2), (4, 3), (5, 3), (0, 3), (3, 2)}
+    assert {(4, 0), (7, 2), (6, 3), (7, 3), (3, 3), (8, 3), (9, 1)} <= cells

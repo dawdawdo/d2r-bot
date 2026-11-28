@@ -1477,7 +1477,7 @@ def _spill_to_shared_pages(bot: Controller, spill: list, left: list) -> list:
 def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
     """Loot charms that match no keep rule (bot/charms.py: their stats come from the save, as they're unidentified)
     are dropped here, before the stash opens; their cells leave inv["other"]. Each must also say "Charm" when hovered.
-    Returns (charms dropped, {cell: description} of the loot charms kept)."""
+    Returns (inventory cells freed, {cell: description} of the loot charms kept)."""
     from . import charms
     from .vision.inventory import cell_center
 
@@ -1504,12 +1504,12 @@ def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
             kept[j["cell"]] = j["what"]
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
-    n = drop_cells(bot, [j["cell"] for j in sure], "junk charms")
-    if n:
-        gone = set().union(*(j["cells"] for j in sure))
-        inv["other"] = [cell for cell in inv["other"] if cell not in gone]
-        _log_loot([f"Charm dropped: {j['what']}" for j in sure])
-    return n, kept
+    if not drop_cells(bot, [j["cell"] for j in sure], "junk charms"):
+        return 0, kept
+    gone = set().union(*(j["cells"] for j in sure))
+    inv["other"] = [cell for cell in inv["other"] if cell not in gone]
+    _log_loot([f"Charm dropped: {j['what']}" for j in sure])
+    return len(gone), kept
 
 
 def cell_center_of(cell: tuple[int, int]) -> tuple[int, int]:
@@ -1534,10 +1534,10 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         inv = _scan_inventory(bot, wait_open=True)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
-    dropped, kept_charms = _drop_junk_charms(bot, inv) if inv["other"] else (0, {})
+    junk_cells, kept_charms = _drop_junk_charms(bot, inv) if inv["other"] else (0, {})
     if inv["other"] and not stash:
         return None
-    done = {"stashed": 0, "dropped": dropped}
+    done = {"stashed": 0, "dropped": 0, "charm_cells_freed": junk_cells}
     loot_cells = set(inv["other"])
 
     def still_there() -> list:
@@ -1684,7 +1684,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         st = {**st, "key_cell": None, "keys_left": 0}
     state.save(st)
     log.info("stowaway: stashed %d, dropped %d key stack(s), %d free cells", done["stashed"], done["dropped"],
-             len(inv["empty"]) + done["stashed"] + done["dropped"])
+             len(inv["empty"]) + done["stashed"] + done["dropped"] + junk_cells)
     return done
 
 

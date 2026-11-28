@@ -202,9 +202,11 @@ def inventory_baseline(cfg: dict, items: list) -> list | None:
 
 
 def protect_own_items(cfg: dict, items: list) -> None:
-    """Protect everything in the session-start save's inventory (but her working key stack) where `inventory.protected`
-    misses it: Stephen rearranges when he plays (2026-11-21). Logged so he can see what the session protects. Items that
-    weren't there when he last played (inventory_baseline) are the bot's loot and go to the stowaway as usual."""
+    """Protect exactly what the session-start save's inventory holds of Stephen's (all but her working key stack):
+    he rearranges when he plays (2026-11-21). `inventory.protected` cells that hold nothing of his are freed, since the
+    game drops loot into them where the stowaway can't see it (2026-11-27: col 0 kept for Gheed's since 11-23 held a
+    grand charm, and two empty cells among his charms a Hel rune and a sapphire). Logged so he can see what the session
+    protects. Items that weren't there when he last played (inventory_baseline) are the bot's loot: the stowaway's."""
     from . import state
     from .mf import session_rects
     from .vision.inventory import protected_cells
@@ -223,7 +225,11 @@ def protect_own_items(cfg: dict, items: list) -> None:
         names = {(c, r): code for code, c, r in items}
         log.warning("inventory: protecting items outside inventory.protected this session (from the save): %s",
                     [(names.get((r[0], r[1]), "?"), *r) for r in added])
-        prot.extend(added)
+    idle = sorted(cells - protected_cells(rects))
+    if idle:
+        log.info("inventory: %d protected cell(s) hold nothing of Stephen's in the save; the stowaway sees them: %s",
+                 len(idle), idle)
+    prot[:] = rects
 
 
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)
