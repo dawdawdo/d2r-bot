@@ -1,12 +1,11 @@
-"""Which loot charms to keep (Stephen 2026-11-27: "way too many charms": he has plenty of grand charms to reroll for
-skillers, and none of the ~20 small ones the bot had kept that day had all res).
+"""Loot charm stats from the save, for loot.csv names. 2026-11-27 this also chose junk charms to drop; the drop step
+took the wrong items (see town._loot_charm_names) and was removed on 11-28, and charm pickups are off.
 
 Loot charms come home unidentified: the tooltip says "Grand Charm / Unidentified" and nothing more. D2R writes every
 item's stats to the save, identified or not (the armory site shows them from there), and the stash stop runs at the
 start of a game, when the save on disk is the one the last game wrote on save & exit, so it holds that loot, cell for
-cell. The stowaway asks it which inventory charms match a keep rule (config `loot.charms_keep`): those go to the
-personal tab, the rest are dropped in town. Uniques (Annihilus, Torch, Gheed's) always stay, and nothing is dropped
-unless the save accounts for every loot cell on screen (a stale save keeps everything)."""
+cell. `keep`/`sort` still say which charms match rules, but nothing acts on that any more: the stowaway only uses the
+names (sort with KEEP_ALL), and every charm it sees goes to the stash."""
 from __future__ import annotations
 
 import logging
@@ -17,6 +16,7 @@ from . import d2save
 
 log = logging.getLogger(__name__)
 
+KEEP_ALL = {"small": {"all_res": 0}, "large": {"all_res": 0}, "grand": {"all_res": 0}}  # every charm: names only
 SIZES = {"cm1": ("small", (1, 1)), "cm2": ("large", (1, 2)), "cm3": ("grand", (1, 3))}
 RESISTS = (39, 41, 43, 45)  # fire, lightning, cold, poison: all four equal = "All Resistances"
 SKILL_TAB = 188  # +N to <class> <tab> skills; layer = class * 8 + tab

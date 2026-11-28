@@ -161,13 +161,6 @@ loot:
   chronicle_tables: 'D:/Google_Drive/Projects/D2R_Bot_20260314/Codebase/armory_tools/scanbundle.tgz'
   pick: [rune, unique, set, gray]  # gray = socketed/eth bases; charms ("magic"): features.charms
   supplies: [rejuv, key]          # white labels picked when needed (belt slot empty / keys < keys_full)
-  charms_keep:  # magic loot charms with any of these ({stat: at least}) go to the personal tab; the rest are dropped at
-                # the next stash stop. They're unidentified: bot/charms.py reads their stats from the save. Uniques stay.
-                # Stats: all_res, skills (+N skill tab, any class), mf, life. Stephen 2026-11-27: plenty of grand charms
-                # to reroll; small ones only with all res
-    small: {all_res: 1}
-    large: {all_res: 1}
-    grand: {all_res: 1, skills: 1}
   gold_max_picks: 8
   gold_max_dist: 260             # px (|dx|+|dy|) from her: farther piles are left (walks into the pack)
   gold_min_hp: 90                # stop picking gold below this life, or when life drops 5 / mana (energy shield) 10
@@ -185,7 +178,8 @@ features:
                          #   (weapons only; 11,840 chests gave no white bases either)
   armor_stands: true     # the Armor Stand NE of each west hut (found 2026-11-21): teleport below it after nw_deep, click
   gems_and_bases: true   # white labels that aren't keys/rejuvs: gems, skulls, runeword bases (the filter picks which)
-  charms: true           # blue labels that say "Charm"
+  charms: false          # blue labels that say "Charm". Off 2026-11-28: too many to sort, and the step that dropped junk
+                         #   ones took the wrong items (cube, TP tome, a skiller); on again only with stash-all
   spare_rejuvs: true     # rejuvs with the belt full go to the stash (Materials tab)
   war_cries: true        # BO/BC on arrival in LK (~4 s; more life and mana)
   cube: true             # cube runes/gems up on the way through town (cube.every_hours)

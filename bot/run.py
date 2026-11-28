@@ -230,6 +230,8 @@ def protect_own_items(cfg: dict, items: list) -> None:
         log.info("inventory: %d protected cell(s) hold nothing of Stephen's in the save; the stowaway sees them: %s",
                  len(idle), idle)
     prot[:] = rects
+    # what the stowaway checks every stop (town.check_own_items); keys get used and move
+    cfg["inventory"]["own_items"] = [[code, c, r] for code, c, r in items if code != "key"]
 
 
 A2_MIN_FREE = 12  # inventory cells to skip the stash: two Archon Plates (2x3 each)

@@ -3,6 +3,21 @@
 **Current milestone:** Andariel farming in the MF set (222 %), ~80 % kills, ~2.5-min runs; Andariel overnight 65-68 % kills, ~10 kills/h, 0 deaths (see 2026-11-24 07:15). Mephisto is a real task now (branch `tasks`): `python -m bot.run --mode chests --tasks meph`
 (or lk,meph). Phase 1 (LK) done: M0–M6 met. Proposed bar for v1.0: 100+ runs untouched.
 
+**2026-11-28 10:30: INCIDENT: the junk-charm drop step lost three of Stephen's items; removed, drops now checked.**
+Stephen found Blizzaga's Horadric Cube gone. From the backups and the stowaway's saved tooltip frames: every drop
+from _drop_junk_charms (2db2b58, live 22:34) took the item SIX COLUMNS RIGHT of its target and never the charm:
+22:34 target (0,0) -> his "+14 life +1 Cold skills" grand charm (6,0); 01:29 target (3,0) -> his Town Portal tome (9,0)
+(two spare TP tomes are still in his personal stash); 08:32 target (3,2) -> the Horadric Cube (8-9, 2-3). Junk charms
+at col >= 4 hit nothing (off the grid), so the same charms were "dropped" game after game and piled up in the
+inventory. Mechanism not found (the hover check just before showed the right item; pointer code looks clean). Key-stack
+drops in the same session (drop_cells after the stash visit, e.g. 09:04 (3,2)) took the right item. I misread the
+22:34 live check as a success. Changes: the drop step is gone and charm pickups are off (features.charms false);
+drop_cells checks occupied cells before/after each click (anything else gone -> kill switch, game left open so the
+item stays on the ground, supervisor stays stopped; a miss -> no more drops that session); every stash stop compares
+Stephen's session-start items with the save and stops the session if any is gone (town.check_own_items). Open: a
+live test of why that path clicked six columns over (only with Stephen's OK, on items that can't be lost). Bot stopped
+since 10:01 (F12, Stephen playing).
+
 **2026-11-27 22:30: charm sorter (2db2b58).** Stephen: "way too many charms" (Blizzaga's stash had 22 grand + 20 small
 magic charms, nearly all from 11-26/27; he has plenty of grand charms to reroll; no small one had all res). Loot charms
 are unidentified, so bot/charms.py reads their stats from the save at the next stash stop (the save the last game

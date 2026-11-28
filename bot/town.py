@@ -1004,13 +1004,47 @@ def close_stash(bot: Controller) -> bool:
     return not stash_shown(bot)
 
 
+DROP_PARK = (640, 600)  # cursor off the inventory grid (no tooltip over it) while checking a drop
+DROP_SETTLE_S = 2.5      # GLaDOS frames lag the game by up to ~1.5 s
+
+
+def _occupied(bot: Controller, settle: float = DROP_SETTLE_S) -> set | None:
+    """Occupied inventory cells (all 40) once two frames 0.3 s apart agree, cursor parked off the grid. None if the
+    inventory panel isn't showing or the frames never settle."""
+    from .vision.inventory import COLS, ROWS, inventory_open, is_empty
+
+    bot.input.move(*DROP_PARK)
+    t0, last = time.monotonic(), None
+    while time.monotonic() - t0 < settle:
+        bot.kill.sleep(0.3)
+        f = bot.capture.grab()
+        if not inventory_open(f):
+            last = None
+            continue
+        occ = {(c, r) for c in range(COLS) for r in range(ROWS) if not is_empty(f, c, r)}
+        if occ == last and time.monotonic() - t0 >= 0.6:
+            bot.frame = f
+            return occ
+        last = occ
+    return None
+
+
 def drop_cells(bot: Controller, cells, what: str) -> int:
     """Ctrl+click inventory cells with ONLY the inventory open = drop them. With the stash open the same click moves
     them into the stash: 2026-11-16..19 about 1 key drop in 10 went to shared page 1 (170 keys) because a lost Esc
-    left the stash up. So: stash closed (checked), inventory opened, stash checked again. Returns cells dropped."""
+    left the stash up. So: stash closed (checked), inventory opened, stash checked again. Returns cells dropped.
+
+    Every click is checked (2026-11-28: a drop step took the item six columns right of its target three times: Stephen's
+    +1 Cold skiller, his Town Portal tome, the Horadric Cube, unnoticed all night). Occupied cells before and after each
+    click: if anything but the target left, the kill switch trips with the game left open (no save & exit), so the item
+    stays on the ground at her feet for Stephen, and the supervisor stays stopped. A drop that took nothing turns drops
+    off for the session. Targets are 1x1 (keys, rejuvs, stack items)."""
     from .vision.inventory import cell_center
 
     if not cells:
+        return 0
+    if getattr(bot, "drops_off", False):
+        log.warning("drop %s: drops are off this session (one missed earlier); keeping %s", what, list(cells))
         return 0
     if not close_stash(bot):
         log.warning("drop %s: the stash won't close; not dropping", what)
@@ -1024,11 +1058,37 @@ def drop_cells(bot: Controller, cells, what: str) -> int:
         bot.press("esc")
         bot.kill.sleep(0.4)
         return 0
-    for cell in cells:
+    dropped = 0
+    before = _occupied(bot)
+    for cell in map(tuple, cells):
+        if before is None:
+            log.warning("drop %s: no settled inventory frame; not dropping", what)
+            bot.save_failure("drop_no_inventory")
+            break
+        if cell not in before:
+            log.warning("drop %s: %s looks empty; skipped", what, cell)
+            continue
         _ctrl_click(bot, *cell_center(*cell))
+        after = _occupied(bot)
+        gone = before - after if after is not None else set()
+        wrong = sorted(gone - {cell})
+        if wrong:
+            bot.save_failure("drop_took_the_wrong_item")
+            log.error("drop %s: clicked %s but %s left the inventory; stopping with the game open", what, cell, wrong)
+            bot.drops_off = True
+            bot.kill.trip(f"a drop took the wrong item ({what}: clicked {cell}, {wrong} left the inventory); "
+                          "game left open so it stays on the ground at her feet", kind="f12")
+            bot.kill.check()
+        if cell not in gone:
+            log.warning("drop %s: %s is still there after the click; no more drops this session", what, cell)
+            bot.save_failure("drop_missed")
+            bot.drops_off = True
+            break
+        dropped += 1
+        before = after
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
-    return len(cells)
+    return dropped
 
 
 def _wait_for(bot: Controller, test, timeout: float = 5.0) -> bool:
@@ -1474,42 +1534,49 @@ def _spill_to_shared_pages(bot: Controller, spill: list, left: list) -> list:
     return left
 
 
-def _drop_junk_charms(bot: Controller, inv: dict) -> tuple[int, dict]:
-    """Loot charms that match no keep rule (bot/charms.py: their stats come from the save, as they're unidentified)
-    are dropped here, before the stash opens; their cells leave inv["other"]. Each must also say "Charm" when hovered.
-    Returns (inventory cells freed, {cell: {cells, what}} of the loot charms kept)."""
+def _loot_charm_names(d2s: dict | None, inv: dict) -> dict:
+    """{cell: {cells, what}} for loot charms, from the save (they're unidentified): names for loot.csv. Nothing is
+    dropped: 2026-11-27/28 a junk-charm drop step here took the item six columns right of its target every time (Stephen's
+    +1 Cold skiller, his Town Portal tome, the Horadric Cube) and never the charm. Removed; see drop_cells' check."""
     from . import charms
-    from .vision.inventory import cell_center
 
-    rules = bot.cfg["loot"].get("charms_keep")
-    if rules is None:
-        return 0, {}
+    if d2s is None or not inv["other"]:
+        return {}
     try:
-        junk, kept = charms.sort(charms.read_save(bot.cfg), inv["other"], rules)
-    except Exception as e:  # noqa: BLE001  an unreadable save keeps every charm, as before
-        log.warning("charms: save not read (%s); keeping them all", e)
-        return 0, {}
-    if not junk:
-        return 0, kept
-    bot.press(bot.cfg["hotkeys"]["inventory"])
-    bot.kill.sleep(0.35)
-    sure = []
-    for j in junk:
-        tip = _save_tooltip(bot, *cell_center(*j["cell"]))
-        if _is_charm(tip, *cell_center(*j["cell"])):
-            sure.append(j)
-        else:
-            log.warning("charms: the save has %s at %s but the tooltip doesn't say Charm; leaving it", j["what"],
-                        j["cell"])
-            kept[j["cell"]] = {"cells": j["cells"], "what": j["what"]}
-    bot.press(bot.cfg["hotkeys"]["inventory"])
-    bot.kill.sleep(0.2)
-    if not drop_cells(bot, [j["cell"] for j in sure], "junk charms"):
-        return 0, kept
-    gone = set().union(*(j["cells"] for j in sure))
-    inv["other"] = [cell for cell in inv["other"] if cell not in gone]
-    _log_loot([f"Charm dropped: {j['what']}" for j in sure])
-    return len(gone), kept
+        return charms.sort(d2s, inv["other"], charms.KEEP_ALL)[1]
+    except Exception as e:  # noqa: BLE001  names only
+        log.warning("charms: not named (%s)", e)
+        return {}
+
+
+def _read_save(bot: Controller) -> dict | None:
+    """The character's save as the last game left it (read-only); None if it can't be read."""
+    from . import charms
+
+    try:
+        return charms.read_save(bot.cfg)
+    except Exception as e:  # noqa: BLE001
+        log.warning("save not read: %s", e)
+        return None
+
+
+def check_own_items(bot: Controller, d2s: dict | None) -> None:
+    """Stop the session if anything of Stephen's (his items in the session-start inventory, run.protect_own_items) is
+    gone from the save. Catches a loss one game later whatever caused it (2026-11-28: one bad drop step lost three of his
+    items over a night and nothing noticed). Trips the kill switch: the supervisor stays stopped until he looks."""
+    from .mf import inventory_items, with_corpse
+
+    own = bot.cfg["inventory"].get("own_items")
+    if not own or d2s is None:
+        return
+    have = set(inventory_items(with_corpse(d2s)))
+    missing = [tuple(i) for i in own if tuple(i) not in have]
+    if missing:
+        bot.save_failure("own_items_missing")
+        log.error("Stephen's items are gone from the inventory (save): %s", missing)
+        bot.kill.trip(f"Stephen's inventory items are gone from the save: {missing}; stopped until he looks",
+                      kind="f12")
+        bot.kill.check()
 
 
 def cell_center_of(cell: tuple[int, int]) -> tuple[int, int]:
@@ -1534,10 +1601,12 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         inv = _scan_inventory(bot, wait_open=True)
     bot.press(bot.cfg["hotkeys"]["inventory"])
     bot.kill.sleep(0.2)
-    junk_cells, kept_charms = _drop_junk_charms(bot, inv) if inv["other"] else (0, {})
+    d2s = _read_save(bot)
+    check_own_items(bot, d2s)
+    kept_charms = _loot_charm_names(d2s, inv)
     if inv["other"] and not stash:
         return None
-    done = {"stashed": 0, "dropped": 0, "charm_cells_freed": junk_cells}
+    done = {"stashed": 0, "dropped": 0}
     loot_cells = set(inv["other"])
 
     def still_there() -> list:
@@ -1688,7 +1757,7 @@ def stowaway(bot: Controller, stash: bool = True) -> dict | None:
         st = {**st, "key_cell": None, "keys_left": 0}
     state.save(st)
     log.info("stowaway: stashed %d, dropped %d key stack(s), %d free cells", done["stashed"], done["dropped"],
-             len(inv["empty"]) + done["stashed"] + done["dropped"] + junk_cells)
+             len(inv["empty"]) + done["stashed"] + done["dropped"])
     return done
 
 

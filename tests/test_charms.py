@@ -52,21 +52,63 @@ def test_sort_drops_nothing_when_the_save_is_older_than_the_inventory():
     assert junk == []
 
 
-def test_stash_stop_drops_junk_and_keeps_the_rest(monkeypatch):
-    from bot import town
 
-    save = {"items": [item("cm3", 0, 0, [(7, 0, 5 << 8)]), item("cm1", 1, 0, ALL_RES), item("cm1", 2, 0, [(19, 0, 9)])]}
-    monkeypatch.setattr(charms, "read_save", lambda cfg: save)
-    monkeypatch.setattr(town, "_save_tooltip", lambda bot, x, y: (x, y))
-    monkeypatch.setattr(town, "_is_charm", lambda tip, x, y: tip == (x, y) and x < 940)  # (2, 0) "isn't" a charm
-    monkeypatch.setattr(town, "_log_loot", lambda items: logged.extend(items))
-    monkeypatch.setattr(town, "drop_cells", lambda bot, cells, what: dropped.extend(cells) or len(cells))
-    logged, dropped = [], []
-    bot = type("B", (), {"cfg": {"loot": {"charms_keep": RULES}, "hotkeys": {"inventory": "i"}},
-                         "press": lambda *a: None, "kill": type("K", (), {"sleep": lambda *a: None})()})()
-    inv = {"other": [(0, 0), (0, 1), (0, 2), (1, 0), (2, 0)]}
-    n, kept = town._drop_junk_charms(bot, inv)
-    assert n == 3 and dropped == [(0, 0)] and logged == ["Charm dropped: Grand Charm: +5 life"]
-    assert inv["other"] == [(1, 0), (2, 0)]
-    assert {c: k["what"] for c, k in kept.items()} == {(1, 0): "Small Charm: 5 all res",
-                                                      (2, 0): "Small Charm: +9 AR"}  # (2, 0) didn't say Charm
+
+def _bot(cfg=None):
+    from bot.killswitch import KillSwitch
+    kill = KillSwitch()
+    kill.sleep = lambda s: kill.check()
+    b = type("B", (), {})()
+    b.cfg, b.kill, b.frame = cfg or {"hotkeys": {"inventory": "i"}}, kill, None
+    b.press = lambda *a: None
+    b.save_failure = lambda note: None
+    return b
+
+
+def _drop_setup(monkeypatch, frames):
+    from bot import town
+    seq = list(frames)
+    monkeypatch.setattr(town, "close_stash", lambda bot: True)
+    monkeypatch.setattr(town, "stash_shown", lambda bot: False)
+    monkeypatch.setattr(town, "_ctrl_click", lambda bot, x, y: clicks.append((x, y)))
+    monkeypatch.setattr(town, "_occupied", lambda bot: seq.pop(0))
+    clicks = []
+    return town, clicks
+
+
+def test_drop_that_takes_another_item_stops_with_the_game_open(monkeypatch):
+    """2026-11-28: clicks on (0,0), (3,0), (3,2) dropped (6,0), (9,0) and the cube at (8,2) instead."""
+    import pytest
+
+    from bot.killswitch import KillSwitchTripped
+    town, clicks = _drop_setup(monkeypatch, [{(3, 2), (8, 2), (9, 2), (8, 3), (9, 3)}, {(3, 2), (8, 3), (9, 3)}])
+    bot = _bot()
+    with pytest.raises(KillSwitchTripped):
+        town.drop_cells(bot, [(3, 2)], "spare key stacks")
+    assert bot.drops_off and bot.kill.kind == "f12" and len(clicks) == 1
+
+
+def test_drop_checks_each_click(monkeypatch):
+    town, clicks = _drop_setup(monkeypatch, [{(0, 0), (1, 0), (5, 0)}, {(1, 0), (5, 0)}, {(5, 0)}])
+    bot = _bot()
+    assert town.drop_cells(bot, [(0, 0), (1, 0)], "spare key stacks") == 2 and not getattr(bot, "drops_off", False)
+
+
+def test_a_drop_that_takes_nothing_turns_drops_off(monkeypatch):
+    town, clicks = _drop_setup(monkeypatch, [{(0, 0), (5, 0)}, {(0, 0), (5, 0)}])
+    bot = _bot()
+    assert town.drop_cells(bot, [(0, 0), (1, 1)], "spare rejuvs") == 0 and bot.drops_off and len(clicks) == 1
+    assert town.drop_cells(bot, [(0, 0)], "spare rejuvs") == 0 and len(clicks) == 1  # off for the session
+
+
+def test_missing_own_item_stops_the_session():
+    import pytest
+
+    from bot import town
+    from bot.killswitch import KillSwitchTripped
+    cube, tome = item("box", 8, 2), item("tbk", 9, 0)
+    bot = _bot({"inventory": {"own_items": [["box", 8, 2], ["tbk", 9, 0]]}})
+    town.check_own_items(bot, {"items": [cube, tome]})  # all there
+    with pytest.raises(KillSwitchTripped):
+        town.check_own_items(bot, {"items": [tome]})
+    assert "box" in bot.kill.reason
